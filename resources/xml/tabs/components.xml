@@ -1,0 +1,54 @@
+<brls:Box
+    width="auto"
+    height="auto">
+
+    <brls:ScrollingFrame
+        width="auto"
+        height="auto"
+        axis="column"
+        alignItems="stretch"
+        grow="1.0" >
+        
+        <brls:Box
+            width="10000"
+            height="auto"
+            axis="column"
+            alignItems="stretch"
+            paddingTop="@style/brls/sidebar/padding_top"
+            paddingRight="@style/brls/sidebar/padding_right"
+            paddingBottom="@style/brls/sidebar/padding_bottom"
+            paddingLeft="@style/brls/sidebar/padding_left">
+            
+            <brls:Header
+                title="Manual"/>
+            
+            <brls:InputCell
+                id="hostIP"/>
+            
+            <brls:DetailCell
+                id="connect"
+                lineTop="1px"
+                marginTop="24"/>
+                
+            <brls:Header
+                title="Search"
+                paddingTop="60"/>
+            
+            <brls:Box
+                width="auto"
+                height="auto"
+                axis="column"
+                alignItems="center"
+                paddingTop="20">
+                
+                <brls:ProgressSpinner
+                    width="60"
+                    height="60"/>
+                    
+            </brls:Box>
+            
+        </brls:Box>
+
+    </brls:ScrollingFrame>
+
+</brls:Box>

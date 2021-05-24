@@ -1,0 +1,3 @@
+[submodule "extern/borealis"]
+	path = extern/borealis
+	url = https://github.com/XITRIX/borealis.git

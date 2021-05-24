@@ -1,0 +1,73 @@
+<brls:Box
+    width="auto"
+    height="auto">
+
+    <brls:ScrollingFrame
+        width="auto"
+        height="auto"
+        axis="column"
+        alignItems="stretch"
+        grow="1.0" >
+        
+        <brls:Box
+            width="10000"
+            height="auto"
+            axis="column"
+            alignItems="stretch"
+            paddingTop="@style/brls/sidebar/padding_top"
+            paddingRight="@style/brls/sidebar/padding_right"
+            paddingBottom="@style/brls/sidebar/padding_bottom"
+            paddingLeft="@style/brls/sidebar/padding_left">
+            
+            <brls:Header
+                title="Quality"/>
+                
+            <brls:SelectorCell
+                id="fps"/>
+                    
+            <brls:SelectorCell
+                id="resolution"/>
+                
+            <brls:SelectorCell
+                id="codec"/>
+                
+            <brls:SelectorCell
+                id="decoder"/>
+        
+            <brls:Header
+                id="header"
+                title="Video bitrate"
+                subtitle="10.0 Mbps"
+                paddingTop="60"/>
+                
+            <brls:Slider
+                id="slider"
+                width="auto"
+                height="84"
+                grow="1"
+                lineBottom="1px"/>
+            
+            
+            <brls:Header
+                title="Stream settings"
+                paddingTop="60"
+                lineTop="1px"/>
+                
+            <brls:BooleanCell
+                id="optimal"/>
+            
+            <brls:BooleanCell
+                id="pcAudio"/>
+                
+            <brls:Header
+                title="Debug"
+                paddingTop="60"/>
+                
+            <brls:BooleanCell
+                id="writeLog"/>
+            
+        </brls:Box>
+
+    </brls:ScrollingFrame>
+
+</brls:Box>
