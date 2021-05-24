@@ -1,24 +1,7 @@
 <brls:AppletFrame
     iconInterpolation="linear"
     footerHidden="false">
-    <brls:TabFrame
+    <HostsTabs
         title="@i18n/demo/title"
-        icon="@res/img/borealis_96.png">
-
-        <!-- Dynamic tab - required to get references to the views in the code -->
-        <brls:Tab label="@i18n/demo/tabs/host" >
-            <HostTab />
-        </brls:Tab>
-
-        <brls:Separator />
-
-        <brls:Tab label="@i18n/demo/tabs/add_host" >
-            <ComponentsTab />
-        </brls:Tab>
-        
-        <brls:Tab label="@i18n/demo/tabs/settings">
-            <SettingsTab />
-        </brls:Tab>
-
-    </brls:TabFrame>
+        icon="@res/img/borealis_96.png" />
 </brls:AppletFrame>

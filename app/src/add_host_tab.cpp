@@ -14,12 +14,12 @@
     limitations under the License.
 */
 
-#include "components_tab.hpp"
+#include "add_host_tab.hpp"
 
 ComponentsTab::ComponentsTab()
 {
     // Inflate the tab from the XML file
-    this->inflateFromXMLRes("xml/tabs/components.xml");
+    this->inflateFromXMLRes("xml/tabs/add_host.xml");
 
     hostIP->setTitle("Host IP");
     hostIP->setValue("10.0.0.19");

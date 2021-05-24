@@ -26,8 +26,8 @@
 #include <borealis.hpp>
 #include <string>
 
-#include "captioned_image.hpp"
-#include "components_tab.hpp"
+#include "hosts_tabs_view.hpp"
+#include "add_host_tab.hpp"
 #include "main_activity.hpp"
 #include "host_tab.hpp"
 #include "settings_tab.hpp"
@@ -58,7 +58,7 @@ int main(int argc, char* argv[])
     brls::Application::setGlobalQuit(false);
 
     // Register custom views (including tabs, which are views)
-    brls::Application::registerXMLView("CaptionedImage", CaptionedImage::create);
+    brls::Application::registerXMLView("HostsTabs", HostsTabs::create);
     brls::Application::registerXMLView("HostTab", HostTab::create);
     brls::Application::registerXMLView("ComponentsTab", ComponentsTab::create);
     brls::Application::registerXMLView("SettingsTab", SettingsTab::create);
