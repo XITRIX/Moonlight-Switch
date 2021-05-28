@@ -37,7 +37,7 @@ include $(DEVKITPRO)/libnx/switch_rules
 #   of a homebrew executable (.nro). This is intended to be used for sysmodules.
 #   NACP building is skipped as well.
 #---------------------------------------------------------------------------------
-TARGET		:=	moonlight
+TARGET		:=	br_moonlight
 BUILD		:=	build.nx
 SOURCES		:=	app/src
 DATA		:=	data
@@ -62,21 +62,24 @@ ARCH	:=	-march=armv8-a+crc+crypto -mtune=cortex-a57 -mtp=soft -fPIE
 CFLAGS	:=	-g -Wall -O2 -ffunction-sections \
 			$(ARCH) $(DEFINES)
 
-CFLAGS	+=	$(INCLUDE) -D__SWITCH__
+CFLAGS	+=	$(INCLUDE) -D__SWITCH__ -DUSE_MBEDTLS_CRYPTO -DUSE_MBEDTLS -DHAS_SOCKLEN_T
 
-CXXFLAGS	:= $(CFLAGS) -std=c++1z -O2 -Wno-volatile
+CXXFLAGS	:= $(CFLAGS) -std=gnu++17 -O2 -Wno-volatile
 
 ASFLAGS	:=	-g $(ARCH)
 LDFLAGS	=	-specs=$(DEVKITPRO)/libnx/switch.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
 
-LIBS	:= -lnx
+LIBS	:= -lcurl -lmbedtls -lmbedx509 -lmbedcrypto \
+	-lavcodec -lavutil -lavformat -lavfilter -lopus -lz -lexpat \
+	-lnx -lswresample -lvpx -ljansson
 
 #---------------------------------------------------------------------------------
 # list of directories containing libraries, this must be the top level containing
 # include and lib
 #---------------------------------------------------------------------------------
-LIBDIRS	:= $(PORTLIBS) $(LIBNX)
+LIBDIRS	:= $(TOPDIR)/curl $(PORTLIBS) $(LIBNX)
 
+include $(TOPDIR)/app/app.mk
 include $(TOPDIR)/extern/extern.mk
 
 #---------------------------------------------------------------------------------

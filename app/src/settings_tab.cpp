@@ -1,54 +1,117 @@
-/*
-    Copyright 2021 natinusala
-
-    Licensed under the Apache License, Version 2.0 (the "License");
-    you may not use this file except in compliance with the License.
-    You may obtain a copy of the License at
-
-        http://www.apache.org/licenses/LICENSE-2.0
-
-    Unless required by applicable law or agreed to in writing, software
-    distributed under the License is distributed on an "AS IS" BASIS,
-    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    See the License for the specific language governing permissions and
-    limitations under the License.
-*/
+//
+//  settings_tab.cpp
+//  Moonlight
+//
+//  Created by XITRIX on 26.05.2021.
+//
 
 #include "settings_tab.hpp"
+#include "Settings.hpp"
+#include <iomanip>
+#include <sstream>
 
-bool radioSelected = false;
+#define SET_SETTING(n, func) \
+    case n: \
+        Settings::instance().func; \
+        break;
+
+#define GET_SETTINGS(combo_box, n, i) \
+    case n: \
+        combo_box->setSelection(i); \
+        break;
+
+#define DEFAULT \
+    default: \
+        break;
 
 SettingsTab::SettingsTab()
 {
     // Inflate the tab from the XML file
     this->inflateFromXMLRes("xml/tabs/settings.xml");
-
-
-    resolution->init("Resolution", { "720p", "1080p" }, 0, [](int selected) {
-        
+    
+    std::vector<std::string> resolutions = { "720p", "1080p" };
+    resolution->setText("Resolution");
+    resolution->setData(resolutions);
+    switch (Settings::instance().resolution()) {
+        GET_SETTINGS(resolution, 720, 0);
+        GET_SETTINGS(resolution, 1080, 1);
+        DEFAULT;
+    }
+    resolution->getEvent()->subscribe([](int selected) {
+        switch (selected) {
+            SET_SETTING(0, set_resolution(720));
+            SET_SETTING(1, set_resolution(1080));
+            DEFAULT;
+        }
     });
     
-    fps->init("FPS", { "30", "60" }, 1, [](int selected) {
-
+    std::vector<std::string> fpss = { "30", "60" };
+    fps->setText("FPS");
+    fps->setData(fpss);
+    switch (Settings::instance().fps()) {
+        GET_SETTINGS(fps, 30, 0);
+        GET_SETTINGS(fps, 60, 1);
+        DEFAULT;
+    }
+    fps->getEvent()->subscribe([](int selected) {
+        switch (selected) {
+            SET_SETTING(0, set_fps(30));
+            SET_SETTING(1, set_fps(60));
+            DEFAULT;
+        }
     });
     
-    codec->init("Video codec", { "H.264", "HEVC (H.265, Experimental)" }, 0, [](int selected) {
-
+    std::vector<std::string> decoders = { "0 (No use threads)", "2", "3", "4" };
+    decoder->setText("Decoder Threads");
+    decoder->setData(decoders);
+    switch (Settings::instance().decoder_threads()) {
+        GET_SETTINGS(decoder, 0, 0);
+        GET_SETTINGS(decoder, 2, 1);
+        GET_SETTINGS(decoder, 3, 2);
+        GET_SETTINGS(decoder, 4, 3);
+        DEFAULT;
+    }
+    decoder->getEvent()->subscribe([](int selected) {
+        switch (selected) {
+            SET_SETTING(0, set_decoder_threads(0));
+            SET_SETTING(1, set_decoder_threads(2));
+            SET_SETTING(2, set_decoder_threads(3));
+            SET_SETTING(3, set_decoder_threads(4));
+            DEFAULT;
+        }
     });
     
-    decoder->init("Decoder Threads", { "0 (No use threads)", "2", "3", "4" }, 3, [](int selected) {
-
+    codec->init("Video codec", { "H.264", "HEVC (H.265, Experimental)" }, Settings::instance().video_codec(), [](int selected) {
+        Settings::instance().set_video_codec((VideoCodec)selected);
     });
     
-    slider->setProgress(0.1f);
+    float progress = (Settings::instance().bitrate() - 500.0f) / 149500.0f;
     slider->getProgressEvent()->subscribe([this](float progress) {
-        header->setSubtitle(std::to_string((int)(progress * 149.5 + 0.5)) + ".0 Mbps");
+        int bitrate = progress * 149500.0f + 500.0f;
+        float fbitrate = bitrate / 1000.0f;
+        std::stringstream stream;
+        stream << std::fixed << std::setprecision(1) << fbitrate;
+        header->setSubtitle(stream.str() + " Mbps");
+        Settings::instance().set_bitrate(bitrate);
+    });
+    slider->setProgress(progress);
+    
+    optimal->init("Use Streaming Optimal Playable Settings", Settings::instance().sops(), [](bool value) {
+        Settings::instance().set_sops(value);
     });
     
+    pcAudio->init("Play Audio on PC", Settings::instance().play_audio(), [](bool value){
+        Settings::instance().set_play_audio(value);
+    });
+    
+    writeLog->init("Write log", Settings::instance().write_log(), [](bool value) {
+        Settings::instance().set_write_log(value);
+    });
+}
 
-    optimal->title->setText("Use Streaming Optimal Playable Settings");
-    pcAudio->title->setText("Play Audio on PC");
-    writeLog->title->setText("Write log");
+SettingsTab::~SettingsTab()
+{
+    Settings::instance().save();
 }
 
 brls::View* SettingsTab::create()

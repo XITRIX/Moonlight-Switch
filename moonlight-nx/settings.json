@@ -1,0 +1,21 @@
+{
+    "hosts": [
+        {
+            "address": "10.0.0.2",
+            "hostname": "XITRIX",
+            "mac": "00:D8:61:C5:EE:63"
+        }
+    ],
+    "settings": {
+        "resolution": 720,
+        "fps": 60,
+        "video_codec": 0,
+        "bitrate": 10000,
+        "ignore_unsupported_resolutions": false,
+        "decoder_threads": 4,
+        "click_by_tap": false,
+        "sops": true,
+        "play_audio": false,
+        "write_log": false
+    }
+}

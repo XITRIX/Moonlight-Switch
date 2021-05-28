@@ -20,6 +20,7 @@
             paddingLeft="@style/brls/sidebar/padding_left">
             
             <brls:Header
+                id="header"
                 title="Status: Unactive"/>
                 
             <brls:DetailCell

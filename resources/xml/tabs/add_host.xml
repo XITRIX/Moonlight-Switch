@@ -31,20 +31,31 @@
                 marginTop="24"/>
                 
             <brls:Header
+                id="search_header"
                 title="Search"
                 paddingTop="60"/>
-            
+                
             <brls:Box
+                id="search_box"
                 width="auto"
                 height="auto"
                 axis="column"
-                alignItems="center"
-                paddingTop="20">
-                
-                <brls:ProgressSpinner
-                    width="60"
-                    height="60"/>
+                alignItems="stretch">
+            
+                <brls:Box
+                    id="loader"
+                    width="auto"
+                    height="auto"
+                    axis="column"
+                    alignItems="center"
+                    paddingTop="20">
                     
+                    <brls:ProgressSpinner
+                        width="60"
+                        height="60"/>
+                        
+                </brls:Box>
+                
             </brls:Box>
             
         </brls:Box>

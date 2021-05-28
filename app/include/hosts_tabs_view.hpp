@@ -8,10 +8,11 @@
 #pragma once
 
 #include <borealis.hpp>
+#include <Singleton.hpp>
 
 using namespace brls;
 
-class HostsTabs : public brls::TabFrame
+class HostsTabs : public Singleton<HostsTabs>, public brls::TabFrame
 {
 public:
     HostsTabs();
