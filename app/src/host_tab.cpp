@@ -23,21 +23,21 @@ HostTab::HostTab(Host host) :
     header->setTitle("Status: Fetching...");
     connect->setText("Wake up");
     
-//    ASYNC_RETAIN
-//    GameStreamClient::instance().connect(host.address, [ASYNC_TOKEN](GSResult<SERVER_DATA> result){
-//        ASYNC_RELEASE
-//        
-//        if (result.isSuccess())
-//        {
-//            header->setTitle("Status: Ready");
-//            connect->setText("Connect");
-//        }
-//        else
-//        {
-//            header->setTitle("Status: Unavailabe");
-//        }
-//        
-//    });
+    ASYNC_RETAIN
+    GameStreamClient::instance().connect(host.address, [ASYNC_TOKEN](GSResult<SERVER_DATA> result){
+        ASYNC_RELEASE
+        
+        if (result.isSuccess())
+        {
+            header->setTitle("Status: Ready");
+            connect->setText("Connect");
+        }
+        else
+        {
+            header->setTitle("Status: Unavailabe");
+        }
+        
+    });
     
     connect->registerClickAction([this](View* view) {
         AppListView* appList = new AppListView(this->host);

@@ -6,8 +6,31 @@
 //
 
 #include "streaming_view.hpp"
+#include "ingame_overlay_view.hpp"
 #include <nanovg.h>
 #include <Limelight.h>
+#include <chrono>
+
+// Moonlight ready gamepad
+struct GamepadState {
+    short buttonFlags;
+    unsigned char leftTrigger;
+    unsigned char rightTrigger;
+    short leftStickX;
+    short leftStickY;
+    short rightStickX;
+    short rightStickY;
+    
+    bool is_equal(GamepadState other) {
+        return buttonFlags == other.buttonFlags &&
+        leftTrigger == other.leftTrigger &&
+        rightTrigger == other.rightTrigger &&
+        leftStickX == other.leftStickX &&
+        leftStickY == other.leftStickY &&
+        rightStickX == other.rightStickX &&
+        rightStickY == other.rightStickY;
+    }
+};
 
 StreamingView::StreamingView(Host host, AppInfo app) :
     host(host), app(app)
@@ -20,7 +43,7 @@ StreamingView::StreamingView(Host host, AppInfo app) :
     ASYNC_RETAIN
     session->start([ASYNC_TOKEN](GSResult<bool> result) {
         ASYNC_RELEASE
-        
+
         if (!result.isSuccess())
         {
             auto alert = new brls::Dialog(result.error());
@@ -34,25 +57,32 @@ StreamingView::StreamingView(Host host, AppInfo app) :
             alert->open();
         }
     });
-    
-    Application::blockInputs();
+}
+
+void StreamingView::onFocusGained()
+{
+    View::onFocusGained();
+    Application::blockInputs(true);
 }
 
 void StreamingView::onFocusLost()
 {
+    View::onFocusLost();
     Application::unblockInputs();
 }
 
 void StreamingView::draw(NVGcontext* vg, float x, float y, float width, float height, Style style, FrameContext* ctx)
 {
     if (!session->is_active())
-        {
-            brls::Application::notify("Terminate");
-            terminate();
-            return;
-        }
+    {
+        brls::Application::notify("Terminate");
+        terminate();
+        return;
+    }
     
     session->draw(vg);
+    handleInput();
+    handleButtonHolding();
 
     if (session->connection_status_is_poor())
     {
@@ -113,19 +143,12 @@ void StreamingView::draw(NVGcontext* vg, float x, float y, float width, float he
         nvgFillColor(vg, nvgRGBA(0, 255, 0, 255));
         nvgTextBox(vg, 20, 30, width, output, NULL);
     }
-    
-    handleInput();
 }
 
 void StreamingView::terminate()
 {
 //    terminated = true;
 //    InputController::controller()->stop_rumple();
-
-    // if (m_loader) {
-    //     m_loader->dispose();
-    //     m_loader = NULL;
-    // }
 
     session->stop(false);
     this->dismiss();
@@ -139,17 +162,22 @@ void StreamingView::handleInput()
     static ControllerState controller;
     Application::getPlatform()->getInputManager()->updateControllerState(&controller);
     
+    static GamepadState lastState;
+    GamepadState state
+    {
+        .buttonFlags = 0,
+        .leftTrigger = static_cast<unsigned char>(0xFFFF * (controller.buttons[BUTTON_LT] ? 1 : 0)),
+        .rightTrigger = static_cast<unsigned char>(0xFFFF * (controller.buttons[BUTTON_RT] ? 1 : 0)),
+        .leftStickX = static_cast<short>(controller.axes[LEFT_X] * 0x7FFF),
+        .leftStickY = static_cast<short>(0xFFFF - controller.axes[LEFT_Y] * 0x7FFF),
+        .rightStickX = static_cast<short>(controller.axes[RIGHT_X] * 0x7FFF),
+        .rightStickY = static_cast<short>(0xFFFF - controller.axes[RIGHT_Y] * 0x7FFF),
+    };
     
-    unsigned char leftTrigger  = 0xFFFF * (controller.buttons[BUTTON_LT] ? 1 : 0);
-    unsigned char rightTrigger = 0xFFFF * (controller.buttons[BUTTON_RT] ? 1 : 0);
-    short leftStickX           = controller.axes[LEFT_X] * 0x7FFF;
-    short leftStickY           = 0xFFFF - controller.axes[LEFT_Y] * 0x7FFF;
-    short rightStickX          = controller.axes[RIGHT_X] * 0x7FFF;
-    short rightStickY          = 0xFFFF - controller.axes[RIGHT_Y] * 0x7FFF;
-    
-    short buttonFlags = 0;
 #define SET_GAME_PAD_STATE(LIMELIGHT_KEY, GAMEPAD_BUTTON) \
-    controller.buttons[GAMEPAD_BUTTON] ? (buttonFlags |= LIMELIGHT_KEY) : (buttonFlags &= ~LIMELIGHT_KEY);
+    controller.buttons[GAMEPAD_BUTTON] ? (state.buttonFlags |= LIMELIGHT_KEY) : (state.buttonFlags &= ~LIMELIGHT_KEY); \
+    if (controller.buttons[GAMEPAD_BUTTON]) \
+        Logger::info("StreamingView: button {} pressed", LIMELIGHT_KEY);
     
     SET_GAME_PAD_STATE(UP_FLAG, BUTTON_UP);
     SET_GAME_PAD_STATE(DOWN_FLAG, BUTTON_DOWN);
@@ -170,14 +198,49 @@ void StreamingView::handleInput()
     SET_GAME_PAD_STATE(LS_CLK_FLAG, BUTTON_LSB);
     SET_GAME_PAD_STATE(RS_CLK_FLAG, BUTTON_RSB);
     
-    LiSendControllerEvent(
-        buttonFlags,
-        leftTrigger,
-        rightTrigger,
-        leftStickX,
-        leftStickY,
-        rightStickX,
-        rightStickY);
+    if (!state.is_equal(lastState))
+    {
+        lastState = state;
+        LiSendControllerEvent(
+              state.buttonFlags,
+              state.leftTrigger,
+              state.rightTrigger,
+              state.leftStickX,
+              state.leftStickY,
+              state.rightStickX,
+              state.rightStickY);
+    }
+}
+
+void StreamingView::handleButtonHolding()
+{
+    static ControllerState controller;
+    Application::getPlatform()->getInputManager()->updateControllerState(&controller);
+    
+    static std::chrono::high_resolution_clock::time_point clock_counter;
+    static bool buttonState = false;
+    static bool used = false;
+    
+    auto duration = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::high_resolution_clock::now() - clock_counter);
+    
+    if (!buttonState && controller.buttons[BUTTON_START])
+    {
+        buttonState = true;
+        clock_counter = std::chrono::high_resolution_clock::now();
+    }
+    else if (buttonState && !controller.buttons[BUTTON_START])
+    {
+        buttonState = false;
+        used = false;
+    }
+    else if (buttonState && duration.count() > 2 && !used)
+    {
+        used = true;
+        
+        IngameOverlay* overlay = new IngameOverlay(this);
+        overlay->setTitle(host.hostname + ": " + app.name);
+        Application::pushActivity(new Activity(overlay));
+    }
 }
 
 StreamingView::~StreamingView()

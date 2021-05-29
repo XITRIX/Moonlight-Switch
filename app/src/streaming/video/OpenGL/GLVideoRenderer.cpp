@@ -212,7 +212,7 @@ void GLVideoRenderer::initialize() {
     m_offset_location = glGetUniformLocation(m_shader_program, "offset");
 }
 
-void GLVideoRenderer::draw(int width, int height, AVFrame *frame) {
+void GLVideoRenderer::draw(NVGcontext* vg, int width, int height, AVFrame *frame) {
     if (!m_video_render_stats.rendered_frames) {
         m_video_render_stats.measurement_start_timestamp = LiGetMillis();
     }

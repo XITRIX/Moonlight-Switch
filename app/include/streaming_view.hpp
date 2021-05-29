@@ -19,15 +19,19 @@ class StreamingView : public View
 public:
     StreamingView(Host host, AppInfo app);
     ~StreamingView();
+    
     void draw(NVGcontext* vg, float x, float y, float width, float height, Style style, FrameContext* ctx) override;
+    void onFocusGained() override;
     void onFocusLost() override;
     
+    void terminate();
+    
 private:
-    bool draw_stats = false;
+    bool draw_stats = true;
     Host host;
     AppInfo app;
     MoonlightSession* session;
     
     void handleInput();
-    void terminate();
+    void handleButtonHolding();
 };

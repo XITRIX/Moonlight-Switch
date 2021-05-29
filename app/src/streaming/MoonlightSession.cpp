@@ -82,6 +82,7 @@ void MoonlightSession::connection_terminated(int error_code) {
 }
 
 void MoonlightSession::connection_log_message(const char* format, ...) {
+    brls::Logger::info("MoonlightSession: {}", format);
 //    va_list list;
 //    va_start(list, format);
 //    vprintf(format, list);

@@ -11,7 +11,7 @@ public:
     GLVideoRenderer() {};
     ~GLVideoRenderer();
     
-    void draw(int width, int height, AVFrame *frame) override;
+    void draw(NVGcontext* vg, int width, int height, AVFrame *frame) override;
     
     VideoRenderStats* video_render_stats() override;
     

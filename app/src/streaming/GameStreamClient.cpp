@@ -139,7 +139,7 @@ void GameStreamClient::find_host(ServerCallback<Host> callback) {
         auto addresses = host_addresses_for_find();
         
         if (addresses.empty()) {
-            brls::async([callback] { callback(GSResult<Host>::failure("Can't obtain IP address...")); });
+            brls::sync([callback] { callback(GSResult<Host>::failure("Can't obtain IP address...")); });
         } else {
             bool found = false;
             
@@ -154,13 +154,13 @@ void GameStreamClient::find_host(ServerCallback<Host> callback) {
                     host.address = addresses[i];
                     host.hostname = server_data.hostname;
                     host.mac = server_data.mac;
-                    brls::async([callback, host] { callback(GSResult<Host>::success(host)); });
+                    brls::sync([callback, host] { callback(GSResult<Host>::success(host)); });
                     break;
                 }
             }
             
             if (!found) {
-                brls::async([callback] { callback(GSResult<Host>::failure("Host PC not found...")); });
+                brls::sync([callback] { callback(GSResult<Host>::failure("Host PC not found...")); });
             }
         }
     });
@@ -176,9 +176,9 @@ void GameStreamClient::wake_up_host(const Host &host, ServerCallback<bool> callb
         
         if (result.isSuccess()) {
             usleep(5'000'000);
-            brls::async([callback, result] { callback(result); });
+            brls::sync([callback, result] { callback(result); });
         } else {
-            brls::async([callback, result] { callback(result); });
+            brls::sync([callback, result] { callback(result); });
         }
     });
 }
@@ -189,7 +189,7 @@ void GameStreamClient::connect(const std::string &address, ServerCallback<SERVER
     perform_async([this, address, callback] {
         int status = gs_init(&m_server_data[address], address);
         
-        brls::async([this, address, callback, status] {
+        brls::sync([this, address, callback, status] {
             if (status == GS_OK) {
                 Host host;
                 host.address = address;
@@ -213,7 +213,7 @@ void GameStreamClient::pair(const std::string &address, const std::string &pin, 
     perform_async([this, address, pin, callback] {
         int status = gs_pair(&m_server_data[address], (char *)pin.c_str());
         
-        brls::async([callback, status] {
+        brls::sync([callback, status] {
             if (status == GS_OK) {
                 callback(GSResult<bool>::success(true));
             } else {
@@ -243,7 +243,7 @@ void GameStreamClient::applist(const std::string &address, ServerCallback<AppInf
         
         std::sort(app_list.begin(), app_list.end(), [](AppInfo a, AppInfo b) { return a.name < b.name; });
         
-        brls::async([this, app_list, callback, status] {
+        brls::sync([this, app_list, callback, status] {
             if (status == GS_OK) {
                 callback(GSResult<AppInfoList>::success(app_list));
             } else {
@@ -263,7 +263,7 @@ void GameStreamClient::app_boxart(const std::string &address, int app_id, Server
         Data data;
         int status = gs_app_boxart(&m_server_data[address], app_id, &data);
         
-        brls::async([this, callback, data, status] {
+        brls::sync([this, callback, data, status] {
             if (status == GS_OK) {
                 callback(GSResult<Data>::success(data));
             } else {
@@ -284,7 +284,7 @@ void GameStreamClient::start(const std::string &address, STREAM_CONFIGURATION co
     perform_async([this, address, app_id, callback] {
         int status = gs_start_app(&m_server_data[address], &m_config, app_id, Settings::instance().sops(), Settings::instance().play_audio(), 0x1);
         
-        brls::async([this, callback, status] {
+        brls::sync([this, callback, status] {
             if (status == GS_OK) {
                 callback(GSResult<STREAM_CONFIGURATION>::success(m_config));
             } else {
@@ -305,7 +305,7 @@ void GameStreamClient::quit(const std::string &address, ServerCallback<bool> cal
     perform_async([this, server_data, callback] {
         int status = gs_quit_app((PSERVER_DATA)&server_data);
         
-        brls::async([this, callback, status] {
+        brls::sync([this, callback, status] {
             if (status == GS_OK) {
                 callback(GSResult<bool>::success(true));
             } else {

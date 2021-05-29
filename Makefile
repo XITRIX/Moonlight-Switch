@@ -62,7 +62,8 @@ ARCH	:=	-march=armv8-a+crc+crypto -mtune=cortex-a57 -mtp=soft -fPIE
 CFLAGS	:=	-g -Wall -O2 -ffunction-sections \
 			$(ARCH) $(DEFINES)
 
-CFLAGS	+=	$(INCLUDE) -D__SWITCH__ -DUSE_MBEDTLS_CRYPTO -DUSE_MBEDTLS -DHAS_SOCKLEN_T
+CFLAGS	+=	$(INCLUDE) -D__SWITCH__ -DUSE_MBEDTLS -DHAS_SOCKLEN_T -DHAS_POLL -DHAS_FCNTL -DUSE_MBEDTLS_CRYPTO \
+	-DMOONLIGHT_VERSION=\"$(MOONLIGHT_VERSION)\"
 
 CXXFLAGS	:= $(CFLAGS) -std=gnu++17 -O2 -Wno-volatile
 
@@ -70,8 +71,8 @@ ASFLAGS	:=	-g $(ARCH)
 LDFLAGS	=	-specs=$(DEVKITPRO)/libnx/switch.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
 
 LIBS	:= -lcurl -lmbedtls -lmbedx509 -lmbedcrypto \
-	-lavcodec -lavutil -lavformat -lavfilter -lopus -lz -lexpat \
-	-lnx -lswresample -lvpx -ljansson
+	-lavcodec -lavutil -lopus -lz -lexpat \
+	-lglad -lnx -lswresample -lvpx -ljansson -lsdl2
 
 #---------------------------------------------------------------------------------
 # list of directories containing libraries, this must be the top level containing

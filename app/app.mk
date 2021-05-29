@@ -8,7 +8,7 @@ SOURCES		:=	$(SOURCES) \
 				app/src/streaming/ffmpeg \
 				app/src/streaming/switch \
 				app/src/streaming/video \
-				app/src/streaming/video/Deko3D \
+				app/src/streaming/video/OpenGL \
 				app/src/libgamestream \
 				app/src/utils 
 
@@ -20,7 +20,7 @@ INCLUDES	:=	$(INCLUDES) \
 				app/src/streaming/ffmpeg \
 				app/src/streaming/switch \
 				app/src/streaming/video \
-				app/src/streaming/video/Deko3D \
+				app/src/streaming/video/OpenGL \
 				app/src/libgamestream \
 				app/src/utils \
 				app/src/switch 

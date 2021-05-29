@@ -1,7 +1,7 @@
 {
     "hosts": [
         {
-            "address": "10.0.0.2",
+            "address": "10.0.0.6",
             "hostname": "XITRIX",
             "mac": "00:D8:61:C5:EE:63"
         }
@@ -15,7 +15,7 @@
         "decoder_threads": 4,
         "click_by_tap": false,
         "sops": true,
-        "play_audio": false,
+        "play_audio": true,
         "write_log": false
     }
 }
