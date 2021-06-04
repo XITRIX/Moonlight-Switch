@@ -8,20 +8,26 @@
 #include "app_list_view.hpp"
 #include "streaming_view.hpp"
 #include "GameStreamClient.hpp"
+#include "app_cell.hpp"
 #include "helper.hpp"
 
 AppListView::AppListView(Host host) :
     host(host)
 {
     this->inflateFromXMLRes("xml/views/app_list_view.xml");
-    
+    container->setHideHighlight(true);
     setTitle(host.hostname);
+    gridView = new GridView();
+    container->addView(gridView);
+    loader = new LoadingOverlay(this);
     updateAppList();
 }
 
 void AppListView::updateAppList()
 {
-    container->clearViews();
+    Application::giveFocus(this);
+    gridView->clearViews();
+    loader->setHidden(false);
     
     ASYNC_RETAIN
     GameStreamClient::instance().connect(host.address, [ASYNC_TOKEN](GSResult<SERVER_DATA> result) {
@@ -33,23 +39,16 @@ void AppListView::updateAppList()
             GameStreamClient::instance().applist(host.address, [ASYNC_TOKEN](GSResult<AppInfoList> result) {
                 ASYNC_RELEASE
                 
+                loader->setHidden(true);
+                
                 if (result.isSuccess())
                 {
                     for (AppInfo app : result.value())
                     {
-                        DetailCell* cell = new DetailCell();
-                        cell->setText(app.name);
-                        
-                        cell->registerClickAction([this, app](View* view) {
-                            AppletFrame* frame = new AppletFrame(new StreamingView(host, app));
-                            frame->setHeaderVisibility(brls::Visibility::GONE);
-                            frame->setFooterVisibility(brls::Visibility::GONE);
-                            Application::pushActivity(new Activity(frame));
-                            return true;
-                        });
-                        
-                        container->addView(cell);
+                        AppCell* cell = new AppCell(host, app);
+                        gridView->addView(cell);
                     }
+                    Application::giveFocus(this);
                 }
                 else
                 {
@@ -68,6 +67,12 @@ void AppListView::updateAppList()
             });
         }
     });
+}
+
+void AppListView::onLayout()
+{
+    Box::onLayout();
     
-    
+    if (loader)
+        loader->layout();
 }

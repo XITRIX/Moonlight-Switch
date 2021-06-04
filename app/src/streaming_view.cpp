@@ -10,6 +10,7 @@
 #include <nanovg.h>
 #include <Limelight.h>
 #include <chrono>
+#include "helper.hpp"
 
 // Moonlight ready gamepad
 struct GamepadState {
@@ -37,6 +38,7 @@ StreamingView::StreamingView(Host host, AppInfo app) :
 {
     setFocusable(true);
     setHideHighlight(true);
+    loader = new LoadingOverlay(this);
     
     session = new MoonlightSession(host.address, app.app_id);
     
@@ -44,17 +46,12 @@ StreamingView::StreamingView(Host host, AppInfo app) :
     session->start([ASYNC_TOKEN](GSResult<bool> result) {
         ASYNC_RELEASE
 
+        loader->setHidden(true);
         if (!result.isSuccess())
         {
-            auto alert = new brls::Dialog(result.error());
-            alert->addButton("Close", [this](View* view)
-            {
-                view->dismiss([this]() {
-                    terminate();
-                });
+            showError(this, result.error(), [this]() {
+                terminate();
             });
-            alert->setCancelable(true);
-            alert->open();
         }
     });
 }
@@ -175,17 +172,15 @@ void StreamingView::handleInput()
     };
     
 #define SET_GAME_PAD_STATE(LIMELIGHT_KEY, GAMEPAD_BUTTON) \
-    controller.buttons[GAMEPAD_BUTTON] ? (state.buttonFlags |= LIMELIGHT_KEY) : (state.buttonFlags &= ~LIMELIGHT_KEY); \
-    if (controller.buttons[GAMEPAD_BUTTON]) \
-        Logger::info("StreamingView: button {} pressed", LIMELIGHT_KEY);
+    controller.buttons[GAMEPAD_BUTTON] ? (state.buttonFlags |= LIMELIGHT_KEY) : (state.buttonFlags &= ~LIMELIGHT_KEY);
     
     SET_GAME_PAD_STATE(UP_FLAG, BUTTON_UP);
     SET_GAME_PAD_STATE(DOWN_FLAG, BUTTON_DOWN);
     SET_GAME_PAD_STATE(LEFT_FLAG, BUTTON_LEFT);
     SET_GAME_PAD_STATE(RIGHT_FLAG, BUTTON_RIGHT);
 
-    SET_GAME_PAD_STATE(A_FLAG, BUTTON_A);
-    SET_GAME_PAD_STATE(B_FLAG, BUTTON_B);
+    SET_GAME_PAD_STATE(A_FLAG, BUTTON_B);
+    SET_GAME_PAD_STATE(B_FLAG, BUTTON_A);
     SET_GAME_PAD_STATE(X_FLAG, BUTTON_Y);
     SET_GAME_PAD_STATE(Y_FLAG, BUTTON_X);
 
@@ -200,15 +195,17 @@ void StreamingView::handleInput()
     
     if (!state.is_equal(lastState))
     {
+        static int count = 0;
         lastState = state;
-        LiSendControllerEvent(
+        if (LiSendControllerEvent(
               state.buttonFlags,
               state.leftTrigger,
               state.rightTrigger,
               state.leftStickX,
               state.leftStickY,
               state.rightStickX,
-              state.rightStickY);
+              state.rightStickY) == 0)
+            Logger::info("StreamingView: sending input data ({})", count++);
     }
 }
 
@@ -243,7 +240,15 @@ void StreamingView::handleButtonHolding()
     }
 }
 
+void StreamingView::onLayout()
+{
+    Box::onLayout();
+    if (loader)
+        loader->layout();
+}
+
 StreamingView::~StreamingView()
 {
+    session->stop(false);
     delete session;
 }

@@ -11,10 +11,11 @@
 #include <Settings.hpp>
 #include "GameStreamClient.hpp"
 #include "MoonlightSession.hpp"
+#include "loading_overlay.hpp"
 
 using namespace brls;
 
-class StreamingView : public View
+class StreamingView : public Box
 {
 public:
     StreamingView(Host host, AppInfo app);
@@ -23,6 +24,7 @@ public:
     void draw(NVGcontext* vg, float x, float y, float width, float height, Style style, FrameContext* ctx) override;
     void onFocusGained() override;
     void onFocusLost() override;
+    void onLayout() override;
     
     void terminate();
     
@@ -31,6 +33,7 @@ private:
     Host host;
     AppInfo app;
     MoonlightSession* session;
+    LoadingOverlay* loader = nullptr;
     
     void handleInput();
     void handleButtonHolding();

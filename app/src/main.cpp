@@ -25,6 +25,8 @@
 #include "MoonlightSession.hpp"
 #include "SwitchMoonlightSessionDecoderAndRenderProvider.hpp"
 
+#include "streaming_view.hpp"
+
 using namespace brls::literals; // for _i18n
 
 int main(int argc, char* argv[])
@@ -76,10 +78,14 @@ int main(int argc, char* argv[])
 
     // Create and push the main activity to the stack
     brls::Application::pushActivity(new MainActivity());
+    
+    brls::Application::enableDebuggingView(Settings::instance().write_log());
 
     // Run the app
     while (brls::Application::mainLoop())
         ;
+    
+    GameStreamClient::instance().stop();
 
     // Exit
     return EXIT_SUCCESS;

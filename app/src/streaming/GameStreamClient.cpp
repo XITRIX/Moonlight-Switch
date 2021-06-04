@@ -21,73 +21,15 @@
 #include <switch.h>
 #endif
 
-static std::mutex m_async_mutex;
-static std::vector<std::function<void()>> m_tasks;
-
-static volatile bool task_loop_active = true;
-
-static void task_loop() {
-    while (task_loop_active) {
-        std::vector<std::function<void()>> m_tasks_copy; {
-            std::lock_guard<std::mutex> guard(m_async_mutex);
-            m_tasks_copy = m_tasks;
-            m_tasks.clear();
-        }
-        
-        for (auto task: m_tasks_copy) {
-            task();
-        }
-        
-        usleep(500'000);
-    }
-}
-
-#ifdef __SWITCH__
-static Thread task_loop_thread;
-static void start_task_loop() {
-    threadCreate(
-        &task_loop_thread,
-        [](void* a) {
-            task_loop();
-        },
-        NULL,
-        NULL,
-        0x10000,
-        0x2C,
-        -2
-    );
-    threadStart(&task_loop_thread);
-}
-#else
-static void start_task_loop() {
-    auto thread = std::thread([](){
-        task_loop();
-    });
-    thread.detach();
-}
-#endif
-
-void perform_async(std::function<void()> task) {
-    std::lock_guard<std::mutex> guard(m_async_mutex);
-    m_tasks.push_back(task);
-}
-
 GameStreamClient::GameStreamClient()
 {
     start();
 }
 
 void GameStreamClient::start() {
-    start_task_loop();
 }
 
 void GameStreamClient::stop() {
-    task_loop_active = false;
-    
-    #ifdef __SWITCH__
-    threadWaitForExit(&task_loop_thread);
-    threadClose(&task_loop_thread);
-    #endif
 }
 
 static uint32_t get_my_ip_address() {
@@ -135,7 +77,7 @@ bool GameStreamClient::can_find_host() {
 }
 
 void GameStreamClient::find_host(ServerCallback<Host> callback) {
-    perform_async([this, callback] {
+    brls::async([this, callback] {
         auto addresses = host_addresses_for_find();
         
         if (addresses.empty()) {
@@ -171,7 +113,7 @@ bool GameStreamClient::can_wake_up_host(const Host &host) {
 }
 
 void GameStreamClient::wake_up_host(const Host &host, ServerCallback<bool> callback) {
-    perform_async([this, host, callback] {
+    brls::async([this, host, callback] {
         auto result = WakeOnLanManager::instance().wake_up_host(host);
         
         if (result.isSuccess()) {
@@ -186,7 +128,7 @@ void GameStreamClient::wake_up_host(const Host &host, ServerCallback<bool> callb
 void GameStreamClient::connect(const std::string &address, ServerCallback<SERVER_DATA> callback) {
     m_server_data[address] = SERVER_DATA();
     
-    perform_async([this, address, callback] {
+    brls::async([this, address, callback] {
         int status = gs_init(&m_server_data[address], address);
         
         brls::sync([this, address, callback, status] {
@@ -210,7 +152,7 @@ void GameStreamClient::pair(const std::string &address, const std::string &pin, 
         return;
     }
     
-    perform_async([this, address, pin, callback] {
+    brls::async([this, address, pin, callback] {
         int status = gs_pair(&m_server_data[address], (char *)pin.c_str());
         
         brls::sync([callback, status] {
@@ -229,7 +171,7 @@ void GameStreamClient::applist(const std::string &address, ServerCallback<AppInf
         return;
     }
     
-    perform_async([this, address, callback] {
+    brls::async([this, address, callback] {
         PAPP_LIST list;
         
         int status = gs_applist(&m_server_data[address], &list);
@@ -259,7 +201,7 @@ void GameStreamClient::app_boxart(const std::string &address, int app_id, Server
         return;
     }
     
-    perform_async([this, address, app_id, callback] {
+    brls::async([this, address, app_id, callback] {
         Data data;
         int status = gs_app_boxart(&m_server_data[address], app_id, &data);
         
@@ -281,7 +223,7 @@ void GameStreamClient::start(const std::string &address, STREAM_CONFIGURATION co
     
     m_config = config;
     
-    perform_async([this, address, app_id, callback] {
+    brls::async([this, address, app_id, callback] {
         int status = gs_start_app(&m_server_data[address], &m_config, app_id, Settings::instance().sops(), Settings::instance().play_audio(), 0x1);
         
         brls::sync([this, callback, status] {
@@ -302,7 +244,7 @@ void GameStreamClient::quit(const std::string &address, ServerCallback<bool> cal
     
     auto server_data = m_server_data[address];
     
-    perform_async([this, server_data, callback] {
+    brls::async([this, server_data, callback] {
         int status = gs_quit_app((PSERVER_DATA)&server_data);
         
         brls::sync([this, callback, status] {

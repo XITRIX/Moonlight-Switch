@@ -16,6 +16,6 @@ void showError(brls::View* presenter, std::string message, std::function<void(vo
             cb();
         });
     });
-    alert->setCancelable(true);
+    alert->setCancelable(false);
     alert->open();
 }

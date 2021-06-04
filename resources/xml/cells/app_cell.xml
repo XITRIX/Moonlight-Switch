@@ -1,0 +1,42 @@
+<brls:Box
+    width="150"
+    height="200"
+    axis="column"
+    alignItems="stretch"
+    focusable="true">
+
+    <brls:Image
+        id="image"
+        width="auto"
+        height="auto"
+        grow="1"
+        scalingType="stretch"/>
+
+    <brls:Box
+        detachedX="0"
+        detachedY="0"
+        width="150"
+        height="200"
+        axis="column"
+        justifyContent="flexEnd">
+        
+        <brls:Box
+            width="auto"
+            height="auto"
+            axis="column"
+            justifyContent="center"
+            backgroundColor="@theme/brls/backdrop"
+            padding="8">
+        
+            <brls:Label
+                id="title"
+                width="auto"
+                height="auto"
+                horizontalAlign="center"
+                fontSize="12"/>
+                
+        </brls:Box>
+            
+    </brls:Box>
+
+</brls:Box>

@@ -12,10 +12,17 @@
 
 using namespace brls;
 
-class HostsTabs : public Singleton<HostsTabs>, public brls::TabFrame
+class HostsTabs : public brls::TabFrame
 {
 public:
     HostsTabs();
     void refillTabs();
     static View* create();
+    static HostsTabs* getInstanse()
+    {
+        return instanse;
+    }
+    
+private:
+    inline static HostsTabs* instanse;
 };

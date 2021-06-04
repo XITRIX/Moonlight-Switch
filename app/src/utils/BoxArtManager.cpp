@@ -27,6 +27,10 @@ void BoxArtManager::set_data(Data data, int app_id) {
     m_has_boxart[app_id] = true;
 }
 
+std::string BoxArtManager::get_texture_path(int app_id) {
+    return Settings::instance().boxart_dir() + "/" + std::to_string(app_id) + ".png";
+}
+
 void BoxArtManager::make_texture_from_boxart(NVGcontext *ctx, int app_id) {
     std::lock_guard<std::mutex> guard(m_mutex);
     

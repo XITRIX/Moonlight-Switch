@@ -13,6 +13,7 @@
 
 HostsTabs::HostsTabs()
 {
+    HostsTabs::instanse = this;
     refillTabs();
 }
 
@@ -36,5 +37,5 @@ void HostsTabs::refillTabs()
 
 View* HostsTabs::create()
 {
-    return &HostsTabs::instance();
+    return new HostsTabs();
 }

@@ -104,8 +104,9 @@ SettingsTab::SettingsTab()
         Settings::instance().set_play_audio(value);
     });
     
-    writeLog->init("Write log", Settings::instance().write_log(), [](bool value) {
+    writeLog->init("Show debugging view", Settings::instance().write_log(), [](bool value) {
         Settings::instance().set_write_log(value);
+        brls::Application::enableDebuggingView(value);
     });
 }
 

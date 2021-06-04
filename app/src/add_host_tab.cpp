@@ -97,7 +97,7 @@ void AddHostTab::connectHost(std::string address)
                     if (result.isSuccess())
                     {
                         Settings::instance().add_host(host);
-                        HostsTabs::instance().refillTabs();
+                        HostsTabs::getInstanse()->refillTabs();
                     }
                     else
                     {

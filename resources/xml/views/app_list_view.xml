@@ -6,6 +6,7 @@
         width="auto"
         height="auto"
         axis="column"
+        scrollingBehavior="centered"
         alignItems="stretch"
         grow="1.0" >
         
