@@ -66,7 +66,15 @@ void SDLAudioRenderer::decode_and_play_sample(char *sample_data, int sample_leng
 {
     int decodeLen = opus_multistream_decode(decoder, (const unsigned char*) sample_data, sample_length, pcmBuffer, FRAME_SIZE, 0);
     if (decodeLen > 0) {
-      SDL_QueueAudio(dev, pcmBuffer, decodeLen * channelCount * sizeof(short));
+        int audio_queued_size = SDL_GetQueuedAudioSize(dev);
+        if(audio_queued_size > 32000)
+        {
+            // clear audio queue to avoid big audio delay
+            // average values are close to 13000 bytes
+            SDL_ClearQueuedAudio(this->dev);
+        }
+        
+        SDL_QueueAudio(dev, pcmBuffer, decodeLen * channelCount * sizeof(short));
     } else {
       printf("Opus error from decode: %d\n", decodeLen);
     }
