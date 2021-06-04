@@ -12,3 +12,4 @@ builddir
 .DS_Store
 *.xcbkptlist
 *.xcuserstate
+moonlight-nx
