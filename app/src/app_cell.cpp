@@ -9,14 +9,17 @@
 #include "streaming_view.hpp"
 #include "BoxArtManager.hpp"
 
-AppCell::AppCell(Host host, AppInfo app)
+AppCell::AppCell(Host host, AppInfo app, int currentApp)
 {
     this->inflateFromXMLRes("xml/cells/app_cell.xml");
     
     title->setText(app.name);
     title->setTextColor(nvgRGB(255,255,255));
     
-    this->registerClickAction([this, host, app](View* view)
+    currentAppImage->setVisibility(currentApp == app.app_id ? Visibility::VISIBLE : Visibility::GONE);
+    
+    this->addGestureRecognizer(new TapGestureRecognizer(this));
+    this->registerClickAction([host, app](View* view)
     {
         AppletFrame* frame = new AppletFrame(new StreamingView(host, app));
         frame->setHeaderVisibility(brls::Visibility::GONE);

@@ -26,6 +26,7 @@
 #include "SwitchMoonlightSessionDecoderAndRenderProvider.hpp"
 
 #include "streaming_view.hpp"
+#include "backward.hpp"
 
 using namespace brls::literals; // for _i18n
 

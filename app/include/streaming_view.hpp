@@ -26,10 +26,10 @@ public:
     void onFocusLost() override;
     void onLayout() override;
     
-    void terminate();
+    void terminate(bool terminateApp);
     
+    bool draw_stats = false;
 private:
-    bool draw_stats = true;
     Host host;
     AppInfo app;
     MoonlightSession* session;

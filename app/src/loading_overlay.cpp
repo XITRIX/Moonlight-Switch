@@ -47,4 +47,5 @@ void LoadingOverlay::layout()
 void LoadingOverlay::setHidden(bool hide)
 {
     setAlpha(hide ? 0 : 1);
+    progress->animate(!hide);
 }

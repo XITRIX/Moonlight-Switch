@@ -7,7 +7,6 @@
 
 #include "app_list_view.hpp"
 #include "streaming_view.hpp"
-#include "GameStreamClient.hpp"
 #include "app_cell.hpp"
 #include "helper.hpp"
 
@@ -16,18 +15,71 @@ AppListView::AppListView(Host host) :
 {
     this->inflateFromXMLRes("xml/views/app_list_view.xml");
     container->setHideHighlight(true);
-    setTitle(host.hostname);
     gridView = new GridView();
     container->addView(gridView);
     loader = new LoadingOverlay(this);
-    updateAppList();
+    
+    registerAction("Reload app list", BUTTON_X, [this](View* view) {
+        this->updateAppList();
+        return true; 
+    });
+}
+
+void AppListView::terninateApp()
+{
+    if (loading)
+        return;
+    
+    Dialog* dialog = new Dialog("Terminate " + currentApp->name + "\n\nAll unsaved progress could be lost");
+    
+    dialog->addButton("Cancel", [this](View* view) {
+        view->dismiss();
+    });
+    
+    dialog->addButton("Terminate", [this](View* view) {
+        view->dismiss([this]
+        {
+            if (loading)
+                return;
+            
+            loading = true;
+            gridView->clearViews();
+            Application::giveFocus(this);
+            loader->setHidden(false);
+            unregisterAction(terminateIdentifier);
+            
+            ASYNC_RETAIN
+            GameStreamClient::instance().quit(host.address, [ASYNC_TOKEN](GSResult<bool> result) {
+                ASYNC_RELEASE
+                
+                loading = false;
+                loader->setHidden(true);
+                
+                if (!result.isSuccess())
+                    showError(this, result.error(), [this] {});
+                
+                updateAppList();
+            });
+        });
+    });
+    
+    dialog->open();
 }
 
 void AppListView::updateAppList()
 {
-    Application::giveFocus(this);
+    if (loading)
+        return;
+    
+    loading = true;
+    
+    unregisterAction(terminateIdentifier);
     gridView->clearViews();
+    Application::giveFocus(this);
     loader->setHidden(false);
+    currentApp = std::nullopt;
+    
+    setTitle(host.hostname);
     
     ASYNC_RETAIN
     GameStreamClient::instance().connect(host.address, [ASYNC_TOKEN](GSResult<SERVER_DATA> result) {
@@ -35,17 +87,23 @@ void AppListView::updateAppList()
         
         if (result.isSuccess())
         {
+            int currentGame = result.value().currentGame;
+            
             ASYNC_RETAIN
-            GameStreamClient::instance().applist(host.address, [ASYNC_TOKEN](GSResult<AppInfoList> result) {
+            GameStreamClient::instance().applist(host.address, [ASYNC_TOKEN, currentGame](GSResult<AppInfoList> result) {
                 ASYNC_RELEASE
                 
+                loading = false;
                 loader->setHidden(true);
                 
                 if (result.isSuccess())
                 {
                     for (AppInfo app : result.value())
                     {
-                        AppCell* cell = new AppCell(host, app);
+                        if (app.app_id == currentGame)
+                            setCurrentApp(app);
+                        
+                        AppCell* cell = new AppCell(host, app, currentGame);
                         gridView->addView(cell);
                     }
                     Application::giveFocus(this);
@@ -67,6 +125,23 @@ void AppListView::updateAppList()
             });
         }
     });
+}
+
+void AppListView::setCurrentApp(AppInfo app, bool update)
+{
+    this->currentApp = app;
+    setTitle(host.hostname + " - Running " + app.name);
+    
+    terminateIdentifier = registerAction("Terminate current app", BUTTON_BACK, [this](View* view) {
+        this->terninateApp();
+        return true;
+    });
+}
+
+void AppListView::willAppear(bool resetState)
+{
+    Box::willAppear(resetState);
+    updateAppList();
 }
 
 void AppListView::onLayout()

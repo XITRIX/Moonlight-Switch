@@ -6,16 +6,23 @@
 //
 
 #include "ingame_overlay_view.hpp"
+#include <libretro-common/retro_timers.h>
+
+bool debug = false;
 
 IngameOverlay::IngameOverlay(StreamingView* streamView) :
     streamView(streamView)
 {
     this->inflateFromXMLRes("xml/views/ingame_overlay.xml");
     
-    terminate->setText("Disconnect");
-    terminate->registerClickAction([this, streamView](View* view) {
-        this->dismiss([streamView]{
-            streamView->terminate();
+    debugButton->init("Debug info", streamView->draw_stats, [streamView](bool value) {
+        streamView->draw_stats = value;
+    });
+    
+    terminateButton->setText("Disconnect");
+    terminateButton->registerClickAction([this, streamView](View* view) {
+        this->dismiss([streamView] {
+            streamView->terminate(false);
         });
         return true;
     });

@@ -170,27 +170,30 @@ void Settings::save() {
         if (json_t* hosts = json_array()) {
             for (auto host: m_hosts) {
                 if (json_t* json = json_object()) {
-                    json_object_set(json, "address", json_string(host.address.c_str()));
-                    json_object_set(json, "hostname", json_string(host.hostname.c_str()));
-                    json_object_set(json, "mac", json_string(host.mac.c_str()));
-                    json_array_append(hosts, json);
+                    json_object_set_new(json, "address", json_string(host.address.c_str()));
+                    json_object_set_new(json, "hostname", json_string(host.hostname.c_str()));
+                    json_object_set_new(json, "mac", json_string(host.mac.c_str()));
+                    json_array_append_new(hosts, json);
+//                    json_decref(json);
                 }
             }
-            json_object_set(root, "hosts", hosts);
+            json_object_set_new(root, "hosts", hosts);
+//            json_decref(hosts);
         }
         
         if (json_t* settings = json_object()) {
-            json_object_set(settings, "resolution", json_integer(m_resolution));
-            json_object_set(settings, "fps", json_integer(m_fps));
-            json_object_set(settings, "video_codec", json_integer(m_video_codec));
-            json_object_set(settings, "bitrate", json_integer(m_bitrate));
-            json_object_set(settings, "ignore_unsupported_resolutions", m_ignore_unsupported_resolutions ? json_true() : json_false());
-            json_object_set(settings, "decoder_threads", json_integer(m_decoder_threads));
-            json_object_set(settings, "click_by_tap", m_click_by_tap ? json_true() : json_false());
-            json_object_set(settings, "sops", m_sops ? json_true() : json_false());
-            json_object_set(settings, "play_audio", m_play_audio ? json_true() : json_false());
-            json_object_set(settings, "write_log", m_write_log ? json_true() : json_false());
-            json_object_set(root, "settings", settings);
+            json_object_set_new(settings, "resolution", json_integer(m_resolution));
+            json_object_set_new(settings, "fps", json_integer(m_fps));
+            json_object_set_new(settings, "video_codec", json_integer(m_video_codec));
+            json_object_set_new(settings, "bitrate", json_integer(m_bitrate));
+            json_object_set_new(settings, "ignore_unsupported_resolutions", m_ignore_unsupported_resolutions ? json_true() : json_false());
+            json_object_set_new(settings, "decoder_threads", json_integer(m_decoder_threads));
+            json_object_set_new(settings, "click_by_tap", m_click_by_tap ? json_true() : json_false());
+            json_object_set_new(settings, "sops", m_sops ? json_true() : json_false());
+            json_object_set_new(settings, "play_audio", m_play_audio ? json_true() : json_false());
+            json_object_set_new(settings, "write_log", m_write_log ? json_true() : json_false());
+            json_object_set_new(root, "settings", settings);
+//            json_decref(settings);
         }
         
         json_dump_file(root, (m_working_dir + "/settings.json").c_str(), JSON_INDENT(4));

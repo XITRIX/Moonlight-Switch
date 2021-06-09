@@ -28,6 +28,7 @@ public:
 private:
     StreamingView* streamView;
     
-    BRLS_BIND(brls::DetailCell, terminate, "terminate");
+    BRLS_BIND(brls::BooleanCell, debugButton, "debug");
+    BRLS_BIND(brls::DetailCell, terminateButton, "terminate");
     BRLS_BIND(brls::AppletFrame, applet, "applet");
 };

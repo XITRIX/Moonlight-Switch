@@ -5,7 +5,7 @@
     
     <brls:AppletFrame
         id="applet"
-        width="80%"
+        width="900"
         height="auto"
         backgroundColor="@theme/brls/background">
     
@@ -29,6 +29,9 @@
                 <brls:Header
                     id="header"
                     title="Connection"/>
+                    
+                <brls:BooleanCell
+                    id="debug"/>
                     
                 <brls:DetailCell
                     id="terminate"/>

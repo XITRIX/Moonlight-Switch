@@ -10,6 +10,15 @@
         width="auto"
         height="auto"
         grow="1"
+        scalingType="fill"/>
+        
+    <brls:Image
+        id="current_app_image"
+        detachedX="108"
+        detachedY="8"
+        width="34"
+        height="34"
+        image="@res/img/play.png"
         scalingType="stretch"/>
 
     <brls:Box

@@ -122,6 +122,7 @@
 		7C3A96112662902900BAF8CA /* ingame_overlay_view.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C3A960F2662902900BAF8CA /* ingame_overlay_view.cpp */; };
 		7C471DA9266962E80059D144 /* grid_view.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C471DA7266962E80059D144 /* grid_view.cpp */; };
 		7C471DAE266970B00059D144 /* app_cell.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C471DAC266970B00059D144 /* app_cell.cpp */; };
+		7C52664C2670266500DA102F /* backward.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C52664A2670266500DA102F /* backward.cpp */; };
 		7CBE6B5F265DADD9007DCC5A /* BoxArtManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CBE6B5B265DADD9007DCC5A /* BoxArtManager.cpp */; };
 		7CBE6B60265DADD9007DCC5A /* Settings.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CBE6B5E265DADD9007DCC5A /* Settings.cpp */; };
 		7CBE6B6F265DAF8D007DCC5A /* client.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CBE6B69265DAF8D007DCC5A /* client.cpp */; };
@@ -132,7 +133,6 @@
 		7CBE6BA0265DB3ED007DCC5A /* GameStreamClient.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CBE6B92265DB3D6007DCC5A /* GameStreamClient.cpp */; };
 		7CBE6BA2265DB85D007DCC5A /* WakeOnLanManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CBE6B90265DB3D6007DCC5A /* WakeOnLanManager.cpp */; };
 		7CDA33AA265D385C00E5D604 /* dialog.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CDA33A8265D385C00E5D604 /* dialog.cpp */; };
-		7CDA33AE265D642200E5D604 /* Makefile in Sources */ = {isa = PBXBuildFile; fileRef = 7CDA33AD265D642200E5D604 /* Makefile */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -520,6 +520,8 @@
 		7C471DA8266962E80059D144 /* grid_view.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = grid_view.hpp; sourceTree = "<group>"; };
 		7C471DAC266970B00059D144 /* app_cell.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = app_cell.cpp; sourceTree = "<group>"; };
 		7C471DAD266970B00059D144 /* app_cell.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = app_cell.hpp; sourceTree = "<group>"; };
+		7C52664A2670266500DA102F /* backward.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = backward.cpp; sourceTree = "<group>"; };
+		7C52664B2670266500DA102F /* backward.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = backward.hpp; sourceTree = "<group>"; };
 		7CBE6B5A265DADD9007DCC5A /* Settings.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Settings.hpp; sourceTree = "<group>"; };
 		7CBE6B5B265DADD9007DCC5A /* BoxArtManager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = BoxArtManager.cpp; sourceTree = "<group>"; };
 		7CBE6B5C265DADD9007DCC5A /* BoxArtManager.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = BoxArtManager.hpp; sourceTree = "<group>"; };
@@ -1526,6 +1528,7 @@
 		7C18F0CD265C1BEB000D3AF0 /* include */ = {
 			isa = PBXGroup;
 			children = (
+				7C52664B2670266500DA102F /* backward.hpp */,
 				7C3A95FF2661A3A800BAF8CA /* helper.hpp */,
 				7C18E8CA265C158A000D3AF0 /* main_activity.hpp */,
 				7C18F0D7265C273B000D3AF0 /* hosts_tabs_view.hpp */,
@@ -1562,6 +1565,7 @@
 				7C2BCFEF2667F47A005952F2 /* loading_overlay.cpp */,
 				7C471DA7266962E80059D144 /* grid_view.cpp */,
 				7C471DAC266970B00059D144 /* app_cell.cpp */,
+				7C52664A2670266500DA102F /* backward.cpp */,
 			);
 			path = src;
 			sourceTree = "<group>";
@@ -1839,7 +1843,6 @@
 				7C18F14E265C37F3000D3AF0 /* RtpReorderQueue.c in Sources */,
 				7C18F142265C37DA000D3AF0 /* Connection.c in Sources */,
 				7C18F090265C1613000D3AF0 /* YGConfig.cpp in Sources */,
-				7CDA33AE265D642200E5D604 /* Makefile in Sources */,
 				7CBE6B7E265DB027007DCC5A /* MbedTLSCryptoManager.cpp in Sources */,
 				7C18F0A5265C165C000D3AF0 /* encoding_utf.c in Sources */,
 				7CBE6B71265DAF8D007DCC5A /* xml.cpp in Sources */,
@@ -1898,6 +1901,7 @@
 				7C18F0B5265C177E000D3AF0 /* dropdown.cpp in Sources */,
 				7C18F13D265C3793000D3AF0 /* rs.c in Sources */,
 				7CBE6BA0265DB3ED007DCC5A /* GameStreamClient.cpp in Sources */,
+				7C52664C2670266500DA102F /* backward.cpp in Sources */,
 				7C18F135265C3786000D3AF0 /* protocol.c in Sources */,
 				7C18F06D265C15DD000D3AF0 /* glfw_font.cpp in Sources */,
 				7CDA33AA265D385C00E5D604 /* dialog.cpp in Sources */,

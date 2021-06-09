@@ -15,11 +15,10 @@ using namespace brls;
 class AppCell : public Box
 {
 public:
-    AppCell(Host host, AppInfo app);
+    AppCell(Host host, AppInfo app, int currentApp);
     
-//    Image* image;
-//    Label* title;
     BRLS_BIND(Image, image, "image");
     BRLS_BIND(Label, title, "title");
+    BRLS_BIND(Image, currentAppImage, "current_app_image");
 };
 

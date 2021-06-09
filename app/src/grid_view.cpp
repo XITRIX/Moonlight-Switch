@@ -37,6 +37,8 @@ void GridView::clearViews()
 {
     Box::clearViews();
     children.clear();
+    lastContainer = nullptr;
+    lastView = nullptr;
 }
 
 View* GridView::getParentNavigationDecision(View* from, View* newFocus, FocusDirection direction)

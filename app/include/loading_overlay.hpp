@@ -18,4 +18,5 @@ public:
     void setHidden(bool hide);
 private:
     Box* holder = nullptr;
+    BRLS_BIND(brls::ProgressSpinner, progress, "progress");
 };

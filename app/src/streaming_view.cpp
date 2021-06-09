@@ -50,7 +50,7 @@ StreamingView::StreamingView(Host host, AppInfo app) :
         if (!result.isSuccess())
         {
             showError(this, result.error(), [this]() {
-                terminate();
+                terminate(false);
             });
         }
     });
@@ -73,7 +73,7 @@ void StreamingView::draw(NVGcontext* vg, float x, float y, float width, float he
     if (!session->is_active())
     {
         brls::Application::notify("Terminate");
-        terminate();
+        terminate(false);
         return;
     }
     
@@ -142,12 +142,12 @@ void StreamingView::draw(NVGcontext* vg, float x, float y, float width, float he
     }
 }
 
-void StreamingView::terminate()
+void StreamingView::terminate(bool terminateApp)
 {
 //    terminated = true;
 //    InputController::controller()->stop_rumple();
 
-    session->stop(false);
+    session->stop(terminateApp);
     this->dismiss();
 }
 
