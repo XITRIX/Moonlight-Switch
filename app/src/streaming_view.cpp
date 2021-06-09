@@ -49,7 +49,7 @@ StreamingView::StreamingView(Host host, AppInfo app) :
         loader->setHidden(true);
         if (!result.isSuccess())
         {
-            showError(this, result.error(), [this]() {
+            showError(result.error(), [this]() {
                 terminate(false);
             });
         }

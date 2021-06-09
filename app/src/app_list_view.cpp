@@ -21,7 +21,7 @@ AppListView::AppListView(Host host) :
     
     registerAction("Reload app list", BUTTON_X, [this](View* view) {
         this->updateAppList();
-        return true; 
+        return true;
     });
 }
 
@@ -32,34 +32,29 @@ void AppListView::terninateApp()
     
     Dialog* dialog = new Dialog("Terminate " + currentApp->name + "\n\nAll unsaved progress could be lost");
     
-    dialog->addButton("Cancel", [this](View* view) {
-        view->dismiss();
-    });
+    dialog->addButton("Cancel", [] { });
     
-    dialog->addButton("Terminate", [this](View* view) {
-        view->dismiss([this]
-        {
-            if (loading)
-                return;
+    dialog->addButton("Terminate", [dialog, this] {
+        if (loading)
+            return;
+        
+        loading = true;
+        gridView->clearViews();
+        Application::giveFocus(this);
+        loader->setHidden(false);
+        unregisterAction(terminateIdentifier);
+        
+        ASYNC_RETAIN
+        GameStreamClient::instance().quit(host.address, [ASYNC_TOKEN](GSResult<bool> result) {
+            ASYNC_RELEASE
             
-            loading = true;
-            gridView->clearViews();
-            Application::giveFocus(this);
-            loader->setHidden(false);
-            unregisterAction(terminateIdentifier);
+            loading = false;
+            loader->setHidden(true);
             
-            ASYNC_RETAIN
-            GameStreamClient::instance().quit(host.address, [ASYNC_TOKEN](GSResult<bool> result) {
-                ASYNC_RELEASE
-                
-                loading = false;
-                loader->setHidden(true);
-                
-                if (!result.isSuccess())
-                    showError(this, result.error(), [this] {});
-                
-                updateAppList();
-            });
+            if (!result.isSuccess())
+                showError(result.error(), [this] {});
+            
+            updateAppList();
         });
     });
     
@@ -110,7 +105,7 @@ void AppListView::updateAppList()
                 }
                 else
                 {
-                    showError(this, result.error(), [this]
+                    showError(result.error(), [this]
                     {
                         this->dismiss();
                     });
@@ -119,7 +114,7 @@ void AppListView::updateAppList()
         }
         else
         {
-            showError(this, result.error(), [this]
+            showError(result.error(), [this]
             {
                 this->dismiss();
             });

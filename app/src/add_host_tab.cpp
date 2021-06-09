@@ -8,6 +8,7 @@
 #include "add_host_tab.hpp"
 #include "hosts_tabs_view.hpp"
 #include "GameStreamClient.hpp"
+#include "helper.hpp"
 
 AddHostTab::AddHostTab()
 {
@@ -52,9 +53,7 @@ void AddHostTab::findHost()
             searchBox->addView(hostButton);
             loader->setVisibility(brls::Visibility::GONE);
         } else {
-            brls::Dialog* dialog = new brls::Dialog(result.error());
-            dialog->addButton("Close", [](View* view) { view->dismiss(); });
-            dialog->open();
+            showError(result.error(), []{});
         }
     });
 }
@@ -68,10 +67,7 @@ void AddHostTab::connectHost(std::string address)
         {
             if (result.value().paired)
             {
-                brls::Dialog* dialog = new brls::Dialog("Already paired");
-                dialog->addButton("Close", [](View* view){view->dismiss();});
-                dialog->open();
-                
+                showError("Already paired", [] {});
                 return;
             }
             
@@ -79,7 +75,8 @@ void AddHostTab::connectHost(std::string address)
             sprintf(pin, "%d%d%d%d", (int)random() % 10, (int)random() % 10, (int)random() % 10, (int)random() % 10);
             
             brls::Dialog* dialog = new brls::Dialog("Pair up\n\nEnter " + std::string(pin) + " on your host device");
-            dialog->addButton("Cancel", [](View* view){view->dismiss();});
+//            dialog->addButton("Cancel", [] {});
+            dialog->setCancelable(false);
             dialog->open();
             
             
@@ -101,9 +98,7 @@ void AddHostTab::connectHost(std::string address)
                     }
                     else
                     {
-                        brls::Dialog* dialog = new brls::Dialog("Error\n\n" + result.error());
-                        dialog->addButton("Close", [](View* view){view->dismiss();});
-                        dialog->open();
+                        showError("Error\n\n" + result.error(), [] {});
                     }
                 });
             });

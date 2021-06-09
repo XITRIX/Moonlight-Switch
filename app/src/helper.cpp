@@ -7,14 +7,12 @@
 
 #include "helper.hpp"
 
-void showError(brls::View* presenter, std::string message, std::function<void(void)> cb)
+void showError(std::string message, std::function<void(void)> cb)
 {
     auto alert = new brls::Dialog(message);
-    alert->addButton("Close", [presenter, cb](brls::View* view)
+    alert->addButton("Close", [alert, cb]
     {
-        view->dismiss([cb]() {
-            cb();
-        });
+        cb();
     });
     alert->setCancelable(false);
     alert->open();

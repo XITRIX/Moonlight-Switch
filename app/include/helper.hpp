@@ -9,4 +9,4 @@
 
 #include <borealis.hpp>
 
-void showError(brls::View* presenter, std::string message, std::function<void(void)> cb);
+void showError(std::string message, std::function<void(void)> cb);
