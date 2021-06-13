@@ -33,6 +33,15 @@ struct GamepadState {
     }
 };
 
+struct MouseState {
+    int x;
+    int y;
+    double scroll_y;
+    bool l_pressed;
+    bool m_pressed;
+    bool r_pressed;
+};
+
 StreamingView::StreamingView(Host host, AppInfo app) :
     host(host), app(app)
 {
@@ -54,6 +63,10 @@ StreamingView::StreamingView(Host host, AppInfo app) :
             });
         }
     });
+    
+    addGestureRecognizer(new PanGestureRecognizer([this](PanGestureStatus status, Sound* sound) {
+        panStatus = status;
+    }, PanAxis::ANY));
 }
 
 void StreamingView::onFocusGained()
@@ -140,6 +153,8 @@ void StreamingView::draw(NVGcontext* vg, float x, float y, float width, float he
         nvgFillColor(vg, nvgRGBA(0, 255, 0, 255));
         nvgTextBox(vg, 20, 30, width, output, NULL);
     }
+    
+    Box::draw(vg, x, y, width, height, style, ctx);
 }
 
 void StreamingView::terminate(bool terminateApp)
@@ -159,30 +174,37 @@ void StreamingView::handleInput()
     static ControllerState controller;
     Application::getPlatform()->getInputManager()->updateControllerState(&controller);
     
-    static GamepadState lastState;
-    GamepadState state
+    static GamepadState lastGamepadState;
+    GamepadState gamepadState
     {
         .buttonFlags = 0,
-        .leftTrigger = static_cast<unsigned char>(0xFFFF * (controller.buttons[BUTTON_LT] ? 1 : 0)),
-        .rightTrigger = static_cast<unsigned char>(0xFFFF * (controller.buttons[BUTTON_RT] ? 1 : 0)),
+        .leftTrigger = static_cast<unsigned char>(0xFFFF * (!panStatus.has_value() && controller.buttons[BUTTON_LT] ? 1 : 0)),
+        .rightTrigger = static_cast<unsigned char>(0xFFFF * (!panStatus.has_value() && controller.buttons[BUTTON_RT] ? 1 : 0)),
         .leftStickX = static_cast<short>(controller.axes[LEFT_X] * 0x7FFF),
-        .leftStickY = static_cast<short>(0xFFFF - controller.axes[LEFT_Y] * 0x7FFF),
+        .leftStickY = static_cast<short>(controller.axes[LEFT_Y] * -0x7FFF),
         .rightStickX = static_cast<short>(controller.axes[RIGHT_X] * 0x7FFF),
-        .rightStickY = static_cast<short>(0xFFFF - controller.axes[RIGHT_Y] * 0x7FFF),
+        .rightStickY = static_cast<short>(controller.axes[RIGHT_Y] * -0x7FFF),
     };
     
 #define SET_GAME_PAD_STATE(LIMELIGHT_KEY, GAMEPAD_BUTTON) \
-    controller.buttons[GAMEPAD_BUTTON] ? (state.buttonFlags |= LIMELIGHT_KEY) : (state.buttonFlags &= ~LIMELIGHT_KEY);
+    controller.buttons[GAMEPAD_BUTTON] ? (gamepadState.buttonFlags |= LIMELIGHT_KEY) : (gamepadState.buttonFlags &= ~LIMELIGHT_KEY);
     
     SET_GAME_PAD_STATE(UP_FLAG, BUTTON_UP);
     SET_GAME_PAD_STATE(DOWN_FLAG, BUTTON_DOWN);
     SET_GAME_PAD_STATE(LEFT_FLAG, BUTTON_LEFT);
     SET_GAME_PAD_STATE(RIGHT_FLAG, BUTTON_RIGHT);
 
+#ifdef __SWITCH__
     SET_GAME_PAD_STATE(A_FLAG, BUTTON_B);
     SET_GAME_PAD_STATE(B_FLAG, BUTTON_A);
     SET_GAME_PAD_STATE(X_FLAG, BUTTON_Y);
     SET_GAME_PAD_STATE(Y_FLAG, BUTTON_X);
+#else
+    SET_GAME_PAD_STATE(A_FLAG, BUTTON_A);
+    SET_GAME_PAD_STATE(B_FLAG, BUTTON_B);
+    SET_GAME_PAD_STATE(X_FLAG, BUTTON_X);
+    SET_GAME_PAD_STATE(Y_FLAG, BUTTON_Y);
+#endif
 
     SET_GAME_PAD_STATE(BACK_FLAG, BUTTON_BACK);
     SET_GAME_PAD_STATE(PLAY_FLAG, BUTTON_START);
@@ -193,20 +215,46 @@ void StreamingView::handleInput()
     SET_GAME_PAD_STATE(LS_CLK_FLAG, BUTTON_LSB);
     SET_GAME_PAD_STATE(RS_CLK_FLAG, BUTTON_RSB);
     
-    if (!state.is_equal(lastState))
+    if (!gamepadState.is_equal(lastGamepadState))
     {
-        static int count = 0;
-        lastState = state;
+        lastGamepadState = gamepadState;
         if (LiSendControllerEvent(
-              state.buttonFlags,
-              state.leftTrigger,
-              state.rightTrigger,
-              state.leftStickX,
-              state.leftStickY,
-              state.rightStickX,
-              state.rightStickY) == 0)
-            Logger::info("StreamingView: sending input data ({})", count++);
+              gamepadState.buttonFlags,
+              gamepadState.leftTrigger,
+              gamepadState.rightTrigger,
+              gamepadState.leftStickX,
+              gamepadState.leftStickY,
+              gamepadState.rightStickX,
+              gamepadState.rightStickY) != 0)
+            Logger::info("StreamingView: error sending input data");
     }
+    
+    static MouseState lastMouseState;
+    MouseState mouseState
+    {
+        .l_pressed = panStatus.has_value() && controller.buttons[BUTTON_RT],
+        .m_pressed = false,
+        .r_pressed = panStatus.has_value() && controller.buttons[BUTTON_LT]
+    };
+    
+    if (mouseState.l_pressed != lastMouseState.l_pressed)
+    {
+        lastMouseState.l_pressed = mouseState.l_pressed;
+        LiSendMouseButtonEvent(mouseState.l_pressed ? BUTTON_ACTION_PRESS : BUTTON_ACTION_RELEASE, BUTTON_MOUSE_LEFT);
+    }
+    
+    if (mouseState.r_pressed != lastMouseState.r_pressed)
+    {
+        lastMouseState.r_pressed = mouseState.r_pressed;
+        LiSendMouseButtonEvent(mouseState.r_pressed ? BUTTON_ACTION_PRESS : BUTTON_ACTION_RELEASE, BUTTON_MOUSE_RIGHT);
+    }
+    
+    if (panStatus.has_value())
+    {
+        LiSendMouseMoveEvent(-panStatus->delta.x, -panStatus->delta.y);
+        panStatus.reset();
+    }
+    
 }
 
 void StreamingView::handleButtonHolding()
