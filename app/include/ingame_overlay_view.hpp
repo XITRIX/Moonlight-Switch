@@ -10,6 +10,9 @@
 #include "streaming_view.hpp"
 #include <borealis.hpp>
 
+using namespace brls;
+
+// MARK: - Ingame Overlay View
 class IngameOverlay : public brls::Box
 {
 public:
@@ -19,16 +22,47 @@ public:
     
     brls::AppletFrame* getAppletFrame() override;
 
-    
-    bool isTranslucent() override
-    {
-        return true;
-    }
+    bool isTranslucent() override { return true; }
     
 private:
     StreamingView* streamView;
     
-    BRLS_BIND(brls::BooleanCell, debugButton, "debug");
-    BRLS_BIND(brls::DetailCell, terminateButton, "terminate");
+    BRLS_BIND(brls::Box, backplate, "backplate");
     BRLS_BIND(brls::AppletFrame, applet, "applet");
 };
+
+// MARK: - Logout Tab
+class LogoutTab : public Box
+{
+public:
+    LogoutTab(StreamingView* streamView);
+private:
+    StreamingView* streamView;
+    
+    BRLS_BIND(brls::DetailCell, disconnect, "disconnect");
+    BRLS_BIND(brls::DetailCell, terminateButton, "terminate");
+};
+
+// MARK: - Debug Tab
+class DebugTab : public Box
+{
+public:
+    DebugTab(StreamingView* streamView);
+private:
+    StreamingView* streamView;
+    
+    BRLS_BIND(brls::BooleanCell, debugButton, "debug");
+    BRLS_BIND(brls::BooleanCell, onscreenLogButton, "onscreen_log");
+};
+
+// MARK: - Keys Tab
+class KeysTab : public Box
+{
+public:
+    KeysTab(StreamingView* streamView);
+private:
+    StreamingView* streamView;
+    
+    BRLS_BIND(brls::DetailCell, escButton, "esc_button");
+};
+

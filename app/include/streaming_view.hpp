@@ -12,6 +12,7 @@
 #include "GameStreamClient.hpp"
 #include "MoonlightSession.hpp"
 #include "loading_overlay.hpp"
+#include <optional>
 
 using namespace brls;
 
@@ -34,6 +35,7 @@ private:
     AppInfo app;
     MoonlightSession* session;
     LoadingOverlay* loader = nullptr;
+    std::optional<PanGestureStatus> panStatus;
     
     void handleInput();
     void handleButtonHolding();

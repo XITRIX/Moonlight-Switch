@@ -104,9 +104,7 @@
 		7C18F148265C37E6000D3AF0 /* LinkedBlockingQueue.c in Sources */ = {isa = PBXBuildFile; fileRef = 7C18F130265C3716000D3AF0 /* LinkedBlockingQueue.c */; };
 		7C18F149265C37E6000D3AF0 /* InputStream.c in Sources */ = {isa = PBXBuildFile; fileRef = 7C18F119265C3716000D3AF0 /* InputStream.c */; };
 		7C18F14A265C37E6000D3AF0 /* PlatformStuff.c in Sources */ = {isa = PBXBuildFile; fileRef = 7C18F121265C3716000D3AF0 /* PlatformStuff.c */; };
-		7C18F14C265C37F3000D3AF0 /* RtpFecQueue.c in Sources */ = {isa = PBXBuildFile; fileRef = 7C18F12C265C3716000D3AF0 /* RtpFecQueue.c */; };
 		7C18F14D265C37F3000D3AF0 /* VideoStream.c in Sources */ = {isa = PBXBuildFile; fileRef = 7C18F122265C3716000D3AF0 /* VideoStream.c */; };
-		7C18F14E265C37F3000D3AF0 /* RtpReorderQueue.c in Sources */ = {isa = PBXBuildFile; fileRef = 7C18F128265C3716000D3AF0 /* RtpReorderQueue.c */; };
 		7C18F14F265C37F3000D3AF0 /* SimpleStun.c in Sources */ = {isa = PBXBuildFile; fileRef = 7C18F118265C3716000D3AF0 /* SimpleStun.c */; };
 		7C18F150265C37F3000D3AF0 /* RtspParser.c in Sources */ = {isa = PBXBuildFile; fileRef = 7C18F12B265C3716000D3AF0 /* RtspParser.c */; };
 		7C18F151265C37F3000D3AF0 /* VideoDepacketizer.c in Sources */ = {isa = PBXBuildFile; fileRef = 7C18F126265C3716000D3AF0 /* VideoDepacketizer.c */; };
@@ -148,6 +146,10 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		7C0B64DD267570FA009D1C0C /* RtpVideoQueue.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = RtpVideoQueue.c; sourceTree = "<group>"; };
+		7C0B64DE267570FA009D1C0C /* RtpAudioQueue.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RtpAudioQueue.h; sourceTree = "<group>"; };
+		7C0B64DF267570FA009D1C0C /* RtpAudioQueue.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = RtpAudioQueue.c; sourceTree = "<group>"; };
+		7C0B64E0267570FA009D1C0C /* RtpVideoQueue.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RtpVideoQueue.h; sourceTree = "<group>"; };
 		7C0D7427265EB69200077D33 /* app_list_view.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = app_list_view.cpp; sourceTree = "<group>"; };
 		7C0D7428265EB69200077D33 /* app_list_view.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = app_list_view.hpp; sourceTree = "<group>"; };
 		7C0D742C265EFF8900077D33 /* app.mk */ = {isa = PBXFileReference; lastKnownFileType = text; path = app.mk; sourceTree = "<group>"; };
@@ -475,13 +477,11 @@
 		7C18F113265C3716000D3AF0 /* PlatformCrypto.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = PlatformCrypto.c; sourceTree = "<group>"; };
 		7C18F114265C3716000D3AF0 /* Input.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Input.h; sourceTree = "<group>"; };
 		7C18F115265C3716000D3AF0 /* ControlStream.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = ControlStream.c; sourceTree = "<group>"; };
-		7C18F116265C3716000D3AF0 /* RtpReorderQueue.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RtpReorderQueue.h; sourceTree = "<group>"; };
 		7C18F117265C3716000D3AF0 /* Rtsp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Rtsp.h; sourceTree = "<group>"; };
 		7C18F118265C3716000D3AF0 /* SimpleStun.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = SimpleStun.c; sourceTree = "<group>"; };
 		7C18F119265C3716000D3AF0 /* InputStream.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = InputStream.c; sourceTree = "<group>"; };
 		7C18F11A265C3716000D3AF0 /* Limelight.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Limelight.h; sourceTree = "<group>"; };
 		7C18F11B265C3716000D3AF0 /* ConnectionTester.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = ConnectionTester.c; sourceTree = "<group>"; };
-		7C18F11C265C3716000D3AF0 /* RtpFecQueue.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RtpFecQueue.h; sourceTree = "<group>"; };
 		7C18F11D265C3716000D3AF0 /* RtspConnection.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = RtspConnection.c; sourceTree = "<group>"; };
 		7C18F11E265C3716000D3AF0 /* ByteBuffer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ByteBuffer.h; sourceTree = "<group>"; };
 		7C18F11F265C3716000D3AF0 /* PlatformSockets.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = PlatformSockets.c; sourceTree = "<group>"; };
@@ -493,11 +493,9 @@
 		7C18F125265C3716000D3AF0 /* Connection.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = Connection.c; sourceTree = "<group>"; };
 		7C18F126265C3716000D3AF0 /* VideoDepacketizer.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = VideoDepacketizer.c; sourceTree = "<group>"; };
 		7C18F127265C3716000D3AF0 /* FakeCallbacks.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = FakeCallbacks.c; sourceTree = "<group>"; };
-		7C18F128265C3716000D3AF0 /* RtpReorderQueue.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = RtpReorderQueue.c; sourceTree = "<group>"; };
 		7C18F129265C3716000D3AF0 /* Video.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Video.h; sourceTree = "<group>"; };
 		7C18F12A265C3716000D3AF0 /* SdpGenerator.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = SdpGenerator.c; sourceTree = "<group>"; };
 		7C18F12B265C3716000D3AF0 /* RtspParser.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = RtspParser.c; sourceTree = "<group>"; };
-		7C18F12C265C3716000D3AF0 /* RtpFecQueue.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = RtpFecQueue.c; sourceTree = "<group>"; };
 		7C18F12D265C3716000D3AF0 /* Misc.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = Misc.c; sourceTree = "<group>"; };
 		7C18F12E265C3716000D3AF0 /* AudioStream.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = AudioStream.c; sourceTree = "<group>"; };
 		7C18F12F265C3716000D3AF0 /* PlatformStuff.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PlatformStuff.h; sourceTree = "<group>"; };
@@ -1633,6 +1631,10 @@
 		7C18F111265C3716000D3AF0 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				7C0B64DF267570FA009D1C0C /* RtpAudioQueue.c */,
+				7C0B64DE267570FA009D1C0C /* RtpAudioQueue.h */,
+				7C0B64DD267570FA009D1C0C /* RtpVideoQueue.c */,
+				7C0B64E0267570FA009D1C0C /* RtpVideoQueue.h */,
 				7C18F12E265C3716000D3AF0 /* AudioStream.c */,
 				7C18F132265C3716000D3AF0 /* ByteBuffer.c */,
 				7C18F125265C3716000D3AF0 /* Connection.c */,
@@ -1645,8 +1647,6 @@
 				7C18F121265C3716000D3AF0 /* PlatformStuff.c */,
 				7C18F113265C3716000D3AF0 /* PlatformCrypto.c */,
 				7C18F11F265C3716000D3AF0 /* PlatformSockets.c */,
-				7C18F12C265C3716000D3AF0 /* RtpFecQueue.c */,
-				7C18F128265C3716000D3AF0 /* RtpReorderQueue.c */,
 				7C18F11D265C3716000D3AF0 /* RtspConnection.c */,
 				7C18F12B265C3716000D3AF0 /* RtspParser.c */,
 				7C18F12A265C3716000D3AF0 /* SdpGenerator.c */,
@@ -1662,8 +1662,6 @@
 				7C18F124265C3716000D3AF0 /* PlatformCrypto.h */,
 				7C18F131265C3716000D3AF0 /* PlatformSockets.h */,
 				7C18F112265C3716000D3AF0 /* PlatformThreads.h */,
-				7C18F11C265C3716000D3AF0 /* RtpFecQueue.h */,
-				7C18F116265C3716000D3AF0 /* RtpReorderQueue.h */,
 				7C18F117265C3716000D3AF0 /* Rtsp.h */,
 				7C18F129265C3716000D3AF0 /* Video.h */,
 			);
@@ -1840,7 +1838,6 @@
 				7C18F0AF265C177E000D3AF0 /* label.cpp in Sources */,
 				7C18F070265C15E7000D3AF0 /* pan_gesture.cpp in Sources */,
 				7C18F0D8265C273B000D3AF0 /* hosts_tabs_view.cpp in Sources */,
-				7C18F14E265C37F3000D3AF0 /* RtpReorderQueue.c in Sources */,
 				7C18F142265C37DA000D3AF0 /* Connection.c in Sources */,
 				7C18F090265C1613000D3AF0 /* YGConfig.cpp in Sources */,
 				7CBE6B7E265DB027007DCC5A /* MbedTLSCryptoManager.cpp in Sources */,
@@ -1859,7 +1856,6 @@
 				7C18F066265C15A7000D3AF0 /* add_host_tab.cpp in Sources */,
 				7C18F0AD265C177E000D3AF0 /* cell_input.cpp in Sources */,
 				7C18F137265C3786000D3AF0 /* unix.c in Sources */,
-				7C18F14C265C37F3000D3AF0 /* RtpFecQueue.c in Sources */,
 				7C0D7439265FA94300077D33 /* SwitchMoonlightSessionDecoderAndRenderProvider.cpp in Sources */,
 				7C18F150265C37F3000D3AF0 /* RtspParser.c in Sources */,
 				7C18F0A6265C165C000D3AF0 /* features_cpu.c in Sources */,

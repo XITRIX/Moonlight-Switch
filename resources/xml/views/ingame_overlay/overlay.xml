@@ -1,0 +1,31 @@
+<brls:Box
+    id="backplate"
+    width="auto"
+    height="auto"
+    backgroundColor="@theme/brls/backdrop">
+    
+    <brls:AppletFrame
+        id="applet"
+        width="80%"
+        height="auto"
+        backgroundColor="@theme/brls/background">
+        
+        <brls:TabFrame>
+            
+            <brls:Tab label="Keys" >
+                <KeysTab />
+            </brls:Tab>
+                
+            <brls:Tab label="Debug" >
+                <DebugTab />
+            </brls:Tab>
+            
+            <brls:Tab label="Logout" >
+                <LogoutTab />
+            </brls:Tab>
+            
+        </brls:TabFrame>
+    
+    </brls:AppletFrame>
+    
+</brls:Box>

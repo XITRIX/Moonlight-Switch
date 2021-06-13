@@ -1,0 +1,30 @@
+<brls:Box
+    width="auto"
+    height="auto">
+    
+    <brls:ScrollingFrame
+        width="auto"
+        height="auto"
+        axis="column"
+        alignItems="stretch"
+        grow="1.0" >
+        
+        <brls:Box
+            width="10000"
+            height="auto"
+            axis="column"
+            alignItems="stretch"
+            paddingTop="@style/brls/sidebar/padding_top"
+            paddingRight="@style/brls/sidebar/padding_right"
+            paddingBottom="@style/brls/sidebar/padding_bottom"
+            paddingLeft="@style/brls/sidebar/padding_left">
+            
+            <brls:DetailCell
+                lineTop="1px"
+                id="esc_button"/>
+        
+        </brls:Box>
+    
+    </brls:ScrollingFrame>
+    
+</brls:Box>
