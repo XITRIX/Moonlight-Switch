@@ -17,8 +17,9 @@ const std::string loadingOverlayXML = R"xml(
 
     <brls:ProgressSpinner
         id="progress"
-        width="60"
-        height="60"/>
+        size="large"
+        width="92"
+        height="92"/>
 
 </brls:Box>
 )xml";

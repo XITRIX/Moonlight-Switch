@@ -121,6 +121,9 @@
 		7C471DA9266962E80059D144 /* grid_view.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C471DA7266962E80059D144 /* grid_view.cpp */; };
 		7C471DAE266970B00059D144 /* app_cell.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C471DAC266970B00059D144 /* app_cell.cpp */; };
 		7C52664C2670266500DA102F /* backward.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C52664A2670266500DA102F /* backward.cpp */; };
+		7C77C51D2676140200179EA8 /* RtpAudioQueue.c in Sources */ = {isa = PBXBuildFile; fileRef = 7C0B64DF267570FA009D1C0C /* RtpAudioQueue.c */; };
+		7C77C51E2676140400179EA8 /* RtpVideoQueue.c in Sources */ = {isa = PBXBuildFile; fileRef = 7C0B64DD267570FA009D1C0C /* RtpVideoQueue.c */; };
+		7C77C5212676C98600179EA8 /* keyboard_view.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C77C51F2676C98600179EA8 /* keyboard_view.cpp */; };
 		7CBE6B5F265DADD9007DCC5A /* BoxArtManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CBE6B5B265DADD9007DCC5A /* BoxArtManager.cpp */; };
 		7CBE6B60265DADD9007DCC5A /* Settings.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CBE6B5E265DADD9007DCC5A /* Settings.cpp */; };
 		7CBE6B6F265DAF8D007DCC5A /* client.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CBE6B69265DAF8D007DCC5A /* client.cpp */; };
@@ -520,6 +523,8 @@
 		7C471DAD266970B00059D144 /* app_cell.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = app_cell.hpp; sourceTree = "<group>"; };
 		7C52664A2670266500DA102F /* backward.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = backward.cpp; sourceTree = "<group>"; };
 		7C52664B2670266500DA102F /* backward.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = backward.hpp; sourceTree = "<group>"; };
+		7C77C51F2676C98600179EA8 /* keyboard_view.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = keyboard_view.cpp; sourceTree = "<group>"; };
+		7C77C5202676C98600179EA8 /* keyboard_view.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = keyboard_view.hpp; sourceTree = "<group>"; };
 		7CBE6B5A265DADD9007DCC5A /* Settings.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Settings.hpp; sourceTree = "<group>"; };
 		7CBE6B5B265DADD9007DCC5A /* BoxArtManager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = BoxArtManager.cpp; sourceTree = "<group>"; };
 		7CBE6B5C265DADD9007DCC5A /* BoxArtManager.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = BoxArtManager.hpp; sourceTree = "<group>"; };
@@ -1539,6 +1544,7 @@
 				7C2BCFF02667F47A005952F2 /* loading_overlay.hpp */,
 				7C471DA8266962E80059D144 /* grid_view.hpp */,
 				7C471DAD266970B00059D144 /* app_cell.hpp */,
+				7C77C5202676C98600179EA8 /* keyboard_view.hpp */,
 			);
 			path = include;
 			sourceTree = "<group>";
@@ -1564,6 +1570,7 @@
 				7C471DA7266962E80059D144 /* grid_view.cpp */,
 				7C471DAC266970B00059D144 /* app_cell.cpp */,
 				7C52664A2670266500DA102F /* backward.cpp */,
+				7C77C51F2676C98600179EA8 /* keyboard_view.cpp */,
 			);
 			path = src;
 			sourceTree = "<group>";
@@ -1631,10 +1638,6 @@
 		7C18F111265C3716000D3AF0 /* src */ = {
 			isa = PBXGroup;
 			children = (
-				7C0B64DF267570FA009D1C0C /* RtpAudioQueue.c */,
-				7C0B64DE267570FA009D1C0C /* RtpAudioQueue.h */,
-				7C0B64DD267570FA009D1C0C /* RtpVideoQueue.c */,
-				7C0B64E0267570FA009D1C0C /* RtpVideoQueue.h */,
 				7C18F12E265C3716000D3AF0 /* AudioStream.c */,
 				7C18F132265C3716000D3AF0 /* ByteBuffer.c */,
 				7C18F125265C3716000D3AF0 /* Connection.c */,
@@ -1644,9 +1647,11 @@
 				7C18F119265C3716000D3AF0 /* InputStream.c */,
 				7C18F130265C3716000D3AF0 /* LinkedBlockingQueue.c */,
 				7C18F12D265C3716000D3AF0 /* Misc.c */,
-				7C18F121265C3716000D3AF0 /* PlatformStuff.c */,
 				7C18F113265C3716000D3AF0 /* PlatformCrypto.c */,
 				7C18F11F265C3716000D3AF0 /* PlatformSockets.c */,
+				7C18F121265C3716000D3AF0 /* PlatformStuff.c */,
+				7C0B64DF267570FA009D1C0C /* RtpAudioQueue.c */,
+				7C0B64DD267570FA009D1C0C /* RtpVideoQueue.c */,
 				7C18F11D265C3716000D3AF0 /* RtspConnection.c */,
 				7C18F12B265C3716000D3AF0 /* RtspParser.c */,
 				7C18F12A265C3716000D3AF0 /* SdpGenerator.c */,
@@ -1658,10 +1663,12 @@
 				7C18F123265C3716000D3AF0 /* Limelight-internal.h */,
 				7C18F11A265C3716000D3AF0 /* Limelight.h */,
 				7C18F120265C3716000D3AF0 /* LinkedBlockingQueue.h */,
-				7C18F12F265C3716000D3AF0 /* PlatformStuff.h */,
 				7C18F124265C3716000D3AF0 /* PlatformCrypto.h */,
 				7C18F131265C3716000D3AF0 /* PlatformSockets.h */,
+				7C18F12F265C3716000D3AF0 /* PlatformStuff.h */,
 				7C18F112265C3716000D3AF0 /* PlatformThreads.h */,
+				7C0B64DE267570FA009D1C0C /* RtpAudioQueue.h */,
+				7C0B64E0267570FA009D1C0C /* RtpVideoQueue.h */,
 				7C18F117265C3716000D3AF0 /* Rtsp.h */,
 				7C18F129265C3716000D3AF0 /* Video.h */,
 			);
@@ -1857,6 +1864,7 @@
 				7C18F0AD265C177E000D3AF0 /* cell_input.cpp in Sources */,
 				7C18F137265C3786000D3AF0 /* unix.c in Sources */,
 				7C0D7439265FA94300077D33 /* SwitchMoonlightSessionDecoderAndRenderProvider.cpp in Sources */,
+				7C77C51E2676140400179EA8 /* RtpVideoQueue.c in Sources */,
 				7C18F150265C37F3000D3AF0 /* RtspParser.c in Sources */,
 				7C18F0A6265C165C000D3AF0 /* features_cpu.c in Sources */,
 				7C18F07C265C15E7000D3AF0 /* logger.cpp in Sources */,
@@ -1893,6 +1901,7 @@
 				7CBE6B5F265DADD9007DCC5A /* BoxArtManager.cpp in Sources */,
 				7C18F073265C15E7000D3AF0 /* scroll_gesture.cpp in Sources */,
 				7C18F152265C37F3000D3AF0 /* SdpGenerator.c in Sources */,
+				7C77C5212676C98600179EA8 /* keyboard_view.cpp in Sources */,
 				7C18F074265C15E7000D3AF0 /* timer.cpp in Sources */,
 				7C18F0B5265C177E000D3AF0 /* dropdown.cpp in Sources */,
 				7C18F13D265C3793000D3AF0 /* rs.c in Sources */,
@@ -1942,6 +1951,7 @@
 				7C18F091265C1613000D3AF0 /* log.cpp in Sources */,
 				7C18F06B265C15DD000D3AF0 /* glfw_platform.cpp in Sources */,
 				7C18F087265C15F0000D3AF0 /* format.cpp in Sources */,
+				7C77C51D2676140200179EA8 /* RtpAudioQueue.c in Sources */,
 				7C18F077265C15E7000D3AF0 /* theme.cpp in Sources */,
 				7C18F0B2265C177E000D3AF0 /* tab_frame.cpp in Sources */,
 				7C3A95F5266160B200BAF8CA /* DebugFileRecorderAudioRenderer.cpp in Sources */,

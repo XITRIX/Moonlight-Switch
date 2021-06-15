@@ -23,6 +23,7 @@ AppListView::AppListView(Host host) :
         this->updateAppList();
         return true;
     });
+    setActionAvailable(BUTTON_X, false);
 }
 
 void AppListView::terninateApp()
@@ -43,6 +44,7 @@ void AppListView::terninateApp()
         Application::giveFocus(this);
         loader->setHidden(false);
         unregisterAction(terminateIdentifier);
+        setActionAvailable(BUTTON_X, false);
         
         ASYNC_RETAIN
         GameStreamClient::instance().quit(host.address, [ASYNC_TOKEN](GSResult<bool> result) {
@@ -73,6 +75,7 @@ void AppListView::updateAppList()
     Application::giveFocus(this);
     loader->setHidden(false);
     currentApp = std::nullopt;
+    setActionAvailable(BUTTON_X, false);
     
     setTitle(host.hostname);
     
@@ -90,6 +93,7 @@ void AppListView::updateAppList()
                 
                 loading = false;
                 loader->setHidden(true);
+                setActionAvailable(BUTTON_X, true);
                 
                 if (result.isSuccess())
                 {

@@ -12,9 +12,21 @@
 #include "GameStreamClient.hpp"
 #include "MoonlightSession.hpp"
 #include "loading_overlay.hpp"
+#include "keyboard_view.hpp"
 #include <optional>
 
 using namespace brls;
+
+typedef brls::Event<> FingersGestureEvent;
+class FingersGestureRecognizer: public GestureRecognizer
+{
+public:
+    FingersGestureRecognizer(int fingers, FingersGestureEvent::Callback respond);
+    GestureState recognitionLoop(std::array<TouchState, TOUCHES_MAX> touches, MouseState mouse, View* view, Sound* soundToPlay) override;
+private:
+    int fingers;
+    FingersGestureEvent event;
+};
 
 class StreamingView : public Box
 {
@@ -36,6 +48,7 @@ private:
     MoonlightSession* session;
     LoadingOverlay* loader = nullptr;
     std::optional<PanGestureStatus> panStatus;
+    KeyboardView* keyboard;
     
     void handleInput();
     void handleButtonHolding();

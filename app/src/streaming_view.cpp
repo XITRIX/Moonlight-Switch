@@ -33,14 +33,30 @@ struct GamepadState {
     }
 };
 
-struct MouseState {
-    int x;
-    int y;
-    double scroll_y;
+struct MouseStateS {
+    Point position;
+    float scroll_y;
     bool l_pressed;
     bool m_pressed;
     bool r_pressed;
 };
+
+FingersGestureRecognizer::FingersGestureRecognizer(int fingers, FingersGestureEvent::Callback respond)
+    : fingers(fingers)
+{
+    event.subscribe(respond);
+}
+
+GestureState FingersGestureRecognizer::recognitionLoop(std::array<TouchState, TOUCHES_MAX> touches, MouseState mouse, View* view, Sound* soundToPlay)
+{
+    if (touches[fingers - 1].phase == brls::TouchPhase::START)
+    {
+        event.fire();
+        return brls::GestureState::END;
+    }
+    return brls::GestureState::UNSURE;
+}
+
 
 StreamingView::StreamingView(Host host, AppInfo app) :
     host(host), app(app)
@@ -48,6 +64,17 @@ StreamingView::StreamingView(Host host, AppInfo app) :
     setFocusable(true);
     setHideHighlight(true);
     loader = new LoadingOverlay(this);
+    
+    keyboard = new KeyboardView();
+    keyboard->detach();
+    keyboard->setDetachedPosition(0, 400);
+    keyboard->setWidth(Application::contentWidth);
+    keyboard->setVisibility(brls::Visibility::GONE);
+    addView(keyboard);
+    
+    addGestureRecognizer(new FingersGestureRecognizer(3, [this] {
+        keyboard->setVisibility(brls::Visibility::VISIBLE);
+    }));
     
     session = new MoonlightSession(host.address, app.app_id);
     
@@ -65,7 +92,11 @@ StreamingView::StreamingView(Host host, AppInfo app) :
     });
     
     addGestureRecognizer(new PanGestureRecognizer([this](PanGestureStatus status, Sound* sound) {
-        panStatus = status;
+        if (status.state == brls::GestureState::START)
+            keyboard->setVisibility(brls::Visibility::GONE);
+        
+        if (status.state == brls::GestureState::STAY)
+            panStatus = status;
     }, PanAxis::ANY));
 }
 
@@ -172,7 +203,9 @@ void StreamingView::handleInput()
         return;
     
     static ControllerState controller;
+    static RawMouseState mouse;
     Application::getPlatform()->getInputManager()->updateControllerState(&controller);
+    Application::getPlatform()->getInputManager()->updateMouseStates(&mouse);
     
     static GamepadState lastGamepadState;
     GamepadState gamepadState
@@ -229,12 +262,14 @@ void StreamingView::handleInput()
             Logger::info("StreamingView: error sending input data");
     }
     
-    static MouseState lastMouseState;
-    MouseState mouseState
+    static MouseStateS lastMouseState;
+    MouseStateS mouseState
     {
-        .l_pressed = panStatus.has_value() && controller.buttons[BUTTON_RT],
-        .m_pressed = false,
-        .r_pressed = panStatus.has_value() && controller.buttons[BUTTON_LT]
+        .position = mouse.position,
+        .scroll_y = mouse.scroll.y,
+        .l_pressed = (panStatus.has_value() && controller.buttons[BUTTON_RT]) || mouse.leftButton,
+        .m_pressed = mouse.middleButton,
+        .r_pressed = (panStatus.has_value() && controller.buttons[BUTTON_LT]) || mouse.rightButton
     };
     
     if (mouseState.l_pressed != lastMouseState.l_pressed)
@@ -249,12 +284,35 @@ void StreamingView::handleInput()
         LiSendMouseButtonEvent(mouseState.r_pressed ? BUTTON_ACTION_PRESS : BUTTON_ACTION_RELEASE, BUTTON_MOUSE_RIGHT);
     }
     
+//    if (mouseState.position != lastMouseState.position)
+//    {
+//        lastMouseState.position = mouseState.position;
+//        LiSendMousePositionEvent(mouseState.position.x, mouseState.position.y, Application::contentWidth, Application::contentHeight);
+//    }
+    
+    if (mouseState.scroll_y != lastMouseState.scroll_y)
+    {
+        lastMouseState.scroll_y = mouseState.scroll_y;
+        LiSendHighResScrollEvent(mouseState.scroll_y > 0 ? fmax(mouseState.scroll_y, 1) : fmin(mouseState.scroll_y, -1));
+    }
+    
     if (panStatus.has_value())
     {
         LiSendMouseMoveEvent(-panStatus->delta.x, -panStatus->delta.y);
         panStatus.reset();
     }
     
+    static KeyboardState oldKeyboardState;
+    KeyboardState keyboardState = keyboard->getKeyboardState();
+    
+    for (int i = 0; i < _VK_KEY_MAX; i++)
+    {
+        if (keyboardState.keys[i] != oldKeyboardState.keys[i])
+        {
+            oldKeyboardState.keys[i] = keyboardState.keys[i];
+            LiSendKeyboardEvent(keyboard->getKeyCode((KeyboardKeys)i), keyboardState.keys[i] ? KEY_ACTION_DOWN : KEY_ACTION_UP, 0);
+        }
+    }
 }
 
 void StreamingView::handleButtonHolding()
