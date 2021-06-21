@@ -64,6 +64,7 @@ DebugTab::DebugTab(StreamingView* streamView) :
     
     onscreenLogButton->init("Show logs", Settings::instance().write_log(), [](bool value) {
         Settings::instance().set_write_log(value);
+        brls::Application::enableDebuggingView(value);
     });
     
     debugButton->init("Debug info", streamView->draw_stats, [streamView](bool value) {
