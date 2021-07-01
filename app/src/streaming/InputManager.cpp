@@ -11,9 +11,9 @@ void MoonlightInputManager::updateTouchScreenPanDelta(brls::PanGestureStatus pan
     this->panStatus = panStatus;
 }
 
-void MoonlightInputManager::handleRumble(unsigned short controller, unsigned short low_freq_motor, unsigned short high_freq_motor)
+void MoonlightInputManager::handleRumble(unsigned short controller, unsigned short lowFreqMotor, unsigned short highFreqMotor)
 {
-    brls::Application::getPlatform()->getInputManager()->sendRumble(controller, low_freq_motor, high_freq_motor);
+    brls::Application::getPlatform()->getInputManager()->sendRumble(controller, lowFreqMotor, highFreqMotor);
 }
 
 void MoonlightInputManager::handleInput() 

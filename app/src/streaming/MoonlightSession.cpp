@@ -90,8 +90,8 @@ void MoonlightSession::connection_log_message(const char* format, ...) {
 //    va_end(list);
 }
 
-void MoonlightSession::connection_rumble(unsigned short controller, unsigned short low_freq_motor, unsigned short high_freq_motor) {
-    MoonlightInputManager::instance().handleRumble(controller, low_freq_motor, high_freq_motor);
+void MoonlightSession::connection_rumble(unsigned short controller, unsigned short lowFreqMotor, unsigned short highFreqMotor) {
+    MoonlightInputManager::instance().handleRumble(controller, lowFreqMotor, highFreqMotor);
 }
 
 void MoonlightSession::connection_status_update(int connection_status) {

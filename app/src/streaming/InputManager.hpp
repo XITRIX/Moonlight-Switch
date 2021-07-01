@@ -46,7 +46,7 @@ class MoonlightInputManager : public Singleton<MoonlightInputManager>
 public:
     MoonlightInputManager();
     void handleInput();
-    void handleRumble(unsigned short controller, unsigned short low_freq_motor, unsigned short high_freq_motor);
+    void handleRumble(unsigned short controller, unsigned short lowFreqMotor, unsigned short highFreqMotor);
     void updateTouchScreenPanDelta(brls::PanGestureStatus panStatus);
     
 private:
