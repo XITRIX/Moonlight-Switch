@@ -10,8 +10,6 @@
 #include "streaming_view.hpp"
 #include <borealis.hpp>
 
-using namespace brls;
-
 // MARK: - Ingame Overlay View
 class IngameOverlay : public brls::Box
 {
@@ -32,7 +30,7 @@ private:
 };
 
 // MARK: - Logout Tab
-class LogoutTab : public Box
+class LogoutTab : public brls::Box
 {
 public:
     LogoutTab(StreamingView* streamView);
@@ -44,7 +42,7 @@ private:
 };
 
 // MARK: - Debug Tab
-class DebugTab : public Box
+class DebugTab : public brls::Box
 {
 public:
     DebugTab(StreamingView* streamView);
@@ -56,7 +54,7 @@ private:
 };
 
 // MARK: - Keys Tab
-class KeysTab : public Box
+class KeysTab : public brls::Box
 {
 public:
     KeysTab(StreamingView* streamView);

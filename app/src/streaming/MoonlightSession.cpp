@@ -1,6 +1,7 @@
 #include "MoonlightSession.hpp"
 #include "GameStreamClient.hpp"
 #include "Settings.hpp"
+#include "InputManager.hpp"
 //#include "StreamControlsController.hpp"
 #include "borealis.hpp"
 #include "AVFrameHolder.hpp"
@@ -90,7 +91,7 @@ void MoonlightSession::connection_log_message(const char* format, ...) {
 }
 
 void MoonlightSession::connection_rumble(unsigned short controller, unsigned short low_freq_motor, unsigned short high_freq_motor) {
-//    StreamControlsController::instance().handle_rumple(controller, low_freq_motor, high_freq_motor);
+    MoonlightInputManager::instance().handleRumble(controller, low_freq_motor, high_freq_motor);
 }
 
 void MoonlightSession::connection_status_update(int connection_status) {

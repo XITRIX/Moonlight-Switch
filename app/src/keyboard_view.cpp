@@ -7,6 +7,8 @@
 
 #include "keyboard_view.hpp"
 
+using namespace brls;
+
 short KeyboardCodes[_VK_KEY_MAX]
 {
     0x08,
@@ -53,11 +55,34 @@ short KeyboardCodes[_VK_KEY_MAX]
     0xA4,
     0xA0,
     0x5B,
+    0xBE,
+    0xBC,
+    0x70,
+    0x71,
+    0x72,
+    0x73,
+    0x74,
+    0x75,
+    0x76,
+    0x77,
+    0x78,
+    0x79,
+    0x7A,
+    0x7B,
+    0x09,
+    0x2E,
+    0xBA,
+    0xBF,
+    0xC0,
+    0xDB,
+    0xDC,
+    0xDD,
+    0xDE,
 };
 
 std::string KeyboardLocalization[_VK_KEY_MAX]
 {
-    "Delete",
+    "Remove",
     "Esc",
     "0",
     "1",
@@ -101,36 +126,29 @@ std::string KeyboardLocalization[_VK_KEY_MAX]
     "Alt",
     "Shift",
     "Win",
-};
-
-KeyboardKeys BUTTONS[] =
-{
-    VK_KEY_Q,
-    VK_KEY_W,
-    VK_KEY_E,
-    VK_KEY_R,
-    VK_KEY_T,
-    VK_KEY_Y,
-    VK_KEY_U,
-    VK_KEY_I,
-    VK_KEY_O,
-    VK_KEY_P,
-    VK_KEY_A,
-    VK_KEY_S,
-    VK_KEY_D,
-    VK_KEY_F,
-    VK_KEY_G,
-    VK_KEY_H,
-    VK_KEY_J,
-    VK_KEY_K,
-    VK_KEY_L,
-    VK_KEY_Z,
-    VK_KEY_X,
-    VK_KEY_C,
-    VK_KEY_V,
-    VK_KEY_B,
-    VK_KEY_N,
-    VK_KEY_M,
+    ".",
+    ",",
+    "F1",
+    "F2",
+    "F3",
+    "F4",
+    "F5",
+    "F6",
+    "F7",
+    "F8",
+    "F9",
+    "F10",
+    "F11",
+    "F12",
+    "TAB",
+    "Delete",
+    ";",
+    "/",
+    "`",
+    "[",
+    "\\",
+    "]",
+    "'",
 };
 
 bool keysState[_VK_KEY_MAX];
@@ -162,12 +180,21 @@ void ButtonView::setKey(KeyboardKeys key)
 {
     charLabel->setText(KeyboardLocalization[key]);
     this->key = key;
+    
+    if (keysState[key])
+        this->playClickAnimation(false);
 }
 
 void ButtonView::registerCallback()
 {
     addGestureRecognizer(new TapGestureRecognizer([this](TapGestureStatus status, Sound* sound) {
-        if (!triggerType)
+        if (event != NULL)
+        {
+            this->playClickAnimation(status.state != GestureState::UNSURE);
+            if (status.state == brls::GestureState::END)
+                event();
+        }
+        else if (!triggerType)
         {
             this->playClickAnimation(status.state != GestureState::UNSURE);
             
@@ -230,98 +257,4 @@ KeyboardState KeyboardView::getKeyboardState()
 short KeyboardView::getKeyCode(KeyboardKeys key)
 {
     return KeyboardCodes[key];
-}
-
-void KeyboardView::createEnglishLayout()
-{
-    clearViews();
-    
-    Box* firstRow = new Box(Axis::ROW);
-    addView(firstRow);
-    
-    for (int i = 0; i < 10; i++)
-    {
-        ButtonView* button = new ButtonView();
-        button->setKey(BUTTONS[i]);
-        button->setMargins(4, 4, 4, 4);
-        firstRow->addView(button);
-    }
-    
-    Box* secondRow = new Box(Axis::ROW);
-    addView(secondRow);
-    
-    for (int i = 10; i < 19; i++)
-    {
-        ButtonView* button = new ButtonView();
-        button->setKey(BUTTONS[i]);
-        button->setMargins(4, 4, 4, 4);
-        secondRow->addView(button);
-    }
-    
-    Box* thirdRow = new Box(Axis::ROW);
-    addView(thirdRow);
-    
-    ButtonView* lshiftButton = new ButtonView();
-    lshiftButton->setKey(VK_LSHIFT);
-    lshiftButton->triggerType = true;
-    lshiftButton->charLabel->setFontSize(21);
-    lshiftButton->setMargins(4, 24, 4, 4);
-    lshiftButton->setWidth(120);
-    thirdRow->addView(lshiftButton);
-    
-    for (int i = 19; i < 26; i++)
-    {
-        ButtonView* button = new ButtonView();
-        button->setKey(BUTTONS[i]);
-        button->setMargins(4, 4, 4, 4);
-        thirdRow->addView(button);
-    }
-    
-    ButtonView* deleteButton = new ButtonView();
-    deleteButton->setKey(VK_BACK);
-    deleteButton->charLabel->setFontSize(21);
-    deleteButton->setMargins(4, 4, 4, 24);
-    deleteButton->setWidth(120);
-    thirdRow->addView(deleteButton);
-    
-    Box* fourthRow = new Box(Axis::ROW);
-    addView(fourthRow);
-    
-    ButtonView* ctrlButton = new ButtonView();
-    ctrlButton->setKey(VK_LCONTROL);
-    ctrlButton->triggerType = true;
-    ctrlButton->charLabel->setFontSize(21);
-    ctrlButton->setMargins(4, 4, 4, 4);
-    ctrlButton->setWidth(120);
-    fourthRow->addView(ctrlButton);
-    
-    ButtonView* altButton = new ButtonView();
-    altButton->setKey(VK_LMENU);
-    altButton->triggerType = true;
-    altButton->charLabel->setFontSize(21);
-    altButton->setMargins(4, 4, 4, 4);
-    altButton->setWidth(120);
-    fourthRow->addView(altButton);
-    
-    ButtonView* spaceButton = new ButtonView();
-    spaceButton->setKey(VK_SPACE);
-    spaceButton->charLabel->setFontSize(21);
-    spaceButton->setMargins(4, 4, 4, 4);
-    spaceButton->setWidth(464);
-    fourthRow->addView(spaceButton);
-    
-    ButtonView* winButton = new ButtonView();
-    winButton->setKey(VK_LWIN);
-    winButton->triggerType = true;
-    winButton->charLabel->setFontSize(21);
-    winButton->setMargins(4, 4, 4, 4);
-    winButton->setWidth(120);
-    fourthRow->addView(winButton);
-    
-    ButtonView* returnButton = new ButtonView();
-    returnButton->setKey(VK_RETURN);
-    returnButton->charLabel->setFontSize(21);
-    returnButton->setMargins(4, 4, 4, 4);
-    returnButton->setWidth(120);
-    fourthRow->addView(returnButton);
 }

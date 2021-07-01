@@ -124,6 +124,7 @@
 		7C77C51D2676140200179EA8 /* RtpAudioQueue.c in Sources */ = {isa = PBXBuildFile; fileRef = 7C0B64DF267570FA009D1C0C /* RtpAudioQueue.c */; };
 		7C77C51E2676140400179EA8 /* RtpVideoQueue.c in Sources */ = {isa = PBXBuildFile; fileRef = 7C0B64DD267570FA009D1C0C /* RtpVideoQueue.c */; };
 		7C77C5212676C98600179EA8 /* keyboard_view.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C77C51F2676C98600179EA8 /* keyboard_view.cpp */; };
+		7CBDEEA82683818A00C6C7B2 /* InputManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CBDEEA62683818A00C6C7B2 /* InputManager.cpp */; };
 		7CBE6B5F265DADD9007DCC5A /* BoxArtManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CBE6B5B265DADD9007DCC5A /* BoxArtManager.cpp */; };
 		7CBE6B60265DADD9007DCC5A /* Settings.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CBE6B5E265DADD9007DCC5A /* Settings.cpp */; };
 		7CBE6B6F265DAF8D007DCC5A /* client.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CBE6B69265DAF8D007DCC5A /* client.cpp */; };
@@ -134,6 +135,8 @@
 		7CBE6BA0265DB3ED007DCC5A /* GameStreamClient.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CBE6B92265DB3D6007DCC5A /* GameStreamClient.cpp */; };
 		7CBE6BA2265DB85D007DCC5A /* WakeOnLanManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CBE6B90265DB3D6007DCC5A /* WakeOnLanManager.cpp */; };
 		7CDA33AA265D385C00E5D604 /* dialog.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CDA33A8265D385C00E5D604 /* dialog.cpp */; };
+		7CE6FA8E26823DDE005854FC /* english_layout.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CE6FA8D26823DDE005854FC /* english_layout.cpp */; };
+		7CE6FA9026823E3A005854FC /* numpad_layout.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CE6FA8F26823E3A005854FC /* numpad_layout.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -525,6 +528,8 @@
 		7C52664B2670266500DA102F /* backward.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = backward.hpp; sourceTree = "<group>"; };
 		7C77C51F2676C98600179EA8 /* keyboard_view.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = keyboard_view.cpp; sourceTree = "<group>"; };
 		7C77C5202676C98600179EA8 /* keyboard_view.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = keyboard_view.hpp; sourceTree = "<group>"; };
+		7CBDEEA62683818A00C6C7B2 /* InputManager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = InputManager.cpp; sourceTree = "<group>"; };
+		7CBDEEA72683818A00C6C7B2 /* InputManager.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = InputManager.hpp; sourceTree = "<group>"; };
 		7CBE6B5A265DADD9007DCC5A /* Settings.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Settings.hpp; sourceTree = "<group>"; };
 		7CBE6B5B265DADD9007DCC5A /* BoxArtManager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = BoxArtManager.cpp; sourceTree = "<group>"; };
 		7CBE6B5C265DADD9007DCC5A /* BoxArtManager.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = BoxArtManager.hpp; sourceTree = "<group>"; };
@@ -564,6 +569,8 @@
 		7CDA33A8265D385C00E5D604 /* dialog.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = dialog.cpp; sourceTree = "<group>"; };
 		7CDA33A9265D385C00E5D604 /* dialog.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = dialog.hpp; sourceTree = "<group>"; };
 		7CDA33AD265D642200E5D604 /* Makefile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
+		7CE6FA8D26823DDE005854FC /* english_layout.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = english_layout.cpp; sourceTree = "<group>"; };
+		7CE6FA8F26823E3A005854FC /* numpad_layout.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = numpad_layout.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -1552,6 +1559,7 @@
 		7C18F0CE265C1BF0000D3AF0 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				7CE6FA8C26823DC6005854FC /* keyboards */,
 				7CBE6B86265DB3D6007DCC5A /* streaming */,
 				7CBE6B75265DB027007DCC5A /* crypto */,
 				7CBE6B67265DAF8D007DCC5A /* libgamestream */,
@@ -1716,6 +1724,8 @@
 		7CBE6B86265DB3D6007DCC5A /* streaming */ = {
 			isa = PBXGroup;
 			children = (
+				7CBDEEA62683818A00C6C7B2 /* InputManager.cpp */,
+				7CBDEEA72683818A00C6C7B2 /* InputManager.hpp */,
 				7C0D7435265FA80D00077D33 /* MoonlightSession.cpp */,
 				7C0D7436265FA80D00077D33 /* MoonlightSession.hpp */,
 				7CBE6B9B265DB3D6007DCC5A /* AVFrameHolder.hpp */,
@@ -1772,6 +1782,15 @@
 				7CBE6B9E265DB3D6007DCC5A /* SwitchMoonlightSessionDecoderAndRenderProvider.cpp */,
 			);
 			path = switch;
+			sourceTree = "<group>";
+		};
+		7CE6FA8C26823DC6005854FC /* keyboards */ = {
+			isa = PBXGroup;
+			children = (
+				7CE6FA8D26823DDE005854FC /* english_layout.cpp */,
+				7CE6FA8F26823E3A005854FC /* numpad_layout.cpp */,
+			);
+			path = keyboards;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -1894,6 +1913,7 @@
 				7C18F0BD265C177E000D3AF0 /* sidebar.cpp in Sources */,
 				7C18F0BB265C177E000D3AF0 /* progress_spinner.cpp in Sources */,
 				7C18F0BC265C177E000D3AF0 /* cell_selector.cpp in Sources */,
+				7CBDEEA82683818A00C6C7B2 /* InputManager.cpp in Sources */,
 				7C18F153265C37F3000D3AF0 /* RtspConnection.c in Sources */,
 				7CBE6B70265DAF8D007DCC5A /* http.cpp in Sources */,
 				7C18F0B8265C177E000D3AF0 /* hint.cpp in Sources */,
@@ -1936,6 +1956,7 @@
 				7C18F095265C1617000D3AF0 /* event.cpp in Sources */,
 				7C18F07D265C15E7000D3AF0 /* application.cpp in Sources */,
 				7C2BCFF12667F47A005952F2 /* loading_overlay.cpp in Sources */,
+				7CE6FA8E26823DDE005854FC /* english_layout.cpp in Sources */,
 				7C3A95F92661618100BAF8CA /* SDLAudioRenderer.cpp in Sources */,
 				7C18F148265C37E6000D3AF0 /* LinkedBlockingQueue.c in Sources */,
 				7C18F084265C15E7000D3AF0 /* view.cpp in Sources */,
@@ -1945,6 +1966,7 @@
 				7CBE6B60265DADD9007DCC5A /* Settings.cpp in Sources */,
 				7C3A96052661BAC100BAF8CA /* debug_layer.cpp in Sources */,
 				7C3A96112662902900BAF8CA /* ingame_overlay_view.cpp in Sources */,
+				7CE6FA9026823E3A005854FC /* numpad_layout.cpp in Sources */,
 				7C18F133265C3786000D3AF0 /* packet.c in Sources */,
 				7CBE6B7F265DB027007DCC5A /* Data.cpp in Sources */,
 				7C18F14A265C37E6000D3AF0 /* PlatformStuff.c in Sources */,

@@ -15,26 +15,24 @@
 #include "keyboard_view.hpp"
 #include <optional>
 
-using namespace brls;
-
 typedef brls::Event<> FingersGestureEvent;
-class FingersGestureRecognizer: public GestureRecognizer
+class FingersGestureRecognizer: public brls::GestureRecognizer
 {
 public:
     FingersGestureRecognizer(int fingers, FingersGestureEvent::Callback respond);
-    GestureState recognitionLoop(std::array<TouchState, TOUCHES_MAX> touches, MouseState mouse, View* view, Sound* soundToPlay) override;
+    brls::GestureState recognitionLoop(std::array<brls::TouchState, TOUCHES_MAX> touches,brls:: MouseState mouse, brls::View* view, brls::Sound* soundToPlay) override;
 private:
     int fingers;
     FingersGestureEvent event;
 };
 
-class StreamingView : public Box
+class StreamingView : public brls::Box
 {
 public:
     StreamingView(Host host, AppInfo app);
     ~StreamingView();
     
-    void draw(NVGcontext* vg, float x, float y, float width, float height, Style style, FrameContext* ctx) override;
+    void draw(NVGcontext* vg, float x, float y, float width, float height, brls::Style style, brls::FrameContext* ctx) override;
     void onFocusGained() override;
     void onFocusLost() override;
     void onLayout() override;
@@ -47,7 +45,7 @@ private:
     AppInfo app;
     MoonlightSession* session;
     LoadingOverlay* loader = nullptr;
-    std::optional<PanGestureStatus> panStatus;
+    Box* keyboardHolder = nullptr;
     KeyboardView* keyboard;
     
     void handleInput();

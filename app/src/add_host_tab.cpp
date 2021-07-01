@@ -65,9 +65,19 @@ void AddHostTab::connectHost(std::string address)
         ASYNC_RELEASE
         if (result.isSuccess())
         {
+            Host host
+            {
+                .address = result.value().address,
+                .hostname = result.value().hostname,
+                .mac = result.value().mac
+            };
+            
             if (result.value().paired)
             {
-                showError("Already paired", [] {});
+                showError("Already paired", [host] {
+                    Settings::instance().add_host(host);
+                    HostsTabs::getInstanse()->refillTabs();
+                });
                 return;
             }
             
@@ -75,17 +85,8 @@ void AddHostTab::connectHost(std::string address)
             sprintf(pin, "%d%d%d%d", (int)random() % 10, (int)random() % 10, (int)random() % 10, (int)random() % 10);
             
             brls::Dialog* dialog = new brls::Dialog("Pair up\n\nEnter " + std::string(pin) + " on your host device");
-//            dialog->addButton("Cancel", [] {});
             dialog->setCancelable(false);
             dialog->open();
-            
-            
-            Host host
-            {
-                .address = result.value().address,
-                .hostname = result.value().hostname,
-                .mac = result.value().mac
-            };
             
             ASYNC_RETAIN
             GameStreamClient::instance().pair(result.value().address, pin, [ASYNC_TOKEN, host, dialog](GSResult<bool> result) {
@@ -102,6 +103,10 @@ void AddHostTab::connectHost(std::string address)
                     }
                 });
             });
+        }
+        else
+        {
+            showError("Error\n\n" + result.error(), [] {});
         }
     });
 }

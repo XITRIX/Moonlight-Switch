@@ -8,6 +8,8 @@
 #include "ingame_overlay_view.hpp"
 #include <libretro-common/retro_timers.h>
 
+using namespace brls;
+
 bool debug = false;
 
 // MARK: - Ingame Overlay View
