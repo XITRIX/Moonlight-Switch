@@ -80,7 +80,7 @@ LIBS	:=  -lcurl -lmbedtls -lmbedx509 -lmbedcrypto \
 # list of directories containing libraries, this must be the top level containing
 # include and lib
 #---------------------------------------------------------------------------------
-LIBDIRS	:= $(TOPDIR)/curl $(PORTLIBS) $(LIBNX)
+LIBDIRS	:= $(TOPDIR) $(PORTLIBS) $(LIBNX)
 
 include $(TOPDIR)/app/app.mk
 include $(TOPDIR)/extern/extern.mk
