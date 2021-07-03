@@ -10,6 +10,7 @@
 #include <fstream>
 #include <future>
 #include <unistd.h>
+#include <zeroconf.hpp>
 
 #if defined(__linux) || defined(__APPLE__)
 #include <sys/socket.h>
@@ -20,6 +21,22 @@
 #elif defined(__SWITCH__)
 #include <switch.h>
 #endif
+
+namespace
+{
+    void* get_in_addr(sockaddr_storage* sa)
+    {
+        if (sa->ss_family == AF_INET)
+            return &reinterpret_cast<sockaddr_in*>(sa)->sin_addr;
+
+        if (sa->ss_family == AF_INET6)
+            return &reinterpret_cast<sockaddr_in6*>(sa)->sin6_addr;
+
+        return nullptr;
+    }
+
+    const std::string SeparatorLine(20, '-');
+}
 
 GameStreamClient::GameStreamClient()
 {
@@ -76,22 +93,81 @@ bool GameStreamClient::can_find_host() {
     return get_my_ip_address() != 0;
 }
 
+void LocalPrintLog(Zeroconf::LogLevel level, const std::string& message)
+{
+    switch (level)
+    {
+        case Zeroconf::LogLevel::Error:
+            brls::Logger::debug("E: {}", message);
+            break;
+        case Zeroconf::LogLevel::Warning:
+            brls::Logger::debug("W: {}", message);
+            break;
+    }
+}
+
+void GameStreamClient::find_hosts(ServerCallback<std::vector<Host>> callback) {
+    brls::async([this, callback] {
+        static const std::string MdnsQuery = "_nvstream._tcp.local";
+        Zeroconf::SetLogCallback(LocalPrintLog);
+        brls::Logger::debug("Search for: {}", MdnsQuery);
+        std::vector<Zeroconf::mdns_responce> result;
+        bool st = Zeroconf::Resolve(MdnsQuery, /*scanTime*/ 3, &result);
+        if (!st)
+            brls::sync([callback] { callback(GSResult<std::vector<Host>>::failure("Error has been occured...")); });
+        else if (result.empty())
+            brls::sync([callback] { callback(GSResult<std::vector<Host>>::failure("Host PC not found...")); });
+        else
+        {
+            std::vector<Host> hosts;
+            
+            for (size_t i = 0; i < result.size(); i++)
+            {
+                auto& item = result[i];
+
+                char buffer[INET6_ADDRSTRLEN + 1] = {0};
+                inet_ntop(item.peer.ss_family, get_in_addr(&item.peer), buffer, INET6_ADDRSTRLEN);
+                brls::Logger::debug("Peer: {}", buffer);
+                
+                Host host;
+                host.address = buffer;
+                if (!item.records.empty())
+                {
+                    for (size_t j = 0; j < item.records.size(); j++)
+                    {
+                        auto& rr = item.records[j];
+                        switch(rr.type)
+                        {
+                            case  1: host.hostname = rr.name; break;
+                            default: break;
+                        }
+                    }
+                }
+                hosts.push_back(host);
+            }
+            
+            brls::sync([callback, hosts] { callback(GSResult<std::vector<Host>>::success(hosts)); });
+        }
+    });
+}
+        
+       
 void GameStreamClient::find_host(ServerCallback<Host> callback) {
     brls::async([this, callback] {
         auto addresses = host_addresses_for_find();
-        
+
         if (addresses.empty()) {
             brls::sync([callback] { callback(GSResult<Host>::failure("Can't obtain IP address...")); });
         } else {
             bool found = false;
-            
+
             for (int i = 0; i < addresses.size(); i++) {
                 SERVER_DATA server_data;
-                
+
                 int status = gs_init(&server_data, addresses[i], true);
                 if (status == GS_OK) {
                     found = true;
-                    
+
                     Host host;
                     host.address = addresses[i];
                     host.hostname = server_data.hostname;
@@ -100,7 +176,7 @@ void GameStreamClient::find_host(ServerCallback<Host> callback) {
                     break;
                 }
             }
-            
+
             if (!found) {
                 brls::sync([callback] { callback(GSResult<Host>::failure("Host PC not found...")); });
             }

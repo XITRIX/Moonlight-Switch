@@ -7,6 +7,7 @@
 
 #include "host_tab.hpp"
 #include "app_list_view.hpp"
+#include "hosts_tabs_view.hpp"
 #include "GameStreamClient.hpp"
 
 using namespace brls::literals;
@@ -31,17 +32,39 @@ HostTab::HostTab(Host host) :
         {
             header->setTitle("Status: Ready");
             connect->setText("Connect");
+            state = AVAILABLE;
         }
         else
         {
             header->setTitle("Status: Unavailabe");
+            state = UNAVAILABLE;
         }
         
     });
     
     connect->registerClickAction([this](View* view) {
-        AppListView* appList = new AppListView(this->host);
-        this->present(appList);
+        switch (state) {
+            case AVAILABLE:
+                this->present(new AppListView(this->host));
+                break;
+            case UNAVAILABLE:
+                break;
+            case FETCHING:
+                break;
+        }
+        return true;
+    });
+    
+    remove->registerClickAction([this, host](View* view) {
+        Dialog* dialog = new Dialog("Are you sure you want to remove this host?");
+        dialog->addButton("Cancel", [] {});
+        dialog->addButton("Remove", [host]
+        {
+            Settings::instance().remove_host(host);
+            HostsTabs::getInstanse()->refillTabs();
+        });
+        dialog->open();
+        
         return true;
     });
 }

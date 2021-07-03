@@ -41,7 +41,7 @@ TARGET		:=	br_moonlight
 BUILD		:=	build.nx
 SOURCES		:=	app/src
 DATA		:=	data
-ICON		:=	resources/img/demo_icon.jpg
+ICON		:=	resources/img/moonlight_icon.jpg
 INCLUDES	:=	app/src app/include
 APP_TITLE	:=	Moonlight
 APP_AUTHOR	:=	XITRIX
@@ -63,7 +63,7 @@ CDBG  	+=
 CFLAGS	:=	-g -Wall -O2 -ffunction-sections \
 			$(ARCH) $(DEFINES) $(CDBG)
 
-CFLAGS	+=	$(INCLUDE) -D__SWITCH__ \
+CFLAGS	+=	$(INCLUDE) -D__SWITCH__ -DMULTICAST_DISABLED \
 			-DBOREALIS_RESOURCES="\"$(BOREALIS_RESOURCES)\""
 
 CXXFLAGS	:= $(CFLAGS) -std=c++1z -O2

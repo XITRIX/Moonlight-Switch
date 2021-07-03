@@ -121,6 +121,7 @@
 		7C471DA9266962E80059D144 /* grid_view.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C471DA7266962E80059D144 /* grid_view.cpp */; };
 		7C471DAE266970B00059D144 /* app_cell.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C471DAC266970B00059D144 /* app_cell.cpp */; };
 		7C52664C2670266500DA102F /* backward.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C52664A2670266500DA102F /* backward.cpp */; };
+		7C5DEBA6268FCA450067CF37 /* DiscoverManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C5DEBA4268FCA450067CF37 /* DiscoverManager.cpp */; };
 		7C77C51D2676140200179EA8 /* RtpAudioQueue.c in Sources */ = {isa = PBXBuildFile; fileRef = 7C0B64DF267570FA009D1C0C /* RtpAudioQueue.c */; };
 		7C77C51E2676140400179EA8 /* RtpVideoQueue.c in Sources */ = {isa = PBXBuildFile; fileRef = 7C0B64DD267570FA009D1C0C /* RtpVideoQueue.c */; };
 		7C77C5212676C98600179EA8 /* keyboard_view.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C77C51F2676C98600179EA8 /* keyboard_view.cpp */; };
@@ -526,6 +527,11 @@
 		7C471DAD266970B00059D144 /* app_cell.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = app_cell.hpp; sourceTree = "<group>"; };
 		7C52664A2670266500DA102F /* backward.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = backward.cpp; sourceTree = "<group>"; };
 		7C52664B2670266500DA102F /* backward.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = backward.hpp; sourceTree = "<group>"; };
+		7C5DEBA1268FC6830067CF37 /* zeroconf.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = zeroconf.hpp; sourceTree = "<group>"; };
+		7C5DEBA2268FC6830067CF37 /* zeroconf-detail.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = "zeroconf-detail.hpp"; sourceTree = "<group>"; };
+		7C5DEBA3268FC6830067CF37 /* zeroconf-util.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = "zeroconf-util.hpp"; sourceTree = "<group>"; };
+		7C5DEBA4268FCA450067CF37 /* DiscoverManager.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = DiscoverManager.cpp; sourceTree = "<group>"; };
+		7C5DEBA5268FCA450067CF37 /* DiscoverManager.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = DiscoverManager.hpp; sourceTree = "<group>"; };
 		7C77C51F2676C98600179EA8 /* keyboard_view.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = keyboard_view.cpp; sourceTree = "<group>"; };
 		7C77C5202676C98600179EA8 /* keyboard_view.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = keyboard_view.hpp; sourceTree = "<group>"; };
 		7CBDEEA62683818A00C6C7B2 /* InputManager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = InputManager.cpp; sourceTree = "<group>"; };
@@ -626,6 +632,7 @@
 		7C18E8CE265C158A000D3AF0 /* extern */ = {
 			isa = PBXGroup;
 			children = (
+				7C5DEBA0268FC6670067CF37 /* zeroconf */,
 				7C18F0DB265C3716000D3AF0 /* moonlight-common-c */,
 				7C18E8CF265C158A000D3AF0 /* borealis */,
 				7C18EEC8265C158B000D3AF0 /* extern.mk */,
@@ -1683,6 +1690,16 @@
 			path = src;
 			sourceTree = "<group>";
 		};
+		7C5DEBA0268FC6670067CF37 /* zeroconf */ = {
+			isa = PBXGroup;
+			children = (
+				7C5DEBA2268FC6830067CF37 /* zeroconf-detail.hpp */,
+				7C5DEBA3268FC6830067CF37 /* zeroconf-util.hpp */,
+				7C5DEBA1268FC6830067CF37 /* zeroconf.hpp */,
+			);
+			path = zeroconf;
+			sourceTree = "<group>";
+		};
 		7CBE6B59265DADD9007DCC5A /* utils */ = {
 			isa = PBXGroup;
 			children = (
@@ -1738,6 +1755,8 @@
 				7CBE6B87265DB3D6007DCC5A /* ffmpeg */,
 				7CBE6B9C265DB3D6007DCC5A /* switch */,
 				7CBE6B8B265DB3D6007DCC5A /* video */,
+				7C5DEBA4268FCA450067CF37 /* DiscoverManager.cpp */,
+				7C5DEBA5268FCA450067CF37 /* DiscoverManager.hpp */,
 			);
 			path = streaming;
 			sourceTree = "<group>";
@@ -1894,6 +1913,7 @@
 				7C471DA9266962E80059D144 /* grid_view.cpp in Sources */,
 				7C18F068265C15A7000D3AF0 /* main.cpp in Sources */,
 				7C18F143265C37DA000D3AF0 /* FakeCallbacks.c in Sources */,
+				7C5DEBA6268FCA450067CF37 /* DiscoverManager.cpp in Sources */,
 				7C18F0A0265C1652000D3AF0 /* glad.c in Sources */,
 				7C18F136265C3786000D3AF0 /* win32.c in Sources */,
 				7C18F07A265C15E7000D3AF0 /* i18n.cpp in Sources */,
@@ -2033,6 +2053,7 @@
 					"NO_TOUCH_SCROLLING=false",
 					USE_MBEDTLS_CRYPTO,
 					USE_MBEDTLS,
+					MULTICAST_DISABLED,
 				);
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
@@ -2051,6 +2072,7 @@
 					"extern/moonlight-common-c/enet/include",
 					"extern/moonlight-common-c/enet/src",
 					"extern/moonlight-common-c/src",
+					extern/zeroconf,
 					/usr/local/include,
 					demo,
 					app/src/utils,
@@ -2125,6 +2147,7 @@
 					"NO_TOUCH_SCROLLING=false",
 					USE_MBEDTLS_CRYPTO,
 					USE_MBEDTLS,
+					MULTICAST_DISABLED,
 				);
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
@@ -2143,6 +2166,7 @@
 					"extern/moonlight-common-c/enet/include",
 					"extern/moonlight-common-c/enet/src",
 					"extern/moonlight-common-c/src",
+					extern/zeroconf,
 					/usr/local/include,
 					demo,
 					app/src/utils,

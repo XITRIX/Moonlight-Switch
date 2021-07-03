@@ -21,7 +21,7 @@
 #pragma once
 
 enum HTTPRequestTimeout: long {
-    HTTPRequestTimeoutLow = 2,
+    HTTPRequestTimeoutLow = 1,
     HTTPRequestTimeoutMedium = 5,
     HTTPRequestTimeoutLong = 120
 };

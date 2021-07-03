@@ -3,5 +3,5 @@
     footerHidden="false">
     <HostsTabs
         title="@i18n/demo/title"
-        icon="@res/img/borealis_96.png" />
+        icon="@res/img/moonlight_96.png" />
 </brls:AppletFrame>

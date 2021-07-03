@@ -41,21 +41,21 @@
                 height="auto"
                 axis="column"
                 alignItems="stretch">
-            
-                <brls:Box
-                    id="loader"
-                    width="auto"
-                    height="auto"
-                    axis="column"
-                    alignItems="center"
-                    paddingTop="20">
-                    
-                    <brls:ProgressSpinner
-                        width="60"
-                        height="60"/>
-                        
-                </brls:Box>
                 
+            </brls:Box>
+            
+            <brls:Box
+                id="loader"
+                width="auto"
+                height="auto"
+                axis="column"
+                alignItems="center"
+                paddingTop="20">
+                
+                <brls:ProgressSpinner
+                    width="60"
+                    height="60"/>
+                    
             </brls:Box>
             
         </brls:Box>

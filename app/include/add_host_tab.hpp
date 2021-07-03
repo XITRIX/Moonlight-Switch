@@ -9,17 +9,21 @@
 
 #include <borealis.hpp>
 #include "Settings.hpp"
+#include "GameStreamClient.hpp"
 
 class AddHostTab : public brls::Box
 {
   public:
     AddHostTab();
+    ~AddHostTab();
 
     static brls::View* create();
 
   private:
     void findHost();
     void connectHost(std::string address);
+    void fillSearchBox(GSResult<std::vector<Host>> hostsRes);
+    brls::Event<GSResult<std::vector<Host>>>::Subscription searchSubscription;
     
     BRLS_BIND(brls::InputCell, hostIP, "hostIP");
     BRLS_BIND(brls::DetailCell, connect, "connect");

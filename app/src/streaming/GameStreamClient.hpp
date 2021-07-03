@@ -71,6 +71,7 @@ public:
     std::vector<std::string> host_addresses_for_find();
     
     bool can_find_host();
+    void find_hosts(ServerCallback<std::vector<Host>> callback);
     void find_host(ServerCallback<Host> callback);
     
     bool can_wake_up_host(const Host &host);

@@ -10,6 +10,13 @@
 #include <borealis.hpp>
 #include <Settings.hpp>
 
+enum HostState
+{
+    FETCHING,
+    AVAILABLE,
+    UNAVAILABLE
+};
+
 class HostTab : public brls::Box
 {
   public:
@@ -21,4 +28,5 @@ class HostTab : public brls::Box
 
 private:
     Host host;
+    HostState state = HostState::FETCHING;
 };

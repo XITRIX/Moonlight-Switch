@@ -7,8 +7,8 @@
 
 #include "add_host_tab.hpp"
 #include "hosts_tabs_view.hpp"
-#include "GameStreamClient.hpp"
 #include "helper.hpp"
+#include "DiscoverManager.hpp"
 
 AddHostTab::AddHostTab()
 {
@@ -33,29 +33,70 @@ AddHostTab::AddHostTab()
     }
 }
 
-void AddHostTab::findHost()
+void AddHostTab::fillSearchBox(GSResult<std::vector<Host>> hostsRes)
 {
-    ASYNC_RETAIN
-    GameStreamClient::instance().find_host([ASYNC_TOKEN](GSResult<Host> result) {
-        ASYNC_RELEASE
-        
-        if (result.isSuccess()) {
-            Host host = result.value();
-            
+    loader->setVisibility(DiscoverManager::instance().isPaused() ? brls::Visibility::GONE : brls::Visibility::VISIBLE);
+    
+    if (hostsRes.isSuccess()) {
+        searchBox->clearViews();
+        std::vector<Host> hosts = hostsRes.value();
+        for (Host host: hosts)
+        {
             brls::DetailCell* hostButton = new brls::DetailCell();
             hostButton->setText(host.hostname);
             hostButton->setDetailText(host.address);
             hostButton->setDetailTextColor(brls::Application::getTheme()["brls/text_disabled"]);
             hostButton->registerClickAction([this, host](View* view) {
+#ifdef MULTICAST_DISABLED
+                DiscoverManager::instance().pause();
+#endif
                 connectHost(host.address);
                 return true;
             });
             searchBox->addView(hostButton);
+        }
+    }
+    else {
+        loader->setVisibility(brls::Visibility::GONE);
+        showError(hostsRes.error(), []{});
+    }
+}
+
+void AddHostTab::findHost()
+{
+#ifdef MULTICAST_DISABLED
+    DiscoverManager::instance().start();
+    fillSearchBox(DiscoverManager::instance().getHosts());
+    searchSubscription = DiscoverManager::instance().getHostsUpdateEvent()->subscribe([this](auto result){
+        fillSearchBox(result);
+    });
+#else
+    ASYNC_RETAIN
+    GameStreamClient::instance().find_hosts([ASYNC_TOKEN](GSResult<std::vector<Host>> result) {
+        ASYNC_RELEASE
+
+        if (result.isSuccess()) {
+            std::vector<Host> hosts = result.value();
+
+            for (Host host: hosts)
+            {
+                brls::DetailCell* hostButton = new brls::DetailCell();
+                hostButton->setText(host.hostname);
+                hostButton->setDetailText(host.address);
+                hostButton->setDetailTextColor(brls::Application::getTheme()["brls/text_disabled"]);
+                hostButton->registerClickAction([this, host](View* view) {
+                    connectHost(host.address);
+                    return true;
+                });
+                searchBox->addView(hostButton);
+            }
             loader->setVisibility(brls::Visibility::GONE);
         } else {
             showError(result.error(), []{});
         }
     });
+#endif
+    
 }
 
 void AddHostTab::connectHost(std::string address)
@@ -109,6 +150,14 @@ void AddHostTab::connectHost(std::string address)
             showError("Error\n\n" + result.error(), [] {});
         }
     });
+}
+
+AddHostTab::~AddHostTab()
+{
+#ifdef MULTICAST_DISABLED
+    DiscoverManager::instance().pause();
+    DiscoverManager::instance().getHostsUpdateEvent()->unsubscribe(searchSubscription);
+#endif
 }
 
 brls::View* AddHostTab::create()

@@ -11,6 +11,7 @@ SOURCES		:=	$(SOURCES) \
 INCLUDES	:=	$(INCLUDES) \
 				$(EXTERN_PATH)/moonlight-common-c/src \
 				$(EXTERN_PATH)/moonlight-common-c/enet/include \
-				$(EXTERN_PATH)/moonlight-common-c/reedsolomon 
+				$(EXTERN_PATH)/moonlight-common-c/reedsolomon \
+                $(EXTERN_PATH)/zeroconf
 
 DEFINES := $(DEFINES) -DUSE_MBEDTLS
