@@ -27,7 +27,7 @@ Thanks a lot to [Rock88](https://github.com/rock88) and his [Moonlight-NX](https
 ## Mouse
 With touch screen you can move your coursor.
 
-While touching screen RT and LR buttons will work like left and right mouse buttons.
+While touching screen ZR and ZL buttons will work like left and right mouse buttons.
 
 Scrolling not supported yet.
 
@@ -41,7 +41,7 @@ By default Switch gamepad configured as X360 gamepad (A/B and X/Y swapped).
 
 Multiple gamepad currently not supported.
 
-# Build Moonlight-NX
+# Build Moonlight-Switch
 1. Clone this repo with submodules by `git clone https://github.com/XITRIX/Moonlight-Switch.git --recursive`
 2. `cd` into folder
 
