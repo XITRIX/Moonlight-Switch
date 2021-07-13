@@ -24,9 +24,11 @@ public:
     
     void onLayout() override;
     void willAppear(bool resetState) override;
+    View* getHintView() override;
     
 private:
     Host host;
+    View* hintView = nullptr;
     std::optional<AppInfo> currentApp;
     bool loading = false;
     LoadingOverlay* loader = nullptr;

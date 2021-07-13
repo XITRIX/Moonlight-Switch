@@ -14,10 +14,44 @@ AppListView::AppListView(Host host) :
     host(host)
 {
     this->inflateFromXMLRes("xml/views/app_list_view.xml");
+    
+    Label* label = new brls::Label();
+    label->setText(brls::Hint::getKeyIcon(ControllerButton::BUTTON_RB) + " Run current app");
+    label->setFontSize(24);
+    label->setMargins(0, 16, 0, 16);
+    
+    Box* holder = new Box();
+    holder->addView(label);
+    holder->setFocusable(true);
+    holder->setCornerRadius(6);
+    holder->addGestureRecognizer(new TapGestureRecognizer(holder));
+    
+    hintView = holder;
+    
     container->setHideHighlight(true);
     gridView = new GridView();
     container->addView(gridView);
     loader = new LoadingOverlay(this);
+    
+    auto playCuttentAction = [this, host](View* view) {
+        if (currentApp.has_value())
+        {
+            AppletFrame* frame = new AppletFrame(new StreamingView(host, currentApp.value()));
+            frame->setHeaderVisibility(brls::Visibility::GONE);
+            frame->setFooterVisibility(brls::Visibility::GONE);
+            Application::pushActivity(new Activity(frame));
+        }
+        return true;
+    };
+    
+    hintView->registerClickAction(playCuttentAction);
+    hintView->registerAction("Play current", brls::ControllerButton::BUTTON_RB, playCuttentAction, true);
+    registerAction("Play current", brls::ControllerButton::BUTTON_RB, playCuttentAction, true);
+    
+    hintView->registerAction("Debug", brls::ControllerButton::BUTTON_START, [this](View* view) {
+        hintView->setVisibility(Visibility::GONE);
+        return true;
+    }, true);
     
     registerAction("Reload app list", BUTTON_X, [this](View* view) {
         this->updateAppList();
@@ -75,6 +109,7 @@ void AppListView::updateAppList()
     Application::giveFocus(this);
     loader->setHidden(false);
     currentApp = std::nullopt;
+    hintView->setVisibility(Visibility::GONE);
     setActionAvailable(BUTTON_X, false);
     
     setTitle(host.hostname);
@@ -129,6 +164,7 @@ void AppListView::updateAppList()
 void AppListView::setCurrentApp(AppInfo app, bool update)
 {
     this->currentApp = app;
+    hintView->setVisibility(Visibility::VISIBLE);
     setTitle(host.hostname + " - Running " + app.name);
     
     terminateIdentifier = registerAction("Terminate current app", BUTTON_BACK, [this](View* view) {
@@ -141,6 +177,11 @@ void AppListView::willAppear(bool resetState)
 {
     Box::willAppear(resetState);
     updateAppList();
+}
+
+View* AppListView::getHintView()
+{
+    return hintView;
 }
 
 void AppListView::onLayout()
