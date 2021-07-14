@@ -80,13 +80,21 @@ StreamingView::StreamingView(Host host, AppInfo app) :
 void StreamingView::onFocusGained()
 {
     View::onFocusGained();
-    Application::blockInputs(true);
+    if (!blocked)
+    {
+        blocked = true;
+        Application::blockInputs(true);
+    }
 }
 
 void StreamingView::onFocusLost()
 {
     View::onFocusLost();
-    Application::unblockInputs();
+    if (blocked)
+    {
+        blocked = false;
+        Application::unblockInputs();
+    }
 }
 
 void StreamingView::draw(NVGcontext* vg, float x, float y, float width, float height, Style style, FrameContext* ctx)

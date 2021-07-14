@@ -47,6 +47,7 @@ private:
     LoadingOverlay* loader = nullptr;
     Box* keyboardHolder = nullptr;
     KeyboardView* keyboard;
+    bool blocked = false;
     
     void handleInput();
     void handleButtonHolding();
