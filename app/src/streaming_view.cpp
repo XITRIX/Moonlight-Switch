@@ -101,7 +101,6 @@ void StreamingView::draw(NVGcontext* vg, float x, float y, float width, float he
 {
     if (!session->is_active())
     {
-        brls::Application::notify("Terminate");
         terminate(false);
         return;
     }

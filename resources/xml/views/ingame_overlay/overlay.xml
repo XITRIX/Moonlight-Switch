@@ -12,15 +12,15 @@
         
         <brls:TabFrame>
             
-            <brls:Tab label="Keys" >
+            <brls:Tab label="@i18n/main/streaming/keys" >
                 <KeysTab />
             </brls:Tab>
                 
-            <brls:Tab label="Debug" >
+            <brls:Tab label="@i18n/main/streaming/debug" >
                 <DebugTab />
             </brls:Tab>
             
-            <brls:Tab label="Logout" >
+            <brls:Tab label="@i18n/main/streaming/logout" >
                 <LogoutTab />
             </brls:Tab>
             

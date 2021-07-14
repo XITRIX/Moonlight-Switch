@@ -2,6 +2,6 @@
     iconInterpolation="linear"
     footerHidden="false">
     <HostsTabs
-        title="@i18n/demo/title"
+        title="@i18n/main/title"
         icon="@res/img/moonlight_96.png" />
 </brls:AppletFrame>

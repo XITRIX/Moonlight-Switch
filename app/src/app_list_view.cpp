@@ -16,14 +16,15 @@ AppListView::AppListView(Host host) :
     this->inflateFromXMLRes("xml/views/app_list_view.xml");
     
     Label* label = new brls::Label();
-    label->setText(brls::Hint::getKeyIcon(ControllerButton::BUTTON_RB) + " Run current app");
+    label->setText(brls::Hint::getKeyIcon(ControllerButton::BUTTON_RB) + "  " + "main/app_list/run_current"_i18n);
     label->setFontSize(24);
-    label->setMargins(0, 16, 0, 16);
+    label->setMargins(4, 16, 4, 16);
     
     Box* holder = new Box();
     holder->addView(label);
     holder->setFocusable(true);
     holder->setCornerRadius(6);
+    holder->setMargins(18, 0, 8, 0);
     holder->addGestureRecognizer(new TapGestureRecognizer(holder));
     
     hintView = holder;
@@ -45,15 +46,10 @@ AppListView::AppListView(Host host) :
     };
     
     hintView->registerClickAction(playCuttentAction);
-    hintView->registerAction("Play current", brls::ControllerButton::BUTTON_RB, playCuttentAction, true);
-    registerAction("Play current", brls::ControllerButton::BUTTON_RB, playCuttentAction, true);
+    hintView->registerAction("", brls::ControllerButton::BUTTON_RB, playCuttentAction, true);
+    registerAction("", brls::ControllerButton::BUTTON_RB, playCuttentAction, true);
     
-    hintView->registerAction("Debug", brls::ControllerButton::BUTTON_START, [this](View* view) {
-        hintView->setVisibility(Visibility::GONE);
-        return true;
-    }, true);
-    
-    registerAction("Reload app list", BUTTON_X, [this](View* view) {
+    registerAction("main/app_list/reload_app_list"_i18n, BUTTON_X, [this](View* view) {
         this->updateAppList();
         return true;
     });
@@ -65,11 +61,11 @@ void AppListView::terninateApp()
     if (loading)
         return;
     
-    Dialog* dialog = new Dialog("Terminate " + currentApp->name + "\n\nAll unsaved progress could be lost");
+    Dialog* dialog = new Dialog("main/app_list/terminate_prefix"_i18n + currentApp->name + "main/app_list/terminate_postfix"_i18n);
     
-    dialog->addButton("Cancel", [] { });
+    dialog->addButton("main/app_list/cancel"_i18n, [] { });
     
-    dialog->addButton("Terminate", [dialog, this] {
+    dialog->addButton("main/app_list/terminate"_i18n, [dialog, this] {
         if (loading)
             return;
         
@@ -165,9 +161,9 @@ void AppListView::setCurrentApp(AppInfo app, bool update)
 {
     this->currentApp = app;
     hintView->setVisibility(Visibility::VISIBLE);
-    setTitle(host.hostname + " - Running " + app.name);
+    setTitle(host.hostname + " - " + "main/app_list/running"_i18n + " " + app.name);
     
-    terminateIdentifier = registerAction("Terminate current app", BUTTON_BACK, [this](View* view) {
+    terminateIdentifier = registerAction("main/app_list/terminate_current_app"_i18n, BUTTON_BACK, [this](View* view) {
         this->terninateApp();
         return true;
     });

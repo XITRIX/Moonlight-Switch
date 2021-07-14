@@ -15,10 +15,10 @@ AddHostTab::AddHostTab()
     // Inflate the tab from the XML file
     this->inflateFromXMLRes("xml/tabs/add_host.xml");
 
-    hostIP->setText("Host IP");
+    hostIP->setText("main/add_host/host_ip"_i18n);
     hostIP->setValue("10.0.0.19");
     
-    connect->setText("Connect");
+    connect->setText("main/add_host/connect"_i18n);
     connect->registerClickAction([this](View* view) {
         connectHost(hostIP->getValue());
         return true;
@@ -28,7 +28,7 @@ AddHostTab::AddHostTab()
         findHost();
     else
     {
-        searchHeader->setTitle("Search is unavailable");
+        searchHeader->setTitle("main/add_host/search_error"_i18n);
         loader->setVisibility(brls::Visibility::GONE);
     }
 }
@@ -115,7 +115,7 @@ void AddHostTab::connectHost(std::string address)
             
             if (result.value().paired)
             {
-                showError("Already paired", [host] {
+                showError("main/add_host/paired_error"_i18n, [host] {
                     Settings::instance().add_host(host);
                     HostsTabs::getInstanse()->refillTabs();
                 });
@@ -125,7 +125,7 @@ void AddHostTab::connectHost(std::string address)
             char pin[5];
             sprintf(pin, "%d%d%d%d", (int)random() % 10, (int)random() % 10, (int)random() % 10, (int)random() % 10);
             
-            brls::Dialog* dialog = new brls::Dialog("Pair up\n\nEnter " + std::string(pin) + " on your host device");
+            brls::Dialog* dialog = new brls::Dialog("main/add_host/pair_prefix"_i18n + std::string(pin) + "main/add_host/pair_postfix"_i18n);
             dialog->setCancelable(false);
             dialog->open();
             
@@ -140,14 +140,14 @@ void AddHostTab::connectHost(std::string address)
                     }
                     else
                     {
-                        showError("Error\n\n" + result.error(), [] {});
+                        showError("main/error/dialog_header"_i18n + result.error(), [] {});
                     }
                 });
             });
         }
         else
         {
-            showError("Error\n\n" + result.error(), [] {});
+            showError("main/error/dialog_header"_i18n + result.error(), [] {});
         }
     });
 }

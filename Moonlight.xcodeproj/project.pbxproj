@@ -140,6 +140,16 @@
 		7CE6FA9026823E3A005854FC /* numpad_layout.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CE6FA8F26823E3A005854FC /* numpad_layout.cpp */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		7C8AE166269CBCDC00210332 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 7C8AE162269CBCDC00210332 /* Borealis.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 7C8AD2CD269C8B4700210332;
+			remoteInfo = Borealis;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXCopyFilesBuildPhase section */
 		7C18E8B4265C1551000D3AF0 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
@@ -534,6 +544,7 @@
 		7C5DEBA5268FCA450067CF37 /* DiscoverManager.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = DiscoverManager.hpp; sourceTree = "<group>"; };
 		7C77C51F2676C98600179EA8 /* keyboard_view.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = keyboard_view.cpp; sourceTree = "<group>"; };
 		7C77C5202676C98600179EA8 /* keyboard_view.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = keyboard_view.hpp; sourceTree = "<group>"; };
+		7C8AE162269CBCDC00210332 /* Borealis.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = Borealis.xcodeproj; sourceTree = "<group>"; };
 		7CBDEEA62683818A00C6C7B2 /* InputManager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = InputManager.cpp; sourceTree = "<group>"; };
 		7CBDEEA72683818A00C6C7B2 /* InputManager.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = InputManager.hpp; sourceTree = "<group>"; };
 		7CBE6B5A265DADD9007DCC5A /* Settings.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Settings.hpp; sourceTree = "<group>"; };
@@ -644,6 +655,7 @@
 		7C18E8CF265C158A000D3AF0 /* borealis */ = {
 			isa = PBXGroup;
 			children = (
+				7C8AE162269CBCDC00210332 /* Borealis.xcodeproj */,
 				7C18E91B265C158A000D3AF0 /* library */,
 			);
 			path = borealis;
@@ -1700,6 +1712,14 @@
 			path = zeroconf;
 			sourceTree = "<group>";
 		};
+		7C8AE163269CBCDC00210332 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				7C8AE167269CBCDC00210332 /* Borealis */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 		7CBE6B59265DADD9007DCC5A /* utils */ = {
 			isa = PBXGroup;
 			children = (
@@ -1856,12 +1876,28 @@
 			mainGroup = 7C18E8AD265C1551000D3AF0;
 			productRefGroup = 7C18E8B7265C1551000D3AF0 /* Products */;
 			projectDirPath = "";
+			projectReferences = (
+				{
+					ProductGroup = 7C8AE163269CBCDC00210332 /* Products */;
+					ProjectRef = 7C8AE162269CBCDC00210332 /* Borealis.xcodeproj */;
+				},
+			);
 			projectRoot = "";
 			targets = (
 				7C18E8B5265C1551000D3AF0 /* Moonlight */,
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXReferenceProxy section */
+		7C8AE167269CBCDC00210332 /* Borealis */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = Borealis;
+			remoteRef = 7C8AE166269CBCDC00210332 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+/* End PBXReferenceProxy section */
 
 /* Begin PBXSourcesBuildPhase section */
 		7C18E8B2265C1551000D3AF0 /* Sources */ = {

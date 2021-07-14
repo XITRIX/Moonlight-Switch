@@ -57,7 +57,7 @@ int main(int argc, char* argv[])
     
     MoonlightSession::set_provider(new SwitchMoonlightSessionDecoderAndRenderProvider());
 
-    brls::Application::createWindow("demo/title"_i18n);
+    brls::Application::createWindow("main/title"_i18n);
 
     // Have the application register an action on every activity that will quit when you press BUTTON_START
     brls::Application::setGlobalQuit(false);

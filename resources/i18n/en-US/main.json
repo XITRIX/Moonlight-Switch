@@ -1,0 +1,76 @@
+{
+    "title": "Moonlight",
+    
+    "error": {
+        "dialog_header": "Error\n\n"
+    },
+    
+    "tabs": {
+        "add_host": "Add host",
+        "settings": "Settings"
+    },
+    
+    "host": {
+        "status": "Status",
+        "fetching": "Fetching...",
+        "ready": "Ready",
+        "unable": "Unable",
+        "wake_up": "Wake up",
+        "connect": "Connect",
+        "remove": "Remove",
+        "remove_message": "Are you sure you want to remove this host?",
+        "cancel": "Cancel",
+        "remove": "Remove"
+    },
+
+    "add_host": {
+        "manual": "Manual",
+        "host_ip": "Host IP",
+        "connect": "Connect",
+        "search": "Search",
+        "search_error": "Search is unavailable",
+        "paired_error": "Already paired",
+        "pair_prefix": "Pair up\n\nEnter ",
+        "pair_postfix": " on your host device"
+    },
+
+    "settings": {
+        "quality": "Quality",
+        "fps": "FPS",
+        "resolution": "Resolution",
+        "video_codec": "Video codec",
+        "decoder_threads": "Decoder Threads",
+        "video_bitrate": "Video bitrate",
+        "stream_settings": "Stream settings",
+        "usops": "Use Streaming Optimal Playable Settings",
+        "paop": "Play Audio on PC",
+        "debug": "Debug",
+        "debugging_view": "Show debugging view",
+        "h264": "H.264",
+        "h265": "HEVC (H.265, Experimental)",
+        "zero_threads": "0 (No use threads)"
+    },
+    
+    "app_list": {
+        "reload_app_list": "Reload",
+        "cancel": "Cancel",
+        "terminate": "Terminate",
+        "terminate_current_app": "Terminate current app",
+        "terminate_prefix": "Terminate ",
+        "terminate_postfix": "\n\nAll unsaved progress could be lost",
+        "running": "Running",
+        "run_current": "Run current app"
+    },
+    
+    "streaming": {
+        "keys": "Keys",
+        "debug": "Debug",
+        "logout": "Logout",
+        "connection": "Connection",
+        "terminate": "Terminate app",
+        "disconnect": "Disconnect",
+        "show_logs": "Show logs",
+        "debug_info": "Debug info",
+        "esc": "ESC button"
+    }
+}

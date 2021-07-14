@@ -24,13 +24,15 @@
     default: \
         break;
 
+using namespace brls::literals;
+
 SettingsTab::SettingsTab()
 {
     // Inflate the tab from the XML file
     this->inflateFromXMLRes("xml/tabs/settings.xml");
     
     std::vector<std::string> resolutions = { "720p", "1080p" };
-    resolution->setText("Resolution");
+    resolution->setText("main/settings/resolution"_i18n);
     resolution->setData(resolutions);
     switch (Settings::instance().resolution()) {
         GET_SETTINGS(resolution, 720, 0);
@@ -46,7 +48,7 @@ SettingsTab::SettingsTab()
     });
     
     std::vector<std::string> fpss = { "30", "60" };
-    fps->setText("FPS");
+    fps->setText("main/settings/fps"_i18n);
     fps->setData(fpss);
     switch (Settings::instance().fps()) {
         GET_SETTINGS(fps, 30, 0);
@@ -61,8 +63,8 @@ SettingsTab::SettingsTab()
         }
     });
     
-    std::vector<std::string> decoders = { "0 (No use threads)", "2", "3", "4" };
-    decoder->setText("Decoder Threads");
+    std::vector<std::string> decoders = { "main/settings/zero_threads"_i18n, "2", "3", "4" };
+    decoder->setText("main/settings/decoder_threads"_i18n);
     decoder->setData(decoders);
     switch (Settings::instance().decoder_threads()) {
         GET_SETTINGS(decoder, 0, 0);
@@ -81,7 +83,7 @@ SettingsTab::SettingsTab()
         }
     });
     
-    codec->init("Video codec", { "H.264", "HEVC (H.265, Experimental)" }, Settings::instance().video_codec(), [](int selected) {
+    codec->init("main/settings/video_codec"_i18n, { "main/settings/h264"_i18n, "main/settings/h265"_i18n }, Settings::instance().video_codec(), [](int selected) {
         Settings::instance().set_video_codec((VideoCodec)selected);
     });
     
@@ -96,15 +98,15 @@ SettingsTab::SettingsTab()
     });
     slider->setProgress(progress);
     
-    optimal->init("Use Streaming Optimal Playable Settings", Settings::instance().sops(), [](bool value) {
+    optimal->init("main/settings/usops"_i18n, Settings::instance().sops(), [](bool value) {
         Settings::instance().set_sops(value);
     });
     
-    pcAudio->init("Play Audio on PC", Settings::instance().play_audio(), [](bool value){
+    pcAudio->init("main/settings/paop"_i18n, Settings::instance().play_audio(), [](bool value){
         Settings::instance().set_play_audio(value);
     });
     
-    writeLog->init("Show debugging view", Settings::instance().write_log(), [](bool value) {
+    writeLog->init("main/settings/debugging_view"_i18n, Settings::instance().write_log(), [](bool value) {
         Settings::instance().set_write_log(value);
         brls::Application::enableDebuggingView(value);
     });

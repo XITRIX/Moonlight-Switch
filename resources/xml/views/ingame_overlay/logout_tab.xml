@@ -21,7 +21,7 @@
         
             <brls:Header
                 id="header"
-                title="Connection"/>
+                title="@i18n/main/streaming/connection"/>
                 
             <brls:DetailCell
                 id="disconnect"/>

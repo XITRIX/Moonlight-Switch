@@ -20,7 +20,7 @@
             paddingLeft="@style/brls/sidebar/padding_left">
             
             <brls:Header
-                title="Manual"/>
+                title="@i18n/main/add_host/manual"/>
             
             <brls:InputCell
                 id="hostIP"/>
@@ -32,7 +32,7 @@
                 
             <brls:Header
                 id="search_header"
-                title="Search"
+                title="@i18n/main/add_host/search"
                 paddingTop="60"/>
                 
             <brls:Box

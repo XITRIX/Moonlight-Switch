@@ -41,7 +41,7 @@ LogoutTab::LogoutTab(StreamingView* streamView) :
 {
     this->inflateFromXMLRes("xml/views/ingame_overlay/logout_tab.xml");
     
-    disconnect->setText("Disconnect");
+    disconnect->setText("main/streaming/disconnect"_i18n);
     disconnect->registerClickAction([this, streamView](View* view) {
         this->dismiss([streamView] {
             streamView->terminate(false);
@@ -49,7 +49,7 @@ LogoutTab::LogoutTab(StreamingView* streamView) :
         return true;
     });
 
-    terminateButton->setText("Terminate app");
+    terminateButton->setText("main/streaming/terminate"_i18n);
     terminateButton->registerClickAction([this, streamView](View* view) {
         this->dismiss([streamView] {
             streamView->terminate(true);
@@ -62,14 +62,14 @@ LogoutTab::LogoutTab(StreamingView* streamView) :
 DebugTab::DebugTab(StreamingView* streamView) :
     streamView(streamView)
 {
-    this->inflateFromXMLRes("xml/views/ingame_overlay/debug_tab.xml");
+    this->inflateFromXMLRes("xml/views/ingame_overlay/debug_tab.xml"); 
     
-    onscreenLogButton->init("Show logs", Settings::instance().write_log(), [](bool value) {
+    onscreenLogButton->init("main/streaming/show_logs"_i18n, Settings::instance().write_log(), [](bool value) {
         Settings::instance().set_write_log(value);
         brls::Application::enableDebuggingView(value);
     });
     
-    debugButton->init("Debug info", streamView->draw_stats, [streamView](bool value) {
+    debugButton->init("main/streaming/debug_info"_i18n, streamView->draw_stats, [streamView](bool value) {
         streamView->draw_stats = value;
     });
 }
@@ -80,7 +80,7 @@ KeysTab::KeysTab(StreamingView* streamView) :
 {
     this->inflateFromXMLRes("xml/views/ingame_overlay/keys_tab.xml");
     
-    escButton->setText("ESC button");
+    escButton->setText("main/streaming/esc"_i18n);
     escButton->registerClickAction([this, streamView](View* view) {
         async([] {
             sync([]{ LiSendKeyboardEvent(0x1B, KEY_ACTION_DOWN, 0); });

@@ -1,0 +1,76 @@
+{
+    "title": "Moonlight",
+    
+    "error": {
+        "dialog_header": "Ошибка\n\n"
+    },
+    
+    "tabs": {
+        "add_host": "Добавить хост",
+        "settings": "Настройки"
+    },
+    
+    "host": {
+        "status": "Статус",
+        "fetching": "Обновление...",
+        "ready": "Готово",
+        "unable": "Не доступен",
+        "wake_up": "Разбудить",
+        "connect": "Подключиться",
+        "remove": "Удалить",
+        "remove_message": "Вы уверены что хотите удалить этот хост?",
+        "cancel": "Отмена",
+        "remove": "Удалить"
+    },
+
+    "add_host": {
+        "manual": "Вручную",
+        "host_ip": "IP Хоста",
+        "connect": "Подключиться",
+        "search": "Поиск",
+        "search_error": "Поиск недоступен",
+        "paired_error": "Уже подключён",
+        "pair_prefix": "Подключение\n\nВведите ",
+        "pair_postfix": " на вашем хосте"
+    },
+
+    "settings": {
+        "quality": "Качество",
+        "fps": "FPS",
+        "resolution": "Разрешение",
+        "video_codec": "Видео кодек",
+        "decoder_threads": "Потоки декодера",
+        "video_bitrate": "Битрейт видео",
+        "stream_settings": "Настройка трансляции",
+        "usops": "Используйте оптимальные игровые настройки",
+        "paop": "Воспроизводить аудио на ПК",
+        "debug": "Отладка",
+        "debugging_view": "Показать окно отладки",
+        "h264": "H.264",
+        "h265": "HEVC (H.265, Эксперементально)",
+        "zero_threads": "0 (Не использовать потоки)"
+    },
+    
+    "app_list": {
+        "reload_app_list": "Перезагрузить",
+        "cancel": "Отмена",
+        "terminate": "Закрыть",
+        "terminate_current_app": "Закрыть программу",
+        "terminate_prefix": "Закрыть ",
+        "terminate_postfix": "\n\nВесь несохранённый прогресс будет потерян",
+        "running": "Запущено",
+        "run_current": "Открыть запущенное приложение"
+    },
+    
+    "streaming": {
+        "keys": "Кнопки",
+        "debug": "Отладка",
+        "logout": "Выход",
+        "connection": "Соединение",
+        "terminate": "Завершить приложение",
+        "disconnect": "Отключиться",
+        "show_logs": "Показать логи",
+        "debug_info": "Отладочная информация",
+        "esc": "Кнопка ESC"
+    }
+}
