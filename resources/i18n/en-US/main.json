@@ -19,8 +19,7 @@
         "connect": "Connect",
         "remove": "Remove",
         "remove_message": "Are you sure you want to remove this host?",
-        "cancel": "Cancel",
-        "remove": "Remove"
+        "cancel": "Cancel"
     },
 
     "add_host": {
