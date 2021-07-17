@@ -47,9 +47,6 @@ void AddHostTab::fillSearchBox(GSResult<std::vector<Host>> hostsRes)
             hostButton->setDetailText(host.address);
             hostButton->setDetailTextColor(brls::Application::getTheme()["brls/text_disabled"]);
             hostButton->registerClickAction([this, host](View* view) {
-#ifdef MULTICAST_DISABLED
-                DiscoverManager::instance().pause();
-#endif
                 connectHost(host.address);
                 return true;
             });
@@ -101,55 +98,79 @@ void AddHostTab::findHost()
 
 void AddHostTab::connectHost(std::string address)
 {
-    ASYNC_RETAIN
-    GameStreamClient::instance().connect(address, [ASYNC_TOKEN](GSResult<SERVER_DATA> result) {
-        ASYNC_RELEASE
-        if (result.isSuccess())
-        {
-            Host host
+    pauseSearching();
+    
+    Dialog* loader = createLoadingDialog("main/add_host/try_connect"_i18n);
+    loader->open();
+    
+    GameStreamClient::instance().connect(address, [this, loader](GSResult<SERVER_DATA> result) {
+        loader->close([this, result] {
+            if (result.isSuccess())
             {
-                .address = result.value().address,
-                .hostname = result.value().hostname,
-                .mac = result.value().mac
-            };
-            
-            if (result.value().paired)
-            {
-                showError("main/add_host/paired_error"_i18n, [host] {
-                    Settings::instance().add_host(host);
-                    HostsTabs::getInstanse()->refillTabs();
-                });
-                return;
-            }
-            
-            char pin[5];
-            sprintf(pin, "%d%d%d%d", (int)random() % 10, (int)random() % 10, (int)random() % 10, (int)random() % 10);
-            
-            brls::Dialog* dialog = new brls::Dialog("main/add_host/pair_prefix"_i18n + std::string(pin) + "main/add_host/pair_postfix"_i18n);
-            dialog->setCancelable(false);
-            dialog->open();
-            
-            ASYNC_RETAIN
-            GameStreamClient::instance().pair(result.value().address, pin, [ASYNC_TOKEN, host, dialog](GSResult<bool> result) {
-                ASYNC_RELEASE
-                dialog->dismiss([result, host] {
-                    if (result.isSuccess())
-                    {
+                Host host
+                {
+                    .address = result.value().address,
+                    .hostname = result.value().hostname,
+                    .mac = result.value().mac
+                };
+                
+                if (result.value().paired)
+                {
+                    showAlert("main/add_host/paired_error"_i18n, [host] {
                         Settings::instance().add_host(host);
                         HostsTabs::getInstanse()->refillTabs();
-                    }
-                    else
-                    {
-                        showError("main/error/dialog_header"_i18n + result.error(), [] {});
-                    }
+                    });
+                    
+                    return;
+                }
+                
+                char pin[5];
+                sprintf(pin, "%d%d%d%d", (int)random() % 10, (int)random() % 10, (int)random() % 10, (int)random() % 10);
+                
+                brls::Dialog* dialog = createLoadingDialog("main/add_host/pair_prefix"_i18n + std::string(pin) + "main/add_host/pair_postfix"_i18n);
+                dialog->setCancelable(false);
+                dialog->open();
+                
+                ASYNC_RETAIN
+                GameStreamClient::instance().pair(result.value().address, pin, [ASYNC_TOKEN, host, dialog](GSResult<bool> result) {
+                    ASYNC_RELEASE
+                    dialog->dismiss([this, result, host] {
+                        if (result.isSuccess())
+                        {
+                            Settings::instance().add_host(host);
+                            HostsTabs::getInstanse()->refillTabs();
+                        }
+                        else
+                        {
+                            showError(result.error(), [] {});
+                        }
+                        
+                        this->startSearching();
+                    });
                 });
-            });
-        }
-        else
-        {
-            showError("main/error/dialog_header"_i18n + result.error(), [] {});
-        }
+            }
+            else
+            {
+                showError(result.error(), [this] {
+                    this->startSearching();
+                });
+            }
+        });
     });
+}
+
+void AddHostTab::pauseSearching()
+{
+#ifdef MULTICAST_DISABLED
+    DiscoverManager::instance().pause();
+#endif
+}
+
+void AddHostTab::startSearching()
+{
+#ifdef MULTICAST_DISABLED
+    DiscoverManager::instance().start();
+#endif
 }
 
 AddHostTab::~AddHostTab()

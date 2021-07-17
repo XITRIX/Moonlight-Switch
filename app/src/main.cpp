@@ -23,6 +23,7 @@
 #include "settings_tab.hpp"
 
 #include "MoonlightSession.hpp"
+#include "DiscoverManager.hpp"
 #include "SwitchMoonlightSessionDecoderAndRenderProvider.hpp"
 
 #include "streaming_view.hpp"
@@ -87,6 +88,7 @@ int main(int argc, char* argv[])
         ;
     
     GameStreamClient::instance().stop();
+    DiscoverManager::instance().pause();
 
     // Exit
     return EXIT_SUCCESS;

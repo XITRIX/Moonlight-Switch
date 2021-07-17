@@ -23,6 +23,8 @@ class AddHostTab : public brls::Box
     void findHost();
     void connectHost(std::string address);
     void fillSearchBox(GSResult<std::vector<Host>> hostsRes);
+    void pauseSearching();
+    void startSearching();
     brls::Event<GSResult<std::vector<Host>>>::Subscription searchSubscription;
     
     BRLS_BIND(brls::InputCell, hostIP, "hostIP");

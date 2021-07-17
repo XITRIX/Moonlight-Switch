@@ -42,7 +42,6 @@ void DiscoverManager::pause()
 
 void DiscoverManager::loop()
 {
-    
     brls::async([this] {
         while (counter < addresses.size() && !paused) {
             SERVER_DATA server_data;

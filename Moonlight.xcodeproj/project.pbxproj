@@ -111,6 +111,7 @@
 		7C18F152265C37F3000D3AF0 /* SdpGenerator.c in Sources */ = {isa = PBXBuildFile; fileRef = 7C18F12A265C3716000D3AF0 /* SdpGenerator.c */; };
 		7C18F153265C37F3000D3AF0 /* RtspConnection.c in Sources */ = {isa = PBXBuildFile; fileRef = 7C18F11D265C3716000D3AF0 /* RtspConnection.c */; };
 		7C2BCFF12667F47A005952F2 /* loading_overlay.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C2BCFEF2667F47A005952F2 /* loading_overlay.cpp */; };
+		7C33AB2E26A2FC6B0008B0A6 /* battery.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C33AB2C26A2FC6B0008B0A6 /* battery.cpp */; };
 		7C3A95F0266153D700BAF8CA /* GLVideoRenderer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CBE6B8D265DB3D6007DCC5A /* GLVideoRenderer.cpp */; };
 		7C3A95F5266160B200BAF8CA /* DebugFileRecorderAudioRenderer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CBE6B94265DB3D6007DCC5A /* DebugFileRecorderAudioRenderer.cpp */; };
 		7C3A95F92661618100BAF8CA /* SDLAudioRenderer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C3A95F82661618100BAF8CA /* SDLAudioRenderer.cpp */; };
@@ -521,6 +522,8 @@
 		7C18F132265C3716000D3AF0 /* ByteBuffer.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = ByteBuffer.c; sourceTree = "<group>"; };
 		7C2BCFEF2667F47A005952F2 /* loading_overlay.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = loading_overlay.cpp; sourceTree = "<group>"; };
 		7C2BCFF02667F47A005952F2 /* loading_overlay.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = loading_overlay.hpp; sourceTree = "<group>"; };
+		7C33AB2C26A2FC6B0008B0A6 /* battery.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = battery.cpp; sourceTree = "<group>"; };
+		7C33AB3026A2FC730008B0A6 /* battery.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = battery.hpp; sourceTree = "<group>"; };
 		7C3A95F82661618100BAF8CA /* SDLAudioRenderer.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = SDLAudioRenderer.cpp; sourceTree = "<group>"; };
 		7C3A95FB2661659300BAF8CA /* SDLAudiorenderer.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = SDLAudiorenderer.hpp; sourceTree = "<group>"; };
 		7C3A95FE2661A3A800BAF8CA /* helper.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = helper.cpp; sourceTree = "<group>"; };
@@ -880,6 +883,7 @@
 		7C18E96D265C158A000D3AF0 /* views */ = {
 			isa = PBXGroup;
 			children = (
+				7C33AB2F26A2FC730008B0A6 /* widgets */,
 				7C18E96E265C158A000D3AF0 /* cells */,
 				7C3A96032661BAB600BAF8CA /* debug_layer.hpp */,
 				7C18E974265C158A000D3AF0 /* slider.hpp */,
@@ -1521,6 +1525,7 @@
 		7C18EEA4265C158B000D3AF0 /* views */ = {
 			isa = PBXGroup;
 			children = (
+				7C33AB2B26A2FC6B0008B0A6 /* widgets */,
 				7C18EEA5265C158B000D3AF0 /* cells */,
 				7C3A96042661BAC100BAF8CA /* debug_layer.cpp */,
 				7C18EEAB265C158B000D3AF0 /* progress_spinner.cpp */,
@@ -1700,6 +1705,22 @@
 				7C18F129265C3716000D3AF0 /* Video.h */,
 			);
 			path = src;
+			sourceTree = "<group>";
+		};
+		7C33AB2B26A2FC6B0008B0A6 /* widgets */ = {
+			isa = PBXGroup;
+			children = (
+				7C33AB2C26A2FC6B0008B0A6 /* battery.cpp */,
+			);
+			path = widgets;
+			sourceTree = "<group>";
+		};
+		7C33AB2F26A2FC730008B0A6 /* widgets */ = {
+			isa = PBXGroup;
+			children = (
+				7C33AB3026A2FC730008B0A6 /* battery.hpp */,
+			);
+			path = widgets;
 			sourceTree = "<group>";
 		};
 		7C5DEBA0268FC6670067CF37 /* zeroconf */ = {
@@ -2019,6 +2040,7 @@
 				7C3A95F0266153D700BAF8CA /* GLVideoRenderer.cpp in Sources */,
 				7C18F075265C15E7000D3AF0 /* animation.cpp in Sources */,
 				7C3A96002661A3A800BAF8CA /* helper.cpp in Sources */,
+				7C33AB2E26A2FC6B0008B0A6 /* battery.cpp in Sources */,
 				7CBE6B60265DADD9007DCC5A /* Settings.cpp in Sources */,
 				7C3A96052661BAC100BAF8CA /* debug_layer.cpp in Sources */,
 				7C3A96112662902900BAF8CA /* ingame_overlay_view.cpp in Sources */,

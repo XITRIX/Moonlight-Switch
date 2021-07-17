@@ -13,9 +13,12 @@
     "host": {
         "status": "Status",
         "fetching": "Fetching...",
+        "wait": "Wait...",
         "ready": "Ready",
         "unable": "Unable",
         "wake_up": "Wake up",
+        "wake_up_message": "Sending Wake Up",
+        "wake_up_error": "Could not wake up the host",
         "connect": "Connect",
         "remove": "Remove",
         "remove_message": "Are you sure you want to remove this host?",
@@ -28,9 +31,10 @@
         "connect": "Connect",
         "search": "Search",
         "search_error": "Search is unavailable",
-        "paired_error": "Already paired",
+        "paired_error": "Already paired\nConfiguration has been updated",
         "pair_prefix": "Pair up\n\nEnter ",
-        "pair_postfix": " on your host device"
+        "pair_postfix": " on your host device",
+        "try_connect": "Trying to connect to the host"
     },
 
     "settings": {

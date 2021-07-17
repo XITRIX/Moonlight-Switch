@@ -21,6 +21,7 @@ class HostTab : public brls::Box
 {
   public:
     HostTab(Host host);
+    void reloadHost();
     
     BRLS_BIND(brls::DetailCell, connect, "connect");
     BRLS_BIND(brls::DetailCell, remove, "remove");
