@@ -18,6 +18,7 @@ class DiscoverManager : public Singleton<DiscoverManager>
 {
 public:
     DiscoverManager();
+    ~DiscoverManager();
     
     brls::Event<GSResult<std::vector<Host>>>* getHostsUpdateEvent()
     {

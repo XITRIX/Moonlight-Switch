@@ -69,3 +69,8 @@ void DiscoverManager::loop()
         paused = true;
     });
 }
+
+DiscoverManager::~DiscoverManager()
+{
+    pthread_join(thread, NULL);
+}
