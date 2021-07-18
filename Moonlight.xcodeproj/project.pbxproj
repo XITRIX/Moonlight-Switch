@@ -112,6 +112,7 @@
 		7C18F153265C37F3000D3AF0 /* RtspConnection.c in Sources */ = {isa = PBXBuildFile; fileRef = 7C18F11D265C3716000D3AF0 /* RtspConnection.c */; };
 		7C2BCFF12667F47A005952F2 /* loading_overlay.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C2BCFEF2667F47A005952F2 /* loading_overlay.cpp */; };
 		7C33AB2E26A2FC6B0008B0A6 /* battery.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C33AB2C26A2FC6B0008B0A6 /* battery.cpp */; };
+		7C33AB3626A34EBA0008B0A6 /* wireless.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C33AB3526A34EBA0008B0A6 /* wireless.cpp */; };
 		7C3A95F0266153D700BAF8CA /* GLVideoRenderer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CBE6B8D265DB3D6007DCC5A /* GLVideoRenderer.cpp */; };
 		7C3A95F5266160B200BAF8CA /* DebugFileRecorderAudioRenderer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CBE6B94265DB3D6007DCC5A /* DebugFileRecorderAudioRenderer.cpp */; };
 		7C3A95F92661618100BAF8CA /* SDLAudioRenderer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C3A95F82661618100BAF8CA /* SDLAudioRenderer.cpp */; };
@@ -524,6 +525,8 @@
 		7C2BCFF02667F47A005952F2 /* loading_overlay.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = loading_overlay.hpp; sourceTree = "<group>"; };
 		7C33AB2C26A2FC6B0008B0A6 /* battery.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = battery.cpp; sourceTree = "<group>"; };
 		7C33AB3026A2FC730008B0A6 /* battery.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = battery.hpp; sourceTree = "<group>"; };
+		7C33AB3426A34EB30008B0A6 /* wireless.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = wireless.hpp; sourceTree = "<group>"; };
+		7C33AB3526A34EBA0008B0A6 /* wireless.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = wireless.cpp; sourceTree = "<group>"; };
 		7C3A95F82661618100BAF8CA /* SDLAudioRenderer.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = SDLAudioRenderer.cpp; sourceTree = "<group>"; };
 		7C3A95FB2661659300BAF8CA /* SDLAudiorenderer.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = SDLAudiorenderer.hpp; sourceTree = "<group>"; };
 		7C3A95FE2661A3A800BAF8CA /* helper.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = helper.cpp; sourceTree = "<group>"; };
@@ -1710,6 +1713,7 @@
 		7C33AB2B26A2FC6B0008B0A6 /* widgets */ = {
 			isa = PBXGroup;
 			children = (
+				7C33AB3526A34EBA0008B0A6 /* wireless.cpp */,
 				7C33AB2C26A2FC6B0008B0A6 /* battery.cpp */,
 			);
 			path = widgets;
@@ -1718,6 +1722,7 @@
 		7C33AB2F26A2FC730008B0A6 /* widgets */ = {
 			isa = PBXGroup;
 			children = (
+				7C33AB3426A34EB30008B0A6 /* wireless.hpp */,
 				7C33AB3026A2FC730008B0A6 /* battery.hpp */,
 			);
 			path = widgets;
@@ -2014,6 +2019,7 @@
 				7C18F0B1265C177E000D3AF0 /* applet_frame.cpp in Sources */,
 				7C471DAE266970B00059D144 /* app_cell.cpp in Sources */,
 				7C18F147265C37E6000D3AF0 /* Misc.c in Sources */,
+				7C33AB3626A34EBA0008B0A6 /* wireless.cpp in Sources */,
 				7C18F139265C3786000D3AF0 /* compress.c in Sources */,
 				7C18F078265C15E7000D3AF0 /* platform.cpp in Sources */,
 				7C18F145265C37E6000D3AF0 /* PlatformSockets.c in Sources */,
