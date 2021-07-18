@@ -174,6 +174,7 @@ void AppListView::updateAppList()
         }
         else
         {
+            blockInput(false);
             showError(result.error(), [this]
             {
                 this->dismiss();
