@@ -36,6 +36,7 @@ int main(int argc, char* argv[])
     // Enable recording for Twitter memes
 #ifdef __SWITCH__
     appletInitializeGamePlayRecording();
+    appletSetWirelessPriorityMode(AppletWirelessPriorityMode_OptimizedForWlan);
 #endif
 
     // Set log level
