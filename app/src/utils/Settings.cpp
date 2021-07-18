@@ -157,6 +157,14 @@ void Settings::load() {
             if (json_t* write_log = json_object_get(settings, "write_log")) {
                 m_write_log = json_typeof(write_log) == JSON_TRUE;
             }
+            
+            if (json_t* write_log = json_object_get(settings, "swap_ui_keys")) {
+                m_swap_ui_keys = json_typeof(write_log) == JSON_TRUE;
+            }
+            
+            if (json_t* write_log = json_object_get(settings, "swap_game_keys")) {
+                m_swap_game_keys = json_typeof(write_log) == JSON_TRUE;
+            }
         }
         
         json_decref(root);
@@ -174,11 +182,9 @@ void Settings::save() {
                     json_object_set_new(json, "hostname", json_string(host.hostname.c_str()));
                     json_object_set_new(json, "mac", json_string(host.mac.c_str()));
                     json_array_append_new(hosts, json);
-//                    json_decref(json);
                 }
             }
             json_object_set_new(root, "hosts", hosts);
-//            json_decref(hosts);
         }
         
         if (json_t* settings = json_object()) {
@@ -192,8 +198,9 @@ void Settings::save() {
             json_object_set_new(settings, "sops", m_sops ? json_true() : json_false());
             json_object_set_new(settings, "play_audio", m_play_audio ? json_true() : json_false());
             json_object_set_new(settings, "write_log", m_write_log ? json_true() : json_false());
+            json_object_set_new(settings, "swap_ui_keys", m_swap_ui_keys ? json_true() : json_false());
+            json_object_set_new(settings, "swap_game_keys", m_swap_game_keys ? json_true() : json_false());
             json_object_set_new(root, "settings", settings);
-//            json_decref(settings);
         }
         
         json_dump_file(root, (m_working_dir + "/settings.json").c_str(), JSON_INDENT(4));

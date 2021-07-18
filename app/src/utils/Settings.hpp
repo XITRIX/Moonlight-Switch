@@ -122,6 +122,22 @@ public:
         return m_write_log;
     }
     
+    void set_swap_ui_keys(bool swap_ui_keys) {
+        m_swap_ui_keys = swap_ui_keys;
+    }
+    
+    bool swap_ui_keys() const {
+        return m_swap_ui_keys;
+    }
+    
+    void set_swap_game_keys(bool swap_game_keys) {
+        m_swap_game_keys = swap_game_keys;
+    }
+    
+    bool swap_game_keys() const {
+        return m_swap_game_keys;
+    }
+    
     void load();
     void save();
 
@@ -143,4 +159,6 @@ private:
     bool m_sops = true;
     bool m_play_audio = false;
     bool m_write_log = false;
+    bool m_swap_ui_keys = false;
+    bool m_swap_game_keys = false;
 };

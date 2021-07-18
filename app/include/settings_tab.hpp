@@ -24,6 +24,8 @@ class SettingsTab : public brls::Box
     BRLS_BIND(brls::BooleanCell, optimal, "optimal");
     BRLS_BIND(brls::BooleanCell, pcAudio, "pcAudio");
     BRLS_BIND(brls::BooleanCell, writeLog, "writeLog");
+    BRLS_BIND(brls::BooleanCell, swapUi, "swap_ui");
+    BRLS_BIND(brls::BooleanCell, swapGame, "swap_game");
 
     static brls::View* create();
 };

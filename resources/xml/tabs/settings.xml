@@ -60,6 +60,16 @@
                 id="pcAudio"/>
                 
             <brls:Header
+                title="@i18n/main/settings/keys"
+                paddingTop="60"/>
+                
+            <brls:BooleanCell
+                id="swap_ui"/>
+                
+            <brls:BooleanCell
+                id="swap_game"/>
+                
+            <brls:Header
                 title="@i18n/main/settings/debug"
                 paddingTop="60"/>
                 

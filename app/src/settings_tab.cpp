@@ -106,6 +106,15 @@ SettingsTab::SettingsTab()
         Settings::instance().set_play_audio(value);
     });
     
+    swapUi->init("main/settings/swap_ui"_i18n, Settings::instance().swap_ui_keys(), [](bool value) {
+        Settings::instance().set_swap_ui_keys(value);
+        brls::Application::setSwapInputKeys(value);
+    });
+    
+    swapGame->init("main/settings/swap_game"_i18n, Settings::instance().swap_game_keys(), [](bool value) {
+        Settings::instance().set_swap_game_keys(value);
+    });
+    
     writeLog->init("main/settings/debugging_view"_i18n, Settings::instance().write_log(), [](bool value) {
         Settings::instance().set_write_log(value);
         brls::Application::enableDebuggingView(value);

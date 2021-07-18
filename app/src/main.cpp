@@ -82,6 +82,7 @@ int main(int argc, char* argv[])
     brls::Application::pushActivity(new MainActivity());
     
     brls::Application::enableDebuggingView(Settings::instance().write_log());
+    brls::Application::setSwapInputKeys(Settings::instance().swap_ui_keys());
 
     // Run the app
     while (brls::Application::mainLoop())

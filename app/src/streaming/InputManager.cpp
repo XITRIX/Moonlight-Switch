@@ -1,4 +1,5 @@
 #include "InputManager.hpp"
+#include "Settings.hpp"
 #include "Limelight.h"
 
 MoonlightInputManager::MoonlightInputManager()
@@ -35,6 +36,26 @@ void MoonlightInputManager::handleInput()
         .rightStickY = static_cast<short>(controller.axes[brls::RIGHT_Y] * -0x7FFF),
     };
     
+    brls::ControllerButton a;
+    brls::ControllerButton b;
+    brls::ControllerButton x;
+    brls::ControllerButton y;
+    
+    if (Settings::instance().swap_game_keys())
+    {
+        a = brls::BUTTON_B;
+        b = brls::BUTTON_A;
+        x = brls::BUTTON_Y;
+        y = brls::BUTTON_X;
+    }
+    else
+    {
+        a = brls::BUTTON_A;
+        b = brls::BUTTON_B;
+        x = brls::BUTTON_X;
+        y = brls::BUTTON_Y;
+    }
+    
 #define SET_GAME_PAD_STATE(LIMELIGHT_KEY, GAMEPAD_BUTTON) \
     controller.buttons[GAMEPAD_BUTTON] ? (gamepadState.buttonFlags |= LIMELIGHT_KEY) : (gamepadState.buttonFlags &= ~LIMELIGHT_KEY);
     
@@ -44,15 +65,15 @@ void MoonlightInputManager::handleInput()
     SET_GAME_PAD_STATE(RIGHT_FLAG, brls::BUTTON_RIGHT);
 
 #ifdef __SWITCH__
-    SET_GAME_PAD_STATE(A_FLAG, brls::BUTTON_B);
-    SET_GAME_PAD_STATE(B_FLAG, brls::BUTTON_A);
-    SET_GAME_PAD_STATE(X_FLAG, brls::BUTTON_Y);
-    SET_GAME_PAD_STATE(Y_FLAG, brls::BUTTON_X);
+    SET_GAME_PAD_STATE(A_FLAG, b);
+    SET_GAME_PAD_STATE(B_FLAG, a);
+    SET_GAME_PAD_STATE(X_FLAG, y);
+    SET_GAME_PAD_STATE(Y_FLAG, x);
 #else
-    SET_GAME_PAD_STATE(A_FLAG, brls::BUTTON_A);
-    SET_GAME_PAD_STATE(B_FLAG, brls::BUTTON_B);
-    SET_GAME_PAD_STATE(X_FLAG, brls::BUTTON_X);
-    SET_GAME_PAD_STATE(Y_FLAG, brls::BUTTON_Y);
+    SET_GAME_PAD_STATE(A_FLAG, a);
+    SET_GAME_PAD_STATE(B_FLAG, b);
+    SET_GAME_PAD_STATE(X_FLAG, x);
+    SET_GAME_PAD_STATE(Y_FLAG, y);
 #endif
 
     SET_GAME_PAD_STATE(BACK_FLAG, brls::BUTTON_BACK);
