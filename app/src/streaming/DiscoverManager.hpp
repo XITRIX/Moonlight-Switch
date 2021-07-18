@@ -39,8 +39,6 @@ public:
     void pause();
     
 private:
-    static void* threadLoop(void*);
-    
     void loop();
     std::vector<std::string> addresses;
     GSResult<std::vector<Host>> hosts;
@@ -48,5 +46,4 @@ private:
     brls::Event<GSResult<std::vector<Host>>> hostsUpdateEvent;
     int counter = 0;
     bool paused = true;
-    pthread_t thread;
 };

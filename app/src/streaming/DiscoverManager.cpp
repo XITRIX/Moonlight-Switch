@@ -16,12 +16,6 @@ DiscoverManager::DiscoverManager()
     start();
 }
 
-void* DiscoverManager::threadLoop(void*)
-{
-    DiscoverManager::instance().loop();
-    return nullptr;
-}
-
 void DiscoverManager::start()
 {
     if (addresses.empty()) {
@@ -31,14 +25,14 @@ void DiscoverManager::start()
             hosts = hosts.failure("main/discovery_manager/no_ip"_i18n);
             return;
         }
-        
+
         paused = true;
     }
-    
+
     if (paused)
     {
         paused = false;
-        pthread_create(&thread, NULL, DiscoverManager::threadLoop, NULL);
+        brls::async([]{ DiscoverManager::instance().loop(); });
     }
     brls::sync([this] { getHostsUpdateEvent()->fire(hosts); });
 }
@@ -64,21 +58,21 @@ void DiscoverManager::loop()
                 hosts = hosts.success(_hosts);
                 brls::sync([this] { getHostsUpdateEvent()->fire(hosts); });
             }
-            
+
             counter++;
         }
-        
+
         if (counter == addresses.size() && _hosts.empty())
         {
             hosts = hosts.failure("main/discovery_manager/no_host"_i18n);
             brls::sync([this] { getHostsUpdateEvent()->fire(hosts); });
         }
-        
+
         paused = true;
     });
 }
 
 DiscoverManager::~DiscoverManager()
 {
-    pthread_join(thread, NULL);
+    paused = true;
 }
