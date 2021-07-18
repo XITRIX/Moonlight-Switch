@@ -8,9 +8,10 @@
 #include "DiscoverManager.hpp"
 #include "GameStreamClient.hpp"
 
+using namespace brls::literals;
+
 DiscoverManager::DiscoverManager()
 {
-    this->addresses = GameStreamClient::instance().host_addresses_for_find();
     hosts = hosts.success(std::vector<Host>());
     start();
 }
@@ -24,10 +25,17 @@ void* DiscoverManager::threadLoop(void*)
 void DiscoverManager::start()
 {
     if (addresses.empty()) {
-        hosts = hosts.failure("Can't obtain IP address...");
+        this->addresses = GameStreamClient::instance().host_addresses_for_find();
+        if (addresses.empty())
+        {
+            hosts = hosts.failure("main/discovery_manager/no_ip"_i18n);
+            return;
+        }
+        
         paused = true;
     }
-    else if (paused)
+    
+    if (paused)
     {
         paused = false;
         pthread_create(&thread, NULL, DiscoverManager::threadLoop, NULL);
@@ -62,7 +70,7 @@ void DiscoverManager::loop()
         
         if (counter == addresses.size() && _hosts.empty())
         {
-            hosts = hosts.failure("Host PC not found...");
+            hosts = hosts.failure("main/discovery_manager/no_host"_i18n);
             brls::sync([this] { getHostsUpdateEvent()->fire(hosts); });
         }
         

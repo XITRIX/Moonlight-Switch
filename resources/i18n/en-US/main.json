@@ -36,6 +36,11 @@
         "pair_postfix": " on your host device",
         "try_connect": "Trying to connect to the host"
     },
+    
+    "discovery_manager": {
+        "no_ip": "Can't obtain IP address",
+        "no_host": "Host PC not found"
+    },
 
     "settings": {
         "quality": "Quality",

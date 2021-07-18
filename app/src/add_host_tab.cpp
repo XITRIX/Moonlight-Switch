@@ -55,7 +55,7 @@ void AddHostTab::fillSearchBox(GSResult<std::vector<Host>> hostsRes)
     }
     else {
         loader->setVisibility(brls::Visibility::GONE);
-        showError(hostsRes.error(), []{});
+        searchHeader->setTitle("main/add_host/search"_i18n + " - " + hostsRes.error());
     }
 }
 

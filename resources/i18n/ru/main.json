@@ -36,6 +36,11 @@
         "pair_postfix": " на вашем хосте",
         "try_connect": "Попытка подключения к хосту"
     },
+    
+    "discovery_manager": {
+        "no_ip": "Не получилось обнаружить IP адрес",
+        "no_host": "Хост не найден"
+    },
 
     "settings": {
         "quality": "Качество",
