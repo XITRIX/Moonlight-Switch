@@ -64,7 +64,21 @@ AppListView::AppListView(Host host) :
         this->updateAppList();
         return true;
     });
-    Application::setActionsBlock(true);
+    blockInput(true);
+}
+
+void AppListView::blockInput(bool block)
+{
+    if (block && !inputBlocked)
+    {
+        inputBlocked = block;
+        Application::blockInputs();
+    }
+    else if (!block && inputBlocked)
+    {
+        inputBlocked = block;
+        Application::unblockInputs();
+    }
 }
 
 void AppListView::terninateApp()
@@ -85,7 +99,7 @@ void AppListView::terninateApp()
         Application::giveFocus(this);
         loader->setHidden(false);
         unregisterAction(terminateIdentifier);
-        Application::setActionsBlock(true);
+        blockInput(true);
         
         ASYNC_RETAIN
         GameStreamClient::instance().quit(host.address, [ASYNC_TOKEN](GSResult<bool> result) {
@@ -117,7 +131,7 @@ void AppListView::updateAppList()
     loader->setHidden(false);
     currentApp = std::nullopt;
     hintView->setVisibility(Visibility::GONE);
-    Application::setActionsBlock(true);
+    blockInput(true);
     
     setTitle(host.hostname);
     
@@ -135,7 +149,7 @@ void AppListView::updateAppList()
                 
                 loading = false;
                 loader->setHidden(true);
-                Application::setActionsBlock(false);
+                blockInput(false);
                 
                 if (result.isSuccess())
                 {

@@ -31,8 +31,10 @@ private:
     View* hintView = nullptr;
     std::optional<AppInfo> currentApp;
     bool loading = false;
+    bool inputBlocked = false;
     LoadingOverlay* loader = nullptr;
     ActionIdentifier terminateIdentifier;
+    void blockInput(bool block);
     
     GridView* gridView;
     BRLS_BIND(Box, container, "container");

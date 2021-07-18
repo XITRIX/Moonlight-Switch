@@ -58,8 +58,8 @@
         "h265": "HEVC (H.265, Experimental)",
         "zero_threads": "0 (No use threads)",
         "keys": "X/Y and A/B keys",
-        "swap_ui": "Swap only for UI",
-        "swap_game": "Swap only for GameStream"
+        "swap_ui": "Swap for UI",
+        "swap_game": "Swap for game stream"
     },
     
     "app_list": {
