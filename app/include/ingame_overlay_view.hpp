@@ -15,11 +15,11 @@ class IngameOverlay : public brls::Box
 {
 public:
     IngameOverlay(StreamingView* streamView);
+    ~IngameOverlay();
     
     void show();
     
     brls::AppletFrame* getAppletFrame() override;
-
     bool isTranslucent() override { return true; }
     
 private:

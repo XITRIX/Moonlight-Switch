@@ -70,6 +70,16 @@
                 id="swap_game"/>
                 
             <brls:Header
+                title="@i18n/main/settings/overlay"
+                paddingTop="60"/>
+                
+            <brls:SelectorCell
+                id="overlay_time"/>
+            
+            <brls:DetailCell
+                id="overlay_buttons"/>
+                
+            <brls:Header
                 title="@i18n/main/settings/debug"
                 paddingTop="60"/>
                 

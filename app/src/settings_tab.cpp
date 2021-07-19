@@ -6,6 +6,7 @@
 //
 
 #include "settings_tab.hpp"
+#include "button_selecting_dialog.hpp"
 #include "Settings.hpp"
 #include <iomanip>
 #include <sstream>
@@ -108,17 +109,50 @@ SettingsTab::SettingsTab()
     
     swapUi->init("main/settings/swap_ui"_i18n, Settings::instance().swap_ui_keys(), [](bool value) {
         Settings::instance().set_swap_ui_keys(value);
-        brls::Application::setSwapInputKeys(value);
+        brls::async([value] { brls::sync([value] { brls::Application::setSwapInputKeys(value); }); });
     });
     
     swapGame->init("main/settings/swap_game"_i18n, Settings::instance().swap_game_keys(), [](bool value) {
         Settings::instance().set_swap_game_keys(value);
     });
     
+    overlayTime->init("main/settings/overlay_time"_i18n, { "main/settings/overlay_zero_time"_i18n, "1", "2", "3", "4", "5" }, Settings::instance().overlay_options().holdTime, [](int value) {
+        auto options = Settings::instance().overlay_options();
+        options.holdTime = value;
+        Settings::instance().set_overlay_options(options);
+    });
+    
+    setupOverlayButtonsCell();
+    overlayButtons->setText("main/settings/overlay_buttons"_i18n);
+    overlayButtons->registerClickAction([this](View* view) {
+        ButtonSelectingDialog* dialog = ButtonSelectingDialog::create("main/settings/overlay_setup_message"_i18n);
+        dialog->addButton("main/cummon/cancel"_i18n, [dialog] { dialog->resetButtons(); });
+        dialog->addButton("main/cummon/confirm"_i18n, [this, dialog] {
+            auto options = Settings::instance().overlay_options();
+            options.buttons = dialog->getButtons();
+            Settings::instance().set_overlay_options(options);
+            this->setupOverlayButtonsCell();
+        });
+        dialog->open();
+        return true;
+    });
+    
     writeLog->init("main/settings/debugging_view"_i18n, Settings::instance().write_log(), [](bool value) {
         Settings::instance().set_write_log(value);
         brls::Application::enableDebuggingView(value);
     });
+}
+
+void SettingsTab::setupOverlayButtonsCell()
+{
+    std::string buttonsText = "";
+    auto buttons = Settings::instance().overlay_options().buttons;
+    for (int i = 0; i < buttons.size(); i++) {
+        buttonsText += brls::Hint::getKeyIcon(buttons[i]);
+        if (i < buttons.size() - 1)
+            buttonsText += " + ";
+    }
+    overlayButtons->setDetailText(buttonsText);
 }
 
 SettingsTab::~SettingsTab()

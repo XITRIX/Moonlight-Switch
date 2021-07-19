@@ -1,12 +1,19 @@
+#pragma once
+
 #include "Singleton.hpp"
+#include <borealis.hpp>
 #include <stdio.h>
 #include <string>
 #include <vector>
-#pragma once
 
 enum VideoCodec: int {
     H264,
     H265
+};
+
+struct OverlayOptions {
+    int holdTime;
+    std::vector<brls::ControllerButton> buttons;
 };
 
 struct Host {
@@ -138,6 +145,14 @@ public:
         return m_swap_game_keys;
     }
     
+    void set_overlay_options(OverlayOptions options) {
+        m_overlay_options = options;
+    }
+    
+    OverlayOptions overlay_options() const {
+        return m_overlay_options;
+    }
+    
     void load();
     void save();
 
@@ -161,4 +176,8 @@ private:
     bool m_write_log = false;
     bool m_swap_ui_keys = false;
     bool m_swap_game_keys = false;
+    OverlayOptions m_overlay_options {
+        .holdTime = 1,
+        .buttons = {brls::ControllerButton::BUTTON_BACK, brls::ControllerButton::BUTTON_START},
+    };
 };

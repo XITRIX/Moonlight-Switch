@@ -165,6 +165,26 @@ void Settings::load() {
             if (json_t* write_log = json_object_get(settings, "swap_game_keys")) {
                 m_swap_game_keys = json_typeof(write_log) == JSON_TRUE;
             }
+            
+            if (json_t* overlay_hold_time = json_object_get(settings, "overlay_hold_time")) {
+                if (json_typeof(overlay_hold_time) == JSON_INTEGER) {
+                    m_overlay_options.holdTime = (int)json_integer_value(overlay_hold_time);
+                }
+            }
+            
+            if (json_t* buttons = json_object_get(settings, "overlay_buttons")) {
+                m_overlay_options.buttons.clear();
+                size_t size = json_array_size(buttons);
+                for (size_t i = 0; i < size; i++) {
+                    if (json_t* j_button = json_array_get(buttons, i)) {
+                        brls::ControllerButton button;
+                        if (json_typeof(j_button) == JSON_INTEGER) {
+                            button = (brls::ControllerButton)json_integer_value(j_button);
+                            m_overlay_options.buttons.push_back(button);
+                        }
+                    }
+                }
+            }
         }
         
         json_decref(root);
@@ -200,6 +220,15 @@ void Settings::save() {
             json_object_set_new(settings, "write_log", m_write_log ? json_true() : json_false());
             json_object_set_new(settings, "swap_ui_keys", m_swap_ui_keys ? json_true() : json_false());
             json_object_set_new(settings, "swap_game_keys", m_swap_game_keys ? json_true() : json_false());
+            json_object_set_new(settings, "overlay_hold_time", json_integer(m_overlay_options.holdTime));
+            
+            if (json_t* overlayButtons = json_array()) {
+                for (auto button: m_overlay_options.buttons) {
+                    json_array_append_new(overlayButtons, json_integer(button));
+                }
+                json_object_set_new(settings, "overlay_buttons", overlayButtons);
+            }
+            
             json_object_set_new(root, "settings", settings);
         }
         

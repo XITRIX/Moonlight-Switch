@@ -88,7 +88,7 @@ void AppListView::terninateApp()
     
     Dialog* dialog = new Dialog("main/app_list/terminate_prefix"_i18n + currentApp->name + "main/app_list/terminate_postfix"_i18n);
     
-    dialog->addButton("main/app_list/cancel"_i18n, [] { });
+    dialog->addButton("main/cummon/cancel"_i18n, [] { });
     
     dialog->addButton("main/app_list/terminate"_i18n, [dialog, this] {
         if (loading)

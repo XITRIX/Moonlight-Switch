@@ -174,9 +174,6 @@ void StreamingView::draw(NVGcontext* vg, float x, float y, float width, float he
 
 void StreamingView::terminate(bool terminateApp)
 {
-//    terminated = true;
-//    InputController::controller()->stop_rumple();
-
     session->stop(terminateApp);
     this->dismiss();
 }
@@ -203,6 +200,11 @@ void StreamingView::handleInput()
 
 void StreamingView::handleButtonHolding()
 {
+    if (!this->focused)
+        return;
+    
+    OverlayOptions options = Settings::instance().overlay_options();
+    
     static ControllerState controller;
     Application::getPlatform()->getInputManager()->updateControllerState(&controller);
     
@@ -212,17 +214,23 @@ void StreamingView::handleButtonHolding()
     
     auto duration = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::high_resolution_clock::now() - clock_counter);
     
-    if (!buttonState && controller.buttons[BUTTON_START])
+    bool buttonsPressed = true;
+    for (auto button : options.buttons)
+    {
+        buttonsPressed &= controller.buttons[button];
+    }
+    
+    if (!buttonState && buttonsPressed)
     {
         buttonState = true;
         clock_counter = std::chrono::high_resolution_clock::now();
     }
-    else if (buttonState && !controller.buttons[BUTTON_START])
+    else if (buttonState && !buttonsPressed)
     {
         buttonState = false;
         used = false;
     }
-    else if (buttonState && duration.count() > 2 && !used)
+    else if (buttonState && duration.count() >= options.holdTime && !used)
     {
         used = true;
         

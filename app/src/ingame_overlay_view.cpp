@@ -35,6 +35,9 @@ brls::AppletFrame* IngameOverlay::getAppletFrame()
     return applet;
 }
 
+IngameOverlay::~IngameOverlay() {
+}
+
 // MARK: - Logout Tab
 LogoutTab::LogoutTab(StreamingView* streamView) :
     streamView(streamView)

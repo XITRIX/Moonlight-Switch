@@ -124,6 +124,7 @@
 		7C471DAE266970B00059D144 /* app_cell.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C471DAC266970B00059D144 /* app_cell.cpp */; };
 		7C52664C2670266500DA102F /* backward.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C52664A2670266500DA102F /* backward.cpp */; };
 		7C5DEBA6268FCA450067CF37 /* DiscoverManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C5DEBA4268FCA450067CF37 /* DiscoverManager.cpp */; };
+		7C6EC65A26A5F174001ABADE /* button_selecting_dialog.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C6EC65826A5F174001ABADE /* button_selecting_dialog.cpp */; };
 		7C77C51D2676140200179EA8 /* RtpAudioQueue.c in Sources */ = {isa = PBXBuildFile; fileRef = 7C0B64DF267570FA009D1C0C /* RtpAudioQueue.c */; };
 		7C77C51E2676140400179EA8 /* RtpVideoQueue.c in Sources */ = {isa = PBXBuildFile; fileRef = 7C0B64DD267570FA009D1C0C /* RtpVideoQueue.c */; };
 		7C77C5212676C98600179EA8 /* keyboard_view.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C77C51F2676C98600179EA8 /* keyboard_view.cpp */; };
@@ -548,6 +549,8 @@
 		7C5DEBA3268FC6830067CF37 /* zeroconf-util.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = "zeroconf-util.hpp"; sourceTree = "<group>"; };
 		7C5DEBA4268FCA450067CF37 /* DiscoverManager.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = DiscoverManager.cpp; sourceTree = "<group>"; };
 		7C5DEBA5268FCA450067CF37 /* DiscoverManager.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = DiscoverManager.hpp; sourceTree = "<group>"; };
+		7C6EC65826A5F174001ABADE /* button_selecting_dialog.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = button_selecting_dialog.cpp; sourceTree = "<group>"; };
+		7C6EC65926A5F174001ABADE /* button_selecting_dialog.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = button_selecting_dialog.hpp; sourceTree = "<group>"; };
 		7C77C51F2676C98600179EA8 /* keyboard_view.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = keyboard_view.cpp; sourceTree = "<group>"; };
 		7C77C5202676C98600179EA8 /* keyboard_view.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = keyboard_view.hpp; sourceTree = "<group>"; };
 		7C8AE162269CBCDC00210332 /* Borealis.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = Borealis.xcodeproj; sourceTree = "<group>"; };
@@ -1579,6 +1582,7 @@
 				7C471DA8266962E80059D144 /* grid_view.hpp */,
 				7C471DAD266970B00059D144 /* app_cell.hpp */,
 				7C77C5202676C98600179EA8 /* keyboard_view.hpp */,
+				7C6EC65926A5F174001ABADE /* button_selecting_dialog.hpp */,
 			);
 			path = include;
 			sourceTree = "<group>";
@@ -1606,6 +1610,7 @@
 				7C471DAC266970B00059D144 /* app_cell.cpp */,
 				7C52664A2670266500DA102F /* backward.cpp */,
 				7C77C51F2676C98600179EA8 /* keyboard_view.cpp */,
+				7C6EC65826A5F174001ABADE /* button_selecting_dialog.cpp */,
 			);
 			path = src;
 			sourceTree = "<group>";
@@ -1996,6 +2001,7 @@
 				7C18F0BB265C177E000D3AF0 /* progress_spinner.cpp in Sources */,
 				7C18F0BC265C177E000D3AF0 /* cell_selector.cpp in Sources */,
 				7CBDEEA82683818A00C6C7B2 /* InputManager.cpp in Sources */,
+				7C6EC65A26A5F174001ABADE /* button_selecting_dialog.cpp in Sources */,
 				7C18F153265C37F3000D3AF0 /* RtspConnection.c in Sources */,
 				7CBE6B70265DAF8D007DCC5A /* http.cpp in Sources */,
 				7C18F0B8265C177E000D3AF0 /* hint.cpp in Sources */,
