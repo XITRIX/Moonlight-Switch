@@ -126,8 +126,8 @@ SettingsTab::SettingsTab()
     overlayButtons->setText("main/settings/overlay_buttons"_i18n);
     overlayButtons->registerClickAction([this](View* view) {
         ButtonSelectingDialog* dialog = ButtonSelectingDialog::create("main/settings/overlay_setup_message"_i18n);
-        dialog->addButton("main/cummon/cancel"_i18n, [dialog] { dialog->resetButtons(); });
-        dialog->addButton("main/cummon/confirm"_i18n, [this, dialog] {
+        dialog->addButton("main/common/cancel"_i18n, [dialog] { dialog->resetButtons(); });
+        dialog->addButton("main/common/confirm"_i18n, [this, dialog] {
             auto options = Settings::instance().overlay_options();
             options.buttons = dialog->getButtons();
             Settings::instance().set_overlay_options(options);

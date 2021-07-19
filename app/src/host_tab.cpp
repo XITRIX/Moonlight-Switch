@@ -56,7 +56,7 @@ HostTab::HostTab(Host host) :
     
     remove->registerClickAction([this, host](View* view) {
         Dialog* dialog = new Dialog("main/host/remove_message"_i18n);
-        dialog->addButton("main/cummon/cancel"_i18n, [] {});
+        dialog->addButton("main/common/cancel"_i18n, [] {});
         dialog->addButton("main/host/remove"_i18n, [host]
         {
             Settings::instance().remove_host(host);
