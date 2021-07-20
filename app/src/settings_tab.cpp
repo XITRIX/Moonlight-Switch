@@ -150,6 +150,10 @@ SettingsTab::SettingsTab()
         return true;
     });
     
+    swapMouse->init("main/settings/swap_mouse"_i18n, Settings::instance().swap_mouse_keys(), [this](bool value) {
+        Settings::instance().set_swap_mouse_keys(value);
+    });
+    
     writeLog->init("main/settings/debugging_view"_i18n, Settings::instance().write_log(), [](bool value) {
         Settings::instance().set_write_log(value);
         brls::Application::enableDebuggingView(value);

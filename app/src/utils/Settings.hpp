@@ -145,6 +145,14 @@ public:
         return m_swap_game_keys;
     }
     
+    void set_swap_mouse_keys(bool swap_ui_keys) {
+        m_swap_mouse_keys = swap_ui_keys;
+    }
+    
+    bool swap_mouse_keys() const {
+        return m_swap_mouse_keys;
+    }
+    
     void set_guide_key_options(KeyComboOptions options) {
         m_overlay_options = options;
     }
@@ -184,6 +192,7 @@ private:
     bool m_write_log = false;
     bool m_swap_ui_keys = false;
     bool m_swap_game_keys = false;
+    bool m_swap_mouse_keys = false;
     KeyComboOptions m_guide_key_options {
         .holdTime = 0,
         .buttons = {brls::ControllerButton::BUTTON_BACK, brls::ControllerButton::BUTTON_START},

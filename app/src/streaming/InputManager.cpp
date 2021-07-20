@@ -118,13 +118,15 @@ void MoonlightInputManager::handleInput()
     if (mouseState.l_pressed != lastMouseState.l_pressed)
     {
         lastMouseState.l_pressed = mouseState.l_pressed;
-        LiSendMouseButtonEvent(mouseState.l_pressed ? BUTTON_ACTION_PRESS : BUTTON_ACTION_RELEASE, BUTTON_MOUSE_LEFT);
+        auto lb = Settings::instance().swap_mouse_keys() ? BUTTON_MOUSE_RIGHT : BUTTON_MOUSE_LEFT;
+        LiSendMouseButtonEvent(mouseState.l_pressed ? BUTTON_ACTION_PRESS : BUTTON_ACTION_RELEASE, lb);
     }
     
     if (mouseState.r_pressed != lastMouseState.r_pressed)
     {
         lastMouseState.r_pressed = mouseState.r_pressed;
-        LiSendMouseButtonEvent(mouseState.r_pressed ? BUTTON_ACTION_PRESS : BUTTON_ACTION_RELEASE, BUTTON_MOUSE_RIGHT);
+        auto rb = Settings::instance().swap_mouse_keys() ? BUTTON_MOUSE_LEFT : BUTTON_MOUSE_RIGHT;
+        LiSendMouseButtonEvent(mouseState.r_pressed ? BUTTON_ACTION_PRESS : BUTTON_ACTION_RELEASE, rb);
     }
     
 //    if (mouseState.position != lastMouseState.position)

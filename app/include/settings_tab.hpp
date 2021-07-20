@@ -23,12 +23,14 @@ class SettingsTab : public brls::Box
     BRLS_BIND(brls::Slider, slider, "slider");
     BRLS_BIND(brls::BooleanCell, optimal, "optimal");
     BRLS_BIND(brls::BooleanCell, pcAudio, "pcAudio");
-    BRLS_BIND(brls::BooleanCell, writeLog, "writeLog");
     BRLS_BIND(brls::BooleanCell, swapUi, "swap_ui");
     BRLS_BIND(brls::BooleanCell, swapGame, "swap_game");
     BRLS_BIND(brls::DetailCell, guideKeyButtons, "guide_key_buttons");
     BRLS_BIND(brls::SelectorCell, overlayTime, "overlay_time");
     BRLS_BIND(brls::DetailCell, overlayButtons, "overlay_buttons");
+    BRLS_BIND(brls::BooleanCell, swapMouse, "swap_mouse");
+    BRLS_BIND(brls::BooleanCell, writeLog, "writeLog");
+    
 
     static brls::View* create();
     

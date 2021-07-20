@@ -87,6 +87,13 @@
                 id="overlay_buttons"/>
                 
             <brls:Header
+                title="@i18n/main/settings/mouse"
+                paddingTop="60"/>
+                
+            <brls:BooleanCell
+                id="swap_mouse"/>
+                
+            <brls:Header
                 title="@i18n/main/settings/debug"
                 paddingTop="60"/>
                 

@@ -166,6 +166,10 @@ void Settings::load() {
                 m_swap_game_keys = json_typeof(write_log) == JSON_TRUE;
             }
             
+            if (json_t* write_log = json_object_get(settings, "swap_mouse_keys")) {
+                m_swap_mouse_keys = json_typeof(write_log) == JSON_TRUE;
+            }
+            
             if (json_t* overlay_hold_time = json_object_get(settings, "overlay_hold_time")) {
                 if (json_typeof(overlay_hold_time) == JSON_INTEGER) {
                     m_overlay_options.holdTime = (int)json_integer_value(overlay_hold_time);
@@ -234,6 +238,7 @@ void Settings::save() {
             json_object_set_new(settings, "write_log", m_write_log ? json_true() : json_false());
             json_object_set_new(settings, "swap_ui_keys", m_swap_ui_keys ? json_true() : json_false());
             json_object_set_new(settings, "swap_game_keys", m_swap_game_keys ? json_true() : json_false());
+            json_object_set_new(settings, "swap_mouse_keys", m_swap_mouse_keys ? json_true() : json_false());
             json_object_set_new(settings, "overlay_hold_time", json_integer(m_overlay_options.holdTime));
             
             if (json_t* overlayButtons = json_array()) {
