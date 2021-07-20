@@ -8,15 +8,15 @@
 #include "button_selecting_dialog.hpp"
 #include "Settings.hpp"
 
-ButtonSelectingDialog::ButtonSelectingDialog(Box* box):
-    Dialog(box) {}
+ButtonSelectingDialog::ButtonSelectingDialog(Box* box, std::function<void(std::vector<ControllerButton>)> callback):
+    Dialog(box), callback(callback) {}
 
 ButtonSelectingDialog::~ButtonSelectingDialog()
 {
     Application::unblockInputs();
 }
 
-ButtonSelectingDialog* ButtonSelectingDialog::create(std::string titleText) {
+ButtonSelectingDialog* ButtonSelectingDialog::create(std::string titleText, std::function<void(std::vector<ControllerButton>)> callback) {
     brls::Style style = brls::Application::getStyle();
 
     brls::Label* label = new brls::Label();
@@ -29,7 +29,7 @@ ButtonSelectingDialog* ButtonSelectingDialog::create(std::string titleText) {
     box->setJustifyContent(brls::JustifyContent::CENTER);
     box->setPadding(style["brls/dialog/paddingTopBottom"], style["brls/dialog/paddingLeftRight"], style["brls/dialog/paddingTopBottom"], style["brls/dialog/paddingLeftRight"]);
     
-    ButtonSelectingDialog* dialog = new ButtonSelectingDialog(box);
+    ButtonSelectingDialog* dialog = new ButtonSelectingDialog(box, callback);
     dialog->titleText = titleText;
     dialog->label = label;
     dialog->setCancelable(false);
@@ -38,6 +38,11 @@ ButtonSelectingDialog* ButtonSelectingDialog::create(std::string titleText) {
     dialog->button1->setHideHighlight(true);
     dialog->button2->setHideHighlight(true);
     dialog->button3->setHideHighlight(true);
+    
+    dialog->addButton("main/common/cancel"_i18n, []{});
+    dialog->addButton("main/common/confirm"_i18n, [dialog] {
+        dialog->callback(dialog->buttons);
+    });
     
     return dialog;
 }
@@ -49,12 +54,6 @@ void ButtonSelectingDialog::open()
     Application::blockInputs();
 }
 
-void ButtonSelectingDialog::resetButtons()
-{
-    buttons.clear();
-    reloadLabel();
-}
-
 void ButtonSelectingDialog::reloadLabel()
 {
     label->setText(titleText + buttonsText());
@@ -64,7 +63,7 @@ std::string ButtonSelectingDialog::buttonsText()
 {
     std::string buttonsText = "";
     for (int i = 0; i < buttons.size(); i++) {
-        buttonsText += brls::Hint::getKeyIcon(buttons[i]);
+        buttonsText += brls::Hint::getKeyIcon(buttons[i], true);
         if (i < buttons.size() - 1)
             buttonsText += " + ";
     }

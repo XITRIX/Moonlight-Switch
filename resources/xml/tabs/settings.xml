@@ -70,6 +70,13 @@
                 id="swap_game"/>
                 
             <brls:Header
+                title="@i18n/main/settings/guide_key"
+                paddingTop="60"/>
+            
+            <brls:DetailCell
+                id="guide_key_buttons"/>
+                
+            <brls:Header
                 title="@i18n/main/settings/overlay"
                 paddingTop="60"/>
                 

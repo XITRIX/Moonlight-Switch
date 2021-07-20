@@ -185,6 +185,20 @@ void Settings::load() {
                     }
                 }
             }
+            
+            if (json_t* buttons = json_object_get(settings, "guide_key_buttons")) {
+                m_guide_key_options.buttons.clear();
+                size_t size = json_array_size(buttons);
+                for (size_t i = 0; i < size; i++) {
+                    if (json_t* j_button = json_array_get(buttons, i)) {
+                        brls::ControllerButton button;
+                        if (json_typeof(j_button) == JSON_INTEGER) {
+                            button = (brls::ControllerButton)json_integer_value(j_button);
+                            m_guide_key_options.buttons.push_back(button);
+                        }
+                    }
+                }
+            }
         }
         
         json_decref(root);
@@ -227,6 +241,13 @@ void Settings::save() {
                     json_array_append_new(overlayButtons, json_integer(button));
                 }
                 json_object_set_new(settings, "overlay_buttons", overlayButtons);
+            }
+            
+            if (json_t* guideKeyButtons = json_array()) { 
+                for (auto button: m_guide_key_options.buttons) {
+                    json_array_append_new(guideKeyButtons, json_integer(button));
+                }
+                json_object_set_new(settings, "guide_key_buttons", guideKeyButtons);
             }
             
             json_object_set_new(root, "settings", settings);

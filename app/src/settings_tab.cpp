@@ -88,9 +88,9 @@ SettingsTab::SettingsTab()
         Settings::instance().set_video_codec((VideoCodec)selected);
     });
     
-    float progress = (Settings::instance().bitrate() - 500.0f) / 149500.0f;
+    float progress = (Settings::instance().bitrate() - 500.0f) / 49500.0f;
     slider->getProgressEvent()->subscribe([this](float progress) {
-        int bitrate = progress * 149500.0f + 500.0f;
+        int bitrate = progress * 49500.0f + 500.0f;
         float fbitrate = bitrate / 1000.0f;
         std::stringstream stream;
         stream << std::fixed << std::setprecision(1) << fbitrate;
@@ -116,23 +116,36 @@ SettingsTab::SettingsTab()
         Settings::instance().set_swap_game_keys(value);
     });
     
+    guideKeyButtons->setText("main/settings/guide_key_buttons"_i18n);
+    guideKeyButtons->setDetailText(getTextFromButtons(Settings::instance().guide_key_options().buttons));
+    guideKeyButtons->registerClickAction([this](View* view) {
+        ButtonSelectingDialog* dialog = ButtonSelectingDialog::create("main/settings/guide_key_setup_message"_i18n, [this](auto buttons) {
+            auto options = Settings::instance().guide_key_options();
+            options.buttons = buttons;
+            Settings::instance().set_guide_key_options(options);
+            guideKeyButtons->setDetailText(getTextFromButtons(buttons));
+        });
+        
+        dialog->open();
+        return true;
+    });
+    
     overlayTime->init("main/settings/overlay_time"_i18n, { "main/settings/overlay_zero_time"_i18n, "1", "2", "3", "4", "5" }, Settings::instance().overlay_options().holdTime, [](int value) {
         auto options = Settings::instance().overlay_options();
         options.holdTime = value;
         Settings::instance().set_overlay_options(options);
     });
     
-    setupOverlayButtonsCell();
     overlayButtons->setText("main/settings/overlay_buttons"_i18n);
+    overlayButtons->setDetailText(getTextFromButtons(Settings::instance().overlay_options().buttons));
     overlayButtons->registerClickAction([this](View* view) {
-        ButtonSelectingDialog* dialog = ButtonSelectingDialog::create("main/settings/overlay_setup_message"_i18n);
-        dialog->addButton("main/common/cancel"_i18n, [dialog] { dialog->resetButtons(); });
-        dialog->addButton("main/common/confirm"_i18n, [this, dialog] {
+        ButtonSelectingDialog* dialog = ButtonSelectingDialog::create("main/settings/overlay_setup_message"_i18n, [this](auto buttons) {
             auto options = Settings::instance().overlay_options();
-            options.buttons = dialog->getButtons();
+            options.buttons = buttons;
             Settings::instance().set_overlay_options(options);
-            this->setupOverlayButtonsCell();
+            overlayButtons->setDetailText(getTextFromButtons(buttons));
         });
+        
         dialog->open();
         return true;
     });
@@ -143,16 +156,15 @@ SettingsTab::SettingsTab()
     });
 }
 
-void SettingsTab::setupOverlayButtonsCell()
+std::string SettingsTab::getTextFromButtons(std::vector<ControllerButton> buttons)
 {
     std::string buttonsText = "";
-    auto buttons = Settings::instance().overlay_options().buttons;
     for (int i = 0; i < buttons.size(); i++) {
-        buttonsText += brls::Hint::getKeyIcon(buttons[i]);
+        buttonsText += brls::Hint::getKeyIcon(buttons[i], true);
         if (i < buttons.size() - 1)
             buttonsText += " + ";
     }
-    overlayButtons->setDetailText(buttonsText);
+    return buttonsText;
 }
 
 SettingsTab::~SettingsTab()

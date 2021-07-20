@@ -11,7 +11,7 @@ enum VideoCodec: int {
     H265
 };
 
-struct OverlayOptions {
+struct KeyComboOptions {
     int holdTime;
     std::vector<brls::ControllerButton> buttons;
 };
@@ -145,11 +145,19 @@ public:
         return m_swap_game_keys;
     }
     
-    void set_overlay_options(OverlayOptions options) {
+    void set_guide_key_options(KeyComboOptions options) {
         m_overlay_options = options;
     }
     
-    OverlayOptions overlay_options() const {
+    KeyComboOptions guide_key_options() const {
+        return m_guide_key_options;
+    }
+    
+    void set_overlay_options(KeyComboOptions options) {
+        m_overlay_options = options;
+    }
+    
+    KeyComboOptions overlay_options() const {
         return m_overlay_options;
     }
     
@@ -176,8 +184,12 @@ private:
     bool m_write_log = false;
     bool m_swap_ui_keys = false;
     bool m_swap_game_keys = false;
-    OverlayOptions m_overlay_options {
-        .holdTime = 1,
+    KeyComboOptions m_guide_key_options {
+        .holdTime = 0,
         .buttons = {brls::ControllerButton::BUTTON_BACK, brls::ControllerButton::BUTTON_START},
+    };
+    KeyComboOptions m_overlay_options {
+        .holdTime = 3,
+        .buttons = {brls::ControllerButton::BUTTON_START},
     };
 };

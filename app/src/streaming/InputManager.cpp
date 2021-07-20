@@ -85,6 +85,12 @@ void MoonlightInputManager::handleInput()
     SET_GAME_PAD_STATE(LS_CLK_FLAG, brls::BUTTON_LSB);
     SET_GAME_PAD_STATE(RS_CLK_FLAG, brls::BUTTON_RSB);
     
+    auto guideKeys = Settings::instance().guide_key_options().buttons;
+    bool guideCombo = guideKeys.size() > 0;
+    for (auto key: guideKeys)
+        guideCombo &= controller.buttons[key];
+    guideCombo ? (gamepadState.buttonFlags |= SPECIAL_FLAG) : (gamepadState.buttonFlags &= ~SPECIAL_FLAG);
+    
     if (!gamepadState.is_equal(lastGamepadState))
     {
         lastGamepadState = gamepadState;

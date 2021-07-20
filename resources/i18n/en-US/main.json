@@ -66,9 +66,12 @@
         "swap_game": "Swap for game stream",
         "overlay": "Ingame overlay",
         "overlay_setup_message": "Press keys you'd like to use to open Overlay:\n\n",
-        "overlay_zero_time": "0 (Instantly)",
+        "overlay_zero_time": "0 (Immediately)",
         "overlay_time": "Hold to open in seconds",
-        "overlay_buttons": "Buttons combination"
+        "overlay_buttons": "Buttons combination",
+        "guide_key_setup_message": "Press keys you'd like to use to press Guide button:\n\n",
+        "guide_key": "Guide key (clicks immediately)",
+        "guide_key_buttons": "Buttons combination"
     },
     
     "button_selecting_dialog": {

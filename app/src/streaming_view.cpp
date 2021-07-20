@@ -203,7 +203,7 @@ void StreamingView::handleButtonHolding()
     if (!this->focused)
         return;
     
-    OverlayOptions options = Settings::instance().overlay_options();
+    KeyComboOptions options = Settings::instance().overlay_options();
     
     static ControllerState controller;
     Application::getPlatform()->getInputManager()->updateControllerState(&controller);
