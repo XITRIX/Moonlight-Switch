@@ -69,7 +69,7 @@ void KeyboardView::createEnglishLayout()
     addView(thirdRow);
     
     ButtonView* lshiftButton = new ButtonView();
-    lshiftButton->setKey(VK_LSHIFT);
+    lshiftButton->setKey(VK_RSHIFT);
     lshiftButton->triggerType = true;
     lshiftButton->charLabel->setFontSize(21);
     lshiftButton->setMargins(4, 24, 4, 4);
@@ -121,7 +121,7 @@ void KeyboardView::createEnglishLayout()
     fourthRow->addView(spaceButton);
     
     ButtonView* ctrlButton = new ButtonView();
-    ctrlButton->setKey(VK_LCONTROL);
+    ctrlButton->setKey(VK_RCONTROL);
     ctrlButton->triggerType = true;
     ctrlButton->charLabel->setFontSize(21);
     ctrlButton->setMargins(4, 4, 4, 4);

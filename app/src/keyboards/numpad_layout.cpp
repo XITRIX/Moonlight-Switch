@@ -74,7 +74,8 @@ void KeyboardView::createNumpadLayout()
     addView(thirdRow);
     
     ButtonView* lshiftButton = new ButtonView();
-    lshiftButton->setKey(VK_TAB);
+    lshiftButton->setKey(VK_RSHIFT);
+    lshiftButton->triggerType = true;
     lshiftButton->charLabel->setFontSize(21);
     lshiftButton->setMargins(4, 24, 4, 4);
     lshiftButton->setWidth(120);
@@ -109,8 +110,7 @@ void KeyboardView::createNumpadLayout()
     fourthRow->addView(altButton);
     
     ButtonView* winButton = new ButtonView();
-    winButton->setKey(VK_LWIN);
-    winButton->triggerType = true;
+    winButton->setKey(VK_TAB);
     winButton->charLabel->setFontSize(21);
     winButton->setMargins(4, 4, 4, 4);
     winButton->setWidth(120);
@@ -124,7 +124,7 @@ void KeyboardView::createNumpadLayout()
     fourthRow->addView(spaceButton);
     
     ButtonView* ctrlButton = new ButtonView();
-    ctrlButton->setKey(VK_LCONTROL);
+    ctrlButton->setKey(VK_RCONTROL);
     ctrlButton->triggerType = true;
     ctrlButton->charLabel->setFontSize(21);
     ctrlButton->setMargins(4, 4, 4, 4);
@@ -132,7 +132,7 @@ void KeyboardView::createNumpadLayout()
     fourthRow->addView(ctrlButton);
     
     ButtonView* returnButton = new ButtonView();
-    returnButton->setKey(VK_LMENU);
+    returnButton->setKey(VK_RMENU);
     returnButton->triggerType = true;
     returnButton->charLabel->setFontSize(21);
     returnButton->setMargins(4, 4, 4, 4);
