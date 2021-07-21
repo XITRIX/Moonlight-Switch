@@ -79,6 +79,9 @@ void KeyboardView::createNumpadLayout()
     lshiftButton->charLabel->setFontSize(21);
     lshiftButton->setMargins(4, 24, 4, 4);
     lshiftButton->setWidth(120);
+    lshiftButton->event = [] {
+        KeyboardView::shiftUpdated.fire();
+    };
     thirdRow->addView(lshiftButton);
     
     for (int i = 23; i < 30; i++)

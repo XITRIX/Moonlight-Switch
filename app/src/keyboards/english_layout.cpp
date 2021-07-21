@@ -74,6 +74,9 @@ void KeyboardView::createEnglishLayout()
     lshiftButton->charLabel->setFontSize(21);
     lshiftButton->setMargins(4, 24, 4, 4);
     lshiftButton->setWidth(120);
+    lshiftButton->event = [] {
+        KeyboardView::shiftUpdated.fire();
+    };
     thirdRow->addView(lshiftButton);
     
     for (int i = 19; i < 26; i++)
@@ -107,7 +110,6 @@ void KeyboardView::createEnglishLayout()
     
     ButtonView* winButton = new ButtonView();
     winButton->setKey(VK_LWIN);
-    winButton->triggerType = true;
     winButton->charLabel->setFontSize(21);
     winButton->setMargins(4, 4, 4, 4);
     winButton->setWidth(120);

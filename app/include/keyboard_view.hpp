@@ -90,17 +90,23 @@ class ButtonView: public brls::Box
 {
 public:
     ButtonView();
+    ~ButtonView();
     brls::Label* charLabel;
     void setKey(KeyboardKeys key);
     void registerCallback();
     bool triggerType = false;
     KeyboardKeys key;
     std::function<void(void)> event = NULL;
+private:
+    brls::VoidEvent::Subscription shiftSubscription;
+    void applyTitle();
+    bool dummy = true;
 };
 
 class KeyboardView: public brls::Box
 {
 public:
+    inline static brls::VoidEvent shiftUpdated;
     KeyboardView();
     KeyboardState getKeyboardState();
     short getKeyCode(KeyboardKeys key);

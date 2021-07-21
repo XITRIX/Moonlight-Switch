@@ -94,6 +94,77 @@ std::string KeyboardLocalization[_VK_KEY_MAX]
     "7",
     "8",
     "9",
+    "a",
+    "b",
+    "c",
+    "d",
+    "e",
+    "f",
+    "g",
+    "h",
+    "i",
+    "j",
+    "k",
+    "l",
+    "m",
+    "n",
+    "o",
+    "p",
+    "q",
+    "r",
+    "s",
+    "t",
+    "u",
+    "v",
+    "w",
+    "x",
+    "y",
+    "z",
+    "Return",
+    "Space",
+    "Ctrl",
+    "Alt",
+    "Shift",
+    "Win",
+    ".",
+    ",",
+    "F1",
+    "F2",
+    "F3",
+    "F4",
+    "F5",
+    "F6",
+    "F7",
+    "F8",
+    "F9",
+    "F10",
+    "F11",
+    "F12",
+    "TAB",
+    "Delete",
+    ";",
+    "/",
+    "`",
+    "[",
+    "\\",
+    "]",
+    "'",
+};
+
+std::string ShiftKeyboardLocalization[_VK_KEY_MAX]
+{
+    "Remove",
+    "Esc",
+    ")",
+    "!",
+    "@",
+    "#",
+    "$",
+    "%",
+    "^",
+    "&",
+    "*",
+    "(",
     "A",
     "B",
     "C",
@@ -126,8 +197,8 @@ std::string KeyboardLocalization[_VK_KEY_MAX]
     "Alt",
     "Shift",
     "Win",
-    ".",
-    ",",
+    ">",
+    "<",
     "F1",
     "F2",
     "F3",
@@ -142,13 +213,13 @@ std::string KeyboardLocalization[_VK_KEY_MAX]
     "F12",
     "TAB",
     "Delete",
-    ";",
-    "/",
+    ":",
+    "?",
     "`",
-    "[",
-    "\\",
-    "]",
-    "'",
+    "{",
+    "|",
+    "}",
+    "\"",
 };
 
 bool keysState[_VK_KEY_MAX];
@@ -173,13 +244,31 @@ ButtonView::ButtonView()
     setShadowVisibility(true);
     setShadowType(ShadowType::GENERIC);
     
+    shiftSubscription = KeyboardView::shiftUpdated.subscribe([this]{
+        applyTitle();
+    });
+    
     registerCallback();
+}
+
+ButtonView::~ButtonView()
+{
+    KeyboardView::shiftUpdated.unsubscribe(shiftSubscription);
+}
+
+void ButtonView::applyTitle()
+{
+    if (dummy) return;
+    
+    bool shifted = keysState[VK_RSHIFT];
+    charLabel->setText(shifted ? ShiftKeyboardLocalization[key] : KeyboardLocalization[key]);
 }
 
 void ButtonView::setKey(KeyboardKeys key)
 {
-    charLabel->setText(KeyboardLocalization[key]);
+    this->dummy = false;
     this->key = key;
+    this->applyTitle();
     
     if (keysState[key])
         this->playClickAnimation(false);
@@ -188,22 +277,25 @@ void ButtonView::setKey(KeyboardKeys key)
 void ButtonView::registerCallback()
 {
     addGestureRecognizer(new TapGestureRecognizer([this](TapGestureStatus status, Sound* sound) {
-        if (event != NULL)
-        {
-            this->playClickAnimation(status.state != GestureState::UNSURE);
-            if (status.state == brls::GestureState::END)
-                event();
-        }
-        else if (!triggerType)
+        if (!triggerType)
         {
             this->playClickAnimation(status.state != GestureState::UNSURE);
             
             switch (status.state) {
                 case brls::GestureState::UNSURE:
-                    keysState[key] = true;
+                    if (!dummy)
+                        keysState[key] = true;
+                    break;
+                case brls::GestureState::END:
+                    if (!dummy)
+                        keysState[key] = false;
+                    
+                    if (event != NULL)
+                        event();
                     break;
                 default:
-                    keysState[key] = false;
+                    if (!dummy)
+                        keysState[key] = false;
                     break;
             }
         }
@@ -214,8 +306,14 @@ void ButtonView::registerCallback()
                     if (!keysState[key])
                         this->playClickAnimation(false);
                     break;
+                case brls::GestureState::FAILED:
+                    if (!keysState[key])
+                        this->playClickAnimation(true);
+                    break;
                 case brls::GestureState::END:
                     keysState[key] = !keysState[key];
+                    if (event != NULL)
+                        event();
                     
                     if (!keysState[key])
                         this->playClickAnimation(!keysState[key]);
