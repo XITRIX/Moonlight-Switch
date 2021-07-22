@@ -154,7 +154,7 @@ public:
     }
     
     void set_guide_key_options(KeyComboOptions options) {
-        m_overlay_options = options;
+        m_guide_key_options = options;
     }
     
     KeyComboOptions guide_key_options() const {
