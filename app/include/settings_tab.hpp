@@ -35,5 +35,7 @@ class SettingsTab : public brls::Box
     static brls::View* create();
     
 private:
+    void setupButtonsSelectorCell(brls::DetailCell* cell, std::vector<brls::ControllerButton> buttons);
     std::string getTextFromButtons(std::vector<brls::ControllerButton> buttons);
+    NVGcolor getColorFromButtons(std::vector<brls::ControllerButton> buttons);
 };

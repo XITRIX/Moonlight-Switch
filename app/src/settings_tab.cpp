@@ -117,13 +117,13 @@ SettingsTab::SettingsTab()
     });
     
     guideKeyButtons->setText("main/settings/guide_key_buttons"_i18n);
-    guideKeyButtons->setDetailText(getTextFromButtons(Settings::instance().guide_key_options().buttons));
+    setupButtonsSelectorCell(guideKeyButtons, Settings::instance().guide_key_options().buttons);
     guideKeyButtons->registerClickAction([this](View* view) {
         ButtonSelectingDialog* dialog = ButtonSelectingDialog::create("main/settings/guide_key_setup_message"_i18n, [this](auto buttons) {
             auto options = Settings::instance().guide_key_options();
             options.buttons = buttons;
             Settings::instance().set_guide_key_options(options);
-            guideKeyButtons->setDetailText(getTextFromButtons(buttons));
+            setupButtonsSelectorCell(guideKeyButtons, buttons);
         });
         
         dialog->open();
@@ -137,13 +137,13 @@ SettingsTab::SettingsTab()
     });
     
     overlayButtons->setText("main/settings/overlay_buttons"_i18n);
-    overlayButtons->setDetailText(getTextFromButtons(Settings::instance().overlay_options().buttons));
+    setupButtonsSelectorCell(overlayButtons, Settings::instance().overlay_options().buttons);
     overlayButtons->registerClickAction([this](View* view) {
         ButtonSelectingDialog* dialog = ButtonSelectingDialog::create("main/settings/overlay_setup_message"_i18n, [this](auto buttons) {
             auto options = Settings::instance().overlay_options();
             options.buttons = buttons;
             Settings::instance().set_overlay_options(options);
-            overlayButtons->setDetailText(getTextFromButtons(buttons));
+            setupButtonsSelectorCell(overlayButtons, buttons);
         });
         
         dialog->open();
@@ -160,15 +160,36 @@ SettingsTab::SettingsTab()
     });
 }
 
+void SettingsTab::setupButtonsSelectorCell(brls::DetailCell* cell, std::vector<ControllerButton> buttons)
+{
+    cell->setDetailText(getTextFromButtons(buttons));
+    cell->setDetailTextColor(getColorFromButtons(buttons));
+}
+
 std::string SettingsTab::getTextFromButtons(std::vector<ControllerButton> buttons)
 {
     std::string buttonsText = "";
-    for (int i = 0; i < buttons.size(); i++) {
-        buttonsText += brls::Hint::getKeyIcon(buttons[i], true);
-        if (i < buttons.size() - 1)
-            buttonsText += " + ";
+    if (buttons.size() > 0)
+    {
+        for (int i = 0; i < buttons.size(); i++) {
+            buttonsText += brls::Hint::getKeyIcon(buttons[i], true);
+            if (i < buttons.size() - 1)
+                buttonsText += " + ";
+        }
+    }
+    else
+    {
+        buttonsText = "brls/hints/off"_i18n;
     }
     return buttonsText;
+}
+
+NVGcolor SettingsTab::getColorFromButtons(std::vector<brls::ControllerButton> buttons)
+{
+    Theme theme = Application::getTheme();
+    return buttons.empty() ?
+        theme["brls/text_disabled"] :
+        theme["brls/list/listItem_value_color"];
 }
 
 SettingsTab::~SettingsTab()
