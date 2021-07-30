@@ -1,6 +1,12 @@
+
+#ifdef __SWITCH__
+#include <switch.h>
+#endif
+
 #include "InputManager.hpp"
 #include "Settings.hpp"
 #include "Limelight.h"
+#include <chrono>
 
 MoonlightInputManager::MoonlightInputManager()
 {
@@ -23,17 +29,25 @@ void MoonlightInputManager::handleInput()
     static brls::RawMouseState mouse;
     brls::Application::getPlatform()->getInputManager()->updateControllerState(&controller);
     brls::Application::getPlatform()->getInputManager()->updateMouseStates(&mouse);
+
+#ifdef __SWITCH__
+    static HidTouchScreenState hidState = { 0 };
+    hidGetTouchScreenStates(&hidState, 1);
+    bool specialKey = hidState.count > 0;
+#else
+    bool specialKey = false;
+#endif
     
     static GamepadState lastGamepadState;
     GamepadState gamepadState
     {
         .buttonFlags = 0,
-        .leftTrigger = static_cast<unsigned char>(0xFFFF * (!panStatus.has_value() && controller.buttons[brls::BUTTON_LT] ? 1 : 0)),
-        .rightTrigger = static_cast<unsigned char>(0xFFFF * (!panStatus.has_value() && controller.buttons[brls::BUTTON_RT] ? 1 : 0)),
-        .leftStickX = static_cast<short>(controller.axes[brls::LEFT_X] * 0x7FFF),
-        .leftStickY = static_cast<short>(controller.axes[brls::LEFT_Y] * -0x7FFF),
-        .rightStickX = static_cast<short>(controller.axes[brls::RIGHT_X] * 0x7FFF),
-        .rightStickY = static_cast<short>(controller.axes[brls::RIGHT_Y] * -0x7FFF),
+        .leftTrigger = static_cast<unsigned char>(0xFFFF * (!specialKey && controller.buttons[brls::BUTTON_LT] ? 1 : 0)),
+        .rightTrigger = static_cast<unsigned char>(0xFFFF * (!specialKey && controller.buttons[brls::BUTTON_RT] ? 1 : 0)),
+        .leftStickX = static_cast<short>(0x7FFF * controller.axes[brls::LEFT_X]),
+        .leftStickY = static_cast<short>(-0x7FFF * (!specialKey ? controller.axes[brls::LEFT_Y] : 0)),
+        .rightStickX = static_cast<short>(0x7FFF * controller.axes[brls::RIGHT_X]),
+        .rightStickY = static_cast<short>(-0x7FFF * (!specialKey ? controller.axes[brls::RIGHT_Y] : 0)),
     };
     
     brls::ControllerButton a;
@@ -105,14 +119,16 @@ void MoonlightInputManager::handleInput()
             brls::Logger::info("StreamingView: error sending input data");
     }
     
+    float stickScrolling = specialKey ? (controller.axes[brls::LEFT_Y] + controller.axes[brls::RIGHT_Y]) : 0;
+    
     static MouseStateS lastMouseState;
     MouseStateS mouseState
     {
         .position = mouse.position,
-        .scroll_y = mouse.scroll.y,
-        .l_pressed = (panStatus.has_value() && controller.buttons[brls::BUTTON_RT]) || mouse.leftButton,
+        .scroll_y = stickScrolling + mouse.scroll.y,
+        .l_pressed = (specialKey && controller.buttons[brls::BUTTON_RT]) || mouse.leftButton,
         .m_pressed = mouse.middleButton,
-        .r_pressed = (panStatus.has_value() && controller.buttons[brls::BUTTON_LT]) || mouse.rightButton
+        .r_pressed = (specialKey && controller.buttons[brls::BUTTON_LT]) || mouse.rightButton
     };
     
     if (mouseState.l_pressed != lastMouseState.l_pressed)
@@ -135,10 +151,16 @@ void MoonlightInputManager::handleInput()
 //        LiSendMousePositionEvent(mouseState.position.x, mouseState.position.y, Application::contentWidth, Application::contentHeight);
 //    }
     
-    if (mouseState.scroll_y != lastMouseState.scroll_y)
+    std::chrono::high_resolution_clock::time_point timeNow = std::chrono::high_resolution_clock::now();
+    static std::chrono::high_resolution_clock::time_point timeStamp = timeNow;
+    
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(timeNow - timeStamp).count();
+    if (mouseState.scroll_y != 0 && duration > 550 - abs(mouseState.scroll_y) * 500)
     {
+        timeStamp = timeNow;
+        brls::Logger::info("Scroll sended: {}", mouseState.scroll_y);
         lastMouseState.scroll_y = mouseState.scroll_y;
-        LiSendHighResScrollEvent(mouseState.scroll_y > 0 ? fmax(mouseState.scroll_y, 1) : fmin(mouseState.scroll_y, -1));
+        LiSendHighResScrollEvent(mouseState.scroll_y > 0 ? 1 : -1);
     }
     
     if (panStatus.has_value())
