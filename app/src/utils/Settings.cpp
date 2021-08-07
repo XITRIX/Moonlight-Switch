@@ -158,16 +158,30 @@ void Settings::load() {
                 m_write_log = json_typeof(write_log) == JSON_TRUE;
             }
             
-            if (json_t* write_log = json_object_get(settings, "swap_ui_keys")) {
-                m_swap_ui_keys = json_typeof(write_log) == JSON_TRUE;
+            if (json_t* swap_ui_keys = json_object_get(settings, "swap_ui_keys")) {
+                m_swap_ui_keys = json_typeof(swap_ui_keys) == JSON_TRUE;
             }
             
-            if (json_t* write_log = json_object_get(settings, "swap_game_keys")) {
-                m_swap_game_keys = json_typeof(write_log) == JSON_TRUE;
+            if (json_t* swap_game_keys = json_object_get(settings, "swap_game_keys")) {
+                m_swap_game_keys = json_typeof(swap_game_keys) == JSON_TRUE;
             }
             
-            if (json_t* write_log = json_object_get(settings, "swap_mouse_keys")) {
-                m_swap_mouse_keys = json_typeof(write_log) == JSON_TRUE;
+            if (json_t* swap_mouse_keys = json_object_get(settings, "swap_mouse_keys")) {
+                m_swap_mouse_keys = json_typeof(swap_mouse_keys) == JSON_TRUE;
+            }
+            
+            if (json_t* swap_mouse_scroll = json_object_get(settings, "swap_mouse_scroll")) {
+                m_swap_mouse_scroll = json_typeof(swap_mouse_scroll) == JSON_TRUE;
+            }
+            
+            if (json_t* volume_amplification = json_object_get(settings, "volume_amplification")) {
+                m_volume_amplification = json_typeof(volume_amplification) == JSON_TRUE;
+            }
+            
+            if (json_t* stream_volume = json_object_get(settings, "stream_volume")) {
+                if (json_typeof(stream_volume) == JSON_INTEGER) {
+                    m_volume = (int)json_integer_value(stream_volume);
+                }
             }
             
             if (json_t* overlay_hold_time = json_object_get(settings, "overlay_hold_time")) {
@@ -239,6 +253,9 @@ void Settings::save() {
             json_object_set_new(settings, "swap_ui_keys", m_swap_ui_keys ? json_true() : json_false());
             json_object_set_new(settings, "swap_game_keys", m_swap_game_keys ? json_true() : json_false());
             json_object_set_new(settings, "swap_mouse_keys", m_swap_mouse_keys ? json_true() : json_false());
+            json_object_set_new(settings, "swap_mouse_scroll", m_swap_mouse_scroll ? json_true() : json_false());
+            json_object_set_new(settings, "volume_amplification", m_volume_amplification ? json_true() : json_false());
+            json_object_set_new(settings, "stream_volume", json_integer(m_volume));
             json_object_set_new(settings, "overlay_hold_time", json_integer(m_overlay_options.holdTime));
             
             if (json_t* overlayButtons = json_array()) {

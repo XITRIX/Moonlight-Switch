@@ -150,8 +150,19 @@ SettingsTab::SettingsTab()
         return true;
     });
     
-    swapMouse->init("main/settings/swap_mouse"_i18n, Settings::instance().swap_mouse_keys(), [this](bool value) {
+    volumeAmplification->init("main/settings/volume_amplification"_i18n, Settings::instance().get_volume_amplification(), [this] (auto value) {
+        Settings::instance().set_volume_amplification(value);
+        
+        if (!value && Settings::instance().get_volume() > 100)
+            Settings::instance().set_volume(100);
+    });
+    
+    swapMouseKeys->init("main/settings/swap_mouse_keys"_i18n, Settings::instance().swap_mouse_keys(), [this](bool value) {
         Settings::instance().set_swap_mouse_keys(value);
+    });
+    
+    swapMouseScroll->init("main/settings/swap_mouse_scroll"_i18n, Settings::instance().swap_mouse_scroll(), [this](bool value) {
+        Settings::instance().set_swap_mouse_scroll(value);
     });
     
     writeLog->init("main/settings/debugging_view"_i18n, Settings::instance().write_log(), [](bool value) {

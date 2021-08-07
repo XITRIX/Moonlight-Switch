@@ -42,13 +42,15 @@ private:
 };
 
 // MARK: - Debug Tab
-class DebugTab : public brls::Box
+class OptionsTab : public brls::Box
 {
 public:
-    DebugTab(StreamingView* streamView);
+    OptionsTab(StreamingView* streamView);
 private:
     StreamingView* streamView;
     
+    BRLS_BIND(brls::Header, volumeHeader, "volume_header");
+    BRLS_BIND(brls::Slider, volumeSlider, "volume_slider");
     BRLS_BIND(brls::BooleanCell, debugButton, "debug");
     BRLS_BIND(brls::BooleanCell, onscreenLogButton, "onscreen_log");
 };

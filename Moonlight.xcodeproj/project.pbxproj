@@ -2143,12 +2143,17 @@
 					"extern/moonlight-common-c/enet/src",
 					"extern/moonlight-common-c/src",
 					extern/zeroconf,
-					/usr/local/include,
 					demo,
 					app/src/utils,
 					app/src,
+					/opt/homebrew/include,
+					"/opt/homebrew/opt/mbedtls@2/include",
 				);
-				LIBRARY_SEARCH_PATHS = /usr/local/lib;
+				LIBRARY_SEARCH_PATHS = (
+					"/opt/homebrew/opt/mbedtls@2/lib",
+					/opt/homebrew/lib,
+					/usr/local/lib,
+				);
 				MACOSX_DEPLOYMENT_TARGET = 11.1;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
@@ -2237,12 +2242,17 @@
 					"extern/moonlight-common-c/enet/src",
 					"extern/moonlight-common-c/src",
 					extern/zeroconf,
-					/usr/local/include,
 					demo,
 					app/src/utils,
 					app/src,
+					/opt/homebrew/include,
+					"/opt/homebrew/opt/mbedtls@2/include",
 				);
-				LIBRARY_SEARCH_PATHS = /usr/local/lib;
+				LIBRARY_SEARCH_PATHS = (
+					"/opt/homebrew/opt/mbedtls@2/lib",
+					/opt/homebrew/lib,
+					/usr/local/lib,
+				);
 				MACOSX_DEPLOYMENT_TARGET = 11.1;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;

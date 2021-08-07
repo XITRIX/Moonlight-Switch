@@ -19,8 +19,21 @@
             paddingBottom="@style/brls/sidebar/padding_bottom"
             paddingLeft="@style/brls/sidebar/padding_left">
             
+            <brls:Header
+                id="volume_header"
+                title="@i18n/main/streaming/volume"/>
+                
+            <brls:Slider
+                id="volume_slider"
+                width="auto"
+                height="84"/>
+            
+            <brls:Header
+                title="@i18n/main/settings/debug"
+                paddingTop="60"
+                lineTop="1px"/>
+                
             <brls:BooleanCell
-                lineTop="1px"
                 id="debug"/>
                 
             <brls:BooleanCell

@@ -145,12 +145,20 @@ public:
         return m_swap_game_keys;
     }
     
-    void set_swap_mouse_keys(bool swap_ui_keys) {
-        m_swap_mouse_keys = swap_ui_keys;
+    void set_swap_mouse_keys(bool swap_mouse_keys) {
+        m_swap_mouse_keys = swap_mouse_keys;
     }
     
     bool swap_mouse_keys() const {
         return m_swap_mouse_keys;
+    }
+    
+    void set_swap_mouse_scroll(bool swap_mouse_scroll) {
+        m_swap_mouse_scroll = swap_mouse_scroll;
+    }
+    
+    bool swap_mouse_scroll() const {
+        return m_swap_mouse_scroll;
     }
     
     void set_guide_key_options(KeyComboOptions options) {
@@ -167,6 +175,22 @@ public:
     
     KeyComboOptions overlay_options() const {
         return m_overlay_options;
+    }
+    
+    void set_volume_amplification(bool allow) {
+        m_volume_amplification = allow;
+    }
+    
+    bool get_volume_amplification() const {
+        return m_volume_amplification;
+    }
+    
+    void set_volume(int volume) {
+        m_volume = volume;
+    }
+    
+    int get_volume() const {
+        return m_volume;
     }
     
     void load();
@@ -193,6 +217,9 @@ private:
     bool m_swap_ui_keys = false;
     bool m_swap_game_keys = false;
     bool m_swap_mouse_keys = false;
+    bool m_swap_mouse_scroll = false;
+    int m_volume = 100;
+    bool m_volume_amplification = false;
     KeyComboOptions m_guide_key_options {
         .holdTime = 0,
         .buttons = {brls::ControllerButton::BUTTON_BACK, brls::ControllerButton::BUTTON_START},

@@ -39,8 +39,9 @@ public:
     std::function<void(void)> event = NULL;
 private:
     brls::VoidEvent::Subscription shiftSubscription;
-    void applyTitle();
     bool dummy = true;
+    
+    void applyTitle();
 };
 
 class KeyboardView: public brls::Box
@@ -48,6 +49,7 @@ class KeyboardView: public brls::Box
 public:
     inline static brls::VoidEvent shiftUpdated;
     KeyboardView();
+    ~KeyboardView();
     KeyboardState getKeyboardState();
     short getKeyCode(KeyboardKeys key);
 private:

@@ -131,6 +131,9 @@ void MoonlightInputManager::handleInput()
         .r_pressed = (specialKey && controller.buttons[brls::BUTTON_LT]) || mouse.rightButton
     };
     
+    if (Settings::instance().swap_mouse_scroll())
+        mouseState.scroll_y *= -1;
+    
     if (mouseState.l_pressed != lastMouseState.l_pressed)
     {
         lastMouseState.l_pressed = mouseState.l_pressed;

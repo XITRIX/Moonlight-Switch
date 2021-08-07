@@ -47,7 +47,6 @@
                 grow="1"
                 lineBottom="1px"/>
             
-            
             <brls:Header
                 title="@i18n/main/settings/stream_settings"
                 paddingTop="60"
@@ -58,6 +57,9 @@
             
             <brls:BooleanCell
                 id="pcAudio"/>
+                
+            <brls:BooleanCell
+                id="volume_amplification"/>
                 
             <brls:Header
                 title="@i18n/main/settings/keys"
@@ -91,7 +93,10 @@
                 paddingTop="60"/>
                 
             <brls:BooleanCell
-                id="swap_mouse"/>
+                id="swap_mouse_keys"/>
+                
+            <brls:BooleanCell
+                id="swap_mouse_scroll"/>
                 
             <brls:Header
                 title="@i18n/main/settings/debug"

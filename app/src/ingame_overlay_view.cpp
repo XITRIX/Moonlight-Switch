@@ -17,7 +17,7 @@ IngameOverlay::IngameOverlay(StreamingView* streamView) :
     streamView(streamView)
 {
     brls::Application::registerXMLView("LogoutTab", [streamView]() { return new LogoutTab(streamView); });
-    brls::Application::registerXMLView("DebugTab", [streamView]() { return new DebugTab(streamView); });
+    brls::Application::registerXMLView("OptionsTab", [streamView]() { return new OptionsTab(streamView); });
     brls::Application::registerXMLView("KeysTab", [streamView]() { return new KeysTab(streamView); });
     
     this->inflateFromXMLRes("xml/views/ingame_overlay/overlay.xml");
@@ -62,10 +62,20 @@ LogoutTab::LogoutTab(StreamingView* streamView) :
 }
 
 // MARK: - Debug Tab
-DebugTab::DebugTab(StreamingView* streamView) :
+OptionsTab::OptionsTab(StreamingView* streamView) :
     streamView(streamView)
 {
-    this->inflateFromXMLRes("xml/views/ingame_overlay/debug_tab.xml"); 
+    this->inflateFromXMLRes("xml/views/ingame_overlay/options_tab.xml");
+    
+    volumeHeader->setSubtitle(std::to_string(Settings::instance().get_volume()) + "%");
+    float amplification = Settings::instance().get_volume_amplification() ? 500.0f : 100.0f;
+    float progress = Settings::instance().get_volume() / amplification;
+    volumeSlider->getProgressEvent()->subscribe([this, amplification](float progress) {
+        int volume = progress * amplification;
+        Settings::instance().set_volume(volume);
+        volumeHeader->setSubtitle(std::to_string(volume) + "%");
+    });
+    volumeSlider->setProgress(progress);
     
     onscreenLogButton->init("main/streaming/show_logs"_i18n, Settings::instance().write_log(), [](bool value) {
         Settings::instance().set_write_log(value);

@@ -116,17 +116,13 @@ void StreamingView::draw(NVGcontext* vg, float x, float y, float width, float he
 
         nvgFontBlur(vg, 3);
         nvgFillColor(vg, nvgRGBA(0, 0, 0, 255));
-        // nvgFontFace(ctx, "icons");
-        // nvgText(ctx, 20, height - 30, utf8(FA_EXCLAMATION_TRIANGLE).data(), NULL);
         nvgFontFaceId(vg, Application::getFont(FONT_REGULAR));
-        nvgText(vg, 50, height - 28, "Bad connection...", NULL);
+        nvgText(vg, 50, height - 28, "\uE140 Bad connection...", NULL);
 
         nvgFontBlur(vg, 0);
         nvgFillColor(vg, nvgRGBA(255, 255, 255, 255));
-        // nvgFontFace(ctx, "icons");
-        // nvgText(ctx, 20, height - 30, utf8(FA_EXCLAMATION_TRIANGLE).data(), NULL);
         nvgFontFaceId(vg, Application::getFont(FONT_REGULAR));
-        nvgText(vg, 50, height - 28, "Bad connection...", NULL);
+        nvgText(vg, 50, height - 28, "\uE140 Bad connection...", NULL);
     }
     
     if (draw_stats)
@@ -174,8 +170,16 @@ void StreamingView::draw(NVGcontext* vg, float x, float y, float width, float he
 
 void StreamingView::terminate(bool terminateApp)
 {
+    if (terminated) return;
+    terminated = true;
+    
     session->stop(terminateApp);
-    this->dismiss();
+    
+    bool hasOverlays = Application::getActivitiesStack().back() != this->getParentActivity();
+    this->dismiss([this, hasOverlays] {
+        if (hasOverlays)
+            this->dismiss();
+    });
 }
 
 void StreamingView::handleInput()

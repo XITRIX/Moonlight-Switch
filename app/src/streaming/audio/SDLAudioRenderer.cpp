@@ -21,8 +21,11 @@
 
 #include <stdbool.h>
 
+#include <Settings.hpp>
 #include <Limelight.h>
 
+#include <climits>
+#include <algorithm>
 #include <stdio.h>
 
 int SDLAudioRenderer::init(int audio_configuration, const POPUS_MULTISTREAM_CONFIGURATION opus_config, void *context, int ar_flags)
@@ -65,6 +68,12 @@ void SDLAudioRenderer::cleanup()
 void SDLAudioRenderer::decode_and_play_sample(char *sample_data, int sample_length)
 {
     int decodeLen = opus_multistream_decode(decoder, (const unsigned char*) sample_data, sample_length, pcmBuffer, FRAME_SIZE, 0);
+    for (int i = 0; i < FRAME_SIZE * MAX_CHANNEL_COUNT; i++)
+    {
+        int scale = pcmBuffer[i] * (Settings::instance().get_volume() / 100.0);
+        pcmBuffer[i] = std::min(SHRT_MAX, std::max(SHRT_MIN, scale));
+    }
+    
     if (decodeLen > 0) {
         int audio_queued_size = SDL_GetQueuedAudioSize(dev);
         if(audio_queued_size > 32000)

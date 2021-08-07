@@ -65,12 +65,14 @@
         "swap_ui": "Swap for UI",
         "swap_game": "Swap for game stream",
         "mouse": "Mouse",
-        "swap_mouse": "Swap mouse \uE0E6 and \uE0E7 buttons",
+        "swap_mouse_keys": "Swap mouse \uE0E6 and \uE0E7 buttons",
+        "swap_mouse_scroll": "Swap mouse vertical scrolling direction",
         "overlay": "Ingame overlay",
         "overlay_setup_message": "Press keys you'd like to use to open Overlay:\n\n",
         "overlay_zero_time": "0 (Immediately)",
         "overlay_time": "Hold to open in seconds",
         "overlay_buttons": "Buttons combination",
+        "volume_amplification": "Allow volume amplification",
         "guide_key_setup_message": "Press keys you'd like to use to press Guide button:\n\n",
         "guide_key": "Guide key (clicks immediately)",
         "guide_key_buttons": "Buttons combination"
@@ -91,13 +93,14 @@
     
     "streaming": {
         "keys": "Keys",
-        "debug": "Debug",
+        "options": "Options",
         "logout": "Logout",
         "connection": "Connection",
         "terminate": "Terminate app",
         "disconnect": "Disconnect",
         "show_logs": "Show logs",
         "debug_info": "Debug info",
-        "esc": "ESC button"
+        "esc": "ESC button",
+        "volume": "Volume"
     }
 }

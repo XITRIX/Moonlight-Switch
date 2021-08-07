@@ -48,6 +48,7 @@ private:
     Box* keyboardHolder = nullptr;
     KeyboardView* keyboard;
     bool blocked = false;
+    bool terminated = false;
     
     void handleInput();
     void handleButtonHolding();

@@ -28,7 +28,9 @@ class SettingsTab : public brls::Box
     BRLS_BIND(brls::DetailCell, guideKeyButtons, "guide_key_buttons");
     BRLS_BIND(brls::SelectorCell, overlayTime, "overlay_time");
     BRLS_BIND(brls::DetailCell, overlayButtons, "overlay_buttons");
-    BRLS_BIND(brls::BooleanCell, swapMouse, "swap_mouse");
+    BRLS_BIND(brls::BooleanCell, volumeAmplification, "volume_amplification");
+    BRLS_BIND(brls::BooleanCell, swapMouseKeys, "swap_mouse_keys");
+    BRLS_BIND(brls::BooleanCell, swapMouseScroll, "swap_mouse_scroll");
     BRLS_BIND(brls::BooleanCell, writeLog, "writeLog");
     
 

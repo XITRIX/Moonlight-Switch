@@ -6,6 +6,8 @@
 //
 
 #include "keyboard_view.hpp"
+#include <chrono>
+#include <libretro-common/retro_timers.h>
 
 using namespace brls;
 
@@ -43,9 +45,35 @@ std::string ShiftKeyboardLocalization[_VK_KEY_MAX]
 };
 
 bool keysState[_VK_KEY_MAX];
+pthread_t rumbleThread;
+std::chrono::high_resolution_clock::time_point rumbleLastButtonClicked;
+brls::InputManager* inputManager = nullptr;
+
+bool rumblingActive = false;
+
+void* rumble_task(void* a)
+{
+    rumblingActive = true;
+    inputManager->sendRumble(0, 32512, 32512);
+    
+    long long duration;
+    do {
+        auto timeNow = std::chrono::high_resolution_clock::now();
+        duration = std::chrono::duration_cast<std::chrono::milliseconds>(timeNow - rumbleLastButtonClicked).count();
+        retro_sleep(10);
+    } while (duration < 100);
+    
+    inputManager->sendRumble(0, 0, 0);
+    rumblingActive = false;
+    return NULL;
+}
+
 
 ButtonView::ButtonView()
 {
+    if (inputManager == nullptr)
+        inputManager = Application::getPlatform()->getInputManager();
+    
     setBackgroundColor(RGB(60, 60, 60));
     setWidth(90);
     setHeight(56);
@@ -96,19 +124,24 @@ void ButtonView::setKey(KeyboardKeys key)
 
 void ButtonView::registerCallback()
 {
-    addGestureRecognizer(new TapGestureRecognizer([this](TapGestureStatus status, Sound* sound) {
+    TapGestureRecognizer* tapRecognizer = new TapGestureRecognizer([this](TapGestureStatus status, Sound* sound) {
         if (!triggerType)
         {
-            this->playClickAnimation(status.state != GestureState::UNSURE);
+            this->playClickAnimation(status.state != brls::GestureState::START);
             
             switch (status.state) {
-                case brls::GestureState::UNSURE:
+                case brls::GestureState::START:
                     if (!dummy)
                         keysState[key] = true;
                     break;
                 case brls::GestureState::END:
+                case brls::GestureState::FAILED:
                     if (!dummy)
                         keysState[key] = false;
+                    
+                    rumbleLastButtonClicked = std::chrono::high_resolution_clock::now();
+                    if (!rumblingActive)
+                        pthread_create(&rumbleThread, NULL, rumble_task, NULL);
                     
                     if (event != NULL)
                         event();
@@ -122,7 +155,7 @@ void ButtonView::registerCallback()
         else
         {
             switch (status.state) {
-                case brls::GestureState::UNSURE:
+                case brls::GestureState::START:
                     if (!keysState[key])
                         this->playClickAnimation(false);
                     break;
@@ -142,7 +175,9 @@ void ButtonView::registerCallback()
                     break;
             }
         }
-    }));
+    });
+    tapRecognizer->setForceRecognision(true);
+    addGestureRecognizer(tapRecognizer);
 }
 
 KeyboardView::KeyboardView()
@@ -160,6 +195,12 @@ KeyboardView::KeyboardView()
     
     addGestureRecognizer(new TapGestureRecognizer([](TapGestureStatus status, Sound* sound){}));
     addGestureRecognizer(new PanGestureRecognizer([](PanGestureStatus status, Sound* sound){}, PanAxis::ANY));
+}
+
+KeyboardView::~KeyboardView()
+{
+    if (rumblingActive)
+        pthread_join(rumbleThread, NULL);
 }
 
 KeyboardState KeyboardView::getKeyboardState()
