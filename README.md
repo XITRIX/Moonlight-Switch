@@ -29,17 +29,20 @@ With touch screen you can move your coursor.
 
 While touching screen ZR and ZL buttons will work like left and right mouse buttons.
 
-Scrolling not supported yet.
+Also While touching screen L and R sticks will work like scrolling wheel.
 
 ## Keyboard
 You can use onscreen keyboard, tap 3 fingers on screen to show it.
-
-It's not fully finished yet.
 
 ## Gamepad
 By default Switch gamepad configured as X360 gamepad (A/B and X/Y swapped). 
 
 Multiple gamepad currently not supported.
+
+## Ingame overlay
+To open overlay, hold + key for 3 seconds.
+
+Key combination and holding time are configurable in settings.
 
 # Build Moonlight-Switch
 1. Clone this repo with submodules by `git clone https://github.com/XITRIX/Moonlight-Switch.git --recursive`
