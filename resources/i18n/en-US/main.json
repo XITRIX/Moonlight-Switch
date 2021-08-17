@@ -35,6 +35,7 @@
         "connect": "Connect",
         "search": "Search",
         "search_error": "Search is unavailable",
+        "search_refresh": "Refresh",
         "paired_error": "Already paired\nConfiguration has been updated",
         "pair_prefix": "Pair up\n\nEnter ",
         "pair_postfix": " on your host device",

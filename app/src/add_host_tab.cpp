@@ -31,6 +31,15 @@ AddHostTab::AddHostTab()
         searchHeader->setTitle("main/add_host/search_error"_i18n);
         loader->setVisibility(brls::Visibility::GONE);
     }
+    
+    registerAction("main/add_host/search_refresh"_i18n, ControllerButton::BUTTON_X, [this] (View* view) {
+#ifdef MULTICAST_DISABLED
+        DiscoverManager::instance().reset();
+#endif
+        findHost();
+        return true;
+    });
+    setActionAvailable(BUTTON_X, GameStreamClient::instance().can_find_host());
 }
 
 void AddHostTab::fillSearchBox(GSResult<std::vector<Host>> hostsRes)
@@ -64,6 +73,7 @@ void AddHostTab::findHost()
 #ifdef MULTICAST_DISABLED
     DiscoverManager::instance().start();
     fillSearchBox(DiscoverManager::instance().getHosts());
+    DiscoverManager::instance().getHostsUpdateEvent()->unsubscribe(searchSubscription);
     searchSubscription = DiscoverManager::instance().getHostsUpdateEvent()->subscribe([this](auto result){
         fillSearchBox(result);
     });

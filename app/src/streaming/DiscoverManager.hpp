@@ -35,6 +35,7 @@ public:
         return paused;
     }
     
+    void reset();
     void start();
     void pause();
     

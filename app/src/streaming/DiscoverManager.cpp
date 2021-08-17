@@ -12,8 +12,17 @@ using namespace brls::literals;
 
 DiscoverManager::DiscoverManager()
 {
-    hosts = hosts.success(std::vector<Host>());
+    reset();
     start();
+}
+
+void DiscoverManager::reset()
+{
+    pause();
+    counter = 0;
+    addresses.clear();
+    _hosts.clear();
+    hosts = hosts.success(std::vector<Host>());
 }
 
 void DiscoverManager::start()
