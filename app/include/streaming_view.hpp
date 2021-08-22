@@ -20,9 +20,10 @@ class FingersGestureRecognizer: public brls::GestureRecognizer
 {
 public:
     FingersGestureRecognizer(int fingers, FingersGestureEvent::Callback respond);
-    brls::GestureState recognitionLoop(std::array<brls::TouchState, TOUCHES_MAX> touches,brls:: MouseState mouse, brls::View* view, brls::Sound* soundToPlay) override;
+    brls::GestureState recognitionLoop(brls::TouchState touch, brls:: MouseState mouse, brls::View* view, brls::Sound* soundToPlay) override;
 private:
     int fingers;
+    int fingersCounter = 0;
     FingersGestureEvent event;
 };
 

@@ -21,13 +21,22 @@ FingersGestureRecognizer::FingersGestureRecognizer(int fingers, FingersGestureEv
     event.subscribe(respond);
 }
 
-GestureState FingersGestureRecognizer::recognitionLoop(std::array<TouchState, TOUCHES_MAX> touches, MouseState mouse, View* view, Sound* soundToPlay)
+GestureState FingersGestureRecognizer::recognitionLoop(TouchState touch, MouseState mouse, View* view, Sound* soundToPlay)
 {
-    if (touches[fingers - 1].phase == brls::TouchPhase::START)
+    if (touch.phase == brls::TouchPhase::START)
     {
-        event.fire();
-        return brls::GestureState::END;
+        fingersCounter++;
+        if (fingersCounter == fingers)
+        {
+            event.fire();
+            return brls::GestureState::END;
+        }
     }
+    else if (touch.phase == brls::TouchPhase::END)
+    {
+        fingersCounter--;
+    }
+    
     return brls::GestureState::UNSURE;
 }
 

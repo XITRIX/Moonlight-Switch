@@ -44,28 +44,20 @@ std::string ShiftKeyboardLocalization[_VK_KEY_MAX]
     ":", "?", "`", "{", "|", "}", "\"",
 };
 
-bool keysState[_VK_KEY_MAX];
-pthread_t rumbleThread;
 std::chrono::high_resolution_clock::time_point rumbleLastButtonClicked;
-brls::InputManager* inputManager = nullptr;
-
 bool rumblingActive = false;
 
-void* rumble_task(void* a)
+bool keysState[_VK_KEY_MAX];
+brls::InputManager* inputManager = nullptr;
+
+void startRumbling()
 {
-    rumblingActive = true;
-    inputManager->sendRumble(0, 32512, 32512);
-    
-    long long duration;
-    do {
-        auto timeNow = std::chrono::high_resolution_clock::now();
-        duration = std::chrono::duration_cast<std::chrono::milliseconds>(timeNow - rumbleLastButtonClicked).count();
-        retro_sleep(10);
-    } while (duration < 100);
-    
-    inputManager->sendRumble(0, 0, 0);
-    rumblingActive = false;
-    return NULL;
+    rumbleLastButtonClicked = std::chrono::high_resolution_clock::now();
+    if (!rumblingActive)
+    {
+        rumblingActive = true;
+        inputManager->sendRumble(0, 32512, 32512);
+    }
 }
 
 
@@ -131,6 +123,8 @@ void ButtonView::registerCallback()
             
             switch (status.state) {
                 case brls::GestureState::START:
+                    startRumbling();
+
                     if (!dummy)
                         keysState[key] = true;
                     break;
@@ -138,10 +132,6 @@ void ButtonView::registerCallback()
                 case brls::GestureState::FAILED:
                     if (!dummy)
                         keysState[key] = false;
-                    
-                    rumbleLastButtonClicked = std::chrono::high_resolution_clock::now();
-                    if (!rumblingActive)
-                        pthread_create(&rumbleThread, NULL, rumble_task, NULL);
                     
                     if (event != NULL)
                         event();
@@ -156,6 +146,7 @@ void ButtonView::registerCallback()
         {
             switch (status.state) {
                 case brls::GestureState::START:
+                    startRumbling();
                     if (!keysState[key])
                         this->playClickAnimation(false);
                     break;
@@ -198,9 +189,22 @@ KeyboardView::KeyboardView()
 }
 
 KeyboardView::~KeyboardView()
+{ }
+
+void KeyboardView::draw(NVGcontext* vg, float x, float y, float width, float height, brls::Style style, brls::FrameContext* ctx) 
 {
-    if (rumblingActive)
-        pthread_join(rumbleThread, NULL);
+    Box::draw(vg, x, y, width, height, style, ctx);
+
+    if (rumblingActive) 
+    {
+        auto timeNow = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(timeNow - rumbleLastButtonClicked).count();
+        if (duration >= 100)
+        {
+            inputManager->sendRumble(0, 0, 0);
+            rumblingActive = false;
+        }
+    }
 }
 
 KeyboardState KeyboardView::getKeyboardState()

@@ -52,6 +52,8 @@ public:
     ~KeyboardView();
     KeyboardState getKeyboardState();
     short getKeyCode(KeyboardKeys key);
+    
+    void draw(NVGcontext* vg, float x, float y, float width, float height, brls::Style style, brls::FrameContext* ctx) override;
 private:
     void createEnglishLayout();
     void createNumpadLayout();
