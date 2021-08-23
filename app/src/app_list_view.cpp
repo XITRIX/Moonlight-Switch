@@ -53,12 +53,12 @@ AppListView::AppListView(Host host) :
     hintView->registerAction("", brls::ControllerButton::BUTTON_RB, playCuttentAction, true);
     registerAction("", brls::ControllerButton::BUTTON_RB, playCuttentAction, true);
 
-#ifdef __SWITCH__
-    registerAction("", brls::ControllerButton::BUTTON_LB, [](View* view) {
-        appletPerformSystemButtonPressingIfInFocus(AppletSystemButtonType_HomeButtonLongPressing);
-        return true;
-    }, true);
-#endif
+// #ifdef __SWITCH__
+//     registerAction("", brls::ControllerButton::BUTTON_LB, [](View* view) {
+//         appletPerformSystemButtonPressingIfInFocus(AppletSystemButtonType_HomeButtonLongPressing);
+//         return true;
+//     }, true);
+// #endif
 
     registerAction("main/app_list/reload_app_list"_i18n, BUTTON_X, [this](View* view) {
         this->updateAppList();
