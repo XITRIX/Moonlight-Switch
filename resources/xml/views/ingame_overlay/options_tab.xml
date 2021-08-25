@@ -20,7 +20,14 @@
             paddingLeft="@style/brls/sidebar/padding_left">
             
             <brls:Header
+                title="@i18n/main/streaming/input"/>
+            
+            <brls:BooleanCell
+                id="input_overlay"/>
+            
+            <brls:Header
                 id="volume_header"
+                paddingTop="60"
                 title="@i18n/main/streaming/volume"/>
                 
             <brls:Slider

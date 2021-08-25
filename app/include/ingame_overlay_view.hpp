@@ -49,20 +49,9 @@ public:
 private:
     StreamingView* streamView;
     
+    BRLS_BIND(brls::BooleanCell, inputOverlayButton, "input_overlay");
     BRLS_BIND(brls::Header, volumeHeader, "volume_header");
     BRLS_BIND(brls::Slider, volumeSlider, "volume_slider");
     BRLS_BIND(brls::BooleanCell, debugButton, "debug");
     BRLS_BIND(brls::BooleanCell, onscreenLogButton, "onscreen_log");
 };
-
-// MARK: - Keys Tab
-class KeysTab : public brls::Box
-{
-public:
-    KeysTab(StreamingView* streamView);
-private:
-    StreamingView* streamView;
-    
-    BRLS_BIND(brls::DetailCell, escButton, "esc_button");
-};
-

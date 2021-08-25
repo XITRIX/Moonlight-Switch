@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		7C09602A26D6A60300CF5061 /* streaming_input_overlay.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C09602826D6A60300CF5061 /* streaming_input_overlay.cpp */; };
+		7C09603126D6EBB600CF5061 /* bottom_bar.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C09603026D6EBB600CF5061 /* bottom_bar.cpp */; };
 		7C0D7429265EB69200077D33 /* app_list_view.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C0D7427265EB69200077D33 /* app_list_view.cpp */; };
 		7C0D7432265FA54700077D33 /* streaming_view.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C0D7430265FA54700077D33 /* streaming_view.cpp */; };
 		7C0D7437265FA80D00077D33 /* MoonlightSession.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C0D7435265FA80D00077D33 /* MoonlightSession.cpp */; };
@@ -166,6 +168,10 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		7C09602826D6A60300CF5061 /* streaming_input_overlay.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = streaming_input_overlay.cpp; sourceTree = "<group>"; };
+		7C09602926D6A60300CF5061 /* streaming_input_overlay.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = streaming_input_overlay.hpp; sourceTree = "<group>"; };
+		7C09602F26D6EBAA00CF5061 /* bottom_bar.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = bottom_bar.hpp; sourceTree = "<group>"; };
+		7C09603026D6EBB600CF5061 /* bottom_bar.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = bottom_bar.cpp; sourceTree = "<group>"; };
 		7C0B64DD267570FA009D1C0C /* RtpVideoQueue.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = RtpVideoQueue.c; sourceTree = "<group>"; };
 		7C0B64DE267570FA009D1C0C /* RtpAudioQueue.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RtpAudioQueue.h; sourceTree = "<group>"; };
 		7C0B64DF267570FA009D1C0C /* RtpAudioQueue.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = RtpAudioQueue.c; sourceTree = "<group>"; };
@@ -907,6 +913,7 @@
 				7C18E980265C158A000D3AF0 /* image.hpp */,
 				7C18E981265C158A000D3AF0 /* sidebar.hpp */,
 				7CDA33A9265D385C00E5D604 /* dialog.hpp */,
+				7C09602F26D6EBAA00CF5061 /* bottom_bar.hpp */,
 			);
 			path = views;
 			sourceTree = "<group>";
@@ -1549,6 +1556,7 @@
 				7C18EEB7265C158B000D3AF0 /* rectangle.cpp */,
 				7C18EEB8265C158B000D3AF0 /* slider.cpp */,
 				7CDA33A8265D385C00E5D604 /* dialog.cpp */,
+				7C09603026D6EBB600CF5061 /* bottom_bar.cpp */,
 			);
 			path = views;
 			sourceTree = "<group>";
@@ -1577,12 +1585,13 @@
 				7C18E8C3265C158A000D3AF0 /* settings_tab.hpp */,
 				7C0D7428265EB69200077D33 /* app_list_view.hpp */,
 				7C0D7431265FA54700077D33 /* streaming_view.hpp */,
-				7C3A96102662902900BAF8CA /* ingame_overlay_view.hpp */,
 				7C2BCFF02667F47A005952F2 /* loading_overlay.hpp */,
 				7C471DA8266962E80059D144 /* grid_view.hpp */,
 				7C471DAD266970B00059D144 /* app_cell.hpp */,
 				7C77C5202676C98600179EA8 /* keyboard_view.hpp */,
 				7C6EC65926A5F174001ABADE /* button_selecting_dialog.hpp */,
+				7C3A96102662902900BAF8CA /* ingame_overlay_view.hpp */,
+				7C09602926D6A60300CF5061 /* streaming_input_overlay.hpp */,
 			);
 			path = include;
 			sourceTree = "<group>";
@@ -1604,13 +1613,14 @@
 				7C0D7427265EB69200077D33 /* app_list_view.cpp */,
 				7C0D7430265FA54700077D33 /* streaming_view.cpp */,
 				7C3A95FE2661A3A800BAF8CA /* helper.cpp */,
-				7C3A960F2662902900BAF8CA /* ingame_overlay_view.cpp */,
 				7C2BCFEF2667F47A005952F2 /* loading_overlay.cpp */,
 				7C471DA7266962E80059D144 /* grid_view.cpp */,
 				7C471DAC266970B00059D144 /* app_cell.cpp */,
 				7C52664A2670266500DA102F /* backward.cpp */,
 				7C77C51F2676C98600179EA8 /* keyboard_view.cpp */,
 				7C6EC65826A5F174001ABADE /* button_selecting_dialog.cpp */,
+				7C3A960F2662902900BAF8CA /* ingame_overlay_view.cpp */,
+				7C09602826D6A60300CF5061 /* streaming_input_overlay.cpp */,
 			);
 			path = src;
 			sourceTree = "<group>";
@@ -1958,6 +1968,7 @@
 				7C0D7437265FA80D00077D33 /* MoonlightSession.cpp in Sources */,
 				7C18F085265C15E7000D3AF0 /* activity.cpp in Sources */,
 				7CBE6B6F265DAF8D007DCC5A /* client.cpp in Sources */,
+				7C09602A26D6A60300CF5061 /* streaming_input_overlay.cpp in Sources */,
 				7C18F0BE265C177E000D3AF0 /* cell_radio.cpp in Sources */,
 				7C18F0BA265C177E000D3AF0 /* recycler.cpp in Sources */,
 				7C18F0A2265C1655000D3AF0 /* tinyxml2.cpp in Sources */,
@@ -2030,6 +2041,7 @@
 				7C18F078265C15E7000D3AF0 /* platform.cpp in Sources */,
 				7C18F145265C37E6000D3AF0 /* PlatformSockets.c in Sources */,
 				7C18F08B265C1613000D3AF0 /* YGLayout.cpp in Sources */,
+				7C09603126D6EBB600CF5061 /* bottom_bar.cpp in Sources */,
 				7C18F072265C15E7000D3AF0 /* gesture.cpp in Sources */,
 				7C0D7432265FA54700077D33 /* streaming_view.cpp in Sources */,
 				7C18F0B0265C177E000D3AF0 /* cell_bool.cpp in Sources */,

@@ -1,0 +1,81 @@
+<brls:Box
+    width="auto"
+    height="auto">
+    
+    <brls:AppletFrame
+        id="applet"
+        width="100%"
+        height="auto"
+        headerHidden="true"
+        footerHidden="true">
+        <brls:Box
+            id="inner"
+            width="auto"
+            height="auto"
+            axis="column"
+            justifyContent="flexEnd"
+            alignItems="stretch"
+            focusable="true">
+            
+            <brls:Box
+                id="hint_bar"
+                width="auto"
+                height="auto"
+                axis="column"
+                alignItems="stretch">
+                
+                <!-- Hints -->
+                <brls:Box
+                    width="auto"
+                    height="@style/brls/applet_frame/footer_height"
+                    lineColor="@theme/brls/applet_frame/separator"
+                    lineTop="1px"
+                    marginLeft="@style/brls/hints/footer_margin_sides"
+                    marginRight="@style/brls/hints/footer_margin_sides"
+                    paddingLeft="@style/brls/hints/footer_padding_sides"
+                    paddingRight="@style/brls/hints/footer_padding_sides"
+                    alignItems="stretch">
+                    
+                    <brls:Box
+                        width="auto"
+                        height="@style/brls/applet_frame/footer_height"
+                        axis="row"
+                        grow="1"
+                        direction="rightToLeft"
+                        justifyContent="spaceBetween"
+                        paddingTop="@style/brls/hints/footer_padding_top_bottom"
+                        paddingBottom="@style/brls/hints/footer_padding_top_bottom" >
+
+                        <brls:Hints
+                            width="auto"
+                            height="auto"
+                            addBaseAction="false"/>
+
+                        <brls:Box
+                            width="auto"
+                            height="auto"
+                            axis="row"
+                            alignItems="center"
+                            direction="leftToRight" >
+
+                            <brls:Label
+                                id="brls/hints/time"
+                                width="auto"
+                                height="auto"
+                                verticalAlign="center"
+                                fontSize="@style/brls/applet_frame/header_title_font_size"
+                                text="Mouse input mode" />
+
+                        </brls:Box>
+
+                    </brls:Box>
+                    
+                </brls:Box>
+                    
+            </brls:Box>
+            
+        </brls:Box>
+    
+    </brls:AppletFrame>
+    
+</brls:Box>

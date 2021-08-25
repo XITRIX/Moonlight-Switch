@@ -12,10 +12,6 @@
         
         <brls:TabFrame>
             
-<!--            <brls:Tab label="@i18n/main/streaming/keys" >-->
-<!--                <KeysTab />-->
-<!--            </brls:Tab>-->
-                
             <brls:Tab label="@i18n/main/streaming/options" >
                 <OptionsTab />
             </brls:Tab>

@@ -6,6 +6,7 @@
 //
 
 #include "ingame_overlay_view.hpp"
+#include "streaming_input_overlay.hpp"
 #include <libretro-common/retro_timers.h>
 
 using namespace brls;
@@ -18,7 +19,6 @@ IngameOverlay::IngameOverlay(StreamingView* streamView) :
 {
     brls::Application::registerXMLView("LogoutTab", [streamView]() { return new LogoutTab(streamView); });
     brls::Application::registerXMLView("OptionsTab", [streamView]() { return new OptionsTab(streamView); });
-    brls::Application::registerXMLView("KeysTab", [streamView]() { return new KeysTab(streamView); });
     
     this->inflateFromXMLRes("xml/views/ingame_overlay/overlay.xml");
     
@@ -77,6 +77,14 @@ OptionsTab::OptionsTab(StreamingView* streamView) :
     });
     volumeSlider->setProgress(progress);
     
+    inputOverlayButton->init("Mouse mode", false, [this](auto value) {
+        this->dismiss([this]() {
+            StreamingInputOverlay* overlay = new StreamingInputOverlay(this->streamView);
+            overlay->setTitle("Mouse input mode");
+            Application::pushActivity(new Activity(overlay));
+        });
+    });
+    
     onscreenLogButton->init("main/streaming/show_logs"_i18n, Settings::instance().write_log(), [](bool value) {
         Settings::instance().set_write_log(value);
         brls::Application::enableDebuggingView(value);
@@ -84,22 +92,5 @@ OptionsTab::OptionsTab(StreamingView* streamView) :
     
     debugButton->init("main/streaming/debug_info"_i18n, streamView->draw_stats, [streamView](bool value) {
         streamView->draw_stats = value;
-    });
-}
-
-// MARK: - Keys Tab
-KeysTab::KeysTab(StreamingView* streamView) :
-    streamView(streamView)
-{
-    this->inflateFromXMLRes("xml/views/ingame_overlay/keys_tab.xml");
-    
-    escButton->setText("main/streaming/esc"_i18n);
-    escButton->registerClickAction([this, streamView](View* view) {
-        async([] {
-            sync([]{ LiSendKeyboardEvent(0x1B, KEY_ACTION_DOWN, 0); });
-            retro_sleep(500);
-            sync([]{ LiSendKeyboardEvent(0x1B, KEY_ACTION_UP, 0); });
-        });
-        return true;
     });
 }
