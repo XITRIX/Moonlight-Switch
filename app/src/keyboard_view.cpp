@@ -47,6 +47,9 @@ std::string ShiftKeyboardLocalization[_VK_KEY_MAX]
 std::chrono::high_resolution_clock::time_point rumbleLastButtonClicked;
 bool rumblingActive = false;
 
+std::chrono::high_resolution_clock::time_point lastButtonClicked;
+KeyboardKeys buttonClicked = _VK_KEY_MAX;
+
 bool keysState[_VK_KEY_MAX];
 brls::InputManager* inputManager = nullptr;
 
@@ -60,9 +63,33 @@ void startRumbling()
     }
 }
 
-
 ButtonView::ButtonView()
 {
+    setFocusable(true);
+    setHideHighlightBackground(true);
+    setHighlightCornerRadius(8);
+    
+    registerClickAction([this](View* view) {
+        if (event != NULL)
+            event();
+            
+        if (!triggerType)
+        {
+            if (!dummy)
+            {
+                keysState[key] = true;
+                buttonClicked = key;
+                lastButtonClicked = std::chrono::high_resolution_clock::now();
+            }
+        }
+        else
+        {
+            keysState[key] = !keysState[key];
+            this->playClickAnimation(!keysState[key]);
+        }
+        return true;
+    });
+    
     if (inputManager == nullptr)
         inputManager = Application::getPlatform()->getInputManager();
     
@@ -203,6 +230,17 @@ void KeyboardView::draw(NVGcontext* vg, float x, float y, float width, float hei
         {
             inputManager->sendRumble(0, 0, 0);
             rumblingActive = false;
+        }
+    }
+    
+    if (buttonClicked != _VK_KEY_MAX)
+    {
+        auto timeNow = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(timeNow - lastButtonClicked).count();
+        if (duration >= 100)
+        {
+            keysState[buttonClicked] = false;
+            buttonClicked = _VK_KEY_MAX;
         }
     }
 }

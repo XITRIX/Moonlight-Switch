@@ -98,13 +98,13 @@ void KeyboardView::createEnglishLayout()
     addView(fourthRow);
     
     ButtonView* altButton = new ButtonView();
-//    altButton->setKey(VK_LMENU);
     altButton->charLabel->setText("123");
     altButton->charLabel->setFontSize(21);
     altButton->setMargins(4, 4, 4, 4);
     altButton->setWidth(120);
     altButton->event = [this] {
         createNumpadLayout();
+        Application::giveFocus(this);
     };
     fourthRow->addView(altButton);
     

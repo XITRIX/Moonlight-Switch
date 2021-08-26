@@ -18,7 +18,9 @@ public:
     
     void show();
     
+    void draw(NVGcontext* vg, float x, float y, float width, float height, brls::Style style, brls::FrameContext* ctx) override;
     brls::AppletFrame* getAppletFrame() override;
+    void onFocusGained() override;
     bool isTranslucent() override { return true; }
 private:
     StreamingView* streamView;
@@ -31,6 +33,6 @@ private:
     BRLS_BIND(brls::Box, hintBar, "hint_bar");
     BRLS_BIND(brls::AppletFrame, applet, "applet");
     
-    
+    std::vector<brls::ActionIdentifier> actionsToFree;
 };
 

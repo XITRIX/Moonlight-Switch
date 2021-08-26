@@ -109,6 +109,7 @@ void KeyboardView::createNumpadLayout()
     altButton->setWidth(120);
     altButton->event = [this] {
         createEnglishLayout();
+        Application::giveFocus(this);
     };
     fourthRow->addView(altButton);
     
