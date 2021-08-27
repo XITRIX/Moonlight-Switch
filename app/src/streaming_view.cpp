@@ -55,8 +55,10 @@ StreamingView::StreamingView(Host host, AppInfo app) :
     addView(keyboardHolder);
     
     addGestureRecognizer(new FingersGestureRecognizer(3, [this] {
-        keyboard = new KeyboardView();
-        keyboardHolder->addView(keyboard);
+        if (!keyboard) {
+            keyboard = new KeyboardView();
+            keyboardHolder->addView(keyboard);
+        }
     }));
     
     session = new MoonlightSession(host.address, app.app_id);
@@ -79,6 +81,7 @@ StreamingView::StreamingView(Host host, AppInfo app) :
         {
             keyboardHolder->removeView(keyboard);
             keyboard = nullptr;
+            Application::giveFocus(this);
         }
             
         if (status.state == brls::GestureState::STAY)

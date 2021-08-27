@@ -14,7 +14,6 @@ StreamingInputOverlay::StreamingInputOverlay(StreamingView* streamView) :
     streamView(streamView)
 {
     this->inflateFromXMLRes("xml/views/stream_input_overlay.xml");
-//    setFocusable(true);
     
     inner->setHideHighlightBackground(true);
     inner->setHideHighlightBorder(true);
@@ -145,6 +144,7 @@ void StreamingInputOverlay::toggleKeyboard()
     {
         inner->removeView(keyboard);
         keyboard = nullptr;
+        Application::giveFocus(this);
     }
     else
     {
