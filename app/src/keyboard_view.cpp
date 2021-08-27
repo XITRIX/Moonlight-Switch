@@ -48,10 +48,8 @@ std::string ShiftKeyboardLocalization[_VK_KEY_MAX]
 std::chrono::high_resolution_clock::time_point rumbleLastButtonClicked;
 bool rumblingActive = false;
 
-std::chrono::high_resolution_clock::time_point lastButtonClicked;
-KeyboardKeys buttonClicked = _VK_KEY_MAX;
-
 bool keysState[_VK_KEY_MAX];
+bool keysStateInited = false;
 brls::InputManager* inputManager = nullptr;
 
 void startRumbling()
@@ -69,27 +67,9 @@ ButtonView::ButtonView()
     setFocusable(true);
     setHideHighlightBackground(true);
     setHighlightCornerRadius(8);
+    setHideClickAnimation(true);
     
-    registerClickAction([this](View* view) {
-        if (event != NULL)
-            event();
-            
-        if (!triggerType)
-        {
-            if (!dummy)
-            {
-                keysState[key] = true;
-                buttonClicked = key;
-                lastButtonClicked = std::chrono::high_resolution_clock::now();
-            }
-        }
-        else
-        {
-            keysState[key] = !keysState[key];
-            this->playClickAnimation(!keysState[key]);
-        }
-        return true;
-    });
+    registerClickAction([](View* view) { return true; });
     
     if (inputManager == nullptr)
         inputManager = Application::getPlatform()->getInputManager();
@@ -124,6 +104,42 @@ ButtonView::~ButtonView()
     KeyboardView::shiftUpdated.unsubscribe(shiftSubscription);
 }
 
+void ButtonView::draw(NVGcontext* vg, float x, float y, float width, float height, brls::Style style, brls::FrameContext* ctx)
+{
+    Box::draw(vg, x, y, width, height, style, ctx);
+    if (!focused) return;
+    
+    sync([this]() {
+        static ControllerState oldController;
+        ControllerState controller;
+        inputManager->updateControllerState(&controller);
+        
+        auto button = inputManager->mapControllerState(BUTTON_A);
+        if (oldController.buttons[button] != controller.buttons[button])
+        {
+            bool pressed = controller.buttons[button];
+            if (!triggerType)
+            {
+                if (!dummy)
+                {
+                    keysState[key] = pressed;
+                    this->playClickAnimation(!pressed, false, true);
+                }
+            }
+            else if (pressed)
+            {
+                keysState[key] = !keysState[key];
+                this->playClickAnimation(!keysState[key], false, true);
+            }
+            
+            if (event != NULL)
+                event();
+        }
+        
+        oldController = controller;
+    });
+}
+
 void ButtonView::applyTitle()
 {
     if (dummy) return;
@@ -139,7 +155,7 @@ void ButtonView::setKey(KeyboardKeys key)
     this->applyTitle();
     
     if (keysState[key])
-        this->playClickAnimation(false);
+        this->playClickAnimation(false, false, true);
 }
 
 void ButtonView::registerCallback()
@@ -147,7 +163,7 @@ void ButtonView::registerCallback()
     TapGestureRecognizer* tapRecognizer = new TapGestureRecognizer([this](TapGestureStatus status, Sound* sound) {
         if (!triggerType)
         {
-            this->playClickAnimation(status.state != brls::GestureState::START);
+            this->playClickAnimation(status.state != brls::GestureState::START, false, true);
             
             switch (status.state) {
                 case brls::GestureState::START:
@@ -176,11 +192,11 @@ void ButtonView::registerCallback()
                 case brls::GestureState::START:
                     startRumbling();
                     if (!keysState[key])
-                        this->playClickAnimation(false);
+                        this->playClickAnimation(false, false, true);
                     break;
                 case brls::GestureState::FAILED:
                     if (!keysState[key])
-                        this->playClickAnimation(true);
+                        this->playClickAnimation(true, false, true);
                     break;
                 case brls::GestureState::END:
                     keysState[key] = !keysState[key];
@@ -188,7 +204,7 @@ void ButtonView::registerCallback()
                         event();
                     
                     if (!keysState[key])
-                        this->playClickAnimation(!keysState[key]);
+                        this->playClickAnimation(!keysState[key], false, true);
                     break;
                 default:
                     break;
@@ -202,8 +218,12 @@ void ButtonView::registerCallback()
 KeyboardView::KeyboardView()
     : Box(Axis::COLUMN)
 {
-    for (int i = 0; i < _VK_KEY_MAX; i++)
-        keysState[i] = false;
+    if (!keysStateInited)
+    {
+        keysStateInited = true;
+        for (int i = 0; i < _VK_KEY_MAX; i++)
+            keysState[i] = false;
+    }
     
     setBackgroundColor(RGBA(120, 120, 120, 200));
     setAlignItems(AlignItems::CENTER);
@@ -231,17 +251,6 @@ void KeyboardView::draw(NVGcontext* vg, float x, float y, float width, float hei
         {
             inputManager->sendRumble(0, 0, 0);
             rumblingActive = false;
-        }
-    }
-    
-    if (buttonClicked != _VK_KEY_MAX)
-    {
-        auto timeNow = std::chrono::high_resolution_clock::now();
-        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(timeNow - lastButtonClicked).count();
-        if (duration >= 100)
-        {
-            keysState[buttonClicked] = false;
-            buttonClicked = _VK_KEY_MAX;
         }
     }
 }

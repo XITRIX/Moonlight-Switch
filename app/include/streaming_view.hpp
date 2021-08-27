@@ -47,7 +47,7 @@ private:
     MoonlightSession* session;
     LoadingOverlay* loader = nullptr;
     Box* keyboardHolder = nullptr;
-    KeyboardView* keyboard;
+    KeyboardView* keyboard = nullptr;
     bool blocked = false;
     bool terminated = false;
     bool tempInputLock = false;

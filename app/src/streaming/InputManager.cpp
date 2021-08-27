@@ -23,8 +23,25 @@ void MoonlightInputManager::handleRumble(unsigned short controller, unsigned sho
     brls::Application::getPlatform()->getInputManager()->sendRumble(controller, lowFreqMotor, highFreqMotor);
 }
 
+void MoonlightInputManager::dropInput()
+{
+    if (inputDropped) return;
+    
+    GamepadState gamepadState;
+    if (LiSendControllerEvent(
+          gamepadState.buttonFlags,
+          gamepadState.leftTrigger,
+          gamepadState.rightTrigger,
+          gamepadState.leftStickX,
+          gamepadState.leftStickY,
+          gamepadState.rightStickX,
+          gamepadState.rightStickY) == 0)
+        inputDropped = true;
+}
+
 void MoonlightInputManager::handleInput() 
 {
+    inputDropped = false;
     static brls::ControllerState controller;
     static brls::RawMouseState mouse;
     brls::Application::getPlatform()->getInputManager()->updateControllerState(&controller);

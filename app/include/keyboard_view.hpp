@@ -37,6 +37,8 @@ public:
     bool triggerType = false;
     KeyboardKeys key;
     std::function<void(void)> event = NULL;
+    
+    void draw(NVGcontext* vg, float x, float y, float width, float height, brls::Style style, brls::FrameContext* ctx) override;
 private:
     brls::VoidEvent::Subscription shiftSubscription;
     bool dummy = true;

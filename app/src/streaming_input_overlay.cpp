@@ -45,8 +45,6 @@ StreamingInputOverlay::StreamingInputOverlay(StreamingView* streamView) :
         }
         return false;
     });
-    
-    keyboard = new KeyboardView();
 }
 
 void StreamingInputOverlay::onFocusGained()
@@ -60,15 +58,18 @@ void StreamingInputOverlay::draw(NVGcontext* vg, float x, float y, float width, 
     Box::draw(vg, x, y, width, height, style, ctx);
     
     // Keyboard
-    static KeyboardState oldKeyboardState;
-    KeyboardState keyboardState = keyboard->getKeyboardState();
-    
-    for (int i = 0; i < _VK_KEY_MAX; i++)
+    if (keyboard)
     {
-        if (keyboardState.keys[i] != oldKeyboardState.keys[i])
+        static KeyboardState oldKeyboardState;
+        KeyboardState keyboardState = keyboard->getKeyboardState();
+        
+        for (int i = 0; i < _VK_KEY_MAX; i++)
         {
-            oldKeyboardState.keys[i] = keyboardState.keys[i];
-            LiSendKeyboardEvent(keyboard->getKeyCode((KeyboardKeys)i), keyboardState.keys[i] ? KEY_ACTION_DOWN : KEY_ACTION_UP, 0);
+            if (keyboardState.keys[i] != oldKeyboardState.keys[i])
+            {
+                oldKeyboardState.keys[i] = keyboardState.keys[i];
+                LiSendKeyboardEvent(keyboard->getKeyCode((KeyboardKeys)i), keyboardState.keys[i] ? KEY_ACTION_DOWN : KEY_ACTION_UP, 0);
+            }
         }
     }
     
@@ -141,16 +142,22 @@ void StreamingInputOverlay::toggleKeyboard()
 {
     isKeyboardOpen = !isKeyboardOpen;
     if (!isKeyboardOpen)
-        inner->removeView(keyboard, false);
+    {
+        inner->removeView(keyboard);
+        keyboard = nullptr;
+    }
     else
+    {
+        keyboard = new KeyboardView();
         inner->addView(keyboard);
+    }
     
     if (!isKeyboardOpen)
     {
         Application::giveFocus(this);
-        actionsToFree.push_back(registerAction("Mouse", ControllerButton::BUTTON_LSB, [](View* view){return true;}));
-        actionsToFree.push_back(registerAction("Scroll", ControllerButton::BUTTON_RSB, [](View* view){return true;}));
-        actionsToFree.push_back(registerAction("Keyboard", ControllerButton::BUTTON_X, [this](View* view) {
+        actionsToFree.push_back(registerAction("main/mouse_input/mouse"_i18n, ControllerButton::BUTTON_LSB, [](View* view){return true;}));
+        actionsToFree.push_back(registerAction("main/mouse_input/scroll"_i18n, ControllerButton::BUTTON_RSB, [](View* view){return true;}));
+        actionsToFree.push_back(registerAction("main/mouse_input/keyboard"_i18n, ControllerButton::BUTTON_X, [this](View* view) {
             this->toggleKeyboard();
             return true;
         }));

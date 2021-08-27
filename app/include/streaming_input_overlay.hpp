@@ -24,7 +24,7 @@ public:
     bool isTranslucent() override { return true; }
 private:
     StreamingView* streamView;
-    KeyboardView* keyboard;
+    KeyboardView* keyboard = nullptr;
     bool isKeyboardOpen = false;
     
     void toggleKeyboard();

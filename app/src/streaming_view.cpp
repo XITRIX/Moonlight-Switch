@@ -50,16 +50,13 @@ StreamingView::StreamingView(Host host, AppInfo app) :
     
     keyboardHolder = new Box(Axis::COLUMN);
     keyboardHolder->detach();
-    keyboardHolder->setVisibility(brls::Visibility::GONE);
     keyboardHolder->setJustifyContent(JustifyContent::FLEX_END);
     keyboardHolder->setAlignItems(AlignItems::STRETCH);
     addView(keyboardHolder);
     
-    keyboard = new KeyboardView();
-    keyboardHolder->addView(keyboard);
-    
     addGestureRecognizer(new FingersGestureRecognizer(3, [this] {
-        keyboardHolder->setVisibility(brls::Visibility::VISIBLE);
+        keyboard = new KeyboardView();
+        keyboardHolder->addView(keyboard);
     }));
     
     session = new MoonlightSession(host.address, app.app_id);
@@ -79,8 +76,11 @@ StreamingView::StreamingView(Host host, AppInfo app) :
     
     addGestureRecognizer(new PanGestureRecognizer([this](PanGestureStatus status, Sound* sound) {
         if (status.state == brls::GestureState::START)
-            keyboardHolder->setVisibility(brls::Visibility::GONE);
-        
+        {
+            keyboardHolder->removeView(keyboard);
+            keyboard = nullptr;
+        }
+            
         if (status.state == brls::GestureState::STAY)
             MoonlightInputManager::instance().updateTouchScreenPanDelta(status);
     }, PanAxis::ANY));
@@ -201,19 +201,24 @@ void StreamingView::terminate(bool terminateApp)
 void StreamingView::handleInput()
 {
     if (!this->focused)
+    {
+        MoonlightInputManager::instance().dropInput();
         return;
+    }
     
     MoonlightInputManager::instance().handleInput();
     
-    static KeyboardState oldKeyboardState;
-    KeyboardState keyboardState = keyboard->getKeyboardState();
-    
-    for (int i = 0; i < _VK_KEY_MAX; i++)
-    {
-        if (keyboardState.keys[i] != oldKeyboardState.keys[i])
+    if (keyboard) {
+        static KeyboardState oldKeyboardState;
+        KeyboardState keyboardState = keyboard->getKeyboardState();
+        
+        for (int i = 0; i < _VK_KEY_MAX; i++)
         {
-            oldKeyboardState.keys[i] = keyboardState.keys[i];
-            LiSendKeyboardEvent(keyboard->getKeyCode((KeyboardKeys)i), keyboardState.keys[i] ? KEY_ACTION_DOWN : KEY_ACTION_UP, 0);
+            if (keyboardState.keys[i] != oldKeyboardState.keys[i])
+            {
+                oldKeyboardState.keys[i] = keyboardState.keys[i];
+                LiSendKeyboardEvent(keyboard->getKeyCode((KeyboardKeys)i), keyboardState.keys[i] ? KEY_ACTION_DOWN : KEY_ACTION_UP, 0);
+            }
         }
     }
 }

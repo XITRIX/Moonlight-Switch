@@ -108,6 +108,7 @@
     },
     
     "mouse_input": {
+        "title": "Mouse input mode",
         "mouse": "Mouse",
         "scroll": "Scroll",
         "keyboard": "Keyboard"

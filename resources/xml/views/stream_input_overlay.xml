@@ -63,7 +63,7 @@
                                 height="auto"
                                 verticalAlign="center"
                                 fontSize="@style/brls/applet_frame/header_title_font_size"
-                                text="Mouse input mode" />
+                                text="@i18n/main/mouse_input/title" />
 
                         </brls:Box>
 
