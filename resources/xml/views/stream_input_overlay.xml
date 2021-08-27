@@ -13,7 +13,6 @@
             width="auto"
             height="auto"
             axis="column"
-            justifyContent="flexEnd"
             alignItems="stretch"
             focusable="true">
             
@@ -29,7 +28,7 @@
                     width="auto"
                     height="@style/brls/applet_frame/footer_height"
                     lineColor="@theme/brls/applet_frame/separator"
-                    lineTop="1px"
+                    lineBottom="1px"
                     marginLeft="@style/brls/hints/footer_margin_sides"
                     marginRight="@style/brls/hints/footer_margin_sides"
                     paddingLeft="@style/brls/hints/footer_padding_sides"
@@ -73,6 +72,12 @@
                 </brls:Box>
                     
             </brls:Box>
+            
+            <brls:Box
+                width="auto"
+                height="auto"
+                grow="1"/>
+            
             
         </brls:Box>
     

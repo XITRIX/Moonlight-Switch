@@ -77,12 +77,13 @@ OptionsTab::OptionsTab(StreamingView* streamView) :
     });
     volumeSlider->setProgress(progress);
     
-    inputOverlayButton->init("Mouse mode", false, [this](auto value) {
+    inputOverlayButton->setText("main/streaming/mouse_input"_i18n);
+    inputOverlayButton->registerClickAction([this, streamView](View* view) {
         this->dismiss([this]() {
             StreamingInputOverlay* overlay = new StreamingInputOverlay(this->streamView);
-            overlay->setTitle("Mouse input mode");
             Application::pushActivity(new Activity(overlay));
         });
+        return true;
     });
     
     onscreenLogButton->init("main/streaming/show_logs"_i18n, Settings::instance().write_log(), [](bool value) {

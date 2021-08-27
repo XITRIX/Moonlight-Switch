@@ -49,7 +49,7 @@ public:
 private:
     StreamingView* streamView;
     
-    BRLS_BIND(brls::BooleanCell, inputOverlayButton, "input_overlay");
+    BRLS_BIND(brls::DetailCell, inputOverlayButton, "input_overlay");
     BRLS_BIND(brls::Header, volumeHeader, "volume_header");
     BRLS_BIND(brls::Slider, volumeSlider, "volume_slider");
     BRLS_BIND(brls::BooleanCell, debugButton, "debug");

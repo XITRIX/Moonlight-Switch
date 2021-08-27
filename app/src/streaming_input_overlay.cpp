@@ -31,14 +31,13 @@ StreamingInputOverlay::StreamingInputOverlay(StreamingView* streamView) :
     
     applet->addGestureRecognizer(new TapGestureRecognizer([this](TapGestureStatus status, Sound* sound) { }));
     
-    actionsToFree.push_back(registerAction("Block keyboard focusing", ControllerButton::BUTTON_NAV_UP, [](View* view){return true;}, true));
-    actionsToFree.push_back(registerAction("Mouse", ControllerButton::BUTTON_LSB, [](View* view){return true;}));
-    actionsToFree.push_back(registerAction("Scroll", ControllerButton::BUTTON_RSB, [](View* view){return true;}));
-    actionsToFree.push_back(registerAction("Keyboard", ControllerButton::BUTTON_X, [this](View* view) {
+    actionsToFree.push_back(registerAction("main/mouse_input/mouse"_i18n, ControllerButton::BUTTON_LSB, [](View* view){return true;}));
+    actionsToFree.push_back(registerAction("main/mouse_input/scroll"_i18n, ControllerButton::BUTTON_RSB, [](View* view){return true;}));
+    actionsToFree.push_back(registerAction("main/mouse_input/keyboard"_i18n, ControllerButton::BUTTON_X, [this](View* view) {
         this->toggleKeyboard();
         return true;
     }));
-    inner->registerAction("Back", ControllerButton::BUTTON_B, [this](View* view) {
+    inner->registerAction("brls/hints/back"_i18n, ControllerButton::BUTTON_B, [this](View* view) {
         if (this->isKeyboardOpen)
         {
             this->toggleKeyboard();
@@ -48,8 +47,6 @@ StreamingInputOverlay::StreamingInputOverlay(StreamingView* streamView) :
     });
     
     keyboard = new KeyboardView();
-    keyboard->setVisibility(isKeyboardOpen ? Visibility::VISIBLE : Visibility::GONE);
-    inner->addView(keyboard, 0);
 }
 
 void StreamingInputOverlay::onFocusGained()
@@ -77,11 +74,15 @@ void StreamingInputOverlay::draw(NVGcontext* vg, float x, float y, float width, 
     
     if (!isKeyboardOpen)
     {
-        // Add setting with range 10 - 30
-        int mouseSpeed = 10;
         
         ControllerState controller;
         Application::getPlatform()->getInputManager()->updateControllerState(&controller);
+        
+        // Add setting with range 10 - 30
+        int mouseSpeed = 13;
+        
+        if (controller.buttons[BUTTON_RB]) mouseSpeed += 5;
+        if (controller.buttons[BUTTON_LB]) mouseSpeed -= 5;
         
         short x = controller.axes[LEFT_X] * mouseSpeed;
         short y = controller.axes[LEFT_Y] * mouseSpeed;
@@ -139,12 +140,14 @@ void StreamingInputOverlay::draw(NVGcontext* vg, float x, float y, float width, 
 void StreamingInputOverlay::toggleKeyboard()
 {
     isKeyboardOpen = !isKeyboardOpen;
-    keyboard->setVisibility(isKeyboardOpen ? Visibility::VISIBLE : Visibility::GONE);
+    if (!isKeyboardOpen)
+        inner->removeView(keyboard, false);
+    else
+        inner->addView(keyboard);
     
     if (!isKeyboardOpen)
     {
         Application::giveFocus(this);
-        actionsToFree.push_back(registerAction("Block keyboard focusing", ControllerButton::BUTTON_NAV_UP, [](View* view){return true;}, true));
         actionsToFree.push_back(registerAction("Mouse", ControllerButton::BUTTON_LSB, [](View* view){return true;}));
         actionsToFree.push_back(registerAction("Scroll", ControllerButton::BUTTON_RSB, [](View* view){return true;}));
         actionsToFree.push_back(registerAction("Keyboard", ControllerButton::BUTTON_X, [this](View* view) {

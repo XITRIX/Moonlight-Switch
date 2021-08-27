@@ -99,9 +99,17 @@
         "connection": "Connection",
         "terminate": "Terminate app",
         "disconnect": "Disconnect",
+        "input": "Input",
+        "mouse_input": "Enter mouse input mode",
         "show_logs": "Show logs",
         "debug_info": "Debug info",
         "esc": "ESC button",
         "volume": "Volume"
+    },
+    
+    "mouse_input": {
+        "mouse": "Mouse",
+        "scroll": "Scroll",
+        "keyboard": "Keyboard"
     }
 }

@@ -22,7 +22,7 @@
             <brls:Header
                 title="@i18n/main/streaming/input"/>
             
-            <brls:BooleanCell
+            <brls:DetailCell
                 id="input_overlay"/>
             
             <brls:Header
