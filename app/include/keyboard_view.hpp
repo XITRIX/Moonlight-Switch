@@ -53,6 +53,7 @@ public:
     KeyboardState getKeyboardState();
     short getKeyCode(KeyboardKeys key);
     
+    View* getParentNavigationDecision(View* from, View* newFocus, brls::FocusDirection direction) override;
     void draw(NVGcontext* vg, float x, float y, float width, float height, brls::Style style, brls::FrameContext* ctx) override;
 private:
     void createEnglishLayout();

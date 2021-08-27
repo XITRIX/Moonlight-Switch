@@ -8,6 +8,7 @@
 #include "keyboard_view.hpp"
 #include <chrono>
 #include <libretro-common/retro_timers.h>
+#include <cmath>
 
 using namespace brls;
 
@@ -258,4 +259,22 @@ KeyboardState KeyboardView::getKeyboardState()
 short KeyboardView::getKeyCode(KeyboardKeys key)
 {
     return KeyboardCodes[key];
+}
+
+View* KeyboardView::getParentNavigationDecision(View* from, View* newFocus, FocusDirection direction)
+{
+    if (newFocus && (direction == FocusDirection::UP || direction == FocusDirection::DOWN))
+    {
+        View* source = Application::getCurrentFocus();
+        void* currentparentUserData = source->getParentUserData();
+        
+        Box* sourceParent = source->getParent();
+        Box* newParent = newFocus->getParent();
+        
+        size_t currentFocusIndex = *((size_t*)currentparentUserData);
+        size_t targetFocusIndex = round((float)currentFocusIndex / (float)(sourceParent->getChildren().size() - 1) * (float)(newParent->getChildren().size() - 1));
+        
+        return newParent->getChildren()[targetFocusIndex];
+    }
+    return Box::getParentNavigationDecision(from, newFocus, direction);
 }
