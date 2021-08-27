@@ -79,10 +79,10 @@ void StreamingInputOverlay::draw(NVGcontext* vg, float x, float y, float width, 
         Application::getPlatform()->getInputManager()->updateControllerState(&controller);
         
         // Add setting with range 10 - 30
-        int mouseSpeed = 13;
+        int mouseSpeed = 15;
         
-        if (controller.buttons[BUTTON_RB]) mouseSpeed += 5;
-        if (controller.buttons[BUTTON_LB]) mouseSpeed -= 5;
+        if (controller.buttons[BUTTON_RB]) mouseSpeed += 10;
+        if (controller.buttons[BUTTON_LB]) mouseSpeed -= 10;
         
         short x = controller.axes[LEFT_X] * mouseSpeed;
         short y = controller.axes[LEFT_Y] * mouseSpeed;

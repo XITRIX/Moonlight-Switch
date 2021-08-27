@@ -94,6 +94,13 @@ void StreamingView::onFocusGained()
         blocked = true;
         Application::blockInputs(true);
     }
+    
+    tempInputLock = true;
+    ASYNC_RETAIN
+    delay(300, [ASYNC_TOKEN]() {
+        ASYNC_RELEASE
+        this->tempInputLock = false;
+    });
 }
 
 void StreamingView::onFocusLost()
@@ -115,7 +122,7 @@ void StreamingView::draw(NVGcontext* vg, float x, float y, float width, float he
     }
     
     session->draw(vg);
-    handleInput();
+    if (!tempInputLock) handleInput();
     handleButtonHolding();
 
     if (session->connection_status_is_poor())

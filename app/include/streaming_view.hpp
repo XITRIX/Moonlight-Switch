@@ -50,6 +50,7 @@ private:
     KeyboardView* keyboard;
     bool blocked = false;
     bool terminated = false;
+    bool tempInputLock = false;
     
     void handleInput();
     void handleButtonHolding();
