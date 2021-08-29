@@ -222,10 +222,10 @@ private:
     bool m_volume_amplification = false;
     KeyComboOptions m_guide_key_options {
         .holdTime = 0,
-        .buttons = {brls::ControllerButton::BUTTON_BACK, brls::ControllerButton::BUTTON_START},
+        .buttons = {},
     };
     KeyComboOptions m_overlay_options {
-        .holdTime = 3,
-        .buttons = {brls::ControllerButton::BUTTON_START},
+        .holdTime = 0,
+        .buttons = {brls::ControllerButton::BUTTON_BACK, brls::ControllerButton::BUTTON_START},
     };
 };
