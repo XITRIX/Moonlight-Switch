@@ -56,7 +56,7 @@ StreamingView::StreamingView(Host host, AppInfo app) :
     
     addGestureRecognizer(new FingersGestureRecognizer(3, [this] {
         if (!keyboard) {
-            keyboard = new KeyboardView();
+            keyboard = new KeyboardView(false);
             keyboardHolder->addView(keyboard);
         }
     }));

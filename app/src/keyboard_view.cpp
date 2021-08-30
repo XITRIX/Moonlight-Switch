@@ -215,8 +215,8 @@ void ButtonView::registerCallback()
     addGestureRecognizer(tapRecognizer);
 }
 
-KeyboardView::KeyboardView()
-    : Box(Axis::COLUMN)
+KeyboardView::KeyboardView(bool focusable)
+    : Box(Axis::COLUMN), needFocus(focusable)
 {
     if (!keysStateInited)
     {

@@ -50,7 +50,7 @@ class KeyboardView: public brls::Box
 {
 public:
     inline static brls::VoidEvent shiftUpdated;
-    KeyboardView();
+    KeyboardView(bool focusable);
     ~KeyboardView();
     KeyboardState getKeyboardState();
     short getKeyCode(KeyboardKeys key);
@@ -58,6 +58,7 @@ public:
     View* getParentNavigationDecision(View* from, View* newFocus, brls::FocusDirection direction) override;
     void draw(NVGcontext* vg, float x, float y, float width, float height, brls::Style style, brls::FrameContext* ctx) override;
 private:
+    bool needFocus = false;
     void createEnglishLayout();
     void createNumpadLayout();
 };

@@ -148,7 +148,7 @@ void StreamingInputOverlay::toggleKeyboard()
     }
     else
     {
-        keyboard = new KeyboardView();
+        keyboard = new KeyboardView(true);
         inner->addView(keyboard);
     }
     
