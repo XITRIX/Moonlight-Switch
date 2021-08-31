@@ -55,10 +55,7 @@ StreamingView::StreamingView(Host host, AppInfo app) :
     addView(keyboardHolder);
     
     addGestureRecognizer(new FingersGestureRecognizer(3, [this] {
-        if (!keyboard) {
-            keyboard = new KeyboardView(false);
-            keyboardHolder->addView(keyboard);
-        }
+        addKeyboard();
     }));
     
     session = new MoonlightSession(host.address, app.app_id);
@@ -79,9 +76,7 @@ StreamingView::StreamingView(Host host, AppInfo app) :
     addGestureRecognizer(new PanGestureRecognizer([this](PanGestureStatus status, Sound* sound) {
         if (status.state == brls::GestureState::START)
         {
-            keyboardHolder->removeView(keyboard);
-            keyboard = nullptr;
-            Application::giveFocus(this);
+            removeKeyboard();
         }
             
         if (status.state == brls::GestureState::STAY)
@@ -114,6 +109,8 @@ void StreamingView::onFocusLost()
         blocked = false;
         Application::unblockInputs();
     }
+    
+    removeKeyboard();
 }
 
 void StreamingView::draw(NVGcontext* vg, float x, float y, float width, float height, Style style, FrameContext* ctx)
@@ -185,6 +182,23 @@ void StreamingView::draw(NVGcontext* vg, float x, float y, float width, float he
     }
     
     Box::draw(vg, x, y, width, height, style, ctx);
+}
+
+void StreamingView::addKeyboard()
+{
+    if (keyboard) return;
+    
+    keyboard = new KeyboardView(false);
+    keyboardHolder->addView(keyboard);
+}
+
+void StreamingView::removeKeyboard()
+{
+    if (!keyboard) return;
+    
+    keyboard->removeFromSuperView();
+    keyboard = nullptr;
+    Application::giveFocus(this);
 }
 
 void StreamingView::terminate(bool terminateApp)

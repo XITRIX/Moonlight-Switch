@@ -54,4 +54,6 @@ private:
     
     void handleInput();
     void handleButtonHolding();
+    void addKeyboard();
+    void removeKeyboard();
 };
