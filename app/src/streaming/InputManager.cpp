@@ -10,7 +10,25 @@
 
 MoonlightInputManager::MoonlightInputManager()
 {
+    brls::Application::getPlatform()->getInputManager()->getMouseCusorOffsetChanged()->subscribe([](brls::Point offset) {
+        if (offset.x != 0 || offset.y != 0)
+        {
+            LiSendMouseMoveEvent(offset.x, offset.y);
+        }
+    });
     
+    brls::Application::getPlatform()->getInputManager()->getMouseScrollOffsetChanged()->subscribe([](brls::Point scroll) {
+        if (scroll.y != 0)
+        {
+//            signed char count = scroll.y > 0 ? 1 : -1;
+//            LiSendScrollEvent(count);
+            LiSendHighResScrollEvent(scroll.y);
+        }
+    });
+    
+    brls::Application::getPlatform()->getInputManager()->getKeyboardKeyStateChanged()->subscribe([](brls::KeyState state) {
+        LiSendKeyboardEvent(state.key, state.pressed ? KEY_ACTION_DOWN : KEY_ACTION_UP, 0);
+    });
 }
 
 void MoonlightInputManager::updateTouchScreenPanDelta(brls::PanGestureStatus panStatus)
@@ -141,8 +159,7 @@ void MoonlightInputManager::handleInput()
     static MouseStateS lastMouseState;
     MouseStateS mouseState
     {
-        .position = mouse.position,
-        .scroll_y = stickScrolling + mouse.scroll.y,
+        .scroll_y = stickScrolling,// + mouse.scroll.y,
         .l_pressed = (specialKey && controller.buttons[brls::BUTTON_RT]) || mouse.leftButton,
         .m_pressed = mouse.middleButton,
         .r_pressed = (specialKey && controller.buttons[brls::BUTTON_LT]) || mouse.rightButton
@@ -164,6 +181,12 @@ void MoonlightInputManager::handleInput()
         auto rb = Settings::instance().swap_mouse_keys() ? BUTTON_MOUSE_LEFT : BUTTON_MOUSE_RIGHT;
         LiSendMouseButtonEvent(mouseState.r_pressed ? BUTTON_ACTION_PRESS : BUTTON_ACTION_RELEASE, rb);
     }
+    
+//    if (mouseState.offset.x != 0 || mouseState.offset.y != 0)
+//    {
+//        lastMouseState.offset = mouseState.offset;
+//        LiSendMouseMoveEvent(mouse.offset.x, mouse.offset.y);
+//    }
     
 //    if (mouseState.position != lastMouseState.position)
 //    {

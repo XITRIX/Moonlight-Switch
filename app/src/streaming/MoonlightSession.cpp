@@ -2,10 +2,8 @@
 #include "GameStreamClient.hpp"
 #include "Settings.hpp"
 #include "InputManager.hpp"
-//#include "StreamControlsController.hpp"
 #include "borealis.hpp"
 #include "AVFrameHolder.hpp"
-//#include <nanogui/nanogui.h>
 
 static MoonlightSession* m_active_session = nullptr;
 static MoonlightSessionDecoderAndRenderProvider* m_provider = nullptr;
@@ -83,11 +81,14 @@ void MoonlightSession::connection_terminated(int error_code) {
 }
 
 void MoonlightSession::connection_log_message(const char* format, ...) {
-    brls::Logger::info("MoonlightSession: {}", format);
-//    va_list list;
-//    va_start(list, format);
-//    vprintf(format, list);
-//    va_end(list);
+    char buffer[256];
+    
+    va_list arglist;
+    va_start(arglist, format);
+    vsprintf(buffer, format, arglist);
+    va_end(arglist);
+    
+    brls::Logger::info(std::string(buffer));
 }
 
 void MoonlightSession::connection_rumble(unsigned short controller, unsigned short lowFreqMotor, unsigned short highFreqMotor) {

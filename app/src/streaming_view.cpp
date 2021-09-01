@@ -99,6 +99,8 @@ void StreamingView::onFocusGained()
         ASYNC_RELEASE
         this->tempInputLock = false;
     });
+    
+    Application::getPlatform()->getInputManager()->setPointerLock(true);
 }
 
 void StreamingView::onFocusLost()
@@ -111,6 +113,7 @@ void StreamingView::onFocusLost()
     }
     
     removeKeyboard();
+    Application::getPlatform()->getInputManager()->setPointerLock(false);
 }
 
 void StreamingView::draw(NVGcontext* vg, float x, float y, float width, float height, Style style, FrameContext* ctx)

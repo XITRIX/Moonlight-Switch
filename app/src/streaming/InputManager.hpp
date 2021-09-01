@@ -34,7 +34,6 @@ struct GamepadState {
 };
 
 struct MouseStateS {
-    brls::Point position;
     float scroll_y;
     bool l_pressed;
     bool m_pressed;
