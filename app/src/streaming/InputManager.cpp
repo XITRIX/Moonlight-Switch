@@ -79,9 +79,9 @@ void MoonlightInputManager::handleInput()
         .buttonFlags = 0,
         .leftTrigger = static_cast<unsigned char>(0xFFFF * (!specialKey && controller.buttons[brls::BUTTON_LT] ? 1 : 0)),
         .rightTrigger = static_cast<unsigned char>(0xFFFF * (!specialKey && controller.buttons[brls::BUTTON_RT] ? 1 : 0)),
-        .leftStickX = static_cast<short>(0x7FFF * controller.axes[brls::LEFT_X]),
+        .leftStickX = static_cast<short>(0x7FFF * (!specialKey ? controller.axes[brls::LEFT_X] : 0)),
         .leftStickY = static_cast<short>(-0x7FFF * (!specialKey ? controller.axes[brls::LEFT_Y] : 0)),
-        .rightStickX = static_cast<short>(0x7FFF * controller.axes[brls::RIGHT_X]),
+        .rightStickX = static_cast<short>(0x7FFF * (!specialKey ? controller.axes[brls::RIGHT_X] : 0)),
         .rightStickY = static_cast<short>(-0x7FFF * (!specialKey ? controller.axes[brls::RIGHT_Y] : 0)),
     };
     
