@@ -52,7 +52,6 @@ moonlight_common_c_files = files(
     'moonlight-common-c/src/RtpVideoQueue.c',
 )
 
-dep_curl = dependency('curl')
 dep_opus = dependency('opus')
 dep_expat = dependency('expat')
 dep_jansson = dependency('jansson')
@@ -61,11 +60,9 @@ dep_avcodec = dependency('libavcodec')
 dep_avutil = dependency('libavutil')
 dep_avformat = dependency('libavformat')
 
-
-
 compiler = meson.get_compiler('c')
 
-
+dep_curl = [ compiler.find_library('curl') ]
 dep_mbedtls = [ compiler.find_library('mbedtls') ]
 dep_mbedx509 = [ compiler.find_library('mbedx509') ]
 dep_mbedcrypto = [ compiler.find_library('mbedcrypto') ]
