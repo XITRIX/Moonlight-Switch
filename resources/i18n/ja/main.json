@@ -1,0 +1,116 @@
+{
+    "title": "Moonlight",
+    
+    "error": {
+        "dialog_header": "エラー\n\n"
+    },
+    
+    "common": {
+        "cancel": "キャンセル",
+        "confirm": "確認"
+    },
+    
+    "tabs": {
+        "add_host": "ホストを追加",
+        "settings": "設定"
+    },
+    
+    "host": {
+        "status": "状態",
+        "fetching": "フェッチ中...",
+        "wait": "待機中...",
+        "ready": "準備完了",
+        "unable": "できません",
+        "wake_up": "起動",
+        "wake_up_message": "起を送信する",
+        "wake_up_error": "ホストを起動することができませんでしたt",
+        "connect": "接続",
+        "remove": "削除",
+        "remove_message": "このホストを削除してもよろしいですか?"
+    },
+
+    "add_host": {
+        "manual": "手動",
+        "host_ip": "ホストIP",
+        "connect": "接続",
+        "search": "検索",
+        "search_error": "検索できません",
+        "search_refresh": "更新",
+        "paired_error": "すでにペアリングされています\n構成が更新されました",
+        "pair_prefix": "ペアリング\n\n入力　",
+        "pair_postfix": " ホストデバイス上",
+        "try_connect": "ホストに接続しようとしています"
+    },
+    
+    "discovery_manager": {
+        "no_ip": "IPアドレスを取得できません",
+        "no_host": "ホストPCが見つかりません"
+    },
+
+    "settings": {
+        "quality": "品質",
+        "fps": "FPS",
+        "resolution": "解像度",
+        "video_codec": "ビデオコーデック",
+        "decoder_threads": "デコーダースレッド",
+        "video_bitrate": "ビデオビットレート",
+        "stream_settings": "ストリーム設定",
+        "usops": "ストリーミングの最適な再生可能な設定を使用する",
+        "paop": "PCでオーディオを再生する",
+        "debug": "デバッグ",
+        "debugging_view": "デバッグビューを表示する",
+        "h264": "H.264",
+        "h265": "HEVC (H.265, 実験的)",
+        "zero_threads": "0 (使用しないスレッド)",
+        "keys": "\uE0E2/\uE0E3 and \uE0E0/\uE0E1 キー",
+        "swap_ui": "UIと交換",
+        "swap_game": "ゲームストリームと交換",
+        "mouse": "マウス",
+        "swap_mouse_keys": "マウスを交換する \uE0E6 and \uE0E7 ボタン",
+        "swap_mouse_scroll": "マウスの垂直スクロール方向を入れ替えます",
+        "overlay": "ゲーム内オーバーレイ",
+        "overlay_setup_message": "オーバーレイを開くために使用するキーを押します:\n\n",
+        "overlay_zero_time": "0 (すぐに)",
+        "overlay_time": "押し続けると数秒で開きます",
+        "overlay_buttons": "ボタンの組み合わせ",
+        "volume_amplification": "ボリューム増幅を許可する",
+        "guide_key_setup_message": "ガイドボタンを押すために使用したいキーを押します:\n\n",
+        "guide_key": "ガイドキー (すぐにクリック)",
+        "guide_key_buttons": "ボタンの組み合わせ"
+    },
+    
+    "button_selecting_dialog": {
+    },
+    
+    "app_list": {
+        "reload_app_list": "リロード",
+        "terminate": "終了する",
+        "terminate_current_app": "現在のアプリを終了します",
+        "terminate_prefix": "終了する ",
+        "terminate_postfix": "\n\n保存されていない進行状況はすべて失われる可能性があります",
+        "running": "実行中",
+        "run_current": "現在のアプリを実行する"
+    },
+    
+    "streaming": {
+        "keys": "キー",
+        "options": "設定",
+        "logout": "ログアウト",
+        "connection": "接続",
+        "terminate": "アプリを終了します",
+        "disconnect": "切断する",
+        "input": "入力",
+        "mouse_input": "マウス入力モードに入る",
+        "show_logs": "ログを表示する",
+        "debug_info": "デバッグ情報",
+        "esc": "エスケープボタン",
+        "volume": "音量"
+    },
+    
+    "mouse_input": {
+        "title": "マウス入力モード",
+        "mouse": "マウス",
+        "scroll": "スクロール",
+        "keyboard": "キーボード"
+    }
+}
