@@ -32,7 +32,6 @@ void main() {\n\
 static const char *vertex_shader_string = "\
 #version 120\n\
 attribute vec2 position;\n\
-uniform float aspect;\n\
 varying vec2 tex_position;\n\
 \
 void main() {\n\
