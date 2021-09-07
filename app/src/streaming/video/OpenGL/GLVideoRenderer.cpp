@@ -187,17 +187,7 @@ void GLVideoRenderer::initialize() {
     glDeleteShader(frag);
 
     glGenBuffers(1, &m_vbo);
-    glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
     glGenVertexArrays(1, &m_vao);
-    glBindVertexArray(m_vao);
-
-    glUseProgram(m_shader_program);
-
-    int positionLocation = glGetAttribLocation(m_shader_program, "position");
-    glEnableVertexAttribArray(positionLocation);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
 
     for (int i = 0; i < 3; i++) {
         m_texture_uniform[i] = glGetUniformLocation(m_shader_program, texture_mappings[i]);
@@ -241,6 +231,13 @@ void GLVideoRenderer::checkAndUpdateScale(int width, int height, AVFrame *frame)
         m_screen_width = width;
         m_screen_height = height;
 
+        glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+        int positionLocation = glGetAttribLocation(m_shader_program, "position");
+        glEnableVertexAttribArray(positionLocation);
+        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
+
         for (int i = 0; i < 3; i++) {
             if (m_texture_id[i]) {
                 glDeleteTextures(1, &m_texture_id[i]);
@@ -272,6 +269,7 @@ void GLVideoRenderer::checkAndUpdateScale(int width, int height, AVFrame *frame)
 }
 
 void GLVideoRenderer::draw(NVGcontext *vg, int width, int height, AVFrame *frame) {
+
     if (!m_video_render_stats.rendered_frames) {
         m_video_render_stats.measurement_start_timestamp = LiGetMillis();
     }
@@ -280,6 +278,9 @@ void GLVideoRenderer::draw(NVGcontext *vg, int width, int height, AVFrame *frame
 
     checkAndInitialize(width, height, frame);
 
+    glBindVertexArray(m_vao);
+
+    glUseProgram(m_shader_program);
     checkAndUpdateScale(width, height, frame);
 
     glClearColor(0, 0, 0, 1);
