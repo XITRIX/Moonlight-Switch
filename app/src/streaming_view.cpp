@@ -124,7 +124,8 @@ void StreamingView::draw(NVGcontext* vg, float x, float y, float width, float he
         return;
     }
     
-    session->draw(vg);
+    session->draw(vg, width, height);
+    
     if (!tempInputLock) handleInput();
     handleButtonHolding();
 

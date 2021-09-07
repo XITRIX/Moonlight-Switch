@@ -19,7 +19,7 @@ public:
     void start(ServerCallback<bool> callback);
     void stop(int terminate_app);
     
-    void draw(NVGcontext* vg);
+    void draw(NVGcontext* vg, int width, int height);
     
     bool is_active() const {
         return m_is_active;

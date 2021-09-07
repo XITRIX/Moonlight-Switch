@@ -4,6 +4,7 @@
 #include "InputManager.hpp"
 #include "borealis.hpp"
 #include "AVFrameHolder.hpp"
+#include <string.h>
 
 static MoonlightSession* m_active_session = nullptr;
 static MoonlightSessionDecoderAndRenderProvider* m_provider = nullptr;
@@ -81,11 +82,11 @@ void MoonlightSession::connection_terminated(int error_code) {
 }
 
 void MoonlightSession::connection_log_message(const char* format, ...) {
-    char buffer[256];
-    
     va_list arglist;
     va_start(arglist, format);
-    vsprintf(buffer, format, arglist);
+    int size = vsnprintf(NULL, 0, format, arglist);
+    char buffer[size];
+    vsnprintf(buffer, size, format, arglist);
     va_end(arglist);
     
     brls::Logger::info(std::string(buffer));
@@ -255,10 +256,10 @@ void MoonlightSession::stop(int terminate_app) {
     LiStopConnection(); 
 }
 
-void MoonlightSession::draw(NVGcontext* vg) {
+void MoonlightSession::draw(NVGcontext* vg, int width, int height) {
     if (m_video_decoder && m_video_renderer) {
-        AVFrameHolder::instance().get([this, vg](AVFrame* frame) {
-            m_video_renderer->draw(vg, m_config.width, m_config.height, frame);
+        AVFrameHolder::instance().get([this, vg, width, height](AVFrame* frame) {
+            m_video_renderer->draw(vg, width, height, frame);
         });
         
         m_session_stats.video_decode_stats = *m_video_decoder->video_decode_stats();

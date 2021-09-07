@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		7C053D2426E556AB00A8CBF5 /* glfw_video.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C18E98F265C158A000D3AF0 /* glfw_video.cpp */; };
+		7C053D4D26E55AC600A8CBF5 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C18E8CD265C158A000D3AF0 /* main.cpp */; };
 		7C09602A26D6A60300CF5061 /* streaming_input_overlay.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C09602826D6A60300CF5061 /* streaming_input_overlay.cpp */; };
 		7C09603126D6EBB600CF5061 /* bottom_bar.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C09603026D6EBB600CF5061 /* bottom_bar.cpp */; };
 		7C0D7429265EB69200077D33 /* app_list_view.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C0D7427265EB69200077D33 /* app_list_view.cpp */; };
@@ -17,12 +19,10 @@
 		7C18F065265C15A7000D3AF0 /* host_tab.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C18E8CC265C158A000D3AF0 /* host_tab.cpp */; };
 		7C18F066265C15A7000D3AF0 /* add_host_tab.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C18E8C4265C158A000D3AF0 /* add_host_tab.cpp */; };
 		7C18F067265C15A7000D3AF0 /* settings_tab.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C18E8C8265C158A000D3AF0 /* settings_tab.cpp */; };
-		7C18F068265C15A7000D3AF0 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C18E8CD265C158A000D3AF0 /* main.cpp */; };
 		7C18F069265C15A7000D3AF0 /* main_activity.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C18E8C5265C158A000D3AF0 /* main_activity.cpp */; };
 		7C18F06B265C15DD000D3AF0 /* glfw_platform.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C18E990265C158A000D3AF0 /* glfw_platform.cpp */; };
 		7C18F06C265C15DD000D3AF0 /* glfw_input.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C18E991265C158A000D3AF0 /* glfw_input.cpp */; };
 		7C18F06D265C15DD000D3AF0 /* glfw_font.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C18E992265C158A000D3AF0 /* glfw_font.cpp */; };
-		7C18F06E265C15DD000D3AF0 /* glfw_video.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C18E98F265C158A000D3AF0 /* glfw_video.cpp */; };
 		7C18F070265C15E7000D3AF0 /* pan_gesture.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C18E99E265C158A000D3AF0 /* pan_gesture.cpp */; };
 		7C18F071265C15E7000D3AF0 /* time.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C18E9AA265C158A000D3AF0 /* time.cpp */; };
 		7C18F072265C15E7000D3AF0 /* gesture.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C18E997265C158A000D3AF0 /* gesture.cpp */; };
@@ -1954,7 +1954,6 @@
 				7C18F141265C37DA000D3AF0 /* ControlStream.c in Sources */,
 				7C18F081265C15E7000D3AF0 /* tap_gesture.cpp in Sources */,
 				7C18F080265C15E7000D3AF0 /* box.cpp in Sources */,
-				7C18F06E265C15DD000D3AF0 /* glfw_video.cpp in Sources */,
 				7C18F076265C15E7000D3AF0 /* input.cpp in Sources */,
 				7C18F083265C15E7000D3AF0 /* bind.cpp in Sources */,
 				7C18F0AF265C177E000D3AF0 /* label.cpp in Sources */,
@@ -1968,6 +1967,7 @@
 				7C0D7437265FA80D00077D33 /* MoonlightSession.cpp in Sources */,
 				7C18F085265C15E7000D3AF0 /* activity.cpp in Sources */,
 				7CBE6B6F265DAF8D007DCC5A /* client.cpp in Sources */,
+				7C053D4D26E55AC600A8CBF5 /* main.cpp in Sources */,
 				7C09602A26D6A60300CF5061 /* streaming_input_overlay.cpp in Sources */,
 				7C18F0BE265C177E000D3AF0 /* cell_radio.cpp in Sources */,
 				7C18F0BA265C177E000D3AF0 /* recycler.cpp in Sources */,
@@ -1975,6 +1975,7 @@
 				7C18F0B9265C177E000D3AF0 /* image.cpp in Sources */,
 				7C18F13A265C3786000D3AF0 /* callbacks.c in Sources */,
 				7C18F146265C37E6000D3AF0 /* PlatformCrypto.c in Sources */,
+				7C053D2426E556AB00A8CBF5 /* glfw_video.cpp in Sources */,
 				7C18F099265C162A000D3AF0 /* nanovg.c in Sources */,
 				7C18F066265C15A7000D3AF0 /* add_host_tab.cpp in Sources */,
 				7C18F0AD265C177E000D3AF0 /* cell_input.cpp in Sources */,
@@ -1989,7 +1990,6 @@
 				7C0D7429265EB69200077D33 /* app_list_view.cpp in Sources */,
 				7C18F069265C15A7000D3AF0 /* main_activity.cpp in Sources */,
 				7C471DA9266962E80059D144 /* grid_view.cpp in Sources */,
-				7C18F068265C15A7000D3AF0 /* main.cpp in Sources */,
 				7C18F143265C37DA000D3AF0 /* FakeCallbacks.c in Sources */,
 				7C5DEBA6268FCA450067CF37 /* DiscoverManager.cpp in Sources */,
 				7C18F0A0265C1652000D3AF0 /* glad.c in Sources */,
