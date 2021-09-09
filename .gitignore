@@ -13,3 +13,4 @@ builddir
 *.xcbkptlist
 *.xcuserstate
 moonlight-nx
+build.mac/Moonlight.app

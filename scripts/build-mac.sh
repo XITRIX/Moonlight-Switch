@@ -4,14 +4,14 @@ cd "$( dirname "${BASH_SOURCE[0]}" )/.."
 meson build.mac/build
 ninja -C build.mac/build
 
-rm -rf ./build.mac/Borealis.app
+rm -rf ./build.mac/Moonlight.app
 
-mkdir ./build.mac/Borealis.app
-mkdir ./build.mac/Borealis.app/Contents
-mkdir ./build.mac/Borealis.app/Contents/MacOS
-mkdir ./build.mac/Borealis.app/Contents/Resources
+mkdir ./build.mac/Moonlight.app
+mkdir ./build.mac/Moonlight.app/Contents
+mkdir ./build.mac/Moonlight.app/Contents/MacOS
+mkdir ./build.mac/Moonlight.app/Contents/Resources
 
-cp ./build.mac/templates/Info.plist ./build.mac/Borealis.app/Contents/Info.plist
-cp ./build.mac/templates/AppIcon.icns ./build.mac/Borealis.app/Contents/Resources/AppIcon.icns
-cp ./build.mac/build/borealis_demo ./build.mac/Borealis.app/Contents/MacOS/Borealis
-cp -r ./resources ./build.mac/Borealis.app/Contents/Resources/
+cp ./build.mac/templates/Info.plist ./build.mac/Moonlight.app/Contents/Info.plist
+cp ./build.mac/templates/AppIcon.icns ./build.mac/Moonlight.app/Contents/Resources/AppIcon.icns
+cp ./build.mac/build/moonlight ./build.mac/Moonlight.app/Contents/MacOS/Moonlight
+cp -r ./resources ./build.mac/Moonlight.app/Contents/Resources/
