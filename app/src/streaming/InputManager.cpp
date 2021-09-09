@@ -6,7 +6,10 @@
 #include "InputManager.hpp"
 #include "Settings.hpp"
 #include "Limelight.h"
+#include <borealis.hpp>
 #include <chrono>
+
+using namespace brls;
 
 MoonlightInputManager::MoonlightInputManager()
 {
@@ -26,8 +29,9 @@ MoonlightInputManager::MoonlightInputManager()
         }
     });
     
-    brls::Application::getPlatform()->getInputManager()->getKeyboardKeyStateChanged()->subscribe([](brls::KeyState state) {
-        LiSendKeyboardEvent(state.key, state.pressed ? KEY_ACTION_DOWN : KEY_ACTION_UP, 0);
+    brls::Application::getPlatform()->getInputManager()->getKeyboardKeyStateChanged()->subscribe([this](brls::KeyState state) {
+        int vkKey = this->glfwKeyToVKKey(state.key);
+        LiSendKeyboardEvent(vkKey, state.pressed ? KEY_ACTION_DOWN : KEY_ACTION_UP, 0);
     });
 }
 
@@ -210,5 +214,75 @@ void MoonlightInputManager::handleInput()
     {
         LiSendMouseMoveEvent(-panStatus->delta.x, -panStatus->delta.y);
         panStatus.reset();
+    }
+}
+
+int MoonlightInputManager::glfwKeyToVKKey(int key) {
+    if (BRLS_KBD_KEY_F1 <= key && key <= BRLS_KBD_KEY_F12)
+        return key - BRLS_KBD_KEY_F1 + 0x70;
+
+    if (BRLS_KBD_KEY_KP_0 <= key && key <= BRLS_KBD_KEY_KP_9)
+        return key - BRLS_KBD_KEY_KP_0 + 0x60;
+
+    switch (key) {
+        case BRLS_KBD_KEY_BACKSPACE:
+            return 0x08;
+        case BRLS_KBD_KEY_PERIOD:
+            return 0xBE;
+        case BRLS_KBD_KEY_GRAVE_ACCENT:
+            return 0xC0;
+        case BRLS_KBD_KEY_LEFT_BRACKET:
+            return 0xDB;
+        case BRLS_KBD_KEY_BACKSLASH:
+            return 0xDC;
+        case BRLS_KBD_KEY_APOSTROPHE:
+            return 0xDE;
+        case BRLS_KBD_KEY_TAB:
+            return 0x09;
+        case BRLS_KBD_KEY_CAPS_LOCK:
+            return 0x14;
+        case BRLS_KBD_KEY_LEFT_SHIFT:
+        case BRLS_KBD_KEY_RIGHT_SHIFT:
+            return 0xA1;
+        case BRLS_KBD_KEY_LEFT_CONTROL:
+        case BRLS_KBD_KEY_RIGHT_CONTROL:
+            return 0xA3;
+        case BRLS_KBD_KEY_LEFT_ALT:
+        case BRLS_KBD_KEY_RIGHT_ALT:
+            return 0xA5;
+        case BRLS_KBD_KEY_DELETE:
+            return 0x2E;
+        case BRLS_KBD_KEY_ENTER:
+            return 0x0D;
+        case BRLS_KBD_KEY_LEFT_SUPER:
+        case BRLS_KBD_KEY_RIGHT_SUPER:
+            return 0x5C;
+        case BRLS_KBD_KEY_LEFT:
+            return 0x25;
+        case BRLS_KBD_KEY_UP:
+            return 0x26;
+        case BRLS_KBD_KEY_RIGHT:
+            return 0x27;
+        case BRLS_KBD_KEY_DOWN:
+            return 0x28;
+        case BRLS_KBD_KEY_ESCAPE:
+            return 0x1B;
+        case BRLS_KBD_KEY_KP_ADD:
+            return 0x6B;
+        case BRLS_KBD_KEY_KP_DECIMAL:
+            return 0x6E;
+        case BRLS_KBD_KEY_KP_DIVIDE:
+            return 0x6F;
+        case BRLS_KBD_KEY_KP_MULTIPLY:
+            return 0x6A;
+        case BRLS_KBD_KEY_KP_ENTER:
+            return 0x0D;
+        case BRLS_KBD_KEY_NUM_LOCK:
+            return 0x90;
+        case BRLS_KBD_KEY_SCROLL_LOCK:
+            return 0x91;
+
+        default:
+            return key;
     }
 }

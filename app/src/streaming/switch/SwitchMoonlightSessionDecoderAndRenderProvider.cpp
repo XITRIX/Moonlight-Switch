@@ -2,7 +2,7 @@
 #include "FFmpegVideoDecoder.hpp"
 #include "SDLAudiorenderer.hpp"
 #include "GLVideoRenderer.hpp"
-#include "DebugFileRecorderAudioRenderer.hpp"
+//#include "DebugFileRecorderAudioRenderer.hpp"
 
 IFFmpegVideoDecoder* SwitchMoonlightSessionDecoderAndRenderProvider::video_decoder() {
     return new FFmpegVideoDecoder();
