@@ -44,6 +44,8 @@ GestureState FingersGestureRecognizer::recognitionLoop(TouchState touch, MouseSt
 StreamingView::StreamingView(Host host, AppInfo app) :
     host(host), app(app)
 {
+    Application::getPlatform()->getVideoContext()->disableScreenDimming(true);
+
     setFocusable(true);
     setHideHighlight(true);
     loader = new LoadingOverlay(this);
@@ -301,6 +303,7 @@ void StreamingView::onLayout()
 
 StreamingView::~StreamingView()
 {
+    Application::getPlatform()->getVideoContext()->disableScreenDimming(false);
     session->stop(false);
     delete session;
 }
