@@ -29,11 +29,13 @@
 #include "streaming_view.hpp"
 #include "backward.hpp"
 
+#ifdef _WIN32
 #include <SDL.h>
+#define SDL_MAIN
+#endif
 
 using namespace brls::literals; // for _i18n
 
-#define SDL_MAIN
 int main(int argc, char* argv[])
 {
     // Enable recording for Twitter memes

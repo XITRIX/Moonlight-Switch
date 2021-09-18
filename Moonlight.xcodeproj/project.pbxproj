@@ -9,6 +9,144 @@
 /* Begin PBXBuildFile section */
 		7C053D2426E556AB00A8CBF5 /* glfw_video.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C18E98F265C158A000D3AF0 /* glfw_video.cpp */; };
 		7C053D4D26E55AC600A8CBF5 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C18E8CD265C158A000D3AF0 /* main.cpp */; };
+		7C0754D826F6A5E0006A4CDC /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7C0754D726F6A5E0006A4CDC /* Assets.xcassets */; };
+		7C0754E426F6A5FF006A4CDC /* app_cell.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C471DAC266970B00059D144 /* app_cell.cpp */; };
+		7C0754E526F6A5FF006A4CDC /* streaming_input_overlay.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C09602826D6A60300CF5061 /* streaming_input_overlay.cpp */; };
+		7C0754E626F6A5FF006A4CDC /* ingame_overlay_view.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C3A960F2662902900BAF8CA /* ingame_overlay_view.cpp */; };
+		7C0754E726F6A5FF006A4CDC /* settings_tab.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C18E8C8265C158A000D3AF0 /* settings_tab.cpp */; };
+		7C0754E826F6A5FF006A4CDC /* button_selecting_dialog.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C6EC65826A5F174001ABADE /* button_selecting_dialog.cpp */; };
+		7C0754E926F6A5FF006A4CDC /* backward.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C52664A2670266500DA102F /* backward.cpp */; };
+		7C0754EA26F6A5FF006A4CDC /* keyboard_view.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C77C51F2676C98600179EA8 /* keyboard_view.cpp */; };
+		7C0754EB26F6A5FF006A4CDC /* loading_overlay.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C2BCFEF2667F47A005952F2 /* loading_overlay.cpp */; };
+		7C0754EC26F6A5FF006A4CDC /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C18E8CD265C158A000D3AF0 /* main.cpp */; };
+		7C0754ED26F6A5FF006A4CDC /* hosts_tabs_view.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C18F0D6265C273B000D3AF0 /* hosts_tabs_view.cpp */; };
+		7C0754EE26F6A5FF006A4CDC /* host_tab.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C18E8CC265C158A000D3AF0 /* host_tab.cpp */; };
+		7C0754EF26F6A5FF006A4CDC /* app_list_view.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C0D7427265EB69200077D33 /* app_list_view.cpp */; };
+		7C0754F026F6A5FF006A4CDC /* grid_view.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C471DA7266962E80059D144 /* grid_view.cpp */; };
+		7C0754F126F6A5FF006A4CDC /* main_activity.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C18E8C5265C158A000D3AF0 /* main_activity.cpp */; };
+		7C0754F226F6A5FF006A4CDC /* streaming_view.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C0D7430265FA54700077D33 /* streaming_view.cpp */; };
+		7C0754F326F6A5FF006A4CDC /* add_host_tab.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C18E8C4265C158A000D3AF0 /* add_host_tab.cpp */; };
+		7C0754F426F6A5FF006A4CDC /* helper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C3A95FE2661A3A800BAF8CA /* helper.cpp */; };
+		7C0754F526F6A656006A4CDC /* english_layout.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CE6FA8D26823DDE005854FC /* english_layout.cpp */; };
+		7C0754F626F6A656006A4CDC /* numpad_layout.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CE6FA8F26823E3A005854FC /* numpad_layout.cpp */; };
+		7C0754F726F6A65D006A4CDC /* InputManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CBDEEA62683818A00C6C7B2 /* InputManager.cpp */; };
+		7C0754F826F6A65D006A4CDC /* MoonlightSession.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C0D7435265FA80D00077D33 /* MoonlightSession.cpp */; };
+		7C0754F926F6A65D006A4CDC /* GameStreamClient.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CBE6B92265DB3D6007DCC5A /* GameStreamClient.cpp */; };
+		7C0754FA26F6A65D006A4CDC /* WakeOnLanManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CBE6B90265DB3D6007DCC5A /* WakeOnLanManager.cpp */; };
+		7C0754FB26F6A663006A4CDC /* Data.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CBE6B79265DB027007DCC5A /* Data.cpp */; };
+		7C0754FC26F6A663006A4CDC /* MbedTLSCryptoManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CBE6B78265DB027007DCC5A /* MbedTLSCryptoManager.cpp */; };
+		7C0754FD26F6A667006A4CDC /* xml.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CBE6B6E265DAF8D007DCC5A /* xml.cpp */; };
+		7C0754FE26F6A667006A4CDC /* http.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CBE6B6D265DAF8D007DCC5A /* http.cpp */; };
+		7C0754FF26F6A667006A4CDC /* client.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CBE6B69265DAF8D007DCC5A /* client.cpp */; };
+		7C07550026F6A66C006A4CDC /* BoxArtManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CBE6B5B265DADD9007DCC5A /* BoxArtManager.cpp */; };
+		7C07550126F6A66C006A4CDC /* Settings.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CBE6B5E265DADD9007DCC5A /* Settings.cpp */; };
+		7C07550226F6A67F006A4CDC /* peer.c in Sources */ = {isa = PBXBuildFile; fileRef = 7C18F0FA265C3716000D3AF0 /* peer.c */; };
+		7C07550326F6A67F006A4CDC /* host.c in Sources */ = {isa = PBXBuildFile; fileRef = 7C18F0FE265C3716000D3AF0 /* host.c */; };
+		7C07550426F6A67F006A4CDC /* list.c in Sources */ = {isa = PBXBuildFile; fileRef = 7C18F0DE265C3716000D3AF0 /* list.c */; };
+		7C07550526F6A67F006A4CDC /* unix.c in Sources */ = {isa = PBXBuildFile; fileRef = 7C18F0F0265C3716000D3AF0 /* unix.c */; };
+		7C07550626F6A67F006A4CDC /* win32.c in Sources */ = {isa = PBXBuildFile; fileRef = 7C18F104265C3716000D3AF0 /* win32.c */; };
+		7C07550726F6A67F006A4CDC /* compress.c in Sources */ = {isa = PBXBuildFile; fileRef = 7C18F0E2265C3716000D3AF0 /* compress.c */; };
+		7C07550826F6A67F006A4CDC /* packet.c in Sources */ = {isa = PBXBuildFile; fileRef = 7C18F0E4265C3716000D3AF0 /* packet.c */; };
+		7C07550926F6A67F006A4CDC /* callbacks.c in Sources */ = {isa = PBXBuildFile; fileRef = 7C18F102265C3716000D3AF0 /* callbacks.c */; };
+		7C07550A26F6A67F006A4CDC /* protocol.c in Sources */ = {isa = PBXBuildFile; fileRef = 7C18F0FC265C3716000D3AF0 /* protocol.c */; };
+		7C07550B26F6A686006A4CDC /* rs.c in Sources */ = {isa = PBXBuildFile; fileRef = 7C18F110265C3716000D3AF0 /* rs.c */; };
+		7C07550C26F6A68C006A4CDC /* PlatformSockets.c in Sources */ = {isa = PBXBuildFile; fileRef = 7C18F11F265C3716000D3AF0 /* PlatformSockets.c */; };
+		7C07550D26F6A68C006A4CDC /* SimpleStun.c in Sources */ = {isa = PBXBuildFile; fileRef = 7C18F118265C3716000D3AF0 /* SimpleStun.c */; };
+		7C07550E26F6A68C006A4CDC /* AudioStream.c in Sources */ = {isa = PBXBuildFile; fileRef = 7C18F12E265C3716000D3AF0 /* AudioStream.c */; };
+		7C07550F26F6A68C006A4CDC /* ControlStream.c in Sources */ = {isa = PBXBuildFile; fileRef = 7C18F115265C3716000D3AF0 /* ControlStream.c */; };
+		7C07551026F6A68C006A4CDC /* RtspParser.c in Sources */ = {isa = PBXBuildFile; fileRef = 7C18F12B265C3716000D3AF0 /* RtspParser.c */; };
+		7C07551126F6A68C006A4CDC /* SdpGenerator.c in Sources */ = {isa = PBXBuildFile; fileRef = 7C18F12A265C3716000D3AF0 /* SdpGenerator.c */; };
+		7C07551226F6A68C006A4CDC /* ByteBuffer.c in Sources */ = {isa = PBXBuildFile; fileRef = 7C18F132265C3716000D3AF0 /* ByteBuffer.c */; };
+		7C07551326F6A68C006A4CDC /* RtpVideoQueue.c in Sources */ = {isa = PBXBuildFile; fileRef = 7C0B64DD267570FA009D1C0C /* RtpVideoQueue.c */; };
+		7C07551426F6A68C006A4CDC /* VideoStream.c in Sources */ = {isa = PBXBuildFile; fileRef = 7C18F122265C3716000D3AF0 /* VideoStream.c */; };
+		7C07551526F6A68C006A4CDC /* PlatformStuff.c in Sources */ = {isa = PBXBuildFile; fileRef = 7C18F121265C3716000D3AF0 /* PlatformStuff.c */; };
+		7C07551626F6A68C006A4CDC /* LinkedBlockingQueue.c in Sources */ = {isa = PBXBuildFile; fileRef = 7C18F130265C3716000D3AF0 /* LinkedBlockingQueue.c */; };
+		7C07551726F6A68C006A4CDC /* InputStream.c in Sources */ = {isa = PBXBuildFile; fileRef = 7C18F119265C3716000D3AF0 /* InputStream.c */; };
+		7C07551826F6A68C006A4CDC /* PlatformCrypto.c in Sources */ = {isa = PBXBuildFile; fileRef = 7C18F113265C3716000D3AF0 /* PlatformCrypto.c */; };
+		7C07551926F6A68C006A4CDC /* FakeCallbacks.c in Sources */ = {isa = PBXBuildFile; fileRef = 7C18F127265C3716000D3AF0 /* FakeCallbacks.c */; };
+		7C07551A26F6A68C006A4CDC /* RtpAudioQueue.c in Sources */ = {isa = PBXBuildFile; fileRef = 7C0B64DF267570FA009D1C0C /* RtpAudioQueue.c */; };
+		7C07551B26F6A68C006A4CDC /* RtspConnection.c in Sources */ = {isa = PBXBuildFile; fileRef = 7C18F11D265C3716000D3AF0 /* RtspConnection.c */; };
+		7C07551C26F6A68C006A4CDC /* Misc.c in Sources */ = {isa = PBXBuildFile; fileRef = 7C18F12D265C3716000D3AF0 /* Misc.c */; };
+		7C07551D26F6A68C006A4CDC /* Connection.c in Sources */ = {isa = PBXBuildFile; fileRef = 7C18F125265C3716000D3AF0 /* Connection.c */; };
+		7C07551F26F6A68C006A4CDC /* VideoDepacketizer.c in Sources */ = {isa = PBXBuildFile; fileRef = 7C18F126265C3716000D3AF0 /* VideoDepacketizer.c */; };
+		7C07552026F6A6B6006A4CDC /* swkbd.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C18E98C265C158A000D3AF0 /* swkbd.cpp */; };
+		7C07552126F6A6B9006A4CDC /* glfw_input.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C18E991265C158A000D3AF0 /* glfw_input.cpp */; };
+		7C07552226F6A6B9006A4CDC /* glfw_font.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C18E992265C158A000D3AF0 /* glfw_font.cpp */; };
+		7C07552326F6A6B9006A4CDC /* glfw_platform.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C18E990265C158A000D3AF0 /* glfw_platform.cpp */; };
+		7C07552426F6A6B9006A4CDC /* glfw_video.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C18E98F265C158A000D3AF0 /* glfw_video.cpp */; };
+		7C07552526F6A6BF006A4CDC /* pan_gesture.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C18E99E265C158A000D3AF0 /* pan_gesture.cpp */; };
+		7C07552626F6A6BF006A4CDC /* style.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C18E999265C158A000D3AF0 /* style.cpp */; };
+		7C07552726F6A6BF006A4CDC /* font.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C18E9A0265C158A000D3AF0 /* font.cpp */; };
+		7C07552826F6A6BF006A4CDC /* task.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C18E9A6265C158A000D3AF0 /* task.cpp */; };
+		7C07552926F6A6BF006A4CDC /* i18n.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C18E9A2265C158A000D3AF0 /* i18n.cpp */; };
+		7C07552A26F6A6BF006A4CDC /* logger.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C18E9A8265C158A000D3AF0 /* logger.cpp */; };
+		7C07552B26F6A6BF006A4CDC /* bind.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C18E99A265C158A000D3AF0 /* bind.cpp */; };
+		7C07552C26F6A6BF006A4CDC /* input.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C18E996265C158A000D3AF0 /* input.cpp */; };
+		7C07552D26F6A6BF006A4CDC /* gesture.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C18E997265C158A000D3AF0 /* gesture.cpp */; };
+		7C07552E26F6A6BF006A4CDC /* geometry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C18E995265C158A000D3AF0 /* geometry.cpp */; };
+		7C07552F26F6A6BF006A4CDC /* timer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C18E99F265C158A000D3AF0 /* timer.cpp */; };
+		7C07553026F6A6BF006A4CDC /* time.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C18E9AA265C158A000D3AF0 /* time.cpp */; };
+		7C07553126F6A6BF006A4CDC /* thread.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C3A96092662484A00BAF8CA /* thread.cpp */; };
+		7C07553226F6A6BF006A4CDC /* application.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C18E9A9265C158A000D3AF0 /* application.cpp */; };
+		7C07553326F6A6BF006A4CDC /* util.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C18E994265C158A000D3AF0 /* util.cpp */; };
+		7C07553426F6A6BF006A4CDC /* scroll_gesture.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C18E99C265C158A000D3AF0 /* scroll_gesture.cpp */; };
+		7C07553526F6A6BF006A4CDC /* theme.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C18E9A4265C158A000D3AF0 /* theme.cpp */; };
+		7C07553626F6A6BF006A4CDC /* view.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C18E9A1265C158A000D3AF0 /* view.cpp */; };
+		7C07553726F6A6BF006A4CDC /* platform.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C18E9A7265C158A000D3AF0 /* platform.cpp */; };
+		7C07553826F6A6BF006A4CDC /* activity.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C18E9A3265C158A000D3AF0 /* activity.cpp */; };
+		7C07553926F6A6BF006A4CDC /* tap_gesture.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C18E99D265C158A000D3AF0 /* tap_gesture.cpp */; };
+		7C07553A26F6A6BF006A4CDC /* box.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C18E998265C158A000D3AF0 /* box.cpp */; };
+		7C07553B26F6A6BF006A4CDC /* animation.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C18E9A5265C158A000D3AF0 /* animation.cpp */; };
+		7C07553C26F6A6C5006A4CDC /* format.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C18E9AD265C158A000D3AF0 /* format.cpp */; };
+		7C07553D26F6A6CD006A4CDC /* Utils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C18ED04265C158B000D3AF0 /* Utils.cpp */; };
+		7C07553E26F6A6CD006A4CDC /* YGConfig.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C18ED18265C158B000D3AF0 /* YGConfig.cpp */; };
+		7C07553F26F6A6CD006A4CDC /* YGValue.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C18ED15265C158B000D3AF0 /* YGValue.cpp */; };
+		7C07554026F6A6CD006A4CDC /* YGNode.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C18ED19265C158B000D3AF0 /* YGNode.cpp */; };
+		7C07554126F6A6CD006A4CDC /* YGNodePrint.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C18ED11265C158B000D3AF0 /* YGNodePrint.cpp */; };
+		7C07554226F6A6CD006A4CDC /* Yoga.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C18ED0A265C158B000D3AF0 /* Yoga.cpp */; };
+		7C07554326F6A6CD006A4CDC /* YGEnums.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C18ED13265C158B000D3AF0 /* YGEnums.cpp */; };
+		7C07554426F6A6CD006A4CDC /* log.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C18ED03265C158B000D3AF0 /* log.cpp */; };
+		7C07554526F6A6CD006A4CDC /* YGStyle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C18ED0B265C158B000D3AF0 /* YGStyle.cpp */; };
+		7C07554626F6A6CD006A4CDC /* YGLayout.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C18ED07265C158B000D3AF0 /* YGLayout.cpp */; };
+		7C07554726F6A6D3006A4CDC /* experiments.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C18ED0E265C158B000D3AF0 /* experiments.cpp */; };
+		7C07554826F6A6D3006A4CDC /* event.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C18ED1D265C158B000D3AF0 /* event.cpp */; };
+		7C07554926F6A6DB006A4CDC /* nanovg.c in Sources */ = {isa = PBXBuildFile; fileRef = 7C18ED23265C158B000D3AF0 /* nanovg.c */; };
+		7C07554A26F6A6E8006A4CDC /* glad.c in Sources */ = {isa = PBXBuildFile; fileRef = 7C18EE28265C158B000D3AF0 /* glad.c */; };
+		7C07554B26F6A6EB006A4CDC /* tinyxml2.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C18EE2A265C158B000D3AF0 /* tinyxml2.cpp */; };
+		7C07554C26F6A6F1006A4CDC /* encoding_utf.c in Sources */ = {isa = PBXBuildFile; fileRef = 7C18EE2D265C158B000D3AF0 /* encoding_utf.c */; };
+		7C07554D26F6A6F1006A4CDC /* compat_strl.c in Sources */ = {isa = PBXBuildFile; fileRef = 7C18EE2F265C158B000D3AF0 /* compat_strl.c */; };
+		7C07554E26F6A6F1006A4CDC /* features_cpu.c in Sources */ = {isa = PBXBuildFile; fileRef = 7C18EE31265C158B000D3AF0 /* features_cpu.c */; };
+		7C07554F26F6A6FF006A4CDC /* battery.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C33AB2C26A2FC6B0008B0A6 /* battery.cpp */; };
+		7C07555026F6A6FF006A4CDC /* wireless.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C33AB3526A34EBA0008B0A6 /* wireless.cpp */; };
+		7C07555126F6A704006A4CDC /* cell_detail.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C18EEA6265C158B000D3AF0 /* cell_detail.cpp */; };
+		7C07555226F6A704006A4CDC /* image.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C18EEAD265C158B000D3AF0 /* image.cpp */; };
+		7C07555326F6A704006A4CDC /* dropdown.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C18EEB2265C158B000D3AF0 /* dropdown.cpp */; };
+		7C07555426F6A704006A4CDC /* rectangle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C18EEB7265C158B000D3AF0 /* rectangle.cpp */; };
+		7C07555526F6A704006A4CDC /* cell_input.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C18EEA8265C158B000D3AF0 /* cell_input.cpp */; };
+		7C07555626F6A704006A4CDC /* scrolling_frame.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C18EEB1265C158B000D3AF0 /* scrolling_frame.cpp */; };
+		7C07555726F6A704006A4CDC /* header.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C18EEB0265C158B000D3AF0 /* header.cpp */; };
+		7C07555826F6A704006A4CDC /* sidebar.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C18EEAE265C158B000D3AF0 /* sidebar.cpp */; };
+		7C07555926F6A704006A4CDC /* applet_frame.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C18EEB3265C158B000D3AF0 /* applet_frame.cpp */; };
+		7C07555A26F6A704006A4CDC /* hint.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C18EEAF265C158B000D3AF0 /* hint.cpp */; };
+		7C07555B26F6A704006A4CDC /* label.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C18EEB4265C158B000D3AF0 /* label.cpp */; };
+		7C07555C26F6A704006A4CDC /* cell_selector.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C18EEAA265C158B000D3AF0 /* cell_selector.cpp */; };
+		7C07555D26F6A704006A4CDC /* debug_layer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C3A96042661BAC100BAF8CA /* debug_layer.cpp */; };
+		7C07555E26F6A704006A4CDC /* recycler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C18EEB5265C158B000D3AF0 /* recycler.cpp */; };
+		7C07555F26F6A704006A4CDC /* tab_frame.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C18EEB6265C158B000D3AF0 /* tab_frame.cpp */; };
+		7C07556026F6A704006A4CDC /* slider.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C18EEB8265C158B000D3AF0 /* slider.cpp */; };
+		7C07556126F6A704006A4CDC /* dialog.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CDA33A8265D385C00E5D604 /* dialog.cpp */; };
+		7C07556226F6A704006A4CDC /* bottom_bar.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C09603026D6EBB600CF5061 /* bottom_bar.cpp */; };
+		7C07556326F6A704006A4CDC /* progress_spinner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C18EEAB265C158B000D3AF0 /* progress_spinner.cpp */; };
+		7C07556426F6A704006A4CDC /* button.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C18EEAC265C158B000D3AF0 /* button.cpp */; };
+		7C07556526F6A704006A4CDC /* cell_radio.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C18EEA7265C158B000D3AF0 /* cell_radio.cpp */; };
+		7C07556626F6A704006A4CDC /* cell_bool.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C18EEA9265C158B000D3AF0 /* cell_bool.cpp */; };
+		7C07556726F6A7CD006A4CDC /* DiscoverManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C5DEBA4268FCA450067CF37 /* DiscoverManager.cpp */; };
+		7C07556826F6A7EE006A4CDC /* DebugFileRecorderAudioRenderer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CBE6B94265DB3D6007DCC5A /* DebugFileRecorderAudioRenderer.cpp */; };
+		7C07556926F6A7EE006A4CDC /* SDLAudioRenderer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C3A95F82661618100BAF8CA /* SDLAudioRenderer.cpp */; };
+		7C07556A26F6A7F4006A4CDC /* FFmpegVideoDecoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CBE6B8A265DB3D6007DCC5A /* FFmpegVideoDecoder.cpp */; };
+		7C07556B26F6A7F7006A4CDC /* SwitchMoonlightSessionDecoderAndRenderProvider.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CBE6B9E265DB3D6007DCC5A /* SwitchMoonlightSessionDecoderAndRenderProvider.cpp */; };
+		7C07556C26F6A7FA006A4CDC /* GLVideoRenderer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CBE6B8D265DB3D6007DCC5A /* GLVideoRenderer.cpp */; };
+		7C07556D26F6A8B4006A4CDC /* resources in Resources */ = {isa = PBXBuildFile; fileRef = 7C18F0D2265C1C37000D3AF0 /* resources */; };
 		7C09602A26D6A60300CF5061 /* streaming_input_overlay.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C09602826D6A60300CF5061 /* streaming_input_overlay.cpp */; };
 		7C09603126D6EBB600CF5061 /* bottom_bar.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C09603026D6EBB600CF5061 /* bottom_bar.cpp */; };
 		7C0D7429265EB69200077D33 /* app_list_view.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C0D7427265EB69200077D33 /* app_list_view.cpp */; };
@@ -168,6 +306,10 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		7C0754CF26F6A5DE006A4CDC /* Moonlight.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Moonlight.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		7C0754D726F6A5E0006A4CDC /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		7C0754DC26F6A5E0006A4CDC /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		7C0754DF26F6A5E0006A4CDC /* Moonlight_App.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Moonlight_App.entitlements; sourceTree = "<group>"; };
 		7C09602826D6A60300CF5061 /* streaming_input_overlay.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = streaming_input_overlay.cpp; sourceTree = "<group>"; };
 		7C09602926D6A60300CF5061 /* streaming_input_overlay.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = streaming_input_overlay.hpp; sourceTree = "<group>"; };
 		7C09602F26D6EBAA00CF5061 /* bottom_bar.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = bottom_bar.hpp; sourceTree = "<group>"; };
@@ -475,7 +617,6 @@
 		7C18EEB8265C158B000D3AF0 /* slider.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = slider.cpp; sourceTree = "<group>"; };
 		7C18EEC8265C158B000D3AF0 /* extern.mk */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = extern.mk; sourceTree = "<group>"; };
 		7C18EEC9265C158B000D3AF0 /* meson.build */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = meson.build; sourceTree = "<group>"; };
-		7C18F0C8265C18CD000D3AF0 /* Moonlight.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Moonlight.entitlements; sourceTree = "<group>"; };
 		7C18F0D2265C1C37000D3AF0 /* resources */ = {isa = PBXFileReference; lastKnownFileType = folder; path = resources; sourceTree = "<group>"; };
 		7C18F0D6265C273B000D3AF0 /* hosts_tabs_view.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = hosts_tabs_view.cpp; sourceTree = "<group>"; };
 		7C18F0D7265C273B000D3AF0 /* hosts_tabs_view.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = hosts_tabs_view.hpp; sourceTree = "<group>"; };
@@ -606,6 +747,13 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		7C0754CC26F6A5DE006A4CDC /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		7C18E8B3265C1551000D3AF0 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -616,6 +764,16 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		7C0754D026F6A5DE006A4CDC /* Moonlight-Mac */ = {
+			isa = PBXGroup;
+			children = (
+				7C0754D726F6A5E0006A4CDC /* Assets.xcassets */,
+				7C0754DC26F6A5E0006A4CDC /* Info.plist */,
+				7C0754DF26F6A5E0006A4CDC /* Moonlight_App.entitlements */,
+			);
+			path = "Moonlight-Mac";
+			sourceTree = "<group>";
+		};
 		7C0D7444265FF4DC00077D33 /* OpenGL */ = {
 			isa = PBXGroup;
 			children = (
@@ -629,10 +787,10 @@
 			isa = PBXGroup;
 			children = (
 				7CDA33AD265D642200E5D604 /* Makefile */,
-				7C18F0C8265C18CD000D3AF0 /* Moonlight.entitlements */,
 				7C18F0D2265C1C37000D3AF0 /* resources */,
 				7C18E8C2265C158A000D3AF0 /* app */,
 				7C18E8CE265C158A000D3AF0 /* extern */,
+				7C0754D026F6A5DE006A4CDC /* Moonlight-Mac */,
 				7C18E8B7265C1551000D3AF0 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -641,6 +799,7 @@
 			isa = PBXGroup;
 			children = (
 				7C18E8B6265C1551000D3AF0 /* Moonlight */,
+				7C0754CF26F6A5DE006A4CDC /* Moonlight.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -1876,6 +2035,23 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		7C0754CE26F6A5DE006A4CDC /* Moonlight-Mac */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 7C0754E326F6A5E0006A4CDC /* Build configuration list for PBXNativeTarget "Moonlight-Mac" */;
+			buildPhases = (
+				7C0754CB26F6A5DE006A4CDC /* Sources */,
+				7C0754CC26F6A5DE006A4CDC /* Frameworks */,
+				7C0754CD26F6A5DE006A4CDC /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "Moonlight-Mac";
+			productName = "Moonlight-App";
+			productReference = 7C0754CF26F6A5DE006A4CDC /* Moonlight.app */;
+			productType = "com.apple.product-type.application";
+		};
 		7C18E8B5265C1551000D3AF0 /* Moonlight */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 7C18E8BD265C1551000D3AF0 /* Build configuration list for PBXNativeTarget "Moonlight" */;
@@ -1901,6 +2077,9 @@
 			attributes = {
 				LastUpgradeCheck = 1240;
 				TargetAttributes = {
+					7C0754CE26F6A5DE006A4CDC = {
+						CreatedOnToolsVersion = 12.5;
+					};
 					7C18E8B5265C1551000D3AF0 = {
 						CreatedOnToolsVersion = 12.4;
 					};
@@ -1926,6 +2105,7 @@
 			projectRoot = "";
 			targets = (
 				7C18E8B5265C1551000D3AF0 /* Moonlight */,
+				7C0754CE26F6A5DE006A4CDC /* Moonlight-Mac */,
 			);
 		};
 /* End PBXProject section */
@@ -1940,7 +2120,162 @@
 		};
 /* End PBXReferenceProxy section */
 
+/* Begin PBXResourcesBuildPhase section */
+		7C0754CD26F6A5DE006A4CDC /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7C0754D826F6A5E0006A4CDC /* Assets.xcassets in Resources */,
+				7C07556D26F6A8B4006A4CDC /* resources in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
+		7C0754CB26F6A5DE006A4CDC /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7C07552226F6A6B9006A4CDC /* glfw_font.cpp in Sources */,
+				7C07554526F6A6CD006A4CDC /* YGStyle.cpp in Sources */,
+				7C0754F526F6A656006A4CDC /* english_layout.cpp in Sources */,
+				7C07550E26F6A68C006A4CDC /* AudioStream.c in Sources */,
+				7C0754F826F6A65D006A4CDC /* MoonlightSession.cpp in Sources */,
+				7C07552726F6A6BF006A4CDC /* font.cpp in Sources */,
+				7C07550126F6A66C006A4CDC /* Settings.cpp in Sources */,
+				7C0754FE26F6A667006A4CDC /* http.cpp in Sources */,
+				7C0754E626F6A5FF006A4CDC /* ingame_overlay_view.cpp in Sources */,
+				7C0754FB26F6A663006A4CDC /* Data.cpp in Sources */,
+				7C07556226F6A704006A4CDC /* bottom_bar.cpp in Sources */,
+				7C07551C26F6A68C006A4CDC /* Misc.c in Sources */,
+				7C07554A26F6A6E8006A4CDC /* glad.c in Sources */,
+				7C07554C26F6A6F1006A4CDC /* encoding_utf.c in Sources */,
+				7C0754EE26F6A5FF006A4CDC /* host_tab.cpp in Sources */,
+				7C07550D26F6A68C006A4CDC /* SimpleStun.c in Sources */,
+				7C07555F26F6A704006A4CDC /* tab_frame.cpp in Sources */,
+				7C07551F26F6A68C006A4CDC /* VideoDepacketizer.c in Sources */,
+				7C07551926F6A68C006A4CDC /* FakeCallbacks.c in Sources */,
+				7C07555226F6A704006A4CDC /* image.cpp in Sources */,
+				7C07555726F6A704006A4CDC /* header.cpp in Sources */,
+				7C07556826F6A7EE006A4CDC /* DebugFileRecorderAudioRenderer.cpp in Sources */,
+				7C0754FC26F6A663006A4CDC /* MbedTLSCryptoManager.cpp in Sources */,
+				7C07555126F6A704006A4CDC /* cell_detail.cpp in Sources */,
+				7C07556426F6A704006A4CDC /* button.cpp in Sources */,
+				7C07554326F6A6CD006A4CDC /* YGEnums.cpp in Sources */,
+				7C07555E26F6A704006A4CDC /* recycler.cpp in Sources */,
+				7C07552B26F6A6BF006A4CDC /* bind.cpp in Sources */,
+				7C07554726F6A6D3006A4CDC /* experiments.cpp in Sources */,
+				7C07553B26F6A6BF006A4CDC /* animation.cpp in Sources */,
+				7C07553426F6A6BF006A4CDC /* scroll_gesture.cpp in Sources */,
+				7C07555C26F6A704006A4CDC /* cell_selector.cpp in Sources */,
+				7C0754F226F6A5FF006A4CDC /* streaming_view.cpp in Sources */,
+				7C07550526F6A67F006A4CDC /* unix.c in Sources */,
+				7C07553C26F6A6C5006A4CDC /* format.cpp in Sources */,
+				7C07550026F6A66C006A4CDC /* BoxArtManager.cpp in Sources */,
+				7C07551826F6A68C006A4CDC /* PlatformCrypto.c in Sources */,
+				7C07556026F6A704006A4CDC /* slider.cpp in Sources */,
+				7C07551126F6A68C006A4CDC /* SdpGenerator.c in Sources */,
+				7C07552926F6A6BF006A4CDC /* i18n.cpp in Sources */,
+				7C0754F726F6A65D006A4CDC /* InputManager.cpp in Sources */,
+				7C07550C26F6A68C006A4CDC /* PlatformSockets.c in Sources */,
+				7C07551B26F6A68C006A4CDC /* RtspConnection.c in Sources */,
+				7C07553726F6A6BF006A4CDC /* platform.cpp in Sources */,
+				7C0754F926F6A65D006A4CDC /* GameStreamClient.cpp in Sources */,
+				7C07556C26F6A7FA006A4CDC /* GLVideoRenderer.cpp in Sources */,
+				7C07552C26F6A6BF006A4CDC /* input.cpp in Sources */,
+				7C07556726F6A7CD006A4CDC /* DiscoverManager.cpp in Sources */,
+				7C0754FF26F6A667006A4CDC /* client.cpp in Sources */,
+				7C0754EC26F6A5FF006A4CDC /* main.cpp in Sources */,
+				7C07550626F6A67F006A4CDC /* win32.c in Sources */,
+				7C07555826F6A704006A4CDC /* sidebar.cpp in Sources */,
+				7C07556626F6A704006A4CDC /* cell_bool.cpp in Sources */,
+				7C07556326F6A704006A4CDC /* progress_spinner.cpp in Sources */,
+				7C07551426F6A68C006A4CDC /* VideoStream.c in Sources */,
+				7C0754F326F6A5FF006A4CDC /* add_host_tab.cpp in Sources */,
+				7C07553026F6A6BF006A4CDC /* time.cpp in Sources */,
+				7C07554026F6A6CD006A4CDC /* YGNode.cpp in Sources */,
+				7C07555626F6A704006A4CDC /* scrolling_frame.cpp in Sources */,
+				7C07553126F6A6BF006A4CDC /* thread.cpp in Sources */,
+				7C07553526F6A6BF006A4CDC /* theme.cpp in Sources */,
+				7C0754E726F6A5FF006A4CDC /* settings_tab.cpp in Sources */,
+				7C0754F426F6A5FF006A4CDC /* helper.cpp in Sources */,
+				7C07555526F6A704006A4CDC /* cell_input.cpp in Sources */,
+				7C07555326F6A704006A4CDC /* dropdown.cpp in Sources */,
+				7C07550726F6A67F006A4CDC /* compress.c in Sources */,
+				7C0754E426F6A5FF006A4CDC /* app_cell.cpp in Sources */,
+				7C07551726F6A68C006A4CDC /* InputStream.c in Sources */,
+				7C07554626F6A6CD006A4CDC /* YGLayout.cpp in Sources */,
+				7C0754E926F6A5FF006A4CDC /* backward.cpp in Sources */,
+				7C07553A26F6A6BF006A4CDC /* box.cpp in Sources */,
+				7C07554226F6A6CD006A4CDC /* Yoga.cpp in Sources */,
+				7C07553926F6A6BF006A4CDC /* tap_gesture.cpp in Sources */,
+				7C07552D26F6A6BF006A4CDC /* gesture.cpp in Sources */,
+				7C07552326F6A6B9006A4CDC /* glfw_platform.cpp in Sources */,
+				7C07552826F6A6BF006A4CDC /* task.cpp in Sources */,
+				7C07554B26F6A6EB006A4CDC /* tinyxml2.cpp in Sources */,
+				7C07550226F6A67F006A4CDC /* peer.c in Sources */,
+				7C07553226F6A6BF006A4CDC /* application.cpp in Sources */,
+				7C07552126F6A6B9006A4CDC /* glfw_input.cpp in Sources */,
+				7C07552426F6A6B9006A4CDC /* glfw_video.cpp in Sources */,
+				7C07554D26F6A6F1006A4CDC /* compat_strl.c in Sources */,
+				7C07555426F6A704006A4CDC /* rectangle.cpp in Sources */,
+				7C0754E826F6A5FF006A4CDC /* button_selecting_dialog.cpp in Sources */,
+				7C07550326F6A67F006A4CDC /* host.c in Sources */,
+				7C0754EB26F6A5FF006A4CDC /* loading_overlay.cpp in Sources */,
+				7C07552526F6A6BF006A4CDC /* pan_gesture.cpp in Sources */,
+				7C07553326F6A6BF006A4CDC /* util.cpp in Sources */,
+				7C07552026F6A6B6006A4CDC /* swkbd.cpp in Sources */,
+				7C07550B26F6A686006A4CDC /* rs.c in Sources */,
+				7C07556A26F6A7F4006A4CDC /* FFmpegVideoDecoder.cpp in Sources */,
+				7C07555026F6A6FF006A4CDC /* wireless.cpp in Sources */,
+				7C07554E26F6A6F1006A4CDC /* features_cpu.c in Sources */,
+				7C07551026F6A68C006A4CDC /* RtspParser.c in Sources */,
+				7C07553826F6A6BF006A4CDC /* activity.cpp in Sources */,
+				7C0754FD26F6A667006A4CDC /* xml.cpp in Sources */,
+				7C07556126F6A704006A4CDC /* dialog.cpp in Sources */,
+				7C07551D26F6A68C006A4CDC /* Connection.c in Sources */,
+				7C0754EF26F6A5FF006A4CDC /* app_list_view.cpp in Sources */,
+				7C07554126F6A6CD006A4CDC /* YGNodePrint.cpp in Sources */,
+				7C07553F26F6A6CD006A4CDC /* YGValue.cpp in Sources */,
+				7C07551326F6A68C006A4CDC /* RtpVideoQueue.c in Sources */,
+				7C07552E26F6A6BF006A4CDC /* geometry.cpp in Sources */,
+				7C07552F26F6A6BF006A4CDC /* timer.cpp in Sources */,
+				7C07551A26F6A68C006A4CDC /* RtpAudioQueue.c in Sources */,
+				7C07554926F6A6DB006A4CDC /* nanovg.c in Sources */,
+				7C07550926F6A67F006A4CDC /* callbacks.c in Sources */,
+				7C07556B26F6A7F7006A4CDC /* SwitchMoonlightSessionDecoderAndRenderProvider.cpp in Sources */,
+				7C07553E26F6A6CD006A4CDC /* YGConfig.cpp in Sources */,
+				7C07553D26F6A6CD006A4CDC /* Utils.cpp in Sources */,
+				7C0754ED26F6A5FF006A4CDC /* hosts_tabs_view.cpp in Sources */,
+				7C07554F26F6A6FF006A4CDC /* battery.cpp in Sources */,
+				7C0754EA26F6A5FF006A4CDC /* keyboard_view.cpp in Sources */,
+				7C07551526F6A68C006A4CDC /* PlatformStuff.c in Sources */,
+				7C07554826F6A6D3006A4CDC /* event.cpp in Sources */,
+				7C07556526F6A704006A4CDC /* cell_radio.cpp in Sources */,
+				7C07555B26F6A704006A4CDC /* label.cpp in Sources */,
+				7C07551626F6A68C006A4CDC /* LinkedBlockingQueue.c in Sources */,
+				7C07552626F6A6BF006A4CDC /* style.cpp in Sources */,
+				7C07556926F6A7EE006A4CDC /* SDLAudioRenderer.cpp in Sources */,
+				7C0754F626F6A656006A4CDC /* numpad_layout.cpp in Sources */,
+				7C07551226F6A68C006A4CDC /* ByteBuffer.c in Sources */,
+				7C0754FA26F6A65D006A4CDC /* WakeOnLanManager.cpp in Sources */,
+				7C07550F26F6A68C006A4CDC /* ControlStream.c in Sources */,
+				7C07555D26F6A704006A4CDC /* debug_layer.cpp in Sources */,
+				7C0754E526F6A5FF006A4CDC /* streaming_input_overlay.cpp in Sources */,
+				7C07550426F6A67F006A4CDC /* list.c in Sources */,
+				7C0754F026F6A5FF006A4CDC /* grid_view.cpp in Sources */,
+				7C07555A26F6A704006A4CDC /* hint.cpp in Sources */,
+				7C07554426F6A6CD006A4CDC /* log.cpp in Sources */,
+				7C07550A26F6A67F006A4CDC /* protocol.c in Sources */,
+				7C07553626F6A6BF006A4CDC /* view.cpp in Sources */,
+				7C07552A26F6A6BF006A4CDC /* logger.cpp in Sources */,
+				7C07550826F6A67F006A4CDC /* packet.c in Sources */,
+				7C0754F126F6A5FF006A4CDC /* main_activity.cpp in Sources */,
+				7C07555926F6A704006A4CDC /* applet_frame.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		7C18E8B2265C1551000D3AF0 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -2087,10 +2422,53 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
+		7C0754E026F6A5E0006A4CDC /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "Moonlight-Mac/Moonlight_App.entitlements";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = D59DHVRS87;
+				ENABLE_HARDENED_RUNTIME = YES;
+				INFOPLIST_FILE = "Moonlight-Mac/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
+				PRODUCT_BUNDLE_IDENTIFIER = ru.xitrix.Moonlight;
+				PRODUCT_NAME = Moonlight;
+			};
+			name = Debug;
+		};
+		7C0754E126F6A5E0006A4CDC /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "Moonlight-Mac/Moonlight_App.entitlements";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = D59DHVRS87;
+				ENABLE_HARDENED_RUNTIME = YES;
+				INFOPLIST_FILE = "Moonlight-Mac/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
+				PRODUCT_BUNDLE_IDENTIFIER = ru.xitrix.Moonlight;
+				PRODUCT_NAME = Moonlight;
+			};
+			name = Release;
+		};
 		7C18E8BB265C1551000D3AF0 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = arm64;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
@@ -2169,7 +2547,6 @@
 				MACOSX_DEPLOYMENT_TARGET = 11.1;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
-				ONLY_ACTIVE_ARCH = YES;
 				OTHER_LDFLAGS = (
 					"-lglfw",
 					"-lmbedtls",
@@ -2192,6 +2569,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = arm64;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
@@ -2289,7 +2667,7 @@
 		7C18E8BE265C1551000D3AF0 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CODE_SIGN_ENTITLEMENTS = Moonlight.entitlements;
+				CODE_SIGN_ENTITLEMENTS = "Moonlight-Mac/Moonlight_App.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = D59DHVRS87;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -2300,7 +2678,7 @@
 		7C18E8BF265C1551000D3AF0 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CODE_SIGN_ENTITLEMENTS = Moonlight.entitlements;
+				CODE_SIGN_ENTITLEMENTS = "Moonlight-Mac/Moonlight_App.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = D59DHVRS87;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -2311,6 +2689,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		7C0754E326F6A5E0006A4CDC /* Build configuration list for PBXNativeTarget "Moonlight-Mac" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7C0754E026F6A5E0006A4CDC /* Debug */,
+				7C0754E126F6A5E0006A4CDC /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		7C18E8B1265C1551000D3AF0 /* Build configuration list for PBXProject "Moonlight" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
