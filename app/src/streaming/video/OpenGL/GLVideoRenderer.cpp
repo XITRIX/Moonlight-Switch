@@ -1,5 +1,9 @@
 #include "GLVideoRenderer.hpp"
+
+// TODO: rework logging with callbacks
+#ifndef _WIN32
 #include "borealis.hpp"
+#endif
 
 // TODO: GLES support
 
@@ -120,7 +124,9 @@ static void check_shader(GLuint handle) {
     GLint success = 0;
     glGetShaderiv(handle, GL_COMPILE_STATUS, &success);
 
+#ifndef _WIN32
     brls::Logger::info("GL: GL_COMPILE_STATUS: {}", success);
+#endif
 
     if (!success) {
         GLint length = 0;
@@ -129,7 +135,11 @@ static void check_shader(GLuint handle) {
         char *buffer = (char *) malloc(length);
 
         glGetShaderInfoLog(handle, length, &length, buffer);
+        
+#ifndef _WIN32
         brls::Logger::error("GL: Compile shader error: {}", buffer);
+#endif
+
         free(buffer);
     }
 }
@@ -140,7 +150,10 @@ static bool use_core_shaders() {
 }
 
 GLVideoRenderer::~GLVideoRenderer() {
+    
+#ifndef _WIN32
     brls::Logger::info("GL: Cleanup...");
+#endif
 
     if (m_shader_program) {
         glDeleteProgram(m_shader_program);
@@ -160,7 +173,9 @@ GLVideoRenderer::~GLVideoRenderer() {
         }
     }
 
+#ifndef _WIN32
     brls::Logger::info("GL: Cleanup done!");
+#endif
 }
 
 void GLVideoRenderer::initialize() {
@@ -214,11 +229,17 @@ void GLVideoRenderer::bindTexture(int id) {
 
 void GLVideoRenderer::checkAndInitialize(int width, int height, AVFrame *frame) {
     if (!m_is_initialized) {
+#ifndef _WIN32
         brls::Logger::info("GL: GL: {}, GLSL: {}", glGetString(GL_VERSION), glGetString(GL_SHADING_LANGUAGE_VERSION));
         brls::Logger::info("GL: Init with width: {}, height: {}", width, height);
+#endif
+
         initialize();
         m_is_initialized = true;
+        
+#ifndef _WIN32
         brls::Logger::info("GL: Init done");
+#endif
     }
 }
 

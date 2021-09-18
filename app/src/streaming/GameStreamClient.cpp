@@ -10,9 +10,9 @@
 #include <fstream>
 #include <future>
 #include <unistd.h>
-#include <zeroconf.hpp>
 
 #if defined(__linux) || defined(__APPLE__)
+#include <zeroconf.hpp>
 #include <sys/socket.h>
 #include <sys/ioctl.h>
 #include <net/if.h>
@@ -22,21 +22,21 @@
 #include <switch.h>
 #endif
 
-namespace
-{
-    void* get_in_addr(sockaddr_storage* sa)
-    {
-        if (sa->ss_family == AF_INET)
-            return &reinterpret_cast<sockaddr_in*>(sa)->sin_addr;
+// namespace
+// {
+//     void* get_in_addr(sockaddr_storage* sa)
+//     {
+//         if (sa->ss_family == AF_INET)
+//             return &reinterpret_cast<sockaddr_in*>(sa)->sin_addr;
 
-        if (sa->ss_family == AF_INET6)
-            return &reinterpret_cast<sockaddr_in6*>(sa)->sin6_addr;
+//         if (sa->ss_family == AF_INET6)
+//             return &reinterpret_cast<sockaddr_in6*>(sa)->sin6_addr;
 
-        return nullptr;
-    }
+//         return nullptr;
+//     }
 
-    const std::string SeparatorLine(20, '-');
-}
+//     const std::string SeparatorLine(20, '-');
+// }
 
 GameStreamClient::GameStreamClient()
 {
@@ -93,6 +93,7 @@ bool GameStreamClient::can_find_host() {
     return get_my_ip_address() != 0;
 }
 
+#ifndef MULTICAST_DISABLED
 void LocalPrintLog(Zeroconf::LogLevel level, const std::string& message)
 {
     switch (level)
@@ -105,8 +106,10 @@ void LocalPrintLog(Zeroconf::LogLevel level, const std::string& message)
             break;
     }
 }
+#endif
 
 void GameStreamClient::find_hosts(ServerCallback<std::vector<Host>> callback) {
+#ifndef MULTICAST_DISABLED
     brls::async([this, callback] {
         static const std::string MdnsQuery = "_nvstream._tcp.local";
         Zeroconf::SetLogCallback(LocalPrintLog);
@@ -149,6 +152,7 @@ void GameStreamClient::find_hosts(ServerCallback<std::vector<Host>> callback) {
             brls::sync([callback, hosts] { callback(GSResult<std::vector<Host>>::success(hosts)); });
         }
     });
+#endif
 }
         
        

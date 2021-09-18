@@ -74,7 +74,7 @@ ButtonView::ButtonView()
     if (inputManager == nullptr)
         inputManager = Application::getPlatform()->getInputManager();
     
-    setBackgroundColor(RGB(60, 60, 60));
+    setBackgroundColor(nvgRGB(60, 60, 60));
     setWidth(90);
     setHeight(56);
     
@@ -84,7 +84,7 @@ ButtonView::ButtonView()
     charLabel = new Label();
     charLabel->setHorizontalAlign(HorizontalAlign::CENTER);
     charLabel->setVerticalAlign(VerticalAlign::CENTER);
-    charLabel->setTextColor(RGB(255, 255, 255));
+    charLabel->setTextColor(nvgRGB(255, 255, 255));
     charLabel->setFontSize(27);
     addView(charLabel);
     
@@ -225,7 +225,7 @@ KeyboardView::KeyboardView(bool focusable)
             keysState[i] = false;
     }
     
-    setBackgroundColor(RGBA(120, 120, 120, 200));
+    setBackgroundColor(nvgRGBA(120, 120, 120, 200));
     setAlignItems(AlignItems::CENTER);
     setPaddingTop(24);
     setPaddingBottom(24);

@@ -1,6 +1,6 @@
 project('moonlight', ['c', 'cpp'],
     version: '1.0.0',
-    default_options: [ 'buildtype=release', 'strip=true', 'b_ndebug=if-release', 'cpp_std=c++1z' ],
+    default_options: [ 'buildtype=release', 'strip=true', 'b_ndebug=if-release', 'cpp_std=c++17' ],
 )
 
 subdir('extern')
@@ -69,5 +69,5 @@ moonlight = executable(
     dependencies : [borealis_dependencies, moonlight_dependencies],
     install: true,
     include_directories: [ borealis_include, app_include, moonlight_common_c_include, zeroconf_include ],
-    cpp_args: [ '-g', '-O2', '-DBRLS_RESOURCES="./resources/"', ] + moonlight_cpp_args + borealis_cpp_args
+    cpp_args: [ '-static', '-w', '-g', '-O2', '-DBRLS_RESOURCES="./resources/"', ] + moonlight_cpp_args + borealis_cpp_args
 )

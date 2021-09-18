@@ -134,7 +134,7 @@ void AddHostTab::connectHost(std::string address)
                 }
                 
                 char pin[5];
-                sprintf(pin, "%d%d%d%d", (int)random() % 10, (int)random() % 10, (int)random() % 10, (int)random() % 10);
+                sprintf(pin, "%d%d%d%d", (int)rand() % 10, (int)rand() % 10, (int)rand() % 10, (int)rand() % 10);
                 
                 brls::Dialog* dialog = createLoadingDialog("main/add_host/pair_prefix"_i18n + std::string(pin) + "main/add_host/pair_postfix"_i18n);
                 dialog->setCancelable(false);
