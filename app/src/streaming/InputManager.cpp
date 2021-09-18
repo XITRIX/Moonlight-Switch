@@ -31,7 +31,8 @@ MoonlightInputManager::MoonlightInputManager()
     
     brls::Application::getPlatform()->getInputManager()->getKeyboardKeyStateChanged()->subscribe([this](brls::KeyState state) {
         int vkKey = this->glfwKeyToVKKey(state.key);
-        LiSendKeyboardEvent(vkKey, state.pressed ? KEY_ACTION_DOWN : KEY_ACTION_UP, 0);
+        char modifiers = state.mods;
+        LiSendKeyboardEvent(vkKey, state.pressed ? KEY_ACTION_DOWN : KEY_ACTION_UP, modifiers);
     });
 }
 
@@ -179,6 +180,12 @@ void MoonlightInputManager::handleInput()
         LiSendMouseButtonEvent(mouseState.l_pressed ? BUTTON_ACTION_PRESS : BUTTON_ACTION_RELEASE, lb);
     }
     
+    if (mouseState.m_pressed != lastMouseState.m_pressed)
+    {
+        lastMouseState.m_pressed = mouseState.m_pressed;
+        LiSendMouseButtonEvent(mouseState.m_pressed ? BUTTON_ACTION_PRESS : BUTTON_ACTION_RELEASE, BUTTON_MOUSE_MIDDLE);
+    }
+    
     if (mouseState.r_pressed != lastMouseState.r_pressed)
     {
         lastMouseState.r_pressed = mouseState.r_pressed;
@@ -242,12 +249,15 @@ int MoonlightInputManager::glfwKeyToVKKey(int key) {
         case BRLS_KBD_KEY_CAPS_LOCK:
             return 0x14;
         case BRLS_KBD_KEY_LEFT_SHIFT:
+            return 0xA0;
         case BRLS_KBD_KEY_RIGHT_SHIFT:
             return 0xA1;
         case BRLS_KBD_KEY_LEFT_CONTROL:
+            return 0xA2;
         case BRLS_KBD_KEY_RIGHT_CONTROL:
             return 0xA3;
         case BRLS_KBD_KEY_LEFT_ALT:
+            return 0xA4;
         case BRLS_KBD_KEY_RIGHT_ALT:
             return 0xA5;
         case BRLS_KBD_KEY_DELETE:
@@ -255,6 +265,7 @@ int MoonlightInputManager::glfwKeyToVKKey(int key) {
         case BRLS_KBD_KEY_ENTER:
             return 0x0D;
         case BRLS_KBD_KEY_LEFT_SUPER:
+            return 0x5B;
         case BRLS_KBD_KEY_RIGHT_SUPER:
             return 0x5C;
         case BRLS_KBD_KEY_LEFT:
