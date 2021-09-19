@@ -31,7 +31,7 @@ void DiscoverManager::start()
         this->addresses = GameStreamClient::instance().host_addresses_for_find();
         if (addresses.empty())
         {
-            hosts = hosts.failure("main/discovery_manager/no_ip"_i18n);
+            hosts = hosts.failure("discovery_manager/no_ip"_i18n);
             return;
         }
 
@@ -73,7 +73,7 @@ void DiscoverManager::loop()
 
         if (counter == addresses.size() && _hosts.empty())
         {
-            hosts = hosts.failure("main/discovery_manager/no_host"_i18n);
+            hosts = hosts.failure("discovery_manager/no_host"_i18n);
             brls::sync([this] { getHostsUpdateEvent()->fire(hosts); });
         }
 

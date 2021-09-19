@@ -30,8 +30,8 @@ void HostsTabs::refillTabs()
     if (hosts.size() > 0)
         addSeparator();
     
-    addTab("main/tabs/add_host"_i18n, AddHostTab::create);
-    addTab("main/tabs/settings"_i18n, SettingsTab::create);
+    addTab("tabs/add_host"_i18n, AddHostTab::create);
+    addTab("tabs/settings"_i18n, SettingsTab::create);
     focusTab(0);
 }
 

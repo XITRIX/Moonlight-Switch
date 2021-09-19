@@ -33,7 +33,7 @@ SettingsTab::SettingsTab()
     this->inflateFromXMLRes("xml/tabs/settings.xml");
     
     std::vector<std::string> resolutions = { "720p", "1080p" };
-    resolution->setText("main/settings/resolution"_i18n);
+    resolution->setText("settings/resolution"_i18n);
     resolution->setData(resolutions);
     switch (Settings::instance().resolution()) {
         GET_SETTINGS(resolution, 720, 0);
@@ -49,7 +49,7 @@ SettingsTab::SettingsTab()
     });
     
     std::vector<std::string> fpss = { "30", "60" };
-    fps->setText("main/settings/fps"_i18n);
+    fps->setText("settings/fps"_i18n);
     fps->setData(fpss);
     switch (Settings::instance().fps()) {
         GET_SETTINGS(fps, 30, 0);
@@ -64,8 +64,8 @@ SettingsTab::SettingsTab()
         }
     });
     
-    std::vector<std::string> decoders = { "main/settings/zero_threads"_i18n, "2", "3", "4" };
-    decoder->setText("main/settings/decoder_threads"_i18n);
+    std::vector<std::string> decoders = { "settings/zero_threads"_i18n, "2", "3", "4" };
+    decoder->setText("settings/decoder_threads"_i18n);
     decoder->setData(decoders);
     switch (Settings::instance().decoder_threads()) {
         GET_SETTINGS(decoder, 0, 0);
@@ -84,7 +84,7 @@ SettingsTab::SettingsTab()
         }
     });
     
-    codec->init("main/settings/video_codec"_i18n, { "main/settings/h264"_i18n, "main/settings/h265"_i18n }, Settings::instance().video_codec(), [](int selected) {
+    codec->init("settings/video_codec"_i18n, { "settings/h264"_i18n, "settings/h265"_i18n }, Settings::instance().video_codec(), [](int selected) {
         Settings::instance().set_video_codec((VideoCodec)selected);
     });
     
@@ -99,27 +99,27 @@ SettingsTab::SettingsTab()
     });
     slider->setProgress(progress);
     
-    optimal->init("main/settings/usops"_i18n, Settings::instance().sops(), [](bool value) {
+    optimal->init("settings/usops"_i18n, Settings::instance().sops(), [](bool value) {
         Settings::instance().set_sops(value);
     });
     
-    pcAudio->init("main/settings/paop"_i18n, Settings::instance().play_audio(), [](bool value){
+    pcAudio->init("settings/paop"_i18n, Settings::instance().play_audio(), [](bool value){
         Settings::instance().set_play_audio(value);
     });
     
-    swapUi->init("main/settings/swap_ui"_i18n, Settings::instance().swap_ui_keys(), [](bool value) {
+    swapUi->init("settings/swap_ui"_i18n, Settings::instance().swap_ui_keys(), [](bool value) {
         Settings::instance().set_swap_ui_keys(value);
         brls::async([value] { brls::sync([value] { brls::Application::setSwapInputKeys(value); }); });
     });
     
-    swapGame->init("main/settings/swap_game"_i18n, Settings::instance().swap_game_keys(), [](bool value) {
+    swapGame->init("settings/swap_game"_i18n, Settings::instance().swap_game_keys(), [](bool value) {
         Settings::instance().set_swap_game_keys(value);
     });
     
-    guideKeyButtons->setText("main/settings/guide_key_buttons"_i18n);
+    guideKeyButtons->setText("settings/guide_key_buttons"_i18n);
     setupButtonsSelectorCell(guideKeyButtons, Settings::instance().guide_key_options().buttons);
     guideKeyButtons->registerClickAction([this](View* view) {
-        ButtonSelectingDialog* dialog = ButtonSelectingDialog::create("main/settings/guide_key_setup_message"_i18n, [this](auto buttons) {
+        ButtonSelectingDialog* dialog = ButtonSelectingDialog::create("settings/guide_key_setup_message"_i18n, [this](auto buttons) {
             auto options = Settings::instance().guide_key_options();
             options.buttons = buttons;
             Settings::instance().set_guide_key_options(options);
@@ -130,16 +130,16 @@ SettingsTab::SettingsTab()
         return true;
     });
     
-    overlayTime->init("main/settings/overlay_time"_i18n, { "main/settings/overlay_zero_time"_i18n, "1", "2", "3", "4", "5" }, Settings::instance().overlay_options().holdTime, [](int value) {
+    overlayTime->init("settings/overlay_time"_i18n, { "settings/overlay_zero_time"_i18n, "1", "2", "3", "4", "5" }, Settings::instance().overlay_options().holdTime, [](int value) {
         auto options = Settings::instance().overlay_options();
         options.holdTime = value;
         Settings::instance().set_overlay_options(options);
     });
     
-    overlayButtons->setText("main/settings/overlay_buttons"_i18n);
+    overlayButtons->setText("settings/overlay_buttons"_i18n);
     setupButtonsSelectorCell(overlayButtons, Settings::instance().overlay_options().buttons);
     overlayButtons->registerClickAction([this](View* view) {
-        ButtonSelectingDialog* dialog = ButtonSelectingDialog::create("main/settings/overlay_setup_message"_i18n, [this](auto buttons) {
+        ButtonSelectingDialog* dialog = ButtonSelectingDialog::create("settings/overlay_setup_message"_i18n, [this](auto buttons) {
             auto options = Settings::instance().overlay_options();
             options.buttons = buttons;
             Settings::instance().set_overlay_options(options);
@@ -150,18 +150,18 @@ SettingsTab::SettingsTab()
         return true;
     });
     
-    volumeAmplification->init("main/settings/volume_amplification"_i18n, Settings::instance().get_volume_amplification(), [this] (auto value) {
+    volumeAmplification->init("settings/volume_amplification"_i18n, Settings::instance().get_volume_amplification(), [this] (auto value) {
         Settings::instance().set_volume_amplification(value);
         
         if (!value && Settings::instance().get_volume() > 100)
             Settings::instance().set_volume(100);
     });
     
-    swapMouseKeys->init("main/settings/swap_mouse_keys"_i18n, Settings::instance().swap_mouse_keys(), [this](bool value) {
+    swapMouseKeys->init("settings/swap_mouse_keys"_i18n, Settings::instance().swap_mouse_keys(), [this](bool value) {
         Settings::instance().set_swap_mouse_keys(value);
     });
     
-    swapMouseScroll->init("main/settings/swap_mouse_scroll"_i18n, Settings::instance().swap_mouse_scroll(), [this](bool value) {
+    swapMouseScroll->init("settings/swap_mouse_scroll"_i18n, Settings::instance().swap_mouse_scroll(), [this](bool value) {
         Settings::instance().set_swap_mouse_scroll(value);
     });
 
@@ -175,7 +175,7 @@ SettingsTab::SettingsTab()
     });
     mouseSpeedSlider->setProgress(mouseProgress);
     
-    writeLog->init("main/settings/debugging_view"_i18n, Settings::instance().write_log(), [](bool value) {
+    writeLog->init("settings/debugging_view"_i18n, Settings::instance().write_log(), [](bool value) {
         Settings::instance().set_write_log(value);
         brls::Application::enableDebuggingView(value);
     });
@@ -200,7 +200,7 @@ std::string SettingsTab::getTextFromButtons(std::vector<ControllerButton> button
     }
     else
     {
-        buttonsText = "brls/hints/off"_i18n;
+        buttonsText = "hints/off"_i18n;
     }
     return buttonsText;
 }

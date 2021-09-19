@@ -1,20 +1,16 @@
 {
     "title": "Moonlight",
-    
     "error": {
         "dialog_header": "Error\n\n"
     },
-    
     "common": {
         "cancel": "Cancel",
         "confirm": "Confirm"
     },
-    
     "tabs": {
         "add_host": "Add host",
         "settings": "Settings"
     },
-    
     "host": {
         "status": "Status",
         "fetching": "Fetching...",
@@ -28,7 +24,6 @@
         "remove": "Remove",
         "remove_message": "Are you sure you want to remove this host?"
     },
-
     "add_host": {
         "manual": "Manual",
         "host_ip": "Host IP",
@@ -41,12 +36,10 @@
         "pair_postfix": " on your host device",
         "try_connect": "Trying to connect to the host"
     },
-    
     "discovery_manager": {
         "no_ip": "Can't obtain IP address",
         "no_host": "Host PC not found"
     },
-
     "settings": {
         "quality": "Quality",
         "fps": "FPS",
@@ -62,11 +55,11 @@
         "h264": "H.264",
         "h265": "HEVC (H.265, Experimental)",
         "zero_threads": "0 (No use threads)",
-        "keys": "\uE0E2/\uE0E3 and \uE0E0/\uE0E1 keys",
+        "keys": "/ and / keys",
         "swap_ui": "Swap for UI",
         "swap_game": "Swap for game stream",
         "mouse": "Mouse",
-        "swap_mouse_keys": "Swap mouse \uE0E6 and \uE0E7 buttons",
+        "swap_mouse_keys": "Swap mouse  and  buttons",
         "swap_mouse_scroll": "Swap mouse vertical scrolling direction",
         "overlay": "Ingame overlay",
         "overlay_setup_message": "Press keys you'd like to use to open Overlay:\n\n",
@@ -79,10 +72,6 @@
         "guide_key_buttons": "Buttons combination",
         "mouse_speed": "Mouse acceleration"
     },
-    
-    "button_selecting_dialog": {
-    },
-    
     "app_list": {
         "reload_app_list": "Reload",
         "terminate": "Terminate",
@@ -90,9 +79,9 @@
         "terminate_prefix": "Terminate ",
         "terminate_postfix": "\n\nAll unsaved progress could be lost",
         "running": "Running",
-        "run_current": "Run current app"
+        "run_current": "Run current app",
+        "star": "Star"
     },
-    
     "streaming": {
         "keys": "Keys",
         "options": "Options",
@@ -108,11 +97,16 @@
         "volume": "Volume",
         "mouse_speed": "Mouse acceleration"
     },
-    
     "mouse_input": {
         "title": "Mouse input mode",
         "mouse": "Mouse",
         "scroll": "Scroll",
         "keyboard": "Keyboard"
+    },
+    "hints": {
+        "ok": "OK",
+        "back": "Back",
+        "on": "On",
+        "off": "Off"
     }
 }

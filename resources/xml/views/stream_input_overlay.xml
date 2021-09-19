@@ -63,7 +63,7 @@
                                 height="auto"
                                 verticalAlign="center"
                                 fontSize="@style/brls/applet_frame/header_title_font_size"
-                                text="@i18n/main/mouse_input/title" />
+                                text="@i18n/mouse_input/title" />
 
                         </brls:Box>
 

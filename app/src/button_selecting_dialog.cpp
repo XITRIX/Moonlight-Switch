@@ -39,15 +39,15 @@ ButtonSelectingDialog* ButtonSelectingDialog::create(std::string titleText, std:
     dialog->button2->setHideHighlight(true);
     dialog->button3->setHideHighlight(true);
     
-    dialog->addButton("main/common/cancel"_i18n, []{});
-    dialog->addButton("main/common/confirm"_i18n, [dialog] {
+    dialog->addButton("common/cancel"_i18n, []{});
+    dialog->addButton("common/confirm"_i18n, [dialog] {
         dialog->callback(dialog->buttons);
     });
     
     dialog->timer.reset(4);
     dialog->timer.addStep(0, 4000);
     dialog->timer.setTickCallback([dialog] {
-        dialog->button2->setText("main/common/confirm"_i18n + " (" + std::to_string((int)dialog->timer) + ")");
+        dialog->button2->setText("common/confirm"_i18n + " (" + std::to_string((int)dialog->timer) + ")");
     });
     dialog->timer.setEndCallback([dialog](bool finished) {
         if (!finished) return;

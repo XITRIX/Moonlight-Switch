@@ -47,7 +47,7 @@ LogoutTab::LogoutTab(StreamingView* streamView) :
 {
     this->inflateFromXMLRes("xml/views/ingame_overlay/logout_tab.xml");
     
-    disconnect->setText("main/streaming/disconnect"_i18n);
+    disconnect->setText("streaming/disconnect"_i18n);
     disconnect->registerClickAction([this, streamView](View* view) {
         this->dismiss([streamView] {
             streamView->terminate(false);
@@ -55,7 +55,7 @@ LogoutTab::LogoutTab(StreamingView* streamView) :
         return true;
     });
 
-    terminateButton->setText("main/streaming/terminate"_i18n);
+    terminateButton->setText("streaming/terminate"_i18n);
     terminateButton->registerClickAction([this, streamView](View* view) {
         this->dismiss([streamView] {
             streamView->terminate(true);
@@ -90,7 +90,7 @@ OptionsTab::OptionsTab(StreamingView* streamView) :
     });
     mouseSlider->setProgress(mouseProgress);
     
-    inputOverlayButton->setText("main/streaming/mouse_input"_i18n);
+    inputOverlayButton->setText("streaming/mouse_input"_i18n);
     inputOverlayButton->registerClickAction([this, streamView](View* view) {
         this->dismiss([this]() {
             StreamingInputOverlay* overlay = new StreamingInputOverlay(this->streamView);
@@ -99,12 +99,12 @@ OptionsTab::OptionsTab(StreamingView* streamView) :
         return true;
     });
     
-    onscreenLogButton->init("main/streaming/show_logs"_i18n, Settings::instance().write_log(), [](bool value) {
+    onscreenLogButton->init("streaming/show_logs"_i18n, Settings::instance().write_log(), [](bool value) {
         Settings::instance().set_write_log(value);
         brls::Application::enableDebuggingView(value);
     });
     
-    debugButton->init("main/streaming/debug_info"_i18n, streamView->draw_stats, [streamView](bool value) {
+    debugButton->init("streaming/debug_info"_i18n, streamView->draw_stats, [streamView](bool value) {
         streamView->draw_stats = value;
     });
 }

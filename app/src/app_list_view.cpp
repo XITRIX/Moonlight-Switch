@@ -20,7 +20,7 @@ AppListView::AppListView(Host host) :
     this->inflateFromXMLRes("xml/views/app_list_view.xml");
     
     Label* label = new brls::Label();
-    label->setText(brls::Hint::getKeyIcon(ControllerButton::BUTTON_RB) + "  " + "main/app_list/run_current"_i18n);
+    label->setText(brls::Hint::getKeyIcon(ControllerButton::BUTTON_RB) + "  " + "app_list/run_current"_i18n);
     label->setFontSize(24);
     label->setMargins(4, 16, 4, 16);
     
@@ -60,7 +60,7 @@ AppListView::AppListView(Host host) :
 //     }, true);
 // #endif
 
-    registerAction("main/app_list/reload_app_list"_i18n, BUTTON_X, [this](View* view) {
+    registerAction("app_list/reload_app_list"_i18n, BUTTON_X, [this](View* view) {
         this->updateAppList();
         return true;
     });
@@ -86,11 +86,11 @@ void AppListView::terninateApp()
     if (loading)
         return;
     
-    Dialog* dialog = new Dialog("main/app_list/terminate_prefix"_i18n + currentApp->name + "main/app_list/terminate_postfix"_i18n);
+    Dialog* dialog = new Dialog("app_list/terminate_prefix"_i18n + currentApp->name + "app_list/terminate_postfix"_i18n);
     
-    dialog->addButton("main/common/cancel"_i18n, [] { });
+    dialog->addButton("common/cancel"_i18n, [] { });
     
-    dialog->addButton("main/app_list/terminate"_i18n, [dialog, this] {
+    dialog->addButton("app_list/terminate"_i18n, [dialog, this] {
         if (loading)
             return;
         
@@ -187,9 +187,9 @@ void AppListView::setCurrentApp(AppInfo app, bool update)
 {
     this->currentApp = app;
     hintView->setVisibility(Visibility::VISIBLE);
-    setTitle(host.hostname + " - " + "main/app_list/running"_i18n + " " + app.name);
+    setTitle(host.hostname + " - " + "app_list/running"_i18n + " " + app.name);
     
-    terminateIdentifier = registerAction("main/app_list/terminate_current_app"_i18n, BUTTON_BACK, [this](View* view) {
+    terminateIdentifier = registerAction("app_list/terminate_current_app"_i18n, BUTTON_BACK, [this](View* view) {
         this->terninateApp();
         return true;
     });

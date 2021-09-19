@@ -15,9 +15,9 @@ AddHostTab::AddHostTab()
     // Inflate the tab from the XML file
     this->inflateFromXMLRes("xml/tabs/add_host.xml");
 
-    hostIP->init("main/add_host/host_ip"_i18n, "10.0.0.19");
+    hostIP->init("add_host/host_ip"_i18n, "10.0.0.19");
     
-    connect->setText("main/add_host/connect"_i18n);
+    connect->setText("add_host/connect"_i18n);
     connect->registerClickAction([this](View* view) {
         connectHost(hostIP->getValue());
         return true;
@@ -27,11 +27,11 @@ AddHostTab::AddHostTab()
         findHost();
     else
     {
-        searchHeader->setTitle("main/add_host/search_error"_i18n);
+        searchHeader->setTitle("add_host/search_error"_i18n);
         loader->setVisibility(brls::Visibility::GONE);
     }
     
-    registerAction("main/add_host/search_refresh"_i18n, ControllerButton::BUTTON_X, [this] (View* view) {
+    registerAction("add_host/search_refresh"_i18n, ControllerButton::BUTTON_X, [this] (View* view) {
 #ifdef MULTICAST_DISABLED
         DiscoverManager::instance().reset();
 #endif
@@ -63,7 +63,7 @@ void AddHostTab::fillSearchBox(GSResult<std::vector<Host>> hostsRes)
     }
     else {
         loader->setVisibility(brls::Visibility::GONE);
-        searchHeader->setTitle("main/add_host/search"_i18n + " - " + hostsRes.error());
+        searchHeader->setTitle("add_host/search"_i18n + " - " + hostsRes.error());
     }
 }
 
@@ -109,7 +109,7 @@ void AddHostTab::connectHost(std::string address)
 {
     pauseSearching();
     
-    Dialog* loader = createLoadingDialog("main/add_host/try_connect"_i18n);
+    Dialog* loader = createLoadingDialog("add_host/try_connect"_i18n);
     loader->open();
     
     GameStreamClient::instance().connect(address, [this, loader](GSResult<SERVER_DATA> result) {
@@ -125,7 +125,7 @@ void AddHostTab::connectHost(std::string address)
                 
                 if (result.value().paired)
                 {
-                    showAlert("main/add_host/paired_error"_i18n, [host] {
+                    showAlert("add_host/paired_error"_i18n, [host] {
                         Settings::instance().add_host(host);
                         HostsTabs::getInstanse()->refillTabs();
                     });
@@ -136,7 +136,7 @@ void AddHostTab::connectHost(std::string address)
                 char pin[5];
                 sprintf(pin, "%d%d%d%d", (int)rand() % 10, (int)rand() % 10, (int)rand() % 10, (int)rand() % 10);
                 
-                brls::Dialog* dialog = createLoadingDialog("main/add_host/pair_prefix"_i18n + std::string(pin) + "main/add_host/pair_postfix"_i18n);
+                brls::Dialog* dialog = createLoadingDialog("add_host/pair_prefix"_i18n + std::string(pin) + "add_host/pair_postfix"_i18n);
                 dialog->setCancelable(false);
                 dialog->open();
                 

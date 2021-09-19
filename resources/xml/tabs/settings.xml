@@ -20,7 +20,7 @@
             paddingLeft="@style/brls/sidebar/padding_left">
             
             <brls:Header
-                title="@i18n/main/settings/quality"/>
+                title="@i18n/settings/quality"/>
                 
             <brls:SelectorCell
                 id="fps"/>
@@ -36,7 +36,7 @@
         
             <brls:Header
                 id="header"
-                title="@i18n/main/settings/video_bitrate"
+                title="@i18n/settings/video_bitrate"
                 subtitle="10.0 Mbps"
                 paddingTop="60"/>
                 
@@ -47,7 +47,7 @@
                 grow="1"/>
             
             <brls:Header
-                title="@i18n/main/settings/stream_settings"
+                title="@i18n/settings/stream_settings"
                 paddingTop="60"
                 lineTop="1px"/>
                 
@@ -61,7 +61,7 @@
                 id="volume_amplification"/>
                 
             <brls:Header
-                title="@i18n/main/settings/keys"
+                title="@i18n/settings/keys"
                 paddingTop="60"/>
                 
             <brls:BooleanCell
@@ -71,14 +71,14 @@
                 id="swap_game"/>
                 
             <brls:Header
-                title="@i18n/main/settings/guide_key"
+                title="@i18n/settings/guide_key"
                 paddingTop="60"/>
             
             <brls:DetailCell
                 id="guide_key_buttons"/>
                 
             <brls:Header
-                title="@i18n/main/settings/overlay"
+                title="@i18n/settings/overlay"
                 paddingTop="60"/>
                 
             <brls:SelectorCell
@@ -88,7 +88,7 @@
                 id="overlay_buttons"/>
                 
             <brls:Header
-                title="@i18n/main/settings/mouse"
+                title="@i18n/settings/mouse"
                 paddingTop="60"/>
                 
             <brls:BooleanCell
@@ -99,7 +99,7 @@
         
             <brls:Header
                 id="mouse_speed_header"
-                title="@i18n/main/settings/mouse_speed"
+                title="@i18n/settings/mouse_speed"
                 subtitle="x1.0"
                 paddingTop="60"/>
                 
@@ -110,7 +110,7 @@
                 grow="1"/>
                 
             <brls:Header
-                title="@i18n/main/settings/debug"
+                title="@i18n/settings/debug"
                 paddingTop="60"
                 lineTop="1px"/>
                 

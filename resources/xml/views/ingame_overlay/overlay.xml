@@ -12,11 +12,11 @@
         
         <brls:TabFrame>
             
-            <brls:Tab label="@i18n/main/streaming/options" >
+            <brls:Tab label="@i18n/streaming/options" >
                 <OptionsTab />
             </brls:Tab>
             
-            <brls:Tab label="@i18n/main/streaming/logout" >
+            <brls:Tab label="@i18n/streaming/logout" >
                 <LogoutTab />
             </brls:Tab>
             

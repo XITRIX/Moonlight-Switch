@@ -22,7 +22,7 @@ void showAlert(std::string message, std::function<void(void)> cb)
 
 void showError(std::string message, std::function<void(void)> cb)
 {
-    showAlert("main/error/dialog_header"_i18n + message, cb);
+    showAlert("error/dialog_header"_i18n + message, cb);
 }
 
 brls::Dialog* createLoadingDialog(std::string text) {

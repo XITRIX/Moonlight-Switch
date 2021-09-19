@@ -69,5 +69,5 @@ moonlight = executable(
     dependencies : [borealis_dependencies, moonlight_dependencies],
     install: true,
     include_directories: [ borealis_include, app_include, moonlight_common_c_include, zeroconf_include ],
-    cpp_args: [ '-static', '-w', '-g', '-O2', '-DBRLS_RESOURCES="./resources/"', ] + moonlight_cpp_args + borealis_cpp_args
+    cpp_args: [ '-static', '-w', '-g', '-O2', '-DBRLS_RESOURCES="./resources/"', '-DBRLS_I18N_PREFIX=\"main/\"', ] + moonlight_cpp_args + borealis_cpp_args
 )
