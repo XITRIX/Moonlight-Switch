@@ -18,6 +18,7 @@ public:
     void open() override;
     
 private:
+    Animatable timer;
     std::function<void(std::vector<ControllerButton>)> callback;
     std::string titleText;
     std::vector<ControllerButton> buttons;

@@ -44,6 +44,19 @@ ButtonSelectingDialog* ButtonSelectingDialog::create(std::string titleText, std:
         dialog->callback(dialog->buttons);
     });
     
+    dialog->timer.reset(4);
+    dialog->timer.addStep(0, 4000);
+    dialog->timer.setTickCallback([dialog] {
+        dialog->button2->setText("main/common/confirm"_i18n + " (" + std::to_string((int)dialog->timer) + ")");
+    });
+    dialog->timer.setEndCallback([dialog](bool finished) {
+        if (!finished) return;
+        
+        dialog->callback(dialog->buttons);
+        dialog->dismiss();
+    });
+    dialog->timer.start();
+    
     return dialog;
 }
 
