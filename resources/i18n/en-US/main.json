@@ -76,7 +76,8 @@
         "volume_amplification": "Allow volume amplification",
         "guide_key_setup_message": "Press keys you'd like to use to press Guide button:\n\n",
         "guide_key": "Guide key (clicks immediately)",
-        "guide_key_buttons": "Buttons combination"
+        "guide_key_buttons": "Buttons combination",
+        "mouse_speed": "Mouse acceleration"
     },
     
     "button_selecting_dialog": {
@@ -104,7 +105,8 @@
         "show_logs": "Show logs",
         "debug_info": "Debug info",
         "esc": "ESC button",
-        "volume": "Volume"
+        "volume": "Volume",
+        "mouse_speed": "Mouse acceleration"
     },
     
     "mouse_input": {

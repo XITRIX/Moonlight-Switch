@@ -9,6 +9,9 @@
 #include "streaming_input_overlay.hpp"
 #include <libretro-common/retro_timers.h>
 
+#include <iomanip>
+#include <sstream>
+
 using namespace brls;
 
 bool debug = false;
@@ -76,6 +79,16 @@ OptionsTab::OptionsTab(StreamingView* streamView) :
         volumeHeader->setSubtitle(std::to_string(volume) + "%");
     });
     volumeSlider->setProgress(progress);
+
+    float mouseProgress = (Settings::instance().get_mouse_speed_multiplier() / 100.0f);
+    mouseSlider->getProgressEvent()->subscribe([this](float value) {
+        float multiplier = value * 1.5f + 0.5f;
+        std::stringstream stream;
+        stream << std::fixed << std::setprecision(1) << multiplier;
+        mouseHeader->setSubtitle("x" + stream.str());
+        Settings::instance().set_mouse_speed_multiplier(value * 100);
+    });
+    mouseSlider->setProgress(mouseProgress);
     
     inputOverlayButton->setText("main/streaming/mouse_input"_i18n);
     inputOverlayButton->registerClickAction([this, streamView](View* view) {

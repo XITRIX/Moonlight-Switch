@@ -190,6 +190,12 @@ void Settings::load() {
                 }
             }
             
+            if (json_t* mouse_speed_multiplier = json_object_get(settings, "mouse_speed_multiplier")) {
+                if (json_typeof(mouse_speed_multiplier) == JSON_INTEGER) {
+                    m_mouse_speed_multiplier = (int)json_integer_value(mouse_speed_multiplier);
+                }
+            }
+            
             if (json_t* buttons = json_object_get(settings, "overlay_buttons")) {
                 m_overlay_options.buttons.clear();
                 size_t size = json_array_size(buttons);
@@ -257,6 +263,7 @@ void Settings::save() {
             json_object_set_new(settings, "volume_amplification", m_volume_amplification ? json_true() : json_false());
             json_object_set_new(settings, "stream_volume", json_integer(m_volume));
             json_object_set_new(settings, "overlay_hold_time", json_integer(m_overlay_options.holdTime));
+            json_object_set_new(settings, "mouse_speed_multiplier", json_integer(m_mouse_speed_multiplier));
             
             if (json_t* overlayButtons = json_array()) {
                 for (auto button: m_overlay_options.buttons) {

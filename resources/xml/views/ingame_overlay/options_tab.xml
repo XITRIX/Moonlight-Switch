@@ -34,6 +34,19 @@
                 id="volume_slider"
                 width="auto"
                 height="84"/>
+        
+            <brls:Header
+                id="mouse_speed_header"
+                title="@i18n/main/streaming/mouse_speed"
+                subtitle="x1.0"
+                paddingTop="60"
+                lineTop="1px"/>
+                
+            <brls:Slider
+                id="mouse_speed_slider"
+                width="auto"
+                height="84"
+                grow="1"/>
             
             <brls:Header
                 title="@i18n/main/settings/debug"

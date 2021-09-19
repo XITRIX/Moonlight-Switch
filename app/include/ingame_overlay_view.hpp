@@ -52,6 +52,8 @@ private:
     BRLS_BIND(brls::DetailCell, inputOverlayButton, "input_overlay");
     BRLS_BIND(brls::Header, volumeHeader, "volume_header");
     BRLS_BIND(brls::Slider, volumeSlider, "volume_slider");
+    BRLS_BIND(brls::Header, mouseHeader, "mouse_speed_header");
+    BRLS_BIND(brls::Slider, mouseSlider, "mouse_speed_slider");
     BRLS_BIND(brls::BooleanCell, debugButton, "debug");
     BRLS_BIND(brls::BooleanCell, onscreenLogButton, "onscreen_log");
 };

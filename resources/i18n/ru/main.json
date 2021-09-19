@@ -76,7 +76,8 @@
         "volume_amplification": "Разрешить усиление громкости",
         "guide_key_setup_message": "Нажмите клавиши, которые хотите использовать для нажатия кнопки \"Guide\":\n\n",
         "guide_key": "Кнопка \"Guide\" (нажимается немедленно)",
-        "guide_key_buttons": "Комбинация кнопок"
+        "guide_key_buttons": "Комбинация кнопок",
+        "mouse_speed": "Скорость мыши"
     },
     
     "app_list": {
@@ -101,7 +102,8 @@
         "show_logs": "Показать логи",
         "debug_info": "Отладочная информация",
         "esc": "Кнопка ESC",
-        "volume": "Громкость звука"
+        "volume": "Громкость звука",
+        "mouse_speed": "Скорость мыши"
     },
     
     "mouse_input": {

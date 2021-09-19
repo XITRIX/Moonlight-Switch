@@ -164,6 +164,16 @@ SettingsTab::SettingsTab()
     swapMouseScroll->init("main/settings/swap_mouse_scroll"_i18n, Settings::instance().swap_mouse_scroll(), [this](bool value) {
         Settings::instance().set_swap_mouse_scroll(value);
     });
+
+    float mouseProgress = (Settings::instance().get_mouse_speed_multiplier() / 100.0f);
+    mouseSpeedSlider->getProgressEvent()->subscribe([this](float value) {
+        float multiplier = value * 1.5f + 0.5f;
+        std::stringstream stream;
+        stream << std::fixed << std::setprecision(1) << multiplier;
+        mouseSpeedHeader->setSubtitle("x" + stream.str());
+        Settings::instance().set_mouse_speed_multiplier(value * 100);
+    });
+    mouseSpeedSlider->setProgress(mouseProgress);
     
     writeLog->init("main/settings/debugging_view"_i18n, Settings::instance().write_log(), [](bool value) {
         Settings::instance().set_write_log(value);

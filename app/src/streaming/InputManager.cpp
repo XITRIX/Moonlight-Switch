@@ -16,7 +16,8 @@ MoonlightInputManager::MoonlightInputManager()
     brls::Application::getPlatform()->getInputManager()->getMouseCusorOffsetChanged()->subscribe([](brls::Point offset) {
         if (offset.x != 0 || offset.y != 0)
         {
-            LiSendMouseMoveEvent(offset.x, offset.y);
+            float multiplier = Settings::instance().get_mouse_speed_multiplier() / 100.f * 1.5f + 0.5f;
+            LiSendMouseMoveEvent(offset.x * multiplier, offset.y * multiplier);
         }
     });
     
@@ -207,7 +208,8 @@ void MoonlightInputManager::handleInput()
     
     if (panStatus.has_value())
     {
-        LiSendMouseMoveEvent(-panStatus->delta.x, -panStatus->delta.y);
+        float multiplier = Settings::instance().get_mouse_speed_multiplier() / 100.f * 1.5f + 0.5f;
+        LiSendMouseMoveEvent(-panStatus->delta.x * multiplier, -panStatus->delta.y * multiplier);
         panStatus.reset();
     }
 }
