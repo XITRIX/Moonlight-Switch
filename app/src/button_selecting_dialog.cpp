@@ -93,6 +93,12 @@ void ButtonSelectingDialog::draw(NVGcontext* vg, float x, float y, float width, 
     for (int i = 0; i < ControllerButton::_BUTTON_MAX; i++)
     {
         ControllerButton button = (ControllerButton) i;
+        if (button == BUTTON_NAV_UP ||
+            button == BUTTON_NAV_DOWN ||
+            button == BUTTON_NAV_LEFT ||
+            button == BUTTON_NAV_RIGHT)
+            continue;
+        
         if (state.buttons[i] && !oldState.buttons[i])
             if(std::find(buttons.begin(), buttons.end(), button) == buttons.end())
             {
