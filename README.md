@@ -31,8 +31,12 @@ While touching screen ZR and ZL buttons will work like left and right mouse butt
 
 Also While touching screen L and R sticks will work like scrolling wheel.
 
+USB mouse working as well.
+
 ## Keyboard
 You can use onscreen keyboard, tap 3 fingers on screen to show it.
+
+USB keyboard working as well.
 
 ## Gamepad
 By default Switch gamepad configured as X360 gamepad (A/B and X/Y swapped). 
@@ -40,7 +44,7 @@ By default Switch gamepad configured as X360 gamepad (A/B and X/Y swapped).
 Multiple gamepad currently not supported.
 
 ## Ingame overlay
-To open overlay, hold + key for 3 seconds.
+To open overlay, press - and + key simultaneously by default.
 
 Key combination and holding time are configurable in settings.
 
@@ -53,12 +57,16 @@ Key combination and holding time are configurable in settings.
 4. If it doesn't work, try to install missing packages
 5. If it still doesn't work, god bless you!
 
-## MacOS:
+## MacOS (XCode):
 3. Open .xcodeproj
 4. Fix dependency folders if you need inside `Project->Moonlight->Search Paths`
 5. Run the build
 6. If it doesn't work, try to install missing packages using Homebrew
 7. And again, god bless you!
 
-## Linux/Windows
-Potentially should work, but I have no building config yet.
+## Linux/Windows/MacOS
+3. Install `meson` and `ninja`
+4. Run `meson build`
+5. Run `ninja -C build`
+6. Install every dependency which compiler asks and return to `5`
+7. Start app with `./build/moonlight`

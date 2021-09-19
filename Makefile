@@ -45,7 +45,7 @@ ICON		:=	resources/img/moonlight_icon.jpg
 INCLUDES	:=	app/src app/include
 APP_TITLE	:=	Moonlight
 APP_AUTHOR	:=	XITRIX
-APP_VERSION	:=	0.7
+APP_VERSION	:=	0.8
 
 ROMFS				:=	resources
 EXTERN_PATH			:=	extern
