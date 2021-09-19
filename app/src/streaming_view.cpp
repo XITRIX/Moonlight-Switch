@@ -84,6 +84,37 @@ StreamingView::StreamingView(Host host, AppInfo app) :
         if (status.state == brls::GestureState::STAY)
             MoonlightInputManager::instance().updateTouchScreenPanDelta(status);
     }, PanAxis::ANY));
+    
+    keysSubscription = Application::getPlatform()->getInputManager()->getKeyboardKeyStateChanged()->subscribe([this, host, app](brls::KeyState state) {
+        if (state.key == BRLS_KBD_KEY_ESCAPE)
+        {
+            static std::chrono::high_resolution_clock::time_point clock_counter;
+            static bool buttonState = false;
+            static bool used = false;
+
+            auto duration = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::high_resolution_clock::now() - clock_counter);
+
+
+            if (!buttonState && state.pressed)
+            {
+                buttonState = true;
+                clock_counter = std::chrono::high_resolution_clock::now();
+            }
+            else if (buttonState && !state.pressed)
+            {
+                buttonState = false;
+                used = false;
+            }
+            else if (buttonState && duration.count() >= 3 && !used)
+            {
+                used = true;
+
+                IngameOverlay* overlay = new IngameOverlay(this);
+                overlay->setTitle(host.hostname + ": " + app.name);
+                Application::pushActivity(new Activity(overlay));
+            }
+        }
+    });
 }
 
 void StreamingView::onFocusGained()
@@ -304,6 +335,7 @@ void StreamingView::onLayout()
 StreamingView::~StreamingView()
 {
     Application::getPlatform()->getVideoContext()->disableScreenDimming(false);
+    Application::getPlatform()->getInputManager()->getKeyboardKeyStateChanged()->unsubscribe(keysSubscription);
     session->stop(false);
     delete session;
 }

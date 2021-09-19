@@ -193,18 +193,6 @@ void MoonlightInputManager::handleInput()
         LiSendMouseButtonEvent(mouseState.r_pressed ? BUTTON_ACTION_PRESS : BUTTON_ACTION_RELEASE, rb);
     }
     
-//    if (mouseState.offset.x != 0 || mouseState.offset.y != 0)
-//    {
-//        lastMouseState.offset = mouseState.offset;
-//        LiSendMouseMoveEvent(mouse.offset.x, mouse.offset.y);
-//    }
-    
-//    if (mouseState.position != lastMouseState.position)
-//    {
-//        lastMouseState.position = mouseState.position;
-//        LiSendMousePositionEvent(mouseState.position.x, mouseState.position.y, Application::contentWidth, Application::contentHeight);
-//    }
-    
     std::chrono::high_resolution_clock::time_point timeNow = std::chrono::high_resolution_clock::now();
     static std::chrono::high_resolution_clock::time_point timeStamp = timeNow;
     
@@ -224,7 +212,7 @@ void MoonlightInputManager::handleInput()
     }
 }
 
-int MoonlightInputManager::glfwKeyToVKKey(int key) {
+int MoonlightInputManager::glfwKeyToVKKey(BrlsKeyboardScancode key) {
     if (BRLS_KBD_KEY_F1 <= key && key <= BRLS_KBD_KEY_F12)
         return key - BRLS_KBD_KEY_F1 + 0x70;
 

@@ -52,6 +52,6 @@ public:
 private:
     std::optional<brls::PanGestureStatus> panStatus;
     bool inputDropped = false;
-    int glfwKeyToVKKey(int key);
+    int glfwKeyToVKKey(brls::BrlsKeyboardScancode key);
 };
 

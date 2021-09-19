@@ -51,6 +51,7 @@ private:
     bool blocked = false;
     bool terminated = false;
     bool tempInputLock = false;
+    brls::Event<brls::KeyState>::Subscription keysSubscription;
     
     void handleInput();
     void handleButtonHolding();

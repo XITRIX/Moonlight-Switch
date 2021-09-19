@@ -192,6 +192,14 @@ public:
     int get_volume() const {
         return m_volume;
     }
+
+    void set_mouse_speed_multiplier(int mouse_speed_multiplier) {
+        m_mouse_speed_multiplier = mouse_speed_multiplier;
+    }
+    
+    int get_mouse_speed_multiplier() const {
+        return m_mouse_speed_multiplier;
+    }
     
     void load();
     void save();
@@ -220,6 +228,7 @@ private:
     bool m_swap_mouse_scroll = false;
     int m_volume = 100;
     bool m_volume_amplification = false;
+    int m_mouse_speed_multiplier = 34;
     KeyComboOptions m_guide_key_options {
         .holdTime = 0,
         .buttons = {},
