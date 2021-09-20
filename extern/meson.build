@@ -52,25 +52,31 @@ moonlight_common_c_files = files(
     'moonlight-common-c/src/RtpVideoQueue.c',
 )
 
-dep_opus = dependency('opus', static : true)
-dep_expat = dependency('expat', static : true)
-dep_jansson = dependency('jansson', static : true)
-dep_sdl2 = dependency('sdl2', static : true)
+dep_opus = dependency('opus')
+dep_expat = dependency('expat')
+dep_jansson = dependency('jansson')
+dep_sdl2 = dependency('sdl2')
 dep_avcodec = dependency('libavcodec')
-dep_avutil = dependency('libavutil', static : true)
-dep_avformat = dependency('libavformat', static : true)
+dep_avutil = dependency('libavutil')
+dep_avformat = dependency('libavformat')
 
 compiler = meson.get_compiler('c')
 
 dep_curl = [ compiler.find_library('curl') ]
-dep_mbedtls = [ compiler.find_library('mbedtls', static : true) ]
-dep_mbedx509 = [ compiler.find_library('mbedx509', static : true) ]
-dep_mbedcrypto = [ compiler.find_library('mbedcrypto', static : true) ]
+dep_mbedtls = [ compiler.find_library('mbedtls') ]
+dep_mbedx509 = [ compiler.find_library('mbedx509') ]
+dep_mbedcrypto = [ compiler.find_library('mbedcrypto') ]
 
-dep_win32 = [ compiler.find_library('ws2_32', static : true) ]
-dep_libwinmm = [ compiler.find_library('libwinmm', static : true) ]
-dep_libwlan = [ compiler.find_library('libwlanapi', static : true) ]
+moonlight_dependencies = []
 
+if compiler.has_argument('-W_WIN32')
+dep_win32 = [ compiler.find_library('ws2_32') ]
+dep_libwinmm = [ compiler.find_library('libwinmm') ]
+dep_libwlan = [ compiler.find_library('libwlanapi') ]
 
-moonlight_dependencies = [ dep_win32, dep_libwinmm, dep_curl, dep_mbedtls, dep_mbedx509, dep_mbedcrypto, dep_avcodec, dep_avformat, dep_avutil, dep_opus, dep_expat, dep_jansson, dep_sdl2, ]
+moonlight_dependencies = [ moonlight_dependencies, dep_win32, dep_libwinmm, ]
+
+endif
+
+moonlight_dependencies = [ moonlight_dependencies, dep_curl, dep_mbedtls, dep_mbedx509, dep_mbedcrypto, dep_avcodec, dep_avformat, dep_avutil, dep_opus, dep_expat, dep_jansson, dep_sdl2, ]
 moonlight_cpp_args = [ '-DUSE_MBEDTLS_CRYPTO', '-DMULTICAST_DISABLED', ]
