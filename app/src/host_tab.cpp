@@ -7,7 +7,7 @@
 
 #include "host_tab.hpp"
 #include "app_list_view.hpp"
-#include "hosts_tabs_view.hpp"
+#include "main_tabs_view.hpp"
 #include "GameStreamClient.hpp"
 #include "helper.hpp"
 
@@ -60,7 +60,7 @@ HostTab::HostTab(Host host) :
         dialog->addButton("host/remove"_i18n, [host]
         {
             Settings::instance().remove_host(host);
-            HostsTabs::getInstanse()->refillTabs();
+            MainTabs::getInstanse()->refillTabs();
         });
         dialog->open();
         

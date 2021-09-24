@@ -6,7 +6,7 @@
 //
 
 #include "add_host_tab.hpp"
-#include "hosts_tabs_view.hpp"
+#include "main_tabs_view.hpp"
 #include "helper.hpp"
 #include "DiscoverManager.hpp"
 
@@ -127,7 +127,7 @@ void AddHostTab::connectHost(std::string address)
                 {
                     showAlert("add_host/paired_error"_i18n, [host] {
                         Settings::instance().add_host(host);
-                        HostsTabs::getInstanse()->refillTabs();
+                        MainTabs::getInstanse()->refillTabs();
                     });
                     
                     return;
@@ -147,7 +147,7 @@ void AddHostTab::connectHost(std::string address)
                         if (result.isSuccess())
                         {
                             Settings::instance().add_host(host);
-                            HostsTabs::getInstanse()->refillTabs();
+                            MainTabs::getInstanse()->refillTabs();
                         }
                         else
                         {
@@ -192,6 +192,6 @@ AddHostTab::~AddHostTab()
 
 brls::View* AddHostTab::create()
 {
-    // Called by the XML engine to create a new ComponentsTab
+    // Called by the XML engine to create a new AddHostTab
     return new AddHostTab();
 }

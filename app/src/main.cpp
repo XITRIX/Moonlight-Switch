@@ -16,7 +16,7 @@
 #include <borealis.hpp>
 #include <string>
 
-#include "hosts_tabs_view.hpp"
+#include "main_tabs_view.hpp"
 #include "add_host_tab.hpp"
 #include "main_activity.hpp"
 #include "host_tab.hpp"
@@ -70,9 +70,9 @@ int main(int argc, char* argv[])
     brls::Application::setGlobalQuit(false);
 
     // Register custom views (including tabs, which are views)
-    brls::Application::registerXMLView("HostsTabs", HostsTabs::create);
+    brls::Application::registerXMLView("MainTabs", MainTabs::create);
     brls::Application::registerXMLView("HostTab", HostTab::create);
-    brls::Application::registerXMLView("ComponentsTab", AddHostTab::create);
+    brls::Application::registerXMLView("AddHostTab", AddHostTab::create);
     brls::Application::registerXMLView("SettingsTab", SettingsTab::create);
 
     // Add custom values to the theme

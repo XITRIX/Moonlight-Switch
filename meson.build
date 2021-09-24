@@ -27,7 +27,7 @@ app_files = files(
     'app/src/grid_view.cpp',
     'app/src/helper.cpp',
     'app/src/host_tab.cpp',
-    'app/src/hosts_tabs_view.cpp',
+    'app/src/main_tabs_view.cpp',
     'app/src/ingame_overlay_view.cpp',
     'app/src/keyboard_view.cpp',
     'app/src/loading_overlay.cpp',

@@ -55,9 +55,17 @@ void Settings::set_working_dir(std::string working_dir) {
 }
 
 void Settings::add_host(const Host& host) {
-    remove_host(host);
-    
-    m_hosts.push_back(host);
+    auto it = std::find_if(m_hosts.begin(), m_hosts.end(), [host](auto h){
+        return h.mac == host.mac;
+    });
+
+    if (it != m_hosts.end()) {
+        it->address = host.address;
+        it->hostname = host.hostname;
+    } else {
+        m_hosts.push_back(host);
+    }
+
     save();
 }
 
@@ -70,6 +78,68 @@ void Settings::remove_host(const Host& host) {
         m_hosts.erase(it);
         save();
     }
+}
+
+void Settings::add_favorite(const Host& host, const App& app) {
+    auto it = std::find_if(m_hosts.begin(), m_hosts.end(), [host](auto h){
+        return h.mac == host.mac;
+    });
+
+    if (it != m_hosts.end()) {
+        auto app_it = std::find_if(it->favorites.begin(), it->favorites.end(), [app](auto h){
+            return h.app_id == app.app_id;
+        });
+
+        if (app_it != it->favorites.end()) {
+            it->favorites.erase(app_it);
+        }
+        
+        it->favorites.push_back(app);
+        save();
+    }
+}
+
+void Settings::remove_favorite(const Host& host, int app_id) {
+    auto it = std::find_if(m_hosts.begin(), m_hosts.end(), [host](auto h){
+        return h.mac == host.mac;
+    });
+
+    if (it != m_hosts.end()) {
+        auto app_it = std::find_if(it->favorites.begin(), it->favorites.end(), [app_id](auto h){
+            return h.app_id == app_id;
+        });
+
+        if (app_it != it->favorites.end()) {
+            it->favorites.erase(app_it);
+            save();
+        }
+    }
+}
+
+bool Settings::is_favorite(const Host& host, int app_id) {
+    auto it = std::find_if(m_hosts.begin(), m_hosts.end(), [host](auto h){
+        return h.mac == host.mac;
+    });
+
+    if (it != m_hosts.end()) {
+        auto app_it = std::find_if(it->favorites.begin(), it->favorites.end(), [app_id](auto h){
+            return h.app_id == app_id;
+        });
+
+        if (app_it != it->favorites.end()) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool Settings::has_any_favorite() {
+    for (auto host : m_hosts) {
+        if (!host.favorites.empty())
+            return true;
+    }
+    return false;
 }
 
 void Settings::load() {
@@ -98,6 +168,31 @@ void Settings::load() {
                         if (json_t* mac = json_object_get(json, "mac")) {
                             if (json_typeof(mac) == JSON_STRING) {
                                 host.mac = json_string_value(mac);
+                            }
+                        }
+
+                        if (json_t* favorites = json_object_get(json, "favorites")) {
+                            size_t size = json_array_size(favorites);
+                            for (size_t i = 0; i < size; i++) {
+                                if (json_t* json = json_array_get(favorites, i)) {
+                                    if (json_typeof(json) == JSON_OBJECT) {
+                                        App app;
+
+                                        if (json_t* name = json_object_get(json, "name")) {
+                                            if (json_typeof(name) == JSON_STRING) {
+                                                app.name = json_string_value(name);
+                                            }
+                                        }
+
+                                        if (json_t* id = json_object_get(json, "id")) {
+                                            if (json_typeof(id) == JSON_INTEGER) {
+                                                app.app_id = (int)json_integer_value(id);
+                                            }
+                                        }
+                                        
+                                        host.favorites.push_back(app);
+                                    }
+                                }
                             }
                         }
                         
@@ -239,6 +334,16 @@ void Settings::save() {
                     json_object_set_new(json, "address", json_string(host.address.c_str()));
                     json_object_set_new(json, "hostname", json_string(host.hostname.c_str()));
                     json_object_set_new(json, "mac", json_string(host.mac.c_str()));
+                    if (json_t* apps = json_array()) {
+                        for (auto app: host.favorites) {
+                            if (json_t* jsonApp = json_object()) {
+                                json_object_set_new(jsonApp, "name", json_string(app.name.c_str()));
+                                json_object_set_new(jsonApp, "id", json_integer(app.app_id));
+                                json_array_append_new(apps, jsonApp);
+                            }
+                        }
+                        json_object_set_new(json, "favorites", apps);
+                    }
                     json_array_append_new(hosts, json);
                 }
             }

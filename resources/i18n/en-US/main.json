@@ -75,12 +75,13 @@
     "app_list": {
         "reload_app_list": "Reload",
         "terminate": "Terminate",
-        "terminate_current_app": "Terminate current app",
+        "terminate_current_app": "Terminate app",
         "terminate_prefix": "Terminate ",
         "terminate_postfix": "\n\nAll unsaved progress could be lost",
         "running": "Running",
         "run_current": "Run current app",
-        "star": "Star"
+        "star": "Star",
+        "unstar": "Unstar"
     },
     "streaming": {
         "keys": "Keys",

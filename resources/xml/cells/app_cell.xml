@@ -11,15 +11,33 @@
         height="auto"
         grow="1"
         scalingType="fill"/>
+
+    <brls:Box
+        detachedX="0"
+        detachedY="0"
+        width="142"
+        height="200"
+        axis="column"
+        direction="rightToLeft"
+        justifyContent="flexStart"
+        alignItems="stretch">
         
-    <brls:Image
-        id="current_app_image"
-        detachedX="108"
-        detachedY="8"
-        width="34"
-        height="34"
-        image="@res/img/play.png"
-        scalingType="stretch"/>
+        <brls:Image
+            id="favorite_app_image"
+            width="34"
+            height="34"
+            marginTop="8"
+            image="@res/img/star.png"
+            scalingType="stretch"/>
+        
+        <brls:Image
+            id="current_app_image"
+            width="34"
+            height="34"
+            marginTop="8"
+            image="@res/img/play.png"
+            scalingType="stretch"/>
+    </brls:Box>
 
     <brls:Box
         detachedX="0"

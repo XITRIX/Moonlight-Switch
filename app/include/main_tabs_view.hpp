@@ -1,5 +1,5 @@
 //
-//  hosts_tabs_view.hpp
+//  main_tabs_view.hpp
 //  Moonlight
 //
 //  Created by Даниил Виноградов on 24.05.2021.
@@ -12,17 +12,23 @@
 
 using namespace brls;
 
-class HostsTabs : public brls::TabFrame
+class MainTabs : public brls::TabFrame
 {
 public:
-    HostsTabs();
+    MainTabs();
     void refillTabs();
     static View* create();
-    static HostsTabs* getInstanse()
+
+    void willAppear(bool resetState = false) override;
+    
+    static MainTabs* getInstanse()
     {
         return instanse;
     }
     
 private:
-    inline static HostsTabs* instanse;
+    bool lastFavoritesTabHidden = true;
+    inline static MainTabs* instanse;
+
+    void updateFavorites();
 };

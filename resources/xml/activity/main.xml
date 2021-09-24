@@ -1,7 +1,8 @@
 <brls:AppletFrame
     iconInterpolation="linear"
     footerHidden="false">
-    <HostsTabs
+    <MainTabs
+        id="main_tabs"
         title="@i18n/title"
         icon="@res/img/moonlight_96.png" />
 </brls:AppletFrame>

@@ -140,6 +140,8 @@ SettingsTab::SettingsTab()
     setupButtonsSelectorCell(overlayButtons, Settings::instance().overlay_options().buttons);
     overlayButtons->registerClickAction([this](View* view) {
         ButtonSelectingDialog* dialog = ButtonSelectingDialog::create("settings/overlay_setup_message"_i18n, [this](auto buttons) {
+            if (buttons.empty()) return;
+
             auto options = Settings::instance().overlay_options();
             options.buttons = buttons;
             Settings::instance().set_overlay_options(options);

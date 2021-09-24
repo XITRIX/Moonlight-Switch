@@ -8,6 +8,8 @@
 #include "app_cell.hpp"
 #include "streaming_view.hpp"
 #include "BoxArtManager.hpp"
+#include "Settings.hpp"
+#include "main_tabs_view.hpp"
 
 AppCell::AppCell(Host host, AppInfo app, int currentApp)
 {
@@ -17,6 +19,7 @@ AppCell::AppCell(Host host, AppInfo app, int currentApp)
     title->setTextColor(nvgRGB(255,255,255));
     
     currentAppImage->setVisibility(currentApp == app.app_id ? Visibility::VISIBLE : Visibility::GONE);
+    favoriteAppImage->setVisibility(Settings::instance().is_favorite(host, app.app_id) ? Visibility::VISIBLE : Visibility::GONE);
     
     this->addGestureRecognizer(new TapGestureRecognizer(this));
     this->registerClickAction([host, app](View* view)
@@ -42,4 +45,23 @@ AppCell::AppCell(Host host, AppInfo app, int currentApp)
             }
         });
     }
+
+    updateFavoriteAction(host, app);
+}
+
+void AppCell::updateFavoriteAction(Host host, AppInfo app)
+{
+    bool isFavorite = Settings::instance().is_favorite(host, app.app_id);
+    registerAction(isFavorite ? "app_list/unstar"_i18n : "app_list/star"_i18n, BUTTON_Y, [this, host, app](View* view) {
+        bool isFavorite = Settings::instance().is_favorite(host, app.app_id);
+        favoriteAppImage->setVisibility(!isFavorite ? Visibility::VISIBLE : Visibility::GONE);
+        if (isFavorite) {
+            Settings::instance().remove_favorite(host, app.app_id);
+        } else {
+            App thisApp {app.name, app.app_id};
+            Settings::instance().add_favorite(host, thisApp);
+        }
+        this->updateFavoriteAction(host, app);
+        return true;
+    });
 }

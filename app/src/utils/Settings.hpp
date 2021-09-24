@@ -16,10 +16,16 @@ struct KeyComboOptions {
     std::vector<brls::ControllerButton> buttons;
 };
 
+struct App {
+    std::string name;
+    int app_id;
+};
+
 struct Host {
     std::string address;
     std::string hostname;
     std::string mac;
+    std::vector<App> favorites;
 };
 
 class Settings: public Singleton<Settings> {
@@ -48,6 +54,11 @@ public:
     
     void add_host(const Host& host);
     void remove_host(const Host& host);
+
+    void add_favorite(const Host& host, const App& app);
+    void remove_favorite(const Host& host, int app_id);
+    bool is_favorite(const Host& host, int app_id);
+    bool has_any_favorite();
     
     int resolution() const {
         return m_resolution;
