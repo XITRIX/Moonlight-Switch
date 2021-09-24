@@ -5,10 +5,6 @@
 //  Created by XITRIX on 26.05.2021.
 //
 
-#ifdef __SWITCH__
-#include <switch.h>
-#endif
-
 #include "app_list_view.hpp"
 #include "streaming_view.hpp"
 #include "app_cell.hpp"

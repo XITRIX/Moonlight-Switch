@@ -61,18 +61,29 @@ StreamingView::StreamingView(Host host, AppInfo app) :
     }));
     
     session = new MoonlightSession(host.address, app.app_id);
-    
-    ASYNC_RETAIN
-    session->start([ASYNC_TOKEN](GSResult<bool> result) {
-        ASYNC_RELEASE
 
-        loader->setHidden(true);
+    ASYNC_RETAIN
+    GameStreamClient::instance().connect(host.address, [ASYNC_TOKEN](GSResult<SERVER_DATA> result){
+        ASYNC_RELEASE
         if (!result.isSuccess())
         {
             showError(result.error(), [this]() {
                 terminate(false);
             });
         }
+        
+        ASYNC_RETAIN
+        session->start([ASYNC_TOKEN](GSResult<bool> result) {
+            ASYNC_RELEASE
+
+            loader->setHidden(true);
+            if (!result.isSuccess())
+            {
+                showError(result.error(), [this]() {
+                    terminate(false);
+                });
+            }
+        });
     });
     
     addGestureRecognizer(new PanGestureRecognizer([this](PanGestureStatus status, Sound* sound) {

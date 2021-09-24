@@ -64,4 +64,5 @@ void AppCell::updateFavoriteAction(Host host, AppInfo app)
         this->updateFavoriteAction(host, app);
         return true;
     });
+    Application::getGlobalHintsUpdateEvent()->fire();
 }

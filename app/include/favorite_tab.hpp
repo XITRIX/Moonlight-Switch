@@ -9,6 +9,7 @@
 
 #include <borealis.hpp>
 #include <Settings.hpp>
+#include "grid_view.hpp"
 
 class FavoriteTab : public brls::Box
 {
@@ -16,4 +17,8 @@ class FavoriteTab : public brls::Box
     FavoriteTab();
 
     static brls::View* create();
+private:
+    BRLS_BIND(brls::Box, container, "container");
+
+    void updateAppList();
 };

@@ -15,6 +15,7 @@ class GridView : public Box
 {
 public:
     GridView();
+    GridView(int columns);
     
     void addView(View* view) override;
     void clearViews() override;

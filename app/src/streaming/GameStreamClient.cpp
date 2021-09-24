@@ -259,7 +259,13 @@ void GameStreamClient::applist(const std::string &address, ServerCallback<AppInf
         AppInfoList app_list;
         
         while (list) {
-            app_list.push_back({ .name = list->name, .app_id = list->id });
+
+            std::string name = std::string(list->name);
+            int id = list->id;
+            AppInfo info;
+            info.name = name.c_str();
+            info.app_id = id;
+            app_list.push_back(info);
             list = list->next;
         }
         

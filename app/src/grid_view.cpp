@@ -8,10 +8,12 @@
 #include "grid_view.hpp"
 
 GridView::GridView()
-    : Box(Axis::COLUMN)
-{
-    columls = 7;
-}
+    : Box(Axis::COLUMN), columls(7)
+{}
+
+GridView::GridView(int columns)
+    : Box(Axis::COLUMN), columls(columns)
+{}
 
 void GridView::addView(View* view)
 {

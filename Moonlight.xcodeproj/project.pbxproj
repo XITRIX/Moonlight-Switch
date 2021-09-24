@@ -279,6 +279,7 @@
 		7CBE6B7F265DB027007DCC5A /* Data.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CBE6B79265DB027007DCC5A /* Data.cpp */; };
 		7CBE6BA0265DB3ED007DCC5A /* GameStreamClient.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CBE6B92265DB3D6007DCC5A /* GameStreamClient.cpp */; };
 		7CBE6BA2265DB85D007DCC5A /* WakeOnLanManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CBE6B90265DB3D6007DCC5A /* WakeOnLanManager.cpp */; };
+		7CD3BE0926FE7BB500A6B1CF /* favorite_tab.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C744DF426FE497C00BFACB5 /* favorite_tab.cpp */; };
 		7CDA33AA265D385C00E5D604 /* dialog.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CDA33A8265D385C00E5D604 /* dialog.cpp */; };
 		7CE6FA8E26823DDE005854FC /* english_layout.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CE6FA8D26823DDE005854FC /* english_layout.cpp */; };
 		7CE6FA9026823E3A005854FC /* numpad_layout.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CE6FA8F26823E3A005854FC /* numpad_layout.cpp */; };
@@ -2258,6 +2259,7 @@
 				7C07554F26F6A6FF006A4CDC /* battery.cpp in Sources */,
 				7C0754EA26F6A5FF006A4CDC /* keyboard_view.cpp in Sources */,
 				7C07551526F6A68C006A4CDC /* PlatformStuff.c in Sources */,
+				7CD3BE0926FE7BB500A6B1CF /* favorite_tab.cpp in Sources */,
 				7C07554826F6A6D3006A4CDC /* event.cpp in Sources */,
 				7C07556526F6A704006A4CDC /* cell_radio.cpp in Sources */,
 				7C07555B26F6A704006A4CDC /* label.cpp in Sources */,
