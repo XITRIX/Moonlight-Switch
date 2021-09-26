@@ -16,7 +16,7 @@ AppListView::AppListView(Host host) :
     this->inflateFromXMLRes("xml/views/app_list_view.xml");
     
     Label* label = new brls::Label();
-    label->setText(brls::Hint::getKeyIcon(ControllerButton::BUTTON_RB) + "  " + "app_list/run_current"_i18n);
+    label->setText(brls::Hint::getKeyIcon(ControllerButton::BUTTON_BACK) + "  " + "app_list/terminate_current_app"_i18n);
     label->setFontSize(24);
     label->setMargins(4, 16, 4, 16);
     
@@ -34,20 +34,17 @@ AppListView::AppListView(Host host) :
     container->addView(gridView);
     loader = new LoadingOverlay(this);
     
-    auto playCuttentAction = [this, host](View* view) {
+    auto closeCurrentAction = [this, host](View* view) {
         if (currentApp.has_value())
         {
-            AppletFrame* frame = new AppletFrame(new StreamingView(host, currentApp.value()));
-            frame->setHeaderVisibility(brls::Visibility::GONE);
-            frame->setFooterVisibility(brls::Visibility::GONE);
-            Application::pushActivity(new Activity(frame));
+            this->terninateApp();
         }
         return true;
     };
     
-    hintView->registerClickAction(playCuttentAction);
-    hintView->registerAction("", brls::ControllerButton::BUTTON_RB, playCuttentAction, true);
-    registerAction("", brls::ControllerButton::BUTTON_RB, playCuttentAction, true);
+    hintView->registerClickAction(closeCurrentAction);
+    hintView->registerAction("", brls::ControllerButton::BUTTON_BACK, closeCurrentAction, true);
+    registerAction("", brls::ControllerButton::BUTTON_BACK, closeCurrentAction, true);
 
 // #ifdef __SWITCH__
 //     registerAction("", brls::ControllerButton::BUTTON_LB, [](View* view) {
@@ -94,7 +91,6 @@ void AppListView::terninateApp()
         gridView->clearViews();
         Application::giveFocus(this);
         loader->setHidden(false);
-        unregisterAction(terminateIdentifier);
         blockInput(true);
         
         ASYNC_RETAIN
@@ -120,8 +116,7 @@ void AppListView::updateAppList()
         return;
     
     loading = true;
-    
-    unregisterAction(terminateIdentifier);
+
     gridView->clearViews();
     Application::giveFocus(this);
     loader->setHidden(false);
@@ -194,11 +189,6 @@ void AppListView::setCurrentApp(AppInfo app, bool update)
     this->currentApp = app;
     hintView->setVisibility(Visibility::VISIBLE);
     setTitle(host.hostname + " - " + "app_list/running"_i18n + " " + app.name);
-    
-    terminateIdentifier = registerAction("app_list/terminate_current_app"_i18n, BUTTON_BACK, [this](View* view) {
-        this->terninateApp();
-        return true;
-    });
 }
 
 void AppListView::willAppear(bool resetState)

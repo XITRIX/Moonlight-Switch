@@ -47,7 +47,7 @@ void MainTabs::refillTabs()
     clearTabs();
 
     if (Settings::instance().has_any_favorite()) {
-        addTab("Favorites", [this] { return this->favoriteTab; });
+        addTab("tabs/favorites"_i18n, [this] { return this->favoriteTab; });
         addSeparator();
     }
     

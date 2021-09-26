@@ -75,7 +75,7 @@
     "app_list": {
         "reload_app_list": "Recargar",
         "terminate": "Cerrar",
-        "terminate_current_app": "Cerrar aplicación",
+        "terminate_current_app": "Cerrar la aplicación actual",
         "terminate_prefix": "Cerrar ",
         "terminate_postfix": "\n\nTodo el progreso no guardado puede perderse",
         "running": "Ejecutándose",

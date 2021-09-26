@@ -34,7 +34,6 @@ private:
     bool loading = false;
     bool inputBlocked = false;
     LoadingOverlay* loader = nullptr;
-    ActionIdentifier terminateIdentifier;
     void blockInput(bool block);
     
     GridView* gridView;

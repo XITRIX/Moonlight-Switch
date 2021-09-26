@@ -8,6 +8,7 @@
         "confirm": "Подтвердить"
     },
     "tabs": {
+        "favorites": "Favorites",
         "add_host": "Добавить хост",
         "settings": "Настройки"
     },
@@ -75,13 +76,13 @@
     "app_list": {
         "reload_app_list": "Перезагрузить",
         "terminate": "Закрыть",
-        "terminate_current_app": "Завершить",
+        "terminate_current_app": "Завершить текущее приложение",
         "terminate_prefix": "Закрыть ",
         "terminate_postfix": "\n\nВесь несохранённый прогресс будет утерян",
         "running": "Запущено",
         "run_current": "Открыть запущенное приложение",
-        "star": "Отметить",
-        "unstar": "Убрать"
+        "star": "В избранное",
+        "unstar": "Убрать из избранного"
     },
     "streaming": {
         "keys": "Кнопки",
