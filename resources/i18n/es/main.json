@@ -1,0 +1,113 @@
+{
+    "title": "Moonlight",
+    "error": {
+        "dialog_header": "Error\n\n\n"
+    },
+    "common": {
+        "cancel": "Cancelar",
+        "confirm": "Confirmar"
+    },
+    "tabs": {
+        "add_host": "Añadir servidor",
+        "settings": "Ajustes"
+    },
+    "host": {
+        "status": "Estado",
+        "fetching": "Buscando...",
+        "wait": "Espera...",
+        "ready": "Listo",
+        "unable": "No disponible",
+        "wake_up": "Reanudar",
+        "wake_up_message": "Reanudando",
+        "wake_up_error": "No se pudo reanudar el servidor",
+        "connect": "Conectar",
+        "remove": "Eliminar",
+        "remove_message": "¿Estás seguro de eliminar este servidor?"
+    },
+    "add_host": {
+        "manual": "Manual",
+        "host_ip": "IP del servidor",
+        "connect": "Añadir",
+        "search": "Buscar",
+        "search_error": "Búsqueda no disponible",
+        "search_refresh": "Actualizar",
+        "paired_error": "Ya está emparejado\nSe ha actualizado la configuración",
+        "pair_prefix": "Emparejar\n\nConfirmar ",
+        "pair_postfix": " en el servidor",
+        "try_connect": "Intentando conectar al servidor"
+    },
+    "discovery_manager": {
+        "no_ip": "No se pudo obtener la IP del servidor",
+        "no_host": "Servidor no encontrado"
+    },
+    "settings": {
+        "quality": "Calidad",
+        "fps": "FPS",
+        "resolution": "Resolución",
+        "video_codec": "Códec de vídeo",
+        "decoder_threads": "Decoder Threads",
+        "video_bitrate": "Video bitrate",
+        "stream_settings": "Ajustes de Transmisión",
+        "usops": "Usar ajustes óptimos para la transmisión",
+        "paop": "Reproducir el audio en el PC",
+        "debug": "Debug",
+        "debugging_view": "Mostrar la vista de debug",
+        "h264": "H.264",
+        "h265": "HEVC (H.265, Experimental)",
+        "zero_threads": "0 (No usar threads)",
+        "keys": "Orden de los botones / y /",
+        "swap_ui": "Intercambiar para la UI",
+        "swap_game": "Intercambiar para el streaming",
+        "mouse": "Ratón",
+        "swap_mouse_keys": "Cambiar botones  y ",
+        "swap_mouse_scroll": "Cambiar la dirección vertical de desplazamiento",
+        "overlay": "Superposición dentro del juego",
+        "overlay_setup_message": "Pulsa los botones que quieres usar para abrir la superposición:\n\n\n",
+        "overlay_zero_time": "0 (Inmediatamente)",
+        "overlay_time": "Retardo de activación en segundos",
+        "overlay_buttons": "Combinación de botones",
+        "volume_amplification": "Utilizar amplificación de volumen",
+        "guide_key_setup_message": "Pulsa el botón que quieres usar para activar el botón de guía:\n\n\n",
+        "guide_key": "Botón de Guía (Activación inmediata)",
+        "guide_key_buttons": "Combinación de botones",
+        "mouse_speed": "Aceleración del ratón"
+    },
+    "app_list": {
+        "reload_app_list": "Recargar",
+        "terminate": "Cerrar",
+        "terminate_current_app": "Cerrar aplicación",
+        "terminate_prefix": "Cerrar ",
+        "terminate_postfix": "\n\nTodo el progreso no guardado puede perderse",
+        "running": "Ejecutándose",
+        "run_current": "Ejecutar aplicación iniciada",
+        "star": "Añadir a favoritos",
+        "unstar": "Quitar de favoritos"
+    },
+    "streaming": {
+        "keys": "Botones",
+        "options": "Ajustes",
+        "logout": "Cerrar sesión",
+        "connection": "Conexión",
+        "terminate": "Cerrar aplicación",
+        "disconnect": "Desconectar",
+        "input": "Entrada",
+        "mouse_input": "Activar modo ratón",
+        "show_logs": "Mostrar logs",
+        "debug_info": "Información de debug",
+        "esc": "Botón de Escape",
+        "volume": "Volumen",
+        "mouse_speed": "Aceleración del ratón"
+    },
+    "mouse_input": {
+        "title": "Modo de entrada ratón",
+        "mouse": "Ratón",
+        "scroll": "Desplazar",
+        "keyboard": "Teclado"
+    },
+    "hints": {
+        "ok": "OK",
+        "back": "Atrás",
+        "on": "On",
+        "off": "Off"
+    }
+}
