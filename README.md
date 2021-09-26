@@ -46,6 +46,27 @@ Multiple gamepad currently not supported.
 ## Ingame overlay
 To open overlay, press - and + key simultaneously by default.
 
+# Localization
+- English (100%)
+- Russian (100%)
+- Japanese (97%)
+- Spanish (100%)
+- Czech (98%) - unsupported yet, as HOS has no such system language
+
+## Contribution
+If you'd like to improve existing language, or add a new one, follow the instruction:
+1. Ask a permission to modify language [here](https://poeditor.com/join/project?hash=9kiCIvN0dc)
+2. Notify me by [creating an issue](https://github.com/XITRIX/Moonlight-Switch/issues/new) with title "[Localization] - {Name of language}", in description write your nickname on POEditor
+3. After translation is done, notify me in issue created earlier
+
+You have 2 options to add that translation:
+1. If you'd like your profile in "contributors" section, you could add that localization by creating a PR
+2. If you don't care, I could do that by myself
+
+If you'd like to test your translation, you could follow build instructions, or ask me to create a build with your localization, I'll attach that build in issue.
+
+ATTENTION! Currently there is no way to select language inside of app, it takes from system settings, so it is impossible to add locatization, that HOS doesn't support (that happend with Czech language).
+
 Key combination and holding time are configurable in settings.
 
 # Build Moonlight-Switch
