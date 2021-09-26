@@ -12,6 +12,7 @@
 #include "GameStreamClient.hpp"
 #include "loading_overlay.hpp"
 #include "grid_view.hpp"
+#include "app_cell.hpp"
 
 #include <optional>
 
@@ -42,4 +43,5 @@ private:
     void setCurrentApp(AppInfo app, bool update = false);
     void terninateApp();
     void updateAppList();
+    void updateFavoriteAction(AppCell* cell, Host host, AppInfo app);
 };

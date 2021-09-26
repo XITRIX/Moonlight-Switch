@@ -16,9 +16,13 @@ class FavoriteTab : public brls::Box
   public:
     FavoriteTab();
 
+    void refreshIfNeeded();
+    void setRefreshNeeded() { isDirty = true; }
     static brls::View* create();
 private:
     BRLS_BIND(brls::Box, container, "container");
+
+    bool isDirty = false;
 
     void updateAppList();
 };

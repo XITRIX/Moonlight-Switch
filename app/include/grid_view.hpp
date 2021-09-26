@@ -21,7 +21,10 @@ public:
     void clearViews() override;
     View* getParentNavigationDecision(View* from, View* newFocus, FocusDirection direction) override;
     std::vector<View*>& getChildren();
-    
+    int getItemIndex(View* view);
+    int getRows();
+    int getItemsInRow(int row);
+
 private:
     int columls = 1;
     Box* lastContainer = nullptr;

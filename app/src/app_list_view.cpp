@@ -5,9 +5,9 @@
 //  Created by XITRIX on 26.05.2021.
 //
 
+#include "main_tabs_view.hpp"
 #include "app_list_view.hpp"
 #include "streaming_view.hpp"
-#include "app_cell.hpp"
 #include "helper.hpp"
 
 AppListView::AppListView(Host host) :
@@ -149,13 +149,23 @@ void AppListView::updateAppList()
                 
                 if (result.isSuccess())
                 {
-                    for (AppInfo app : result.value())
+                    AppInfoList sortedApps = result.value();
+                    std::sort(sortedApps.begin(), sortedApps.end(), [this, currentGame](AppInfo l, AppInfo r) {
+                        bool currentCondition = l.app_id == currentGame && r.app_id != currentGame;
+                        bool favoriteCondition = Settings::instance().is_favorite(this->host, l.app_id) && !Settings::instance().is_favorite(this->host, r.app_id);
+                        return currentCondition || favoriteCondition;
+                    });
+
+                    for (AppInfo app : sortedApps)
                     {
                         if (app.app_id == currentGame)
                             setCurrentApp(app);
                         
                         AppCell* cell = new AppCell(host, app, currentGame);
+                        cell->setFavorite(Settings::instance().is_favorite(host, app.app_id));
                         gridView->addView(cell);
+                        this->updateFavoriteAction(cell, host, app);
+                        
                     }
                     Application::giveFocus(this);
                 }
@@ -208,4 +218,23 @@ void AppListView::onLayout()
     
     if (loader)
         loader->layout();
+}
+
+void AppListView::updateFavoriteAction(AppCell* cell, Host host, AppInfo app)
+{
+    bool isFavorite = Settings::instance().is_favorite(host, app.app_id);
+    cell->registerAction(isFavorite ? "app_list/unstar"_i18n : "app_list/star"_i18n, BUTTON_Y, [this, cell, host, app](View* view) {
+        bool isFavorite = Settings::instance().is_favorite(host, app.app_id);
+        cell->setFavorite(!isFavorite);
+        if (isFavorite) {
+            Settings::instance().remove_favorite(host, app.app_id);
+        } else {
+            App thisApp {app.name, app.app_id};
+            Settings::instance().add_favorite(host, thisApp);
+        }
+        MainTabs::getInstanse()->getFavoriteTab()->setRefreshNeeded();
+        this->updateFavoriteAction(cell, host, app);
+        return true;
+    });
+    Application::getGlobalHintsUpdateEvent()->fire();
 }

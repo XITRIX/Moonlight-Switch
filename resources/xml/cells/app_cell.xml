@@ -24,17 +24,19 @@
         
         <brls:Image
             id="favorite_app_image"
-            width="34"
-            height="34"
+            width="28"
+            height="28"
             marginTop="8"
+            alpha="0.75"
             image="@res/img/star.png"
             scalingType="stretch"/>
         
         <brls:Image
             id="current_app_image"
-            width="34"
-            height="34"
+            width="28"
+            height="28"
             marginTop="8"
+            alpha="0.75"
             image="@res/img/play.png"
             scalingType="stretch"/>
     </brls:Box>

@@ -6,7 +6,6 @@
 //
 
 #include "main_tabs_view.hpp"
-#include "favorite_tab.hpp"
 #include "host_tab.hpp"
 #include "add_host_tab.hpp"
 #include "settings_tab.hpp"
@@ -14,18 +13,27 @@
 
 MainTabs::MainTabs()
 {
+    favoriteTab = new FavoriteTab();
+    favoriteTab->ptrLock();
+    
     MainTabs::instanse = this;
     refillTabs();
     lastFavoritesTabHidden = !Settings::instance().has_any_favorite();
 }
 
+MainTabs::~MainTabs()
+{
+    favoriteTab->ptrUnlock();
+}
+
 void MainTabs::willAppear(bool resetState)
 {
     Box::willAppear(resetState);
-    updateFavorites();
+    updateFavoritesIfNeeded();
+    favoriteTab->refreshIfNeeded();
 }
 
-void MainTabs::updateFavorites()
+void MainTabs::updateFavoritesIfNeeded()
 {
     bool favTabsHidden = !Settings::instance().has_any_favorite();
     if (lastFavoritesTabHidden != favTabsHidden) {
@@ -39,7 +47,7 @@ void MainTabs::refillTabs()
     clearTabs();
 
     if (Settings::instance().has_any_favorite()) {
-        addTab("Favorites", FavoriteTab::create);
+        addTab("Favorites", [this] { return this->favoriteTab; });
         addSeparator();
     }
     

@@ -75,12 +75,13 @@
     "app_list": {
         "reload_app_list": "Перезагрузить",
         "terminate": "Закрыть",
-        "terminate_current_app": "Завершить программу",
+        "terminate_current_app": "Завершить",
         "terminate_prefix": "Закрыть ",
         "terminate_postfix": "\n\nВесь несохранённый прогресс будет утерян",
         "running": "Запущено",
         "run_current": "Открыть запущенное приложение",
-        "star": "Star"
+        "star": "Отметить",
+        "unstar": "Убрать"
     },
     "streaming": {
         "keys": "Кнопки",

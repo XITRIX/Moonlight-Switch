@@ -62,7 +62,7 @@ void Settings::add_host(const Host& host) {
     if (it != m_hosts.end()) {
         it->address = host.address;
         it->hostname = host.hostname;
-    } else {
+    } else if (!host.address.empty() && !host.mac.empty()) {
         m_hosts.push_back(host);
     }
 
@@ -71,7 +71,7 @@ void Settings::add_host(const Host& host) {
 
 void Settings::remove_host(const Host& host) {
     auto it = std::find_if(m_hosts.begin(), m_hosts.end(), [host](auto h){
-        return h.address == host.address || h.hostname == host.hostname || h.mac == host.mac;
+        return h.mac == host.mac;
     });
     
     if (it != m_hosts.end()) {

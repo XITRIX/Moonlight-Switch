@@ -9,6 +9,7 @@
 
 #include <borealis.hpp>
 #include <Singleton.hpp>
+#include "favorite_tab.hpp"
 
 using namespace brls;
 
@@ -16,11 +17,14 @@ class MainTabs : public brls::TabFrame
 {
 public:
     MainTabs();
+    ~MainTabs();
     void refillTabs();
     static View* create();
 
     void willAppear(bool resetState = false) override;
-    
+    FavoriteTab* getFavoriteTab() { return favoriteTab; }
+    void updateFavoritesIfNeeded();
+
     static MainTabs* getInstanse()
     {
         return instanse;
@@ -30,5 +34,5 @@ private:
     bool lastFavoritesTabHidden = true;
     inline static MainTabs* instanse;
 
-    void updateFavorites();
+    FavoriteTab* favoriteTab;
 };

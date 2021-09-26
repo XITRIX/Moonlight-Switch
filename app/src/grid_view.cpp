@@ -86,6 +86,30 @@ View* GridView::getParentNavigationDecision(View* from, View* newFocus, FocusDir
     return Box::getParentNavigationDecision(from, newFocus, direction);
 }
 
+int GridView::getItemIndex(View* view)
+{
+    for (int i = 0; i < children.size(); i++) {
+        if (children[i] == view)
+            return i;
+    }
+
+    return -1;
+}
+
+int GridView::getRows()
+{
+    return (int)children.size() / columls;
+}
+
+int GridView::getItemsInRow(int row)
+{
+    if (getRows() > row - 2)
+        return columls;
+    if (getRows() > row - 1)
+        return (int)children.size() % columls;
+    return 0;
+}
+
 std::vector<View*>& GridView::getChildren()
 {
     return this->children;

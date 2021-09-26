@@ -22,6 +22,8 @@ public:
     BRLS_BIND(Image, currentAppImage, "current_app_image");
     BRLS_BIND(Image, favoriteAppImage, "favorite_app_image");
 
+    void setFavorite(bool favorite);
+
 private:
     void updateFavoriteAction(Host host, AppInfo app);
 };
