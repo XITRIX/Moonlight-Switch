@@ -30,9 +30,7 @@ void MainTabs::willAppear(bool resetState)
 
 void MainTabs::updateFavoritesIfNeeded()
 {
-    bool favTabsHidden = !Settings::instance().has_any_favorite();
-    if (lastFavoritesTabHidden != favTabsHidden) {
-        lastFavoritesTabHidden = favTabsHidden;
+    if (lastHasAnyFavorites != Settings::instance().has_any_favorite()) {
         refillTabs();
     }
 }
@@ -41,10 +39,12 @@ void MainTabs::refillTabs()
 {
     clearTabs();
 
-    if (Settings::instance().has_any_favorite()) {
+    bool hasAnyFavorite = !Settings::instance().has_any_favorite();
+    if (hasAnyFavorite) {
         addTab("tabs/favorites"_i18n, [this] { return this->favoriteTab; });
         addSeparator();
     }
+    lastHasAnyFavorites = hasAnyFavorite;
     
     auto hosts = Settings::instance().hosts();
     for (Host host : hosts)
