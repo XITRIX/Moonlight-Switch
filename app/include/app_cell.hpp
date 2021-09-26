@@ -21,6 +21,7 @@ public:
     BRLS_BIND(Label, title, "title");
     BRLS_BIND(Image, currentAppImage, "current_app_image");
     BRLS_BIND(Image, favoriteAppImage, "favorite_app_image");
+    BRLS_BIND(Rectangle, unactiveLayer, "unactive_layer");
 
     void setFavorite(bool favorite);
 

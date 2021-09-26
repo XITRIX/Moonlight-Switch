@@ -184,7 +184,7 @@ void AppListView::updateAppList()
     });
 }
 
-void AppListView::setCurrentApp(AppInfo app, bool update)
+void AppListView::setCurrentApp(AppInfo app)
 {
     this->currentApp = app;
     hintView->setVisibility(Visibility::VISIBLE);

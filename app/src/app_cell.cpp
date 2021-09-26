@@ -18,7 +18,9 @@ AppCell::AppCell(Host host, AppInfo app, int currentApp)
 
     title->setText(app.name);
     title->setTextColor(nvgRGB(255,255,255));
-    
+
+    bool isUnactive = currentApp != 0 && currentApp != app.app_id;
+    unactiveLayer->setVisibility(isUnactive ? Visibility::VISIBLE : Visibility::GONE);
     currentAppImage->setVisibility(currentApp == app.app_id ? Visibility::VISIBLE : Visibility::GONE);
     
     this->addGestureRecognizer(new TapGestureRecognizer(this));
@@ -30,6 +32,7 @@ AppCell::AppCell(Host host, AppInfo app, int currentApp)
         Application::pushActivity(new Activity(frame));
         return true;
     });
+    this->setActionAvailable(BUTTON_A, !isUnactive);
     
     if (BoxArtManager::instance().has_boxart(app.app_id))
         image->setImageFromFile(BoxArtManager::instance().get_texture_path(app.app_id));

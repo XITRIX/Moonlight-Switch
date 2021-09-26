@@ -45,7 +45,7 @@ void FavoriteTab::updateAppList()
 
         for (App app : host.favorites) {
             AppInfo info {app.name, app.app_id};
-            AppCell* cell = new AppCell(host, info, false);
+            AppCell* cell = new AppCell(host, info, 0);
             gridView->addView(cell);
 
             cell->registerAction("app_list/unstar"_i18n, BUTTON_Y, [this, gridView, cell, host, app](View* view) {

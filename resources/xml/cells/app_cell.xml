@@ -21,7 +21,7 @@
         direction="rightToLeft"
         justifyContent="flexStart"
         alignItems="stretch">
-        
+
         <brls:Image
             id="favorite_app_image"
             width="28"
@@ -30,7 +30,7 @@
             alpha="0.75"
             image="@res/img/star.png"
             scalingType="stretch"/>
-        
+
         <brls:Image
             id="current_app_image"
             width="28"
@@ -41,6 +41,14 @@
             scalingType="stretch"/>
     </brls:Box>
 
+    <brls:Rectangle
+        id="unactive_layer"
+        detachedX="0"
+        detachedY="0"
+        width="150"
+        height="200"
+        color="#4A4A4AA0"/>
+
     <brls:Box
         detachedX="0"
         detachedY="0"
@@ -48,7 +56,7 @@
         height="200"
         axis="column"
         justifyContent="flexEnd">
-        
+
         <brls:Box
             width="auto"
             height="auto"
@@ -56,16 +64,16 @@
             justifyContent="center"
             backgroundColor="@theme/brls/backdrop"
             padding="8">
-        
+
             <brls:Label
                 id="title"
                 width="auto"
                 height="auto"
                 horizontalAlign="center"
                 fontSize="12"/>
-                
+
         </brls:Box>
-            
+
     </brls:Box>
 
 </brls:Box>
