@@ -17,7 +17,6 @@ class MainTabs : public brls::TabFrame
 {
 public:
     MainTabs();
-    ~MainTabs();
     void refillTabs();
     static View* create();
 

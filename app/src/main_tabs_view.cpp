@@ -21,11 +21,6 @@ MainTabs::MainTabs()
     lastFavoritesTabHidden = !Settings::instance().has_any_favorite();
 }
 
-MainTabs::~MainTabs()
-{
-    favoriteTab->ptrUnlock();
-}
-
 void MainTabs::willAppear(bool resetState)
 {
     Box::willAppear(resetState);

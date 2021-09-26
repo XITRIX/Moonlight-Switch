@@ -39,8 +39,6 @@ void FavoriteTab::updateAppList()
 
         Header* header = new Header();
         header->setTitle(host.hostname);
-        header->setMarginLeft(60);
-        header->setMarginBottom(20);
         container->addView(header);
 
         GridView* gridView = new GridView(5);
