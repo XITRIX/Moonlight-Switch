@@ -30,7 +30,7 @@ public:
     }
     
 private:
-    bool lastHasAnyFavorites = true;
+    bool lastHasAnyFavorites = false;
     inline static MainTabs* instanse;
 
     FavoriteTab* favoriteTab;

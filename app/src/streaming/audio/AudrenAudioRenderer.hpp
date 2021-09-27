@@ -19,6 +19,7 @@ private:
     ssize_t free_wavebuf_index();
     size_t append_audio(const void *buf, size_t size);
     void write_audio(const void *buf, size_t size);
+    bool flush();
     
     OpusMSDecoder* m_decoder = nullptr;
     s16* m_decoded_buffer = nullptr;

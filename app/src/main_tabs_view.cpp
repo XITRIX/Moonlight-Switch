@@ -18,7 +18,7 @@ MainTabs::MainTabs()
     
     MainTabs::instanse = this;
     refillTabs();
-    lastFavoritesTabHidden = !Settings::instance().has_any_favorite();
+    lastHasAnyFavorites = Settings::instance().has_any_favorite();
 }
 
 void MainTabs::willAppear(bool resetState)
@@ -39,7 +39,7 @@ void MainTabs::refillTabs()
 {
     clearTabs();
 
-    bool hasAnyFavorite = !Settings::instance().has_any_favorite();
+    bool hasAnyFavorite = Settings::instance().has_any_favorite();
     if (hasAnyFavorite) {
         addTab("tabs/favorites"_i18n, [this] { return this->favoriteTab; });
         addSeparator();

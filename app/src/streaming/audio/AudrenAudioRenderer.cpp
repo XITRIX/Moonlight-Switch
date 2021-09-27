@@ -174,7 +174,16 @@ size_t AudrenAudioRenderer::append_audio(const void *buf, size_t size) {
     m_current_size += size;
     
     if (m_current_size == m_buffer_size) {
-        audrvVoiceAddWaveBuf(&m_driver, 0, m_current_wavebuf);
+        if (flush()) {
+            // audrvVoiceStop creates sound flickering, if I could know the delay, I could call it only if it's huge
+            // but I have no idea how to get that delay, so skipping every 400 sample sounds fine, not so effective,
+            // but doesn't create flickering sounds
+
+            // brls::Logger::error("Audio Flushed!");
+            // audrvVoiceStop(&m_driver, 0);
+        } else {
+            audrvVoiceAddWaveBuf(&m_driver, 0, m_current_wavebuf);
+        }
         
         mutexLock(&m_update_lock);
         audrvUpdate(&m_driver);
@@ -188,6 +197,17 @@ size_t AudrenAudioRenderer::append_audio(const void *buf, size_t size) {
     }
     
     return size;
+}
+
+// Drop audren buffer every 400 samples to prevent audio delay
+bool AudrenAudioRenderer::flush() {
+    static int count = 0;
+    count++;
+    if (count == 400) {
+        count = 0;
+        return true;
+    } 
+    return false;
 }
 
 void AudrenAudioRenderer::write_audio(const void *buf, size_t size) {
