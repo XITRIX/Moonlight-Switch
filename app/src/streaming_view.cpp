@@ -116,7 +116,7 @@ StreamingView::StreamingView(Host host, AppInfo app) :
                 buttonState = false;
                 used = false;
             }
-            else if (buttonState && duration.count() >= 3 && !used)
+            else if (buttonState && duration.count() >= 2 && !used)
             {
                 used = true;
 
