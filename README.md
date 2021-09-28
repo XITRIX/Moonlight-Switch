@@ -46,6 +46,8 @@ Multiple gamepad currently not supported.
 ## Ingame overlay
 To open overlay, press - and + key simultaneously by default.
 
+Key combination and holding time are configurable in settings.
+
 # Localization
 - English (100%)
 - Russian (100%)
@@ -66,8 +68,6 @@ You have 2 options to add that translation:
 If you'd like to test your translation, you could follow build instructions, or ask me to create a build with your localization, I'll attach that build in issue.
 
 ATTENTION! Currently there is no way to select language inside of app, it takes from system settings, so it is impossible to add locatization, that HOS doesn't support (that happend with Czech language).
-
-Key combination and holding time are configurable in settings.
 
 # Build Moonlight-Switch
 1. Clone this repo with submodules by `git clone https://github.com/XITRIX/Moonlight-Switch.git --recursive`
