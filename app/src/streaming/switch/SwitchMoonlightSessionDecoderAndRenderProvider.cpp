@@ -1,11 +1,11 @@
 #include "SwitchMoonlightSessionDecoderAndRenderProvider.hpp"
 #include "FFmpegVideoDecoder.hpp"
 #include "GLVideoRenderer.hpp"
-#ifdef __SWITCH__
-#include "AudrenAudioRenderer.hpp"
-#else
+//#ifdef __SWITCH__
+//#include "AudrenAudioRenderer.hpp"
+//#else
 #include "SDLAudiorenderer.hpp"
-#endif
+//#endif
 
 IFFmpegVideoDecoder* SwitchMoonlightSessionDecoderAndRenderProvider::video_decoder() {
     return new FFmpegVideoDecoder();
@@ -20,9 +20,9 @@ IVideoRenderer* SwitchMoonlightSessionDecoderAndRenderProvider::video_renderer()
 }
 
 IAudioRenderer* SwitchMoonlightSessionDecoderAndRenderProvider::audio_renderer() {
-#ifdef __SWITCH__
-    return new AudrenAudioRenderer();
-#else
+//#ifdef __SWITCH__
+//    return new AudrenAudioRenderer();
+//#else
     return new SDLAudioRenderer();
-#endif
+//#endif
 }

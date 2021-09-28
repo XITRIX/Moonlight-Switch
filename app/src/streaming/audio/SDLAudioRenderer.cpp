@@ -42,9 +42,9 @@ int SDLAudioRenderer::init(int audio_configuration, const POPUS_MULTISTREAM_CONF
     want.freq = opus_config->sampleRate;
     want.format = AUDIO_S16LSB;
     want.channels = opus_config->channelCount;
-    want.samples = 4096;
+    want.samples = 4096;// 2048;
 
-    dev = SDL_OpenAudioDevice(NULL, 0, &want, &have, SDL_AUDIO_ALLOW_FORMAT_CHANGE);
+    dev = SDL_OpenAudioDevice(NULL, 0, &want, &have, SDL_AUDIO_ALLOW_ANY_CHANGE);
     if (dev == 0) {
       printf("Failed to open audio: %s\n", SDL_GetError());
       return -1;
