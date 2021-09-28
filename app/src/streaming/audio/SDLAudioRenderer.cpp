@@ -42,7 +42,7 @@ int SDLAudioRenderer::init(int audio_configuration, const POPUS_MULTISTREAM_CONF
     want.freq = opus_config->sampleRate;
     want.format = AUDIO_S16LSB;
     want.channels = opus_config->channelCount;
-    want.samples = 4096;// 2048;
+    want.samples = 1024;
 
     dev = SDL_OpenAudioDevice(NULL, 0, &want, &have, SDL_AUDIO_ALLOW_ANY_CHANGE);
     if (dev == 0) {
@@ -75,7 +75,7 @@ void SDLAudioRenderer::decode_and_play_sample(char *sample_data, int sample_leng
     }
     
     if (decodeLen > 0) {
-        if(SDL_GetQueuedAudioSize(dev) > 32000)
+        if(SDL_GetQueuedAudioSize(dev) > 13000)
         {
             // clear audio queue to avoid big audio delay
             // average values are close to 13000 bytes
