@@ -1,0 +1,113 @@
+{
+    "title": "Moonlight",
+    "error": {
+        "dialog_header": "Fehler\n\n\n"
+    },
+    "common": {
+        "cancel": "Abbrechen",
+        "confirm": "Bestätigen"
+    },
+    "tabs": {
+        "add_host": "Host hinzufügen",
+        "settings": "Einstellungen"
+    },
+    "host": {
+        "status": "Status",
+        "fetching": "Wird abgerufen...",
+        "wait": "Warten...",
+        "ready": "Bereit",
+        "unable": "Nicht verfügbar",
+        "wake_up": "Aufwecken",
+        "wake_up_message": "Host wird geweckt",
+        "wake_up_error": "Host konnte nicht geweckt werden",
+        "connect": "Verbinden",
+        "remove": "Entfernen",
+        "remove_message": "Wollen Sie diesen Host wirklich entfernen?"
+    },
+    "add_host": {
+        "manual": "Manuell",
+        "host_ip": "Host IP",
+        "connect": "Verbinden",
+        "search": "Suche",
+        "search_error": "Suche ist nicht verfügbar",
+        "search_refresh": "Aktualisieren",
+        "paired_error": "Bereits gekoppelt\nKonfiguration wurde aktualisiert",
+        "pair_prefix": "Koppeln\n\nGeben Sie ",
+        "pair_postfix": " auf dem Host ein",
+        "try_connect": "Verbindung mit Host wird hergestellt"
+    },
+    "discovery_manager": {
+        "no_ip": "IP Adresse kann nicht abgerufen werden",
+        "no_host": "Host nicht gefunden"
+    },
+    "settings": {
+        "quality": "Qualität",
+        "fps": "FPS",
+        "resolution": "Auflösung",
+        "video_codec": "Video Codec",
+        "decoder_threads": "Decoder Threads",
+        "video_bitrate": "Video Bitrate",
+        "stream_settings": "Streameinstellungen",
+        "usops": "Optimale Streameinstellungen benutzen",
+        "paop": "Audio auf Host abspielen",
+        "debug": "Debug",
+        "debugging_view": "Debugansicht anzeigen",
+        "h264": "H.264",
+        "h265": "HEVC (H.265, Experimentell)",
+        "zero_threads": "0 (Keine Threads benutzen)",
+        "keys": "/ und / Tasten",
+        "swap_ui": "Für UI tauschen",
+        "swap_game": "Für Game Stream tauschen",
+        "mouse": "Maus",
+        "swap_mouse_keys": " und  Tasten tauschen",
+        "swap_mouse_scroll": "Scrollrichtung umkehren",
+        "overlay": "Ingame Overlay",
+        "overlay_setup_message": "Drücken Sie die Tasten, die Sie benutzen wollen, um das Overlay zu öffnen:\n\n\n",
+        "overlay_zero_time": "0 (keine Verzögerung)",
+        "overlay_time": "Verzögerung (Sekunden)",
+        "overlay_buttons": "Tastenkombination",
+        "volume_amplification": "Lautstärkeverstärkung zulassen",
+        "guide_key_setup_message": "Drücken Sie die Tasten, die Sie benutzen wollen, um die Guide Taste zu drücken:\n\n\n",
+        "guide_key": "Guide Taste (keine Verzögerung)",
+        "guide_key_buttons": "Tastenkombination",
+        "mouse_speed": "Mausbeschleunigung"
+    },
+    "app_list": {
+        "reload_app_list": "Neu laden",
+        "terminate": "Beenden",
+        "terminate_current_app": "Aktuelles Programm beenden",
+        "terminate_prefix": "Beende ",
+        "terminate_postfix": "\n\nJeder nicht gespeicherte Fortschritt könnte verloren gehen",
+        "running": "Läuft",
+        "run_current": "Aktuelles Programm fortsetzen",
+        "star": "Favorit",
+        "unstar": "Favorit entfernen"
+    },
+    "streaming": {
+        "keys": "Tasten",
+        "options": "Einstellungen",
+        "logout": "Logout",
+        "connection": "Verbindung",
+        "terminate": "Programm beenden",
+        "disconnect": "Verbindung trennen",
+        "input": "Eingabe",
+        "mouse_input": "Mauseingabemodus starten",
+        "show_logs": "Protokolle anzeigen",
+        "debug_info": "Debug Informationen",
+        "esc": "ESC Taste",
+        "volume": "Lautstärke",
+        "mouse_speed": "Mausbeschleunigung"
+    },
+    "mouse_input": {
+        "title": "Mauseingabemodus",
+        "mouse": "Maus",
+        "scroll": "Scrollen",
+        "keyboard": "Tastatur"
+    },
+    "hints": {
+        "ok": "OK",
+        "back": "Zurück",
+        "on": "An",
+        "off": "Aus"
+    }
+}
