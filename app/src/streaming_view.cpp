@@ -70,6 +70,7 @@ StreamingView::StreamingView(Host host, AppInfo app) :
             showError(result.error(), [this]() {
                 terminate(false);
             });
+            return;
         }
         
         ASYNC_RETAIN

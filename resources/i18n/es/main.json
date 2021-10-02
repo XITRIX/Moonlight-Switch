@@ -1,7 +1,7 @@
 {
     "title": "Moonlight",
     "error": {
-        "dialog_header": "Error\n\n\n"
+        "dialog_header": "Error\n\n"
     },
     "common": {
         "cancel": "Cancelar",
