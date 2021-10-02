@@ -1,7 +1,11 @@
 {
     "title": "Moonlight",
     "error": {
-        "dialog_header": "Error\n\n"
+        "dialog_header": "Error",
+        "stream_start": "Failed to start stream...",
+        "unknown_error": "Unknown problem has been occured...",
+        "host_not_found": "Host PC not found...",
+        "ip_not_obtained": "Can't obtain IP address..."
     },
     "common": {
         "cancel": "Cancel",

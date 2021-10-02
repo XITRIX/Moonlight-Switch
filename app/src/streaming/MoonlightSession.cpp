@@ -6,6 +6,8 @@
 #include "AVFrameHolder.hpp"
 #include <string.h>
 
+using namespace brls;
+
 static MoonlightSession* m_active_session = nullptr;
 static MoonlightSessionDecoderAndRenderProvider* m_provider = nullptr;
 
@@ -237,7 +239,7 @@ void MoonlightSession::start(ServerCallback<bool> callback) {
             
             if (result != 0) {
                 LiStopConnection();
-                callback(GSResult<bool>::failure("Failed to start stream..."));
+                callback(GSResult<bool>::failure("error/stream_start"_i18n));
             } else {
                 callback(GSResult<bool>::success(true));
             }
