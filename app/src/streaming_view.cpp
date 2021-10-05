@@ -122,7 +122,6 @@ StreamingView::StreamingView(Host host, AppInfo app) :
                 used = true;
 
                 IngameOverlay* overlay = new IngameOverlay(this);
-                overlay->setTitle(host.hostname + ": " + app.name);
                 Application::pushActivity(new Activity(overlay));
             }
         }
@@ -326,7 +325,6 @@ void StreamingView::handleButtonHolding()
         used = true;
         
         IngameOverlay* overlay = new IngameOverlay(this);
-        overlay->setTitle(host.hostname + ": " + app.name);
         Application::pushActivity(new Activity(overlay));
     }
 }

@@ -28,6 +28,7 @@ AppListView::AppListView(Host host) :
     holder->addGestureRecognizer(new TapGestureRecognizer(holder));
     
     hintView = holder;
+    getAppletFrameItem()->hintView = hintView;
     
     container->setHideHighlight(true);
     gridView = new GridView();
@@ -124,7 +125,8 @@ void AppListView::updateAppList()
     hintView->setVisibility(Visibility::GONE);
     blockInput(true);
     
-    setTitle(host.hostname);
+    getAppletFrameItem()->title = host.hostname;
+    updateAppletFrameItem();
     
     ASYNC_RETAIN
     GameStreamClient::instance().connect(host.address, [ASYNC_TOKEN](GSResult<SERVER_DATA> result) {
@@ -188,18 +190,14 @@ void AppListView::setCurrentApp(AppInfo app)
 {
     this->currentApp = app;
     hintView->setVisibility(Visibility::VISIBLE);
-    setTitle(host.hostname + " - " + "app_list/running"_i18n + " " + app.name);
+    getAppletFrameItem()->title = host.hostname + " - " + "app_list/running"_i18n + " " + app.name;
+    updateAppletFrameItem();
 }
 
 void AppListView::willAppear(bool resetState)
 {
     Box::willAppear(resetState);
     updateAppList();
-}
-
-View* AppListView::getHintView()
-{
-    return hintView;
 }
 
 void AppListView::onLayout()

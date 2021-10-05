@@ -35,9 +35,9 @@ void GridView::addView(View* view)
     lastView = view;
 }
 
-void GridView::clearViews()
+void GridView::clearViews(bool free)
 {
-    Box::clearViews();
+    Box::clearViews(free);
     children.clear();
     lastContainer = nullptr;
     lastView = nullptr;

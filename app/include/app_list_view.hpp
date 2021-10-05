@@ -25,7 +25,6 @@ public:
     
     void onLayout() override;
     void willAppear(bool resetState) override;
-    View* getHintView() override;
     
 private:
     Host host;
