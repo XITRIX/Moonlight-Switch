@@ -1,7 +1,11 @@
 {
     "title": "Moonlight",
     "error": {
-        "dialog_header": "Fehler"
+        "dialog_header": "Fehler",
+        "stream_start": "Stream konnten nicht gestartet werden...",
+        "unknown_error": "Unbekannter Fehler aufgetreten...",
+        "host_not_found": "Host nicht gefunden...",
+        "ip_not_obtained": "IP Adresse kann nicht abgerufen werden..."
     },
     "common": {
         "cancel": "Abbrechen",
@@ -9,7 +13,8 @@
     },
     "tabs": {
         "add_host": "Host hinzufügen",
-        "settings": "Einstellungen"
+        "settings": "Einstellungen",
+        "favorites": "Favoriten"
     },
     "host": {
         "status": "Status",
