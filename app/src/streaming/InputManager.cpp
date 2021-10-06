@@ -144,6 +144,8 @@ void MoonlightInputManager::handleInput()
     bool guideCombo = guideKeys.size() > 0;
     for (auto key: guideKeys)
         guideCombo &= controller.buttons[key];
+        
+    if (guideCombo || lastGamepadState.buttonFlags & SPECIAL_FLAG) gamepadState.buttonFlags = 0;
     guideCombo ? (gamepadState.buttonFlags |= SPECIAL_FLAG) : (gamepadState.buttonFlags &= ~SPECIAL_FLAG);
     
     if (!gamepadState.is_equal(lastGamepadState))

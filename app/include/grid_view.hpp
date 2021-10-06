@@ -18,7 +18,7 @@ public:
     GridView(int columns);
     
     void addView(View* view) override;
-    void clearViews() override;
+    void clearViews(bool free = true) override;
     View* getParentNavigationDecision(View* from, View* newFocus, FocusDirection direction) override;
     std::vector<View*>& getChildren();
     int getItemIndex(View* view);

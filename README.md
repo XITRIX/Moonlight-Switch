@@ -8,12 +8,11 @@ Thanks a lot to [Rock88](https://github.com/rock88) and his [Moonlight-NX](https
 <details>
   <summary>Preview</summary>
   <p float="left">
-  <img width="500" src="https://user-images.githubusercontent.com/9553519/122124363-da8b0880-ce37-11eb-9a08-b6f17c794673.jpg" />
-  <img width="500" src="https://user-images.githubusercontent.com/9553519/122124394-e7a7f780-ce37-11eb-9a04-f44b380b6a35.jpg" />
-  </p>
-  <p float="left">
-  <img width="500" src="https://user-images.githubusercontent.com/9553519/122124550-1b831d00-ce38-11eb-97e7-ae1f70d02e32.jpg" />
-  <img width="500" src="https://user-images.githubusercontent.com/9553519/122124600-2b026600-ce38-11eb-9e18-3da42f8fc33d.jpg" />
+  <img width="500" src="https://user-images.githubusercontent.com/9553519/135712658-20382345-2da5-4968-9f57-f9f4470ae819.jpg" />
+  <img width="500" src="https://user-images.githubusercontent.com/9553519/135712664-bf2481b2-2791-490d-99a9-2f968682db76.jpg" />
+  <img width="500" src="https://user-images.githubusercontent.com/9553519/135712669-fd8b2495-e1ea-4357-949f-7fa7312da46f.jpg" />
+  <img width="500" src="https://user-images.githubusercontent.com/9553519/135712672-b9ac3785-bd1c-4948-82b2-9b353019feba.jpg" />
+  <img width="500" src="https://user-images.githubusercontent.com/9553519/135712676-aaa85bb7-9517-4a6d-bc35-070df092383c.jpg" />
   </p>
 </details>
 
@@ -44,16 +43,17 @@ By default Switch gamepad configured as X360 gamepad (A/B and X/Y swapped).
 Multiple gamepad currently not supported.
 
 ## Ingame overlay
-To open overlay, press - and + key simultaneously by default.
+To open overlay, press - and + key simultaneously by default or Hold ESC on keyboard.
 
-Key combination and holding time are configurable in settings.
+Key combination and holding time are configurable in settings (gamepad only).
 
 # Localization
 - English (100%)
 - Russian (100%)
-- Japanese (97%)
-- Spanish (100%)
-- Czech (98%) - unsupported yet, as HOS has no such system language
+- German (94%)
+- Spanish (94%)
+- Japanese (92%)
+- Czech (93%) - unsupported yet, as HOS has no such system language
 
 ## Contribution
 If you'd like to improve existing language, or add a new one, follow the instruction:

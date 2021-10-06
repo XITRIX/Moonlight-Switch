@@ -70,6 +70,7 @@ StreamingView::StreamingView(Host host, AppInfo app) :
             showError(result.error(), [this]() {
                 terminate(false);
             });
+            return;
         }
         
         ASYNC_RETAIN
@@ -121,7 +122,6 @@ StreamingView::StreamingView(Host host, AppInfo app) :
                 used = true;
 
                 IngameOverlay* overlay = new IngameOverlay(this);
-                overlay->setTitle(host.hostname + ": " + app.name);
                 Application::pushActivity(new Activity(overlay));
             }
         }
@@ -325,7 +325,6 @@ void StreamingView::handleButtonHolding()
         used = true;
         
         IngameOverlay* overlay = new IngameOverlay(this);
-        overlay->setTitle(host.hostname + ": " + app.name);
         Application::pushActivity(new Activity(overlay));
     }
 }

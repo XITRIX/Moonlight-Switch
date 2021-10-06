@@ -706,6 +706,7 @@
 		7C77C51F2676C98600179EA8 /* keyboard_view.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = keyboard_view.cpp; sourceTree = "<group>"; };
 		7C77C5202676C98600179EA8 /* keyboard_view.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = keyboard_view.hpp; sourceTree = "<group>"; };
 		7C8AE162269CBCDC00210332 /* Borealis.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = Borealis.xcodeproj; sourceTree = "<group>"; };
+		7CA52ECE270868A0008D04B8 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		7CBDEEA62683818A00C6C7B2 /* InputManager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = InputManager.cpp; sourceTree = "<group>"; };
 		7CBDEEA72683818A00C6C7B2 /* InputManager.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = InputManager.hpp; sourceTree = "<group>"; };
 		7CBE6B5A265DADD9007DCC5A /* Settings.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Settings.hpp; sourceTree = "<group>"; };
@@ -791,6 +792,7 @@
 		7C18E8AD265C1551000D3AF0 = {
 			isa = PBXGroup;
 			children = (
+				7CA52ECE270868A0008D04B8 /* README.md */,
 				7CDA33AD265D642200E5D604 /* Makefile */,
 				7C744DF226FE492D00BFACB5 /* meson.build */,
 				7C18F0D2265C1C37000D3AF0 /* resources */,

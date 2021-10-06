@@ -75,10 +75,10 @@ void SDLAudioRenderer::decode_and_play_sample(char *sample_data, int sample_leng
     }
     
     if (decodeLen > 0) {
-        if(SDL_GetQueuedAudioSize(dev) > 13000)
+        if(SDL_GetQueuedAudioSize(dev) > 16000)
         {
             // clear audio queue to avoid big audio delay
-            // average values are close to 13000 bytes
+            // average values are close to 16000 bytes
             SDL_ClearQueuedAudio(this->dev);
         }
         

@@ -41,6 +41,16 @@ public:
     void terminate(bool terminateApp);
     
     bool draw_stats = false;
+
+    Host getHost()
+    {
+        return host;
+    }
+
+    AppInfo getApp()
+    {
+        return app;
+    }
 private:
     Host host;
     AppInfo app;

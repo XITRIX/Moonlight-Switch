@@ -31,6 +31,9 @@ IngameOverlay::IngameOverlay(StreamingView* streamView) :
     }));
     
     applet->addGestureRecognizer(new TapGestureRecognizer([this](TapGestureStatus status, Sound* sound) { }));
+
+    getAppletFrameItem()->title = streamView->getHost().hostname + ": " + streamView->getApp().name;
+    updateAppletFrameItem();
 }
 
 brls::AppletFrame* IngameOverlay::getAppletFrame()

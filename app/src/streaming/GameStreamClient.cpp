@@ -22,6 +22,8 @@
 #include <switch.h>
 #endif
 
+using namespace brls;
+
 // namespace
 // {
 //     void* get_in_addr(sockaddr_storage* sa)
@@ -117,9 +119,9 @@ void GameStreamClient::find_hosts(ServerCallback<std::vector<Host>> callback) {
         std::vector<Zeroconf::mdns_responce> result;
         bool st = Zeroconf::Resolve(MdnsQuery, /*scanTime*/ 3, &result);
         if (!st)
-            brls::sync([callback] { callback(GSResult<std::vector<Host>>::failure("Error has been occured...")); });
+            brls::sync([callback] { callback(GSResult<std::vector<Host>>::failure("error/unknown_error"_i18n)); });
         else if (result.empty())
-            brls::sync([callback] { callback(GSResult<std::vector<Host>>::failure("Host PC not found...")); });
+            brls::sync([callback] { callback(GSResult<std::vector<Host>>::failure("error/host_not_found"_i18n)); });
         else
         {
             std::vector<Host> hosts;
@@ -161,7 +163,7 @@ void GameStreamClient::find_host(ServerCallback<Host> callback) {
         auto addresses = host_addresses_for_find();
 
         if (addresses.empty()) {
-            brls::sync([callback] { callback(GSResult<Host>::failure("Can't obtain IP address...")); });
+            brls::sync([callback] { callback(GSResult<Host>::failure("error/ip_not_obtained"_i18n)); });
         } else {
             bool found = false;
 
@@ -182,7 +184,7 @@ void GameStreamClient::find_host(ServerCallback<Host> callback) {
             }
 
             if (!found) {
-                brls::sync([callback] { callback(GSResult<Host>::failure("Host PC not found...")); });
+                brls::sync([callback] { callback(GSResult<Host>::failure("error/host_not_found"_i18n)); });
             }
         }
     });
