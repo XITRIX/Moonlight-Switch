@@ -5,10 +5,17 @@
 #include <stdio.h>
 #include <string>
 #include <vector>
+#include <map>
 
 enum VideoCodec: int {
     H264,
     H265
+};
+
+struct KeyMappingLayout {
+    std::string title;
+    bool editable;
+    std::map<int, int> mapping;
 };
 
 struct KeyComboOptions {
@@ -211,6 +218,16 @@ public:
     int get_mouse_speed_multiplier() const {
         return m_mouse_speed_multiplier;
     }
+
+    int get_current_mapping_layout();
+
+    void set_current_mapping_layout(int layout) {
+        m_current_mapping_layout = layout;
+    }
+
+    std::vector<KeyMappingLayout>* get_mapping_laouts() {
+        return &m_mapping_laouts;
+    }
     
     void load();
     void save();
@@ -240,6 +257,8 @@ private:
     int m_volume = 100;
     bool m_volume_amplification = false;
     int m_mouse_speed_multiplier = 34;
+    int m_current_mapping_layout = 0;
+    std::vector<KeyMappingLayout> m_mapping_laouts;
     KeyComboOptions m_guide_key_options {
         .holdTime = 0,
         .buttons = {},
@@ -248,4 +267,6 @@ private:
         .holdTime = 0,
         .buttons = {brls::ControllerButton::BUTTON_BACK, brls::ControllerButton::BUTTON_START},
     };
+
+    void loadBaseLayouts();
 };

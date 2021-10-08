@@ -48,10 +48,14 @@ public:
     void handleInput();
     void handleRumble(unsigned short controller, unsigned short lowFreqMotor, unsigned short highFreqMotor);
     void updateTouchScreenPanDelta(brls::PanGestureStatus panStatus);
+    void reloadButtonMappingLayout();
     
 private:
+    brls::ControllerButton mappingButtons[brls::_BUTTON_MAX];
     std::optional<brls::PanGestureStatus> panStatus;
     bool inputDropped = false;
+
+    brls::ControllerState mapController(brls::ControllerState controller);
     int glfwKeyToVKKey(brls::BrlsKeyboardScancode key);
 };
 

@@ -37,6 +37,18 @@ MoonlightInputManager::MoonlightInputManager()
     });
 }
 
+void MoonlightInputManager::reloadButtonMappingLayout()
+{
+    KeyMappingLayout layout = (*Settings::instance().get_mapping_laouts())[Settings::instance().get_current_mapping_layout()];
+    for (int i = 0; i < _BUTTON_MAX; i++) {
+        if (layout.mapping.count(i) == 1) {
+            mappingButtons[i] = (brls::ControllerButton)layout.mapping.at(i);
+        } else {
+            mappingButtons[i] = (brls::ControllerButton)i;
+        }
+    }
+}
+
 void MoonlightInputManager::updateTouchScreenPanDelta(brls::PanGestureStatus panStatus)
 {
     this->panStatus = panStatus;
@@ -66,10 +78,13 @@ void MoonlightInputManager::dropInput()
 void MoonlightInputManager::handleInput() 
 {
     inputDropped = false;
+    static brls::ControllerState rawController;
     static brls::ControllerState controller;
     static brls::RawMouseState mouse;
-    brls::Application::getPlatform()->getInputManager()->updateControllerState(&controller);
+
+    brls::Application::getPlatform()->getInputManager()->updateControllerState(&rawController);
     brls::Application::getPlatform()->getInputManager()->updateMouseStates(&mouse);
+    controller = mapController(rawController);
 
 #ifdef __SWITCH__
     static HidTouchScreenState hidState = { 0 };
@@ -216,7 +231,25 @@ void MoonlightInputManager::handleInput()
     }
 }
 
-int MoonlightInputManager::glfwKeyToVKKey(BrlsKeyboardScancode key) {
+brls::ControllerState MoonlightInputManager::mapController(brls::ControllerState controller)
+{
+    brls::ControllerState result;
+
+    std::fill(result.buttons, result.buttons + sizeof(result.buttons), false);
+
+    for (int i = 0; i < _AXES_MAX; i++)
+        result.axes[i] = controller.axes[i];
+
+
+    for (int i = 0; i < _BUTTON_MAX; i++) {
+        result.buttons[mappingButtons[i]] |= controller.buttons[i];
+    }
+
+    return result;
+}
+
+int MoonlightInputManager::glfwKeyToVKKey(BrlsKeyboardScancode key)
+{
     if (BRLS_KBD_KEY_F1 <= key && key <= BRLS_KBD_KEY_F12)
         return key - BRLS_KBD_KEY_F1 + 0x70;
 

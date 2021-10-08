@@ -67,7 +67,7 @@
             <brls:BooleanCell
                 id="swap_ui"/>
                 
-            <brls:BooleanCell
+            <brls:SelectorCell
                 id="swap_game"/>
                 
             <brls:Header

@@ -86,7 +86,8 @@ StreamingView::StreamingView(Host host, AppInfo app) :
             }
         });
     });
-    
+
+    MoonlightInputManager::instance().reloadButtonMappingLayout();
     addGestureRecognizer(new PanGestureRecognizer([this](PanGestureStatus status, Sound* sound) {
         if (status.state == brls::GestureState::START)
         {

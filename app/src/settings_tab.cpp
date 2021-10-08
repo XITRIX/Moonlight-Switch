@@ -111,9 +111,23 @@ SettingsTab::SettingsTab()
         Settings::instance().set_swap_ui_keys(value);
         brls::async([value] { brls::sync([value] { brls::Application::setSwapInputKeys(value); }); });
     });
-    
-    swapGame->init("settings/swap_game"_i18n, Settings::instance().swap_game_keys(), [](bool value) {
-        Settings::instance().set_swap_game_keys(value);
+
+    std::vector<std::string> layouts;
+    for (KeyMappingLayout layout : *Settings::instance().get_mapping_laouts())
+        layouts.push_back(layout.title);
+    layouts.push_back("+ Create new layout");
+
+    swapGame->setText("settings/keys_mapping"_i18n);
+    swapGame->setData(layouts);
+    swapGame->setSelection(Settings::instance().get_current_mapping_layout());
+    swapGame->getEvent()->subscribe([this](int selected) {
+        if (Settings::instance().get_mapping_laouts()->size() == selected) {
+            this->swapGame->setSelection(Settings::instance().get_current_mapping_layout(), true);
+            // Open mapping editor View
+            return;
+        }
+
+        Settings::instance().set_current_mapping_layout(selected);
     });
     
     guideKeyButtons->setText("settings/guide_key_buttons"_i18n);

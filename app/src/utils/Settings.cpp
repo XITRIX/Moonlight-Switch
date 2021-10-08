@@ -6,6 +6,8 @@
 #include <limits.h>
 #include <sys/stat.h>
 
+using namespace brls;
+
 #ifdef _WIN32
 static int mkdir(const char* dir, mode_t mode) {
     return mkdir(dir);
@@ -143,6 +145,8 @@ bool Settings::has_any_favorite() {
 }
 
 void Settings::load() {
+    loadBaseLayouts();
+
     json_t* root = json_load_file((m_working_dir + "/settings.json").c_str(), 0, NULL);
     
     if (root && json_typeof(root) == JSON_OBJECT) {
@@ -319,6 +323,36 @@ void Settings::load() {
                 }
             }
         }
+
+        if (json_t* layouts = json_object_get(root, "mapping_layouts")) {
+            size_t size = json_array_size(layouts);
+            for (size_t i = 0; i < size; i++) {
+                if (json_t* json = json_array_get(layouts, i)) {
+                    if (json_typeof(json) == JSON_OBJECT) {
+                        KeyMappingLayout layout;
+                        layout.editable = true;
+
+                        if (json_t* title = json_object_get(json, "title")) {
+                            if (json_typeof(title) == JSON_STRING) {
+                                layout.title = json_string_value(title);
+                            }
+                        }
+
+                        if (json_t* mapping = json_object_get(json, "mapping")) {
+                            const char *key;
+                            json_t *value;
+                            json_object_foreach(mapping, key, value) {
+                                if (json_typeof(value) == JSON_STRING) {
+                                    layout.mapping[std::atoi(key)] = std::atoi(json_string_value(value));
+                                }
+                            }
+                        }
+
+                        m_mapping_laouts.push_back(layout);
+                    }
+                }
+            }
+        }
         
         json_decref(root);
     }
@@ -386,8 +420,48 @@ void Settings::save() {
             
             json_object_set_new(root, "settings", settings);
         }
+
+        if (json_t* hosts = json_array()) {
+            for (auto mappint_layout: m_mapping_laouts) {
+                if (!mappint_layout.editable) continue;
+                
+                if (json_t* json = json_object()) {
+                    json_object_set_new(json, "title", json_string(mappint_layout.title.c_str()));
+                    if (json_t* mapping = json_object()) {
+                        for (auto key: mappint_layout.mapping) {
+                            json_object_set_new(mapping, std::to_string(key.first).c_str(), json_string(std::to_string(key.second).c_str()));
+                        }
+                        json_object_set_new(json, "mapping", mapping);
+                    }
+                    json_array_append_new(hosts, json);
+                }
+            }
+            json_object_set_new(root, "mapping_layouts", hosts);
+        }
         
         json_dump_file(root, (m_working_dir + "/settings.json").c_str(), JSON_INDENT(4));
         json_decref(root);
     }
+}
+
+void Settings::loadBaseLayouts() {
+    KeyMappingLayout defaultLayout {
+        .title = "settings/keys_mapping_default"_i18n,
+        .editable = false,
+        .mapping = {}
+    };
+    KeyMappingLayout swapLayout {
+        .title = "settings/keys_mapping_swap"_i18n,
+        .editable = false,
+        .mapping = { {ControllerButton::BUTTON_A, ControllerButton::BUTTON_B}, {ControllerButton::BUTTON_B, ControllerButton::BUTTON_A}, {ControllerButton::BUTTON_X, ControllerButton::BUTTON_Y}, {ControllerButton::BUTTON_Y, ControllerButton::BUTTON_X} }
+    };
+
+    m_mapping_laouts.push_back(defaultLayout);
+    m_mapping_laouts.push_back(swapLayout);
+}
+
+int Settings::get_current_mapping_layout() {
+    if (m_current_mapping_layout >= m_mapping_laouts.size())
+        return 0;
+    return m_current_mapping_layout;
 }
