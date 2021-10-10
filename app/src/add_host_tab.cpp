@@ -46,10 +46,12 @@ void AddHostTab::fillSearchBox(GSResult<std::vector<Host>> hostsRes)
     loader->setVisibility(DiscoverManager::instance().isPaused() ? brls::Visibility::GONE : brls::Visibility::VISIBLE);
     
     if (hostsRes.isSuccess()) {
-        searchBox->clearViews();
         std::vector<Host> hosts = hostsRes.value();
         for (Host host: hosts)
         {
+            if (searchBoxIpExists(host.address))
+                continue;
+
             brls::DetailCell* hostButton = new brls::DetailCell();
             hostButton->setText(host.hostname);
             hostButton->setDetailText(host.address);
@@ -65,6 +67,16 @@ void AddHostTab::fillSearchBox(GSResult<std::vector<Host>> hostsRes)
         loader->setVisibility(brls::Visibility::GONE);
         searchHeader->setTitle("add_host/search"_i18n + " - " + hostsRes.error());
     }
+}
+
+bool AddHostTab::searchBoxIpExists(std::string ip)
+{
+    for (View* child : searchBox->getChildren()) {
+        DetailCell* cell = dynamic_cast<DetailCell*>(child);
+        if (cell->detail->getFullText() == ip)
+            return true;
+    }
+    return false;
 }
 
 void AddHostTab::findHost()
@@ -148,13 +160,15 @@ void AddHostTab::connectHost(std::string address)
                         {
                             Settings::instance().add_host(host);
                             MainTabs::getInstanse()->refillTabs();
+                            this->startSearching();
                         }
                         else
                         {
-                            showError(result.error(), [] {});
+                            showError(result.error(), [this] {
+                                this->startSearching();
+                            });
                         }
-                        
-                        this->startSearching();
+
                     });
                 });
             }

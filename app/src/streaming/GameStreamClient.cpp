@@ -219,7 +219,6 @@ void GameStreamClient::connect(const std::string &address, ServerCallback<SERVER
                 host.address = address;
                 host.hostname = m_server_data[address].hostname;
                 host.mac = m_server_data[address].mac;
-                Settings::instance().add_host(host);
                 callback(GSResult<SERVER_DATA>::success(m_server_data[address]));
             } else {
                 callback(GSResult<SERVER_DATA>::failure(gs_error()));
