@@ -5,6 +5,7 @@
     },
     "common": {
         "cancel": "Cancelar",
+        "remove": "Eliminar",
         "confirm": "Confirmar"
     },
     "tabs": {
@@ -21,7 +22,6 @@
         "wake_up_message": "Reanudando",
         "wake_up_error": "No se pudo reanudar el servidor",
         "connect": "Conectar",
-        "remove": "Eliminar",
         "remove_message": "¿Estás seguro de eliminar este servidor?"
     },
     "add_host": {

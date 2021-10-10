@@ -14,7 +14,7 @@ using namespace brls;
 class ButtonSelectingDialog: public Dialog {
 public:
     ~ButtonSelectingDialog();
-    static ButtonSelectingDialog* create(std::string titleText, std::function<void(std::vector<ControllerButton>)> callback);
+    static ButtonSelectingDialog* create(std::string titleText, std::function<void(std::vector<ControllerButton>)> callback, bool oneKey = false);
     void open() override;
     
 private:
@@ -24,8 +24,9 @@ private:
     std::vector<ControllerButton> buttons;
     ControllerState oldState;
     Label* label;
+    bool oneKey;
     
-    ButtonSelectingDialog(Box* box, std::function<void(std::vector<ControllerButton>)> callback);
+    ButtonSelectingDialog(Box* box, std::function<void(std::vector<ControllerButton>)> callback, bool oneKey);
     
     void reloadLabel();
     std::string buttonsText();

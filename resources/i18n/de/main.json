@@ -9,6 +9,7 @@
     },
     "common": {
         "cancel": "Abbrechen",
+        "remove": "Entfernen",
         "confirm": "Bestätigen"
     },
     "tabs": {
@@ -26,7 +27,6 @@
         "wake_up_message": "Host wird geweckt",
         "wake_up_error": "Host konnte nicht geweckt werden",
         "connect": "Verbinden",
-        "remove": "Entfernen",
         "remove_message": "Wollen Sie diesen Host wirklich entfernen?"
     },
     "add_host": {

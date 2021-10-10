@@ -7,6 +7,7 @@
 
 #include "settings_tab.hpp"
 #include "button_selecting_dialog.hpp"
+#include "mapping_layout_editor.hpp"
 #include "Settings.hpp"
 #include <iomanip>
 #include <sstream>
@@ -136,26 +137,44 @@ SettingsTab::SettingsTab()
                         Settings::instance().set_current_mapping_layout(selected);
                         swapGame->setDetailText(layoutTexts[selected]);
                     }
-                }, Settings::instance().get_current_mapping_layout(), [](int selected) {
+                }, Settings::instance().get_current_mapping_layout(), [this](int selected) {
                     if (Settings::instance().get_mapping_laouts()->size() == selected) {
+                        KeyMappingLayout layout;
+                        layout.title = "New layout";
+                        layout.editable = true;
+                        Settings::instance().get_mapping_laouts()->push_back(layout);
+                        Settings::instance().set_current_mapping_layout(selected);
+                        swapGame->setDetailText(layout.title);
+
                         // Show layout editor View
+                        MappingLayoutEditor* editor = new MappingLayoutEditor(selected, [this] {
+                            auto currentLayout = Settings::instance().get_mapping_laouts()->at(Settings::instance().get_current_mapping_layout());
+                            this->swapGame->setDetailText(currentLayout.title);
+                        });
+                        this->present(editor);
                     }
                 });
 
-        dropdown->registerAction("Edit", BUTTON_Y, [dropdown](View* view) {
-            RecyclerCell* cell = dynamic_cast<RecyclerCell*>(Application::getCurrentFocus());
-            if (cell) {
-                int index = cell->getIndexPath().row;
-                // Show layout editor View
-            }
-            Application::popActivity();
+        dropdown->registerAction("Edit", BUTTON_Y, [this, dropdown](View* view) {
+            Application::popActivity(brls::TransitionAnimation::FADE, [this, dropdown]() {
+                RecyclerCell* cell = dynamic_cast<RecyclerCell*>(dropdown->getDefaultFocus());
+                if (cell) {
+                    // Show layout editor View
+                    int index = cell->getIndexPath().row;
+                    MappingLayoutEditor* editor = new MappingLayoutEditor(index, [this] {
+                        auto currentLayout = Settings::instance().get_mapping_laouts()->at(Settings::instance().get_current_mapping_layout());
+                        this->swapGame->setDetailText(currentLayout.title);
+                    });
+                    this->present(editor);
+                }
+            });
             return true;
         });
         dropdown->setActionAvailable(BUTTON_Y, current < layouts.size() && layouts[current].editable);
 
         dropdown->registerAction("UpUpdate", BUTTON_NAV_UP, [dropdown](View* view) {
             sync([dropdown]{
-                RecyclerCell* cell = dynamic_cast<RecyclerCell*>(Application::getCurrentFocus());
+                RecyclerCell* cell = dynamic_cast<RecyclerCell*>(dropdown->getDefaultFocus());
                 if (cell) {
                     auto layouts = Settings::instance().get_mapping_laouts();
                     int index = cell->getIndexPath().row;

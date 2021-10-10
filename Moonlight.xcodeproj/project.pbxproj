@@ -283,6 +283,8 @@
 		7CDA33AA265D385C00E5D604 /* dialog.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CDA33A8265D385C00E5D604 /* dialog.cpp */; };
 		7CE6FA8E26823DDE005854FC /* english_layout.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CE6FA8D26823DDE005854FC /* english_layout.cpp */; };
 		7CE6FA9026823E3A005854FC /* numpad_layout.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CE6FA8F26823E3A005854FC /* numpad_layout.cpp */; };
+		7CEE3F402711A51C00483021 /* mapping_layout_editor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CEE3F3E2711A51C00483021 /* mapping_layout_editor.cpp */; };
+		7CEE3F412711A51C00483021 /* mapping_layout_editor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CEE3F3E2711A51C00483021 /* mapping_layout_editor.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -750,6 +752,8 @@
 		7CDA33AD265D642200E5D604 /* Makefile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
 		7CE6FA8D26823DDE005854FC /* english_layout.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = english_layout.cpp; sourceTree = "<group>"; };
 		7CE6FA8F26823E3A005854FC /* numpad_layout.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = numpad_layout.cpp; sourceTree = "<group>"; };
+		7CEE3F3E2711A51C00483021 /* mapping_layout_editor.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = mapping_layout_editor.cpp; sourceTree = "<group>"; };
+		7CEE3F3F2711A51C00483021 /* mapping_layout_editor.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = mapping_layout_editor.hpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -1760,6 +1764,7 @@
 				7C6EC65926A5F174001ABADE /* button_selecting_dialog.hpp */,
 				7C3A96102662902900BAF8CA /* ingame_overlay_view.hpp */,
 				7C09602926D6A60300CF5061 /* streaming_input_overlay.hpp */,
+				7CEE3F3F2711A51C00483021 /* mapping_layout_editor.hpp */,
 			);
 			path = include;
 			sourceTree = "<group>";
@@ -1790,6 +1795,7 @@
 				7C6EC65826A5F174001ABADE /* button_selecting_dialog.cpp */,
 				7C3A960F2662902900BAF8CA /* ingame_overlay_view.cpp */,
 				7C09602826D6A60300CF5061 /* streaming_input_overlay.cpp */,
+				7CEE3F3E2711A51C00483021 /* mapping_layout_editor.cpp */,
 			);
 			path = src;
 			sourceTree = "<group>";
@@ -2220,6 +2226,7 @@
 				7C07553A26F6A6BF006A4CDC /* box.cpp in Sources */,
 				7C07554226F6A6CD006A4CDC /* Yoga.cpp in Sources */,
 				7C07553926F6A6BF006A4CDC /* tap_gesture.cpp in Sources */,
+				7CEE3F412711A51C00483021 /* mapping_layout_editor.cpp in Sources */,
 				7C07552D26F6A6BF006A4CDC /* gesture.cpp in Sources */,
 				7C07552326F6A6B9006A4CDC /* glfw_platform.cpp in Sources */,
 				7C07552826F6A6BF006A4CDC /* task.cpp in Sources */,
@@ -2364,6 +2371,7 @@
 				7C18F0B8265C177E000D3AF0 /* hint.cpp in Sources */,
 				7C18F08D265C1613000D3AF0 /* Yoga.cpp in Sources */,
 				7CBE6B5F265DADD9007DCC5A /* BoxArtManager.cpp in Sources */,
+				7CEE3F402711A51C00483021 /* mapping_layout_editor.cpp in Sources */,
 				7C18F073265C15E7000D3AF0 /* scroll_gesture.cpp in Sources */,
 				7C18F152265C37F3000D3AF0 /* SdpGenerator.c in Sources */,
 				7C77C5212676C98600179EA8 /* keyboard_view.cpp in Sources */,

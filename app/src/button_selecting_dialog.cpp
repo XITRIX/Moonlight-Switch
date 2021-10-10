@@ -8,15 +8,15 @@
 #include "button_selecting_dialog.hpp"
 #include "Settings.hpp"
 
-ButtonSelectingDialog::ButtonSelectingDialog(Box* box, std::function<void(std::vector<ControllerButton>)> callback):
-    Dialog(box), callback(callback) {}
+ButtonSelectingDialog::ButtonSelectingDialog(Box* box, std::function<void(std::vector<ControllerButton>)> callback, bool oneKey):
+    Dialog(box), callback(callback), oneKey(oneKey) {}
 
 ButtonSelectingDialog::~ButtonSelectingDialog()
 {
     Application::unblockInputs();
 }
 
-ButtonSelectingDialog* ButtonSelectingDialog::create(std::string titleText, std::function<void(std::vector<ControllerButton>)> callback) {
+ButtonSelectingDialog* ButtonSelectingDialog::create(std::string titleText, std::function<void(std::vector<ControllerButton>)> callback, bool oneKey) {
     brls::Style style = brls::Application::getStyle();
 
     brls::Label* label = new brls::Label();
@@ -29,7 +29,7 @@ ButtonSelectingDialog* ButtonSelectingDialog::create(std::string titleText, std:
     box->setJustifyContent(brls::JustifyContent::CENTER);
     box->setPadding(style["brls/dialog/paddingTopBottom"], style["brls/dialog/paddingLeftRight"], style["brls/dialog/paddingTopBottom"], style["brls/dialog/paddingLeftRight"]);
     
-    ButtonSelectingDialog* dialog = new ButtonSelectingDialog(box, callback);
+    ButtonSelectingDialog* dialog = new ButtonSelectingDialog(box, callback, oneKey);
     dialog->titleText = titleText;
     dialog->label = label;
     dialog->setCancelable(false);
@@ -43,19 +43,21 @@ ButtonSelectingDialog* ButtonSelectingDialog::create(std::string titleText, std:
     dialog->addButton("common/confirm"_i18n, [dialog] {
         dialog->callback(dialog->buttons);
     });
-    
-    dialog->timer.reset(4);
-    dialog->timer.addStep(0, 4000);
-    dialog->timer.setTickCallback([dialog] {
-        dialog->button2->setText("common/confirm"_i18n + " (" + std::to_string((int)dialog->timer) + ")");
-    });
-    dialog->timer.setEndCallback([dialog](bool finished) {
-        if (!finished) return;
-        
-        dialog->callback(dialog->buttons);
-        dialog->dismiss();
-    });
-    dialog->timer.start();
+
+    if (!oneKey) {
+        dialog->timer.reset(4);
+        dialog->timer.addStep(0, 4000);
+        dialog->timer.setTickCallback([dialog] {
+            dialog->button2->setText("common/confirm"_i18n + " (" + std::to_string((int)dialog->timer) + ")");
+        });
+        dialog->timer.setEndCallback([dialog](bool finished) {
+            if (!finished) return;
+
+            dialog->callback(dialog->buttons);
+            dialog->dismiss();
+        });
+        dialog->timer.start();
+    }
     
     return dialog;
 }
@@ -103,7 +105,13 @@ void ButtonSelectingDialog::draw(NVGcontext* vg, float x, float y, float width, 
             if(std::find(buttons.begin(), buttons.end(), button) == buttons.end())
             {
                 buttons.push_back(button);
-                reloadLabel();
+                
+                if (oneKey) {
+                    callback(buttons);
+                    dismiss();
+                } else {
+                    reloadLabel();
+                }
             }
     }
     

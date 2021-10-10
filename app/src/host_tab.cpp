@@ -19,7 +19,7 @@ HostTab::HostTab(Host host) :
     // Inflate the tab from the XML file
     this->inflateFromXMLRes("xml/tabs/host.xml");
     
-    remove->setText("host/remove"_i18n);
+    remove->setText("common/remove"_i18n);
     remove->title->setTextColor(RGB(229, 57, 53));
     
     reloadHost();
@@ -57,7 +57,7 @@ HostTab::HostTab(Host host) :
     remove->registerClickAction([this, host](View* view) {
         Dialog* dialog = new Dialog("host/remove_message"_i18n);
         dialog->addButton("common/cancel"_i18n, [] {});
-        dialog->addButton("host/remove"_i18n, [host]
+        dialog->addButton("common/remove"_i18n, [host]
         {
             Settings::instance().remove_host(host);
             MainTabs::getInstanse()->refillTabs();

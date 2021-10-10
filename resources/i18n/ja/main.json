@@ -5,6 +5,7 @@
     },
     "common": {
         "cancel": "キャンセル",
+        "remove": "削除",
         "confirm": "確認"
     },
     "tabs": {
@@ -21,7 +22,6 @@
         "wake_up_message": "起を送信する",
         "wake_up_error": "ホストを起動することができませんでしたt",
         "connect": "接続",
-        "remove": "削除",
         "remove_message": "このホストを削除してもよろしいですか?"
     },
     "add_host": {

@@ -9,6 +9,7 @@
     },
     "common": {
         "cancel": "Cancel",
+        "remove": "Remove",
         "confirm": "Confirm"
     },
     "tabs": {
@@ -26,7 +27,6 @@
         "wake_up_message": "Sending Wake Up",
         "wake_up_error": "Could not wake up the host",
         "connect": "Connect",
-        "remove": "Remove",
         "remove_message": "Are you sure you want to remove this host?"
     },
     "add_host": {
@@ -63,8 +63,8 @@
         "keys": "Controller keys",
         "swap_ui": "Swap / and / for UI",
         "keys_mapping": "Game mapping layout",
-        "keys_mapping_default": "Default",
-        "keys_mapping_swap": "Swap / and /",
+        "keys_mapping_default": "Xbox (Default)",
+        "keys_mapping_swap": "Switch (Swap / and /)",
         "keys_mapping": "Keys mapping layout",
         "mouse": "Mouse",
         "swap_mouse_keys": "Swap mouse  and  buttons",
