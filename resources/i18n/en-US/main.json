@@ -10,7 +10,8 @@
     "common": {
         "cancel": "Cancel",
         "remove": "Remove",
-        "confirm": "Confirm"
+        "confirm": "Confirm",
+        "edit": "Edit"
     },
     "tabs": {
         "favorites": "Favorites",
@@ -62,10 +63,12 @@
         "zero_threads": "0 (No use threads)",
         "keys": "Controller keys",
         "swap_ui": "Swap / and / for UI",
-        "keys_mapping": "Game mapping layout",
+        "keys_mapping": "Game keys mapping",
         "keys_mapping_default": "Xbox (Default)",
         "keys_mapping_swap": "Switch (Swap / and /)",
-        "keys_mapping": "Keys mapping layout",
+        "keys_mapping_title": "Keys mapping layout",
+        "keys_mapping_create_new": "+ Create new layout",
+        "keys_mapping_new_title": "New layout",
         "mouse": "Mouse",
         "swap_mouse_keys": "Swap mouse  and  buttons",
         "swap_mouse_scroll": "Swap mouse vertical scrolling direction",
@@ -79,6 +82,13 @@
         "guide_key": "Guide key (clicks immediately)",
         "guide_key_buttons": "Buttons combination",
         "mouse_speed": "Mouse acceleration"
+    },
+    "mapping_layout_editor": {
+        "title": "Mapping layout editor",
+        "remove": "Remove layout",
+        "selection_dialog_title": "Press Key to override",
+        "remove_dialog_title": "Are you sure you want to remove this layout?",
+        "rename_title": "Mapping layout name"
     },
     "app_list": {
         "reload_app_list": "Reload",

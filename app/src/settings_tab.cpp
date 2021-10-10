@@ -116,9 +116,9 @@ SettingsTab::SettingsTab()
     std::vector<std::string> layouts;
     for (KeyMappingLayout layout : *Settings::instance().get_mapping_laouts())
         layouts.push_back(layout.title);
-    layouts.push_back("+ Create new layout");
+    layouts.push_back("settings/keys_mapping_create_new"_i18n);
 
-    swapGame->setText("settings/keys_mapping"_i18n);
+    swapGame->setText("settings/keys_mapping_title"_i18n);
     swapGame->setDetailTextColor(Application::getTheme()["brls/list/listItem_value_color"]);
     swapGame->setDetailText(layouts[Settings::instance().get_current_mapping_layout()]);
 
@@ -129,7 +129,7 @@ SettingsTab::SettingsTab()
         std::vector<std::string> layoutTexts;
         for (KeyMappingLayout layout : layouts)
             layoutTexts.push_back(layout.title);
-        layoutTexts.push_back("+ Create new layout");
+        layoutTexts.push_back("settings/keys_mapping_create_new"_i18n);
 
         Dropdown* dropdown = new Dropdown(
                 swapGame->title->getFullText(), layoutTexts, [this, layoutTexts](int selected) {
@@ -140,7 +140,7 @@ SettingsTab::SettingsTab()
                 }, Settings::instance().get_current_mapping_layout(), [this](int selected) {
                     if (Settings::instance().get_mapping_laouts()->size() == selected) {
                         KeyMappingLayout layout;
-                        layout.title = "New layout";
+                        layout.title = "settings/keys_mapping_new_title"_i18n;
                         layout.editable = true;
                         Settings::instance().get_mapping_laouts()->push_back(layout);
                         Settings::instance().set_current_mapping_layout(selected);
@@ -155,7 +155,7 @@ SettingsTab::SettingsTab()
                     }
                 });
 
-        dropdown->registerAction("Edit", BUTTON_Y, [this, dropdown](View* view) {
+        dropdown->registerAction("common/edit"_i18n, BUTTON_Y, [this, dropdown](View* view) {
             Application::popActivity(brls::TransitionAnimation::FADE, [this, dropdown]() {
                 RecyclerCell* cell = dynamic_cast<RecyclerCell*>(dropdown->getDefaultFocus());
                 if (cell) {

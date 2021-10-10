@@ -17,7 +17,7 @@ MappingLayoutEditor::MappingLayoutEditor(int layoutNumber, std::function<void(vo
 {
     std::vector<KeyMappingLayout>* layouts = Settings::instance().get_mapping_laouts();
 
-    getAppletFrameItem()->title = "Mapping layout editor";
+    getAppletFrameItem()->title = "mapping_layout_editor/title"_i18n;
     setJustifyContent(JustifyContent::SPACE_EVENLY);
     setAlignItems(AlignItems::CENTER);
 
@@ -35,7 +35,12 @@ MappingLayoutEditor::MappingLayoutEditor(int layoutNumber, std::function<void(vo
 
     getAppletFrameItem()->hintView = holder;
 
-    registerAction("Rename", BUTTON_RB, [this](View* view) {
+    registerAction("_rename", BUTTON_RB, [this](View* view) {
+        this->renameLayout();
+        return true;
+    }, true);
+
+    holder->registerAction("_rename", BUTTON_RB, [this](View* view) {
         this->renameLayout();
         return true;
     }, true);
@@ -45,7 +50,12 @@ MappingLayoutEditor::MappingLayoutEditor(int layoutNumber, std::function<void(vo
         return true;
     });
 
-    registerAction("Remove layout", BUTTON_BACK, [this](View* view) {
+    registerAction("mapping_layout_editor/remove"_i18n, BUTTON_BACK, [this](View* view) {
+        this->removeLayout();
+        return true;
+    });
+
+    holder->registerAction("mapping_layout_editor/remove"_i18n, BUTTON_BACK, [this](View* view) {
         this->removeLayout();
         return true;
     });
@@ -93,7 +103,7 @@ MappingLayoutEditor::MappingLayoutEditor(int layoutNumber, std::function<void(vo
         buttonView->setSize(Size(144, 50));
 
         buttonView->registerClickAction([this, layouts, buttonView, button](View* view) {
-            ButtonSelectingDialog* dialog = ButtonSelectingDialog::create("Press Key to override " + Hint::getKeyIcon(button, true), [this, layouts, buttonView, button](std::vector<ControllerButton> selectedButtons){
+            ButtonSelectingDialog* dialog = ButtonSelectingDialog::create("mapping_layout_editor/selection_dialog_title"_i18n + " " + Hint::getKeyIcon(button, true), [this, layouts, buttonView, button](std::vector<ControllerButton> selectedButtons){
                 if (selectedButtons.size() > 0) {
                     if (selectedButtons[0] == button) {
                         buttonView->setText(Hint::getKeyIcon(button, true));
@@ -112,7 +122,7 @@ MappingLayoutEditor::MappingLayoutEditor(int layoutNumber, std::function<void(vo
             return true;
         });
 
-        int index = counter++ % 4;
+        int index = counter++ / 4;
         containers[index]->addView(buttonView);
     }
 }
@@ -123,12 +133,12 @@ void MappingLayoutEditor::renameLayout()
     Swkbd::openForText([this](std::string text) {
         this->titleLabel->setText(brls::Hint::getKeyIcon(ControllerButton::BUTTON_RB, true) + "  " + text);
         Settings::instance().get_mapping_laouts()->at(layoutNumber).title = text;
-    }, "Mapping layout name", "", 30, title, 0);
+    }, "mapping_layout_editor/rename_title"_i18n, "", 20, title, 0);
 }
 
 void MappingLayoutEditor::removeLayout()
 {
-    Dialog* dialog = new Dialog("Are you sure you want to remove this layout?");
+    Dialog* dialog = new Dialog("mapping_layout_editor/remove_dialog_title"_i18n);
     dialog->addButton("common/cancel"_i18n, [](){});
     dialog->addButton("common/remove"_i18n, [this]() {
         int current = Settings::instance().get_current_mapping_layout();
