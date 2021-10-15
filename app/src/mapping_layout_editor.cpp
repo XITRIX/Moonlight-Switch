@@ -90,13 +90,26 @@ MappingLayoutEditor::MappingLayoutEditor(int layoutNumber, std::function<void(vo
     for (ControllerButton button: buttons) {
         Button* buttonView = new Button();
         buttonView->setStyle(&BUTTONSTYLE_BORDERED);
+
+        buttonView->registerAction("mapping_layout_editor/reset"_i18n, BUTTON_Y, [this, buttonView, button, layouts](View* view) {
+            buttonView->setText(Hint::getKeyIcon(button, true));
+            buttonView->setTextColor(Application::getTheme()["brls/text"]);
+            buttonView->setActionAvailable(BUTTON_Y, false);
+
+            layouts->at(this->layoutNumber).mapping.erase(button);
+            return true;
+        });
+
         if (layouts->at(layoutNumber).mapping.count(button) == 1) {
             buttonView->setText(Hint::getKeyIcon(button, true) + " \uE090 " + Hint::getKeyIcon((ControllerButton) layouts->at(layoutNumber).mapping.at(button), true));
             buttonView->setTextColor(Application::getTheme()["brls/accent"]);
+            buttonView->setActionAvailable(BUTTON_Y, true);
         } else {
             buttonView->setText(Hint::getKeyIcon(button, true));
             buttonView->setTextColor(Application::getTheme()["brls/text"]);
+            buttonView->setActionAvailable(BUTTON_Y, false);
         }
+
         buttonView->setFontSize(24);
         buttonView->setMarginTop(4);
         buttonView->setMarginBottom(4);
@@ -108,11 +121,13 @@ MappingLayoutEditor::MappingLayoutEditor(int layoutNumber, std::function<void(vo
                     if (selectedButtons[0] == button) {
                         buttonView->setText(Hint::getKeyIcon(button, true));
                         buttonView->setTextColor(Application::getTheme()["brls/text"]);
+                        buttonView->setActionAvailable(BUTTON_Y, false);
 
                         layouts->at(this->layoutNumber).mapping.erase(button);
                     } else {
                         buttonView->setText(Hint::getKeyIcon(button, true) + " \uE090 " + Hint::getKeyIcon((ControllerButton) selectedButtons[0], true));
                         buttonView->setTextColor(Application::getTheme()["brls/accent"]);
+                        buttonView->setActionAvailable(BUTTON_Y, true);
 
                         layouts->at(this->layoutNumber).mapping[button] = selectedButtons[0];
                     }

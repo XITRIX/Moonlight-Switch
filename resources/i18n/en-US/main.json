@@ -86,6 +86,7 @@
     "mapping_layout_editor": {
         "title": "Mapping layout editor",
         "remove": "Remove layout",
+        "reset": "Reset",
         "selection_dialog_title": "Press Key to override",
         "remove_dialog_title": "Are you sure you want to remove this layout?",
         "rename_title": "Mapping layout name"

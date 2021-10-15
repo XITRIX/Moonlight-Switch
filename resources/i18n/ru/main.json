@@ -86,6 +86,7 @@
     "mapping_layout_editor": {
         "title": "Редактор схем переназначения кнопок",
         "remove": "Удалить схему",
+        "reset": "Сбросить",
         "selection_dialog_title": "Нажмите кнопку для переназначения",
         "remove_dialog_title": "Вы уверены что хотите удалить эту схему?",
         "rename_title": "Название схемы"
