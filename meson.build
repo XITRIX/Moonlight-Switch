@@ -35,6 +35,8 @@ app_files = files(
     'app/src/settings_tab.cpp',
     'app/src/streaming_input_overlay.cpp',
     'app/src/streaming_view.cpp',
+    'app/src/mapping_layout_editor.cpp',
+    'app/src/favorite_tab.cpp',
 
     'app/src/crypto/Data.cpp',
     'app/src/crypto/MbedTLSCryptoManager.cpp',
