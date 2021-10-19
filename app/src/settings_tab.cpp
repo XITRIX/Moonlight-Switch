@@ -172,32 +172,12 @@ SettingsTab::SettingsTab()
         });
         dropdown->setActionAvailable(BUTTON_Y, current < layouts.size() && layouts[current].editable);
 
-        dropdown->registerAction("UpUpdate", BUTTON_NAV_UP, [dropdown](View* view) {
-            sync([dropdown]{
-                RecyclerCell* cell = dynamic_cast<RecyclerCell*>(dropdown->getDefaultFocus());
-                if (cell) {
-                    auto layouts = Settings::instance().get_mapping_laouts();
-                    int index = cell->getIndexPath().row;
-                    int layoutsCount = (int)Settings::instance().get_mapping_laouts()->size();
-                    dropdown->setActionAvailable(BUTTON_Y, index < layoutsCount && layouts->at(index).editable);
-                }
-            });
-            return false;
-        }, true);
-
-        dropdown->registerAction("DownUpdate", BUTTON_NAV_DOWN, [dropdown](View* view) {
-            sync([dropdown]{
-                RecyclerCell* cell = dynamic_cast<RecyclerCell*>(Application::getCurrentFocus());
-                if (cell) {
-                    auto layouts = Settings::instance().get_mapping_laouts();
-                    int index = cell->getIndexPath().row;
-                    int layoutsCount = (int)Settings::instance().get_mapping_laouts()->size();
-                    dropdown->setActionAvailable(BUTTON_Y, index < layoutsCount && layouts->at(index).editable);
-                }
-            });
-            return false;
-        }, true);
-
+        dropdown->getCellFocusDidChangeEvent()->subscribe([dropdown](RecyclerCell* cell) {
+            auto layouts = Settings::instance().get_mapping_laouts();
+            int index = cell->getIndexPath().row;
+            int layoutsCount = (int)Settings::instance().get_mapping_laouts()->size();
+            dropdown->setActionAvailable(BUTTON_Y, index < layoutsCount && layouts->at(index).editable);
+        });
 
         Application::pushActivity(new Activity(dropdown));
         return true;
