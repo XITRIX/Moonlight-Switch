@@ -97,9 +97,13 @@ int http_request(const std::string url, Data* data, HTTPRequestTimeout timeout) 
     if (res != CURLE_OK) {
         gs_set_error(curl_easy_strerror(res));
         brls::Logger::error("Curl: error: {}", gs_error().c_str());
+        free(http_data->memory);
+        free(http_data);
         return GS_FAILED;
     } else if (http_data->memory == NULL) {
         brls::Logger::error("Curl: memory = NULL");
+        free(http_data->memory);
+        free(http_data);
         return GS_OUT_OF_MEMORY;
     }
     
