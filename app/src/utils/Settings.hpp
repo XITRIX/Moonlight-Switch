@@ -195,6 +195,14 @@ public:
         return m_overlay_options;
     }
     
+    void set_mouse_input_options(KeyComboOptions options) {
+        m_mouse_input_options = options;
+    }
+    
+    KeyComboOptions mouse_input_options() const {
+        return m_mouse_input_options;
+    }
+    
     void set_volume_amplification(bool allow) {
         m_volume_amplification = allow;
     }
@@ -266,6 +274,10 @@ private:
     KeyComboOptions m_overlay_options {
         .holdTime = 0,
         .buttons = {brls::ControllerButton::BUTTON_BACK, brls::ControllerButton::BUTTON_START},
+    };
+    KeyComboOptions m_mouse_input_options {
+        .holdTime = 0,
+        .buttons = {},
     };
 
     void loadBaseLayouts();

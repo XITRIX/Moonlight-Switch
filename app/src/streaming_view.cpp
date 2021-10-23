@@ -7,6 +7,7 @@
 
 #include "streaming_view.hpp"
 #include "ingame_overlay_view.hpp"
+#include "streaming_input_overlay.hpp"
 #include <nanovg.h>
 #include <Limelight.h>
 #include <chrono>
@@ -172,7 +173,8 @@ void StreamingView::draw(NVGcontext* vg, float x, float y, float width, float he
     session->draw(vg, width, height);
     
     if (!tempInputLock) handleInput();
-    handleButtonHolding();
+    handleOverlayCombo();
+    handleMouseInputCombo();
 
     if (session->connection_status_is_poor())
     {
@@ -289,7 +291,7 @@ void StreamingView::handleInput()
     }
 }
 
-void StreamingView::handleButtonHolding()
+void StreamingView::handleOverlayCombo()
 {
     if (!this->focused)
         return;
@@ -326,6 +328,47 @@ void StreamingView::handleButtonHolding()
         used = true;
         
         IngameOverlay* overlay = new IngameOverlay(this);
+        Application::pushActivity(new Activity(overlay));
+    }
+}
+
+void StreamingView::handleMouseInputCombo()
+{
+    if (!this->focused)
+        return;
+    
+    KeyComboOptions options = Settings::instance().mouse_input_options();
+    
+    static ControllerState controller;
+    Application::getPlatform()->getInputManager()->updateUnifiedControllerState(&controller);
+    
+    static std::chrono::high_resolution_clock::time_point clock_counter;
+    static bool buttonState = false;
+    static bool used = false;
+    
+    auto duration = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::high_resolution_clock::now() - clock_counter);
+    
+    bool buttonsPressed = true;
+    for (auto button : options.buttons)
+    {
+        buttonsPressed &= controller.buttons[button];
+    }
+    
+    if (!buttonState && buttonsPressed)
+    {
+        buttonState = true;
+        clock_counter = std::chrono::high_resolution_clock::now();
+    }
+    else if (buttonState && !buttonsPressed)
+    {
+        buttonState = false;
+        used = false;
+    }
+    else if (buttonState && duration.count() >= options.holdTime && !used)
+    {
+        used = true;
+        
+        StreamingInputOverlay* overlay = new StreamingInputOverlay(this);
         Application::pushActivity(new Activity(overlay));
     }
 }

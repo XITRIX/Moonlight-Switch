@@ -67,7 +67,7 @@ LogoutTab::LogoutTab(StreamingView* streamView) :
     });
 }
 
-// MARK: - Debug Tab
+// MARK: - Options Tab
 OptionsTab::OptionsTab(StreamingView* streamView) :
     streamView(streamView)
 {

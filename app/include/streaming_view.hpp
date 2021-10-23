@@ -64,7 +64,8 @@ private:
     brls::Event<brls::KeyState>::Subscription keysSubscription;
     
     void handleInput();
-    void handleButtonHolding();
+    void handleOverlayCombo();
+    void handleMouseInputCombo();
     void addKeyboard();
     void removeKeyboard();
 };

@@ -88,6 +88,16 @@
                 id="overlay_buttons"/>
                 
             <brls:Header
+                title="@i18n/settings/mouse_input"
+                paddingTop="60"/>
+                
+            <brls:SelectorCell
+                id="mouse_input_time"/>
+            
+            <brls:DetailCell
+                id="mouse_input_buttons"/>
+                
+            <brls:Header
                 title="@i18n/settings/mouse"
                 paddingTop="60"/>
                 

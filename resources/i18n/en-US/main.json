@@ -77,6 +77,8 @@
         "overlay_zero_time": "0 (Immediately)",
         "overlay_time": "Hold to open in seconds",
         "overlay_buttons": "Buttons combination",
+        "mouse_input": "Mouse input mode",
+        "mouse_input_setup_message": "Press keys you'd like to use to open Mouse input mode:\n\n",
         "volume_amplification": "Allow volume amplification",
         "guide_key_setup_message": "Press keys you'd like to use to press Guide button:\n\n",
         "guide_key": "Guide key (clicks immediately)",

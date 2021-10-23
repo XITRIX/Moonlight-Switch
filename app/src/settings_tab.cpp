@@ -219,6 +219,26 @@ SettingsTab::SettingsTab()
         return true;
     });
     
+    mouseInputTime->init("settings/overlay_time"_i18n, { "settings/overlay_zero_time"_i18n, "1", "2", "3", "4", "5" }, Settings::instance().overlay_options().holdTime, [](int value) {
+        auto options = Settings::instance().mouse_input_options();
+        options.holdTime = value;
+        Settings::instance().set_mouse_input_options(options);
+    });
+    
+    mouseInputButtons->setText("settings/overlay_buttons"_i18n);
+    setupButtonsSelectorCell(mouseInputButtons, Settings::instance().mouse_input_options().buttons);
+    mouseInputButtons->registerClickAction([this](View* view) {
+        ButtonSelectingDialog* dialog = ButtonSelectingDialog::create("settings/mouse_input_setup_message"_i18n, [this](auto buttons) {
+            auto options = Settings::instance().mouse_input_options();
+            options.buttons = buttons;
+            Settings::instance().set_mouse_input_options(options);
+            setupButtonsSelectorCell(mouseInputButtons, buttons);
+        });
+        
+        dialog->open();
+        return true;
+    });
+    
     volumeAmplification->init("settings/volume_amplification"_i18n, Settings::instance().get_volume_amplification(), [this] (auto value) {
         Settings::instance().set_volume_amplification(value);
         
