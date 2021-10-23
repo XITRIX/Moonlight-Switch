@@ -75,26 +75,14 @@ void MoonlightInputManager::dropInput()
         inputDropped = true;
 }
 
-void MoonlightInputManager::handleInput() 
+GamepadState MoonlightInputManager::getControllerState(int controllerNum, bool specialKey)
 {
-    inputDropped = false;
-    static brls::ControllerState rawController;
-    static brls::ControllerState controller;
-    static brls::RawMouseState mouse;
+    brls::ControllerState rawController;
+    brls::ControllerState controller;
 
-    brls::Application::getPlatform()->getInputManager()->updateControllerState(&rawController);
-    brls::Application::getPlatform()->getInputManager()->updateMouseStates(&mouse);
+    brls::Application::getPlatform()->getInputManager()->updateControllerState(&rawController, controllerNum);
     controller = mapController(rawController);
 
-#ifdef __SWITCH__
-    static HidTouchScreenState hidState = { 0 };
-    hidGetTouchScreenStates(&hidState, 1);
-    bool specialKey = hidState.count > 0;
-#else
-    bool specialKey = false;
-#endif
-    
-    static GamepadState lastGamepadState;
     GamepadState gamepadState
     {
         .buttonFlags = 0,
@@ -105,12 +93,12 @@ void MoonlightInputManager::handleInput()
         .rightStickX = static_cast<short>(0x7FFF * (!specialKey ? controller.axes[brls::RIGHT_X] : 0)),
         .rightStickY = static_cast<short>(-0x7FFF * (!specialKey ? controller.axes[brls::RIGHT_Y] : 0)),
     };
-    
+
     brls::ControllerButton a;
     brls::ControllerButton b;
     brls::ControllerButton x;
     brls::ControllerButton y;
-    
+
     if (Settings::instance().swap_game_keys())
     {
         a = brls::BUTTON_B;
@@ -125,10 +113,10 @@ void MoonlightInputManager::handleInput()
         x = brls::BUTTON_X;
         y = brls::BUTTON_Y;
     }
-    
+
 #define SET_GAME_PAD_STATE(LIMELIGHT_KEY, GAMEPAD_BUTTON) \
     controller.buttons[GAMEPAD_BUTTON] ? (gamepadState.buttonFlags |= LIMELIGHT_KEY) : (gamepadState.buttonFlags &= ~LIMELIGHT_KEY);
-    
+
     SET_GAME_PAD_STATE(UP_FLAG, brls::BUTTON_UP);
     SET_GAME_PAD_STATE(DOWN_FLAG, brls::BUTTON_DOWN);
     SET_GAME_PAD_STATE(LEFT_FLAG, brls::BUTTON_LEFT);
@@ -154,28 +142,64 @@ void MoonlightInputManager::handleInput()
 
     SET_GAME_PAD_STATE(LS_CLK_FLAG, brls::BUTTON_LSB);
     SET_GAME_PAD_STATE(RS_CLK_FLAG, brls::BUTTON_RSB);
-    
+
     auto guideKeys = Settings::instance().guide_key_options().buttons;
     bool guideCombo = guideKeys.size() > 0;
     for (auto key: guideKeys)
         guideCombo &= controller.buttons[key];
-        
-    if (guideCombo || lastGamepadState.buttonFlags & SPECIAL_FLAG) gamepadState.buttonFlags = 0;
+
+    if (guideCombo || lastGamepadStates[controllerNum].buttonFlags & SPECIAL_FLAG) gamepadState.buttonFlags = 0;
     guideCombo ? (gamepadState.buttonFlags |= SPECIAL_FLAG) : (gamepadState.buttonFlags &= ~SPECIAL_FLAG);
-    
-    if (!gamepadState.is_equal(lastGamepadState))
-    {
-        lastGamepadState = gamepadState;
-        if (LiSendControllerEvent(
-              gamepadState.buttonFlags,
-              gamepadState.leftTrigger,
-              gamepadState.rightTrigger,
-              gamepadState.leftStickX,
-              gamepadState.leftStickY,
-              gamepadState.rightStickX,
-              gamepadState.rightStickY) != 0)
-            brls::Logger::info("StreamingView: error sending input data");
+
+    return gamepadState;
+}
+
+void MoonlightInputManager::handleControllers(bool specialKey)
+{
+    for (int i = 0; i < brls::Application::getPlatform()->getInputManager()->getControllersConnectedCount(); i++) {
+        GamepadState gamepadState = getControllerState(i, specialKey);
+
+        static short lastControllersCount = -1;
+        short controllersCount = controllersToMap();
+
+        if (!gamepadState.is_equal(lastGamepadStates[i]))
+        {
+            lastGamepadStates[i] = gamepadState;
+            if (LiSendMultiControllerEvent(
+                  i,
+                  controllersCount,
+                  gamepadState.buttonFlags,
+                  gamepadState.leftTrigger,
+                  gamepadState.rightTrigger,
+                  gamepadState.leftStickX,
+                  gamepadState.leftStickY,
+                  gamepadState.rightStickX,
+                  gamepadState.rightStickY) != 0)
+                brls::Logger::info("StreamingView: error sending input data");
+        }
     }
+}
+
+void MoonlightInputManager::handleInput() 
+{
+    inputDropped = false;
+    static brls::ControllerState rawController;
+    static brls::ControllerState controller;
+    static brls::RawMouseState mouse;
+
+    brls::Application::getPlatform()->getInputManager()->updateUnifiedControllerState(&rawController);
+    brls::Application::getPlatform()->getInputManager()->updateMouseStates(&mouse);
+    controller = mapController(rawController);
+
+#ifdef __SWITCH__
+    static HidTouchScreenState hidState = { 0 };
+    hidGetTouchScreenStates(&hidState, 1);
+    bool specialKey = hidState.count > 0;
+#else
+    bool specialKey = false;
+#endif
+
+    handleControllers(specialKey);
     
     float stickScrolling = specialKey ? (controller.axes[brls::LEFT_Y] + controller.axes[brls::RIGHT_Y]) : 0;
     
@@ -228,6 +252,22 @@ void MoonlightInputManager::handleInput()
         float multiplier = Settings::instance().get_mouse_speed_multiplier() / 100.f * 1.5f + 0.5f;
         LiSendMouseMoveEvent(-panStatus->delta.x * multiplier, -panStatus->delta.y * multiplier);
         panStatus.reset();
+    }
+}
+
+short MoonlightInputManager::controllersToMap()
+{
+    switch (brls::Application::getPlatform()->getInputManager()->getControllersConnectedCount()) {
+        case 0:
+            return 0x0;
+        case 1:
+            return 0x1;
+        case 2:
+            return 0x3;
+        case 3:
+            return 0x7;
+        default:
+            return 0xF;
     }
 }
 

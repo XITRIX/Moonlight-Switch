@@ -112,7 +112,7 @@ void ButtonView::draw(NVGcontext* vg, float x, float y, float width, float heigh
     sync([this]() {
         static ControllerState oldController;
         ControllerState controller;
-        inputManager->updateControllerState(&controller);
+        inputManager->updateUnifiedControllerState(&controller);
         
         auto button = inputManager->mapControllerState(BUTTON_A);
         if (oldController.buttons[button] != controller.buttons[button])

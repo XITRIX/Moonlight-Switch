@@ -64,7 +64,7 @@ ButtonSelectingDialog* ButtonSelectingDialog::create(std::string titleText, std:
 
 void ButtonSelectingDialog::open()
 {
-    Application::getPlatform()->getInputManager()->updateControllerState(&oldState);
+    Application::getPlatform()->getInputManager()->updateUnifiedControllerState(&oldState);
     Dialog::open();
     Application::blockInputs();
 }
@@ -90,7 +90,7 @@ void ButtonSelectingDialog::draw(NVGcontext* vg, float x, float y, float width, 
     Dialog::draw(vg, x, y, width, height, style, ctx);
     
     ControllerState state;
-    Application::getPlatform()->getInputManager()->updateControllerState(&state);
+    Application::getPlatform()->getInputManager()->updateUnifiedControllerState(&state);
     
     for (int i = 0; i < ControllerButton::_BUTTON_MAX; i++)
     {

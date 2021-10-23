@@ -297,7 +297,7 @@ void StreamingView::handleButtonHolding()
     KeyComboOptions options = Settings::instance().overlay_options();
     
     static ControllerState controller;
-    Application::getPlatform()->getInputManager()->updateControllerState(&controller);
+    Application::getPlatform()->getInputManager()->updateUnifiedControllerState(&controller);
     
     static std::chrono::high_resolution_clock::time_point clock_counter;
     static bool buttonState = false;

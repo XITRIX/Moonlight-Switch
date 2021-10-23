@@ -76,7 +76,7 @@ void StreamingInputOverlay::draw(NVGcontext* vg, float x, float y, float width, 
     {
         
         ControllerState controller;
-        Application::getPlatform()->getInputManager()->updateControllerState(&controller);
+        Application::getPlatform()->getInputManager()->updateUnifiedControllerState(&controller);
         
         // Add setting with range 10 - 30
         int mouseSpeed = 15;

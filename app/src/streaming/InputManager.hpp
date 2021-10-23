@@ -51,11 +51,17 @@ public:
     void reloadButtonMappingLayout();
     
 private:
+    GamepadState lastGamepadStates[GAMEPADS_MAX];
     brls::ControllerButton mappingButtons[brls::_BUTTON_MAX];
     std::optional<brls::PanGestureStatus> panStatus;
     bool inputDropped = false;
 
     brls::ControllerState mapController(brls::ControllerState controller);
     int glfwKeyToVKKey(brls::BrlsKeyboardScancode key);
+
+    GamepadState getControllerState(int controllerNum, bool specialKey);
+    void handleControllers(bool specialKey);
+
+    short controllersToMap();
 };
 
