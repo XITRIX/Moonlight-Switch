@@ -159,7 +159,6 @@ void MoonlightInputManager::handleControllers(bool specialKey)
     for (int i = 0; i < brls::Application::getPlatform()->getInputManager()->getControllersConnectedCount(); i++) {
         GamepadState gamepadState = getControllerState(i, specialKey);
 
-        static short lastControllersCount = -1;
         short controllersCount = controllersToMap();
 
         if (!gamepadState.is_equal(lastGamepadStates[i]))
