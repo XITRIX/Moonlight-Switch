@@ -338,6 +338,8 @@ void StreamingView::handleMouseInputCombo()
         return;
     
     KeyComboOptions options = Settings::instance().mouse_input_options();
+    if (options.buttons.empty()) 
+        return;
     
     static ControllerState controller;
     Application::getPlatform()->getInputManager()->updateUnifiedControllerState(&controller);
