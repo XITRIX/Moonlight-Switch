@@ -63,16 +63,22 @@ void MoonlightInputManager::dropInput()
 {
     if (inputDropped) return;
     
+    bool res = true;
     GamepadState gamepadState;
-    if (LiSendControllerEvent(
-          gamepadState.buttonFlags,
-          gamepadState.leftTrigger,
-          gamepadState.rightTrigger,
-          gamepadState.leftStickX,
-          gamepadState.leftStickY,
-          gamepadState.rightStickX,
-          gamepadState.rightStickY) == 0)
-        inputDropped = true;
+    for (int i = 0; i < brls::Application::getPlatform()->getInputManager()->getControllersConnectedCount(); i++) {
+        res &= LiSendMultiControllerEvent(
+            i,
+            controllersToMap(),
+            gamepadState.buttonFlags,
+            gamepadState.leftTrigger,
+            gamepadState.rightTrigger,
+            gamepadState.leftStickX,
+            gamepadState.leftStickY,
+            gamepadState.rightStickX,
+            gamepadState.rightStickY) == 0;
+
+    }
+    inputDropped = res;
 }
 
 GamepadState MoonlightInputManager::getControllerState(int controllerNum, bool specialKey)
