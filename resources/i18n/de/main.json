@@ -9,8 +9,9 @@
     },
     "common": {
         "cancel": "Abbrechen",
+        "confirm": "Bestätigen",
         "remove": "Entfernen",
-        "confirm": "Bestätigen"
+        "edit": "bearbeiten"
     },
     "tabs": {
         "add_host": "Host hinzufügen",
@@ -27,6 +28,7 @@
         "wake_up_message": "Host wird geweckt",
         "wake_up_error": "Host konnte nicht geweckt werden",
         "connect": "Verbinden",
+        "remove": "Entfernen",
         "remove_message": "Wollen Sie diesen Host wirklich entfernen?"
     },
     "add_host": {
@@ -75,7 +77,13 @@
         "guide_key_setup_message": "Drücken Sie die Tasten, die Sie benutzen wollen, um die Guide Taste zu drücken:\n\n\n",
         "guide_key": "Guide Taste (keine Verzögerung)",
         "guide_key_buttons": "Tastenkombination",
-        "mouse_speed": "Mausbeschleunigung"
+        "mouse_speed": "Mausbeschleunigung",
+        "keys_mapping": "Tastenlayout",
+        "keys_mapping_default": "Xbox (Standard)",
+        "keys_mapping_swap": "Switch (/ und / vertauschen)",
+        "keys_mapping_title": "Tastenlayout",
+        "keys_mapping_create_new": "+ Neues Layout erstellen",
+        "keys_mapping_new_title": "Neues Layout"
     },
     "app_list": {
         "reload_app_list": "Neu laden",
@@ -114,5 +122,13 @@
         "back": "Zurück",
         "on": "An",
         "off": "Aus"
+    },
+    "mapping_layout_editor": {
+        "title": "Layouteditor",
+        "remove": "Layout entfernen",
+        "selection_dialog_title": "Zum Überschreiben, Taste drücken",
+        "remove_dialog_title": "Möchten Sie dieses Layout wirklich entfernen?",
+        "rename_title": "Layoutname",
+        "reset": "Zurücksetzen"
     }
 }
