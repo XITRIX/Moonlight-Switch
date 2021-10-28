@@ -49,6 +49,8 @@ public:
     void handleRumble(unsigned short controller, unsigned short lowFreqMotor, unsigned short highFreqMotor);
     void updateTouchScreenPanDelta(brls::PanGestureStatus panStatus);
     void reloadButtonMappingLayout();
+    void leftMouseClick();
+    void rightMouseClick();
     
 private:
     GamepadState lastGamepadStates[GAMEPADS_MAX];

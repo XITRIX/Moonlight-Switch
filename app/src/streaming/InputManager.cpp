@@ -225,6 +225,8 @@ void MoonlightInputManager::handleInput()
         lastMouseState.l_pressed = mouseState.l_pressed;
         auto lb = Settings::instance().swap_mouse_keys() ? BUTTON_MOUSE_RIGHT : BUTTON_MOUSE_LEFT;
         LiSendMouseButtonEvent(mouseState.l_pressed ? BUTTON_ACTION_PRESS : BUTTON_ACTION_RELEASE, lb);
+        if (!mouseState.l_pressed)
+            Logger::debug("Release key lmb");
     }
     
     if (mouseState.m_pressed != lastMouseState.m_pressed)
@@ -291,6 +293,18 @@ brls::ControllerState MoonlightInputManager::mapController(brls::ControllerState
     }
 
     return result;
+}
+
+void MoonlightInputManager::leftMouseClick()
+{
+    LiSendMouseButtonEvent(BUTTON_ACTION_PRESS, BUTTON_MOUSE_LEFT);
+    LiSendMouseButtonEvent(BUTTON_ACTION_RELEASE, BUTTON_MOUSE_LEFT);
+}
+
+void MoonlightInputManager::rightMouseClick()
+{
+    LiSendMouseButtonEvent(BUTTON_ACTION_PRESS, BUTTON_MOUSE_RIGHT);
+    LiSendMouseButtonEvent(BUTTON_ACTION_RELEASE, BUTTON_MOUSE_RIGHT);
 }
 
 int MoonlightInputManager::glfwKeyToVKKey(BrlsKeyboardScancode key)

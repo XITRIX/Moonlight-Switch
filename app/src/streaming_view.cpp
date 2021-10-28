@@ -13,34 +13,9 @@
 #include <chrono>
 #include "helper.hpp"
 #include "InputManager.hpp"
+#include "click_gesture_recognizer.hpp"
 
 using namespace brls;
-
-FingersGestureRecognizer::FingersGestureRecognizer(int fingers, FingersGestureEvent::Callback respond)
-    : fingers(fingers)
-{
-    event.subscribe(respond);
-}
-
-GestureState FingersGestureRecognizer::recognitionLoop(TouchState touch, MouseState mouse, View* view, Sound* soundToPlay)
-{
-    if (touch.phase == brls::TouchPhase::START)
-    {
-        fingersCounter++;
-        if (fingersCounter == fingers)
-        {
-            event.fire();
-            return brls::GestureState::END;
-        }
-    }
-    else if (touch.phase == brls::TouchPhase::END)
-    {
-        fingersCounter--;
-    }
-    
-    return brls::GestureState::UNSURE;
-}
-
 
 StreamingView::StreamingView(Host host, AppInfo app) :
     host(host), app(app)
@@ -56,10 +31,6 @@ StreamingView::StreamingView(Host host, AppInfo app) :
     keyboardHolder->setJustifyContent(JustifyContent::FLEX_END);
     keyboardHolder->setAlignItems(AlignItems::STRETCH);
     addView(keyboardHolder);
-    
-    addGestureRecognizer(new FingersGestureRecognizer(3, [this] {
-        addKeyboard();
-    }));
     
     session = new MoonlightSession(host.address, app.app_id);
 
@@ -89,14 +60,45 @@ StreamingView::StreamingView(Host host, AppInfo app) :
     });
 
     MoonlightInputManager::instance().reloadButtonMappingLayout();
-    addGestureRecognizer(new PanGestureRecognizer([this](PanGestureStatus status, Sound* sound) {
-        if (status.state == brls::GestureState::START)
-        {
-            removeKeyboard();
+
+    static bool lMouseKeyGate = false;
+    static bool lMouseKeyUsed = false;
+    addGestureRecognizer(new FingersGestureRecognizer(3, [this] {
+        addKeyboard();
+    }));
+
+    addGestureRecognizer(new ClickGestureRecognizer(1, [this](TapGestureStatus status) {
+        if (status.state == brls::GestureState::END) {
+            MoonlightInputManager::instance().leftMouseClick();
+            lMouseKeyGate = true;
+            delay(200, []{ lMouseKeyGate = false; });
         }
-            
-        if (status.state == brls::GestureState::STAY)
+    }));
+
+    addGestureRecognizer(new ClickGestureRecognizer(2, [this](TapGestureStatus status) {
+        if (status.state == brls::GestureState::END) {
+            MoonlightInputManager::instance().rightMouseClick();
+        }
+    }));
+
+    addGestureRecognizer(new PanGestureRecognizer([this](PanGestureStatus status, Sound* sound) {
+        if (status.state == brls::GestureState::UNSURE && lMouseKeyGate) {
+            lMouseKeyGate = false;
+            lMouseKeyUsed = true;
+        }
+        else if (status.state == brls::GestureState::START) {
+            removeKeyboard();
+            if (lMouseKeyUsed) {
+                LiSendMouseButtonEvent(BUTTON_ACTION_PRESS, BUTTON_MOUSE_LEFT);
+            }
+        }
+        else if (status.state == brls::GestureState::STAY) {
             MoonlightInputManager::instance().updateTouchScreenPanDelta(status);
+        }
+        else if (lMouseKeyUsed) {
+            LiSendMouseButtonEvent(BUTTON_ACTION_RELEASE, BUTTON_MOUSE_LEFT);
+            lMouseKeyUsed = false;
+        }
     }, PanAxis::ANY));
     
     keysSubscription = Application::getPlatform()->getInputManager()->getKeyboardKeyStateChanged()->subscribe([this, host, app](brls::KeyState state) {

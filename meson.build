@@ -7,6 +7,7 @@ subdir('extern')
 
 app_include = include_directories(
     'app/include',
+    'app/include/gestures',
     'app/src/utils',
     'app/src/libgamestream',
     'app/src/crypto',
@@ -37,6 +38,9 @@ app_files = files(
     'app/src/streaming_view.cpp',
     'app/src/mapping_layout_editor.cpp',
     'app/src/favorite_tab.cpp',
+
+    'app/src/gestures/fingers_gesture_recognizer.cpp',
+    'app/src/gestures/click_gesture_recognizer.cpp',
 
     'app/src/crypto/Data.cpp',
     'app/src/crypto/MbedTLSCryptoManager.cpp',

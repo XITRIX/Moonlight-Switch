@@ -13,19 +13,8 @@
 #include "MoonlightSession.hpp"
 #include "loading_overlay.hpp"
 #include "keyboard_view.hpp"
+#include "gestures/fingers_gesture_recognizer.hpp"
 #include <optional>
-
-typedef brls::Event<> FingersGestureEvent;
-class FingersGestureRecognizer: public brls::GestureRecognizer
-{
-public:
-    FingersGestureRecognizer(int fingers, FingersGestureEvent::Callback respond);
-    brls::GestureState recognitionLoop(brls::TouchState touch, brls:: MouseState mouse, brls::View* view, brls::Sound* soundToPlay) override;
-private:
-    int fingers;
-    int fingersCounter = 0;
-    FingersGestureEvent event;
-};
 
 class StreamingView : public brls::Box
 {

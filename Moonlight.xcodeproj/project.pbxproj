@@ -253,6 +253,10 @@
 		7C2BCFF12667F47A005952F2 /* loading_overlay.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C2BCFEF2667F47A005952F2 /* loading_overlay.cpp */; };
 		7C33AB2E26A2FC6B0008B0A6 /* battery.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C33AB2C26A2FC6B0008B0A6 /* battery.cpp */; };
 		7C33AB3626A34EBA0008B0A6 /* wireless.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C33AB3526A34EBA0008B0A6 /* wireless.cpp */; };
+		7C373F6C2729A8B8005073A1 /* fingers_gesture_recognizer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C373F6A2729A8B8005073A1 /* fingers_gesture_recognizer.cpp */; };
+		7C373F6D2729A8B8005073A1 /* fingers_gesture_recognizer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C373F6A2729A8B8005073A1 /* fingers_gesture_recognizer.cpp */; };
+		7C373F712729A9E8005073A1 /* click_gesture_recognizer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C373F6F2729A9E8005073A1 /* click_gesture_recognizer.cpp */; };
+		7C373F722729A9E8005073A1 /* click_gesture_recognizer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C373F6F2729A9E8005073A1 /* click_gesture_recognizer.cpp */; };
 		7C3A95F0266153D700BAF8CA /* GLVideoRenderer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CBE6B8D265DB3D6007DCC5A /* GLVideoRenderer.cpp */; };
 		7C3A95F5266160B200BAF8CA /* DebugFileRecorderAudioRenderer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CBE6B94265DB3D6007DCC5A /* DebugFileRecorderAudioRenderer.cpp */; };
 		7C3A95F92661618100BAF8CA /* SDLAudioRenderer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C3A95F82661618100BAF8CA /* SDLAudioRenderer.cpp */; };
@@ -679,6 +683,10 @@
 		7C33AB3026A2FC730008B0A6 /* battery.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = battery.hpp; sourceTree = "<group>"; };
 		7C33AB3426A34EB30008B0A6 /* wireless.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = wireless.hpp; sourceTree = "<group>"; };
 		7C33AB3526A34EBA0008B0A6 /* wireless.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = wireless.cpp; sourceTree = "<group>"; };
+		7C373F6A2729A8B8005073A1 /* fingers_gesture_recognizer.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = fingers_gesture_recognizer.cpp; sourceTree = "<group>"; };
+		7C373F6B2729A8B8005073A1 /* fingers_gesture_recognizer.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = fingers_gesture_recognizer.hpp; sourceTree = "<group>"; };
+		7C373F6F2729A9E8005073A1 /* click_gesture_recognizer.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = click_gesture_recognizer.cpp; sourceTree = "<group>"; };
+		7C373F702729A9E8005073A1 /* click_gesture_recognizer.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = click_gesture_recognizer.hpp; sourceTree = "<group>"; };
 		7C3A95F82661618100BAF8CA /* SDLAudioRenderer.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = SDLAudioRenderer.cpp; sourceTree = "<group>"; };
 		7C3A95FB2661659300BAF8CA /* SDLAudiorenderer.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = SDLAudiorenderer.hpp; sourceTree = "<group>"; };
 		7C3A95FE2661A3A800BAF8CA /* helper.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = helper.cpp; sourceTree = "<group>"; };
@@ -912,6 +920,7 @@
 		7C18E92D265C158A000D3AF0 /* core */ = {
 			isa = PBXGroup;
 			children = (
+				7C18E934265C158A000D3AF0 /* touch */,
 				7C18E933265C158A000D3AF0 /* actions.hpp */,
 				7C18E942265C158A000D3AF0 /* activity.hpp */,
 				7C18E939265C158A000D3AF0 /* animation.hpp */,
@@ -934,7 +943,6 @@
 				7C18E938265C158A000D3AF0 /* theme.hpp */,
 				7C18E932265C158A000D3AF0 /* time.hpp */,
 				7C18E93C265C158A000D3AF0 /* timer.hpp */,
-				7C18E934265C158A000D3AF0 /* touch */,
 				7C18E944265C158A000D3AF0 /* util.hpp */,
 				7C18E940265C158A000D3AF0 /* video.hpp */,
 				7C18E93F265C158A000D3AF0 /* view.hpp */,
@@ -1747,6 +1755,7 @@
 		7C18F0CD265C1BEB000D3AF0 /* include */ = {
 			isa = PBXGroup;
 			children = (
+				7C373F6E2729A8CB005073A1 /* gestures */,
 				7C18F0D7265C273B000D3AF0 /* main_tabs_view.hpp */,
 				7C744DF526FE497C00BFACB5 /* favorite_tab.hpp */,
 				7C18E8C7265C158A000D3AF0 /* host_tab.hpp */,
@@ -1772,6 +1781,7 @@
 		7C18F0CE265C1BF0000D3AF0 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				7C373F682729A88D005073A1 /* gestures */,
 				7CE6FA8C26823DC6005854FC /* keyboards */,
 				7CBE6B86265DB3D6007DCC5A /* streaming */,
 				7CBE6B75265DB027007DCC5A /* crypto */,
@@ -1916,6 +1926,24 @@
 				7C33AB3026A2FC730008B0A6 /* battery.hpp */,
 			);
 			path = widgets;
+			sourceTree = "<group>";
+		};
+		7C373F682729A88D005073A1 /* gestures */ = {
+			isa = PBXGroup;
+			children = (
+				7C373F6A2729A8B8005073A1 /* fingers_gesture_recognizer.cpp */,
+				7C373F6F2729A9E8005073A1 /* click_gesture_recognizer.cpp */,
+			);
+			path = gestures;
+			sourceTree = "<group>";
+		};
+		7C373F6E2729A8CB005073A1 /* gestures */ = {
+			isa = PBXGroup;
+			children = (
+				7C373F6B2729A8B8005073A1 /* fingers_gesture_recognizer.hpp */,
+				7C373F702729A9E8005073A1 /* click_gesture_recognizer.hpp */,
+			);
+			path = gestures;
 			sourceTree = "<group>";
 		};
 		7C5DEBA0268FC6670067CF37 /* zeroconf */ = {
@@ -2212,6 +2240,7 @@
 				7C07553026F6A6BF006A4CDC /* time.cpp in Sources */,
 				7C07554026F6A6CD006A4CDC /* YGNode.cpp in Sources */,
 				7C07555626F6A704006A4CDC /* scrolling_frame.cpp in Sources */,
+				7C373F6D2729A8B8005073A1 /* fingers_gesture_recognizer.cpp in Sources */,
 				7C07553126F6A6BF006A4CDC /* thread.cpp in Sources */,
 				7C07553526F6A6BF006A4CDC /* theme.cpp in Sources */,
 				7C0754E726F6A5FF006A4CDC /* settings_tab.cpp in Sources */,
@@ -2276,6 +2305,7 @@
 				7C07552626F6A6BF006A4CDC /* style.cpp in Sources */,
 				7C07556926F6A7EE006A4CDC /* SDLAudioRenderer.cpp in Sources */,
 				7C0754F626F6A656006A4CDC /* numpad_layout.cpp in Sources */,
+				7C373F722729A9E8005073A1 /* click_gesture_recognizer.cpp in Sources */,
 				7C07551226F6A68C006A4CDC /* ByteBuffer.c in Sources */,
 				7C0754FA26F6A65D006A4CDC /* WakeOnLanManager.cpp in Sources */,
 				7C07550F26F6A68C006A4CDC /* ControlStream.c in Sources */,
@@ -2357,6 +2387,7 @@
 				7C18F092265C1613000D3AF0 /* YGEnums.cpp in Sources */,
 				7C18F071265C15E7000D3AF0 /* time.cpp in Sources */,
 				7C18F14F265C37F3000D3AF0 /* SimpleStun.c in Sources */,
+				7C373F6C2729A8B8005073A1 /* fingers_gesture_recognizer.cpp in Sources */,
 				7C18F0B6265C177E000D3AF0 /* button.cpp in Sources */,
 				7C18F06C265C15DD000D3AF0 /* glfw_input.cpp in Sources */,
 				7C18F13F265C37DA000D3AF0 /* AudioStream.c in Sources */,
@@ -2421,6 +2452,7 @@
 				7C3A96002661A3A800BAF8CA /* helper.cpp in Sources */,
 				7C33AB2E26A2FC6B0008B0A6 /* battery.cpp in Sources */,
 				7CBE6B60265DADD9007DCC5A /* Settings.cpp in Sources */,
+				7C373F712729A9E8005073A1 /* click_gesture_recognizer.cpp in Sources */,
 				7C3A96052661BAC100BAF8CA /* debug_layer.cpp in Sources */,
 				7C3A96112662902900BAF8CA /* ingame_overlay_view.cpp in Sources */,
 				7CE6FA9026823E3A005854FC /* numpad_layout.cpp in Sources */,
