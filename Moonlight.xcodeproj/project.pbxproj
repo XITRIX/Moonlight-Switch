@@ -268,6 +268,8 @@
 		7C471DAE266970B00059D144 /* app_cell.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C471DAC266970B00059D144 /* app_cell.cpp */; };
 		7C52664C2670266500DA102F /* backward.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C52664A2670266500DA102F /* backward.cpp */; };
 		7C5DEBA6268FCA450067CF37 /* DiscoverManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C5DEBA4268FCA450067CF37 /* DiscoverManager.cpp */; };
+		7C6E0C6A2742E2130046F91C /* two_finger_scroll_recognizer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C6E0C682742E2130046F91C /* two_finger_scroll_recognizer.cpp */; };
+		7C6E0C6B2742E2130046F91C /* two_finger_scroll_recognizer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C6E0C682742E2130046F91C /* two_finger_scroll_recognizer.cpp */; };
 		7C6EC65A26A5F174001ABADE /* button_selecting_dialog.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C6EC65826A5F174001ABADE /* button_selecting_dialog.cpp */; };
 		7C744DF626FE497C00BFACB5 /* favorite_tab.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C744DF426FE497C00BFACB5 /* favorite_tab.cpp */; };
 		7C77C51D2676140200179EA8 /* RtpAudioQueue.c in Sources */ = {isa = PBXBuildFile; fileRef = 7C0B64DF267570FA009D1C0C /* RtpAudioQueue.c */; };
@@ -708,6 +710,8 @@
 		7C5DEBA3268FC6830067CF37 /* zeroconf-util.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = "zeroconf-util.hpp"; sourceTree = "<group>"; };
 		7C5DEBA4268FCA450067CF37 /* DiscoverManager.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = DiscoverManager.cpp; sourceTree = "<group>"; };
 		7C5DEBA5268FCA450067CF37 /* DiscoverManager.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = DiscoverManager.hpp; sourceTree = "<group>"; };
+		7C6E0C682742E2130046F91C /* two_finger_scroll_recognizer.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = two_finger_scroll_recognizer.cpp; sourceTree = "<group>"; };
+		7C6E0C692742E2130046F91C /* two_finger_scroll_recognizer.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = two_finger_scroll_recognizer.hpp; sourceTree = "<group>"; };
 		7C6EC65826A5F174001ABADE /* button_selecting_dialog.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = button_selecting_dialog.cpp; sourceTree = "<group>"; };
 		7C6EC65926A5F174001ABADE /* button_selecting_dialog.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = button_selecting_dialog.hpp; sourceTree = "<group>"; };
 		7C744DF226FE492D00BFACB5 /* meson.build */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = meson.build; sourceTree = "<group>"; };
@@ -1933,6 +1937,7 @@
 			children = (
 				7C373F6A2729A8B8005073A1 /* fingers_gesture_recognizer.cpp */,
 				7C373F6F2729A9E8005073A1 /* click_gesture_recognizer.cpp */,
+				7C6E0C682742E2130046F91C /* two_finger_scroll_recognizer.cpp */,
 			);
 			path = gestures;
 			sourceTree = "<group>";
@@ -1942,6 +1947,7 @@
 			children = (
 				7C373F6B2729A8B8005073A1 /* fingers_gesture_recognizer.hpp */,
 				7C373F702729A9E8005073A1 /* click_gesture_recognizer.hpp */,
+				7C6E0C692742E2130046F91C /* two_finger_scroll_recognizer.hpp */,
 			);
 			path = gestures;
 			sourceTree = "<group>";
@@ -2198,6 +2204,7 @@
 				7C0754EE26F6A5FF006A4CDC /* host_tab.cpp in Sources */,
 				7C07550D26F6A68C006A4CDC /* SimpleStun.c in Sources */,
 				7C07555F26F6A704006A4CDC /* tab_frame.cpp in Sources */,
+				7C6E0C6B2742E2130046F91C /* two_finger_scroll_recognizer.cpp in Sources */,
 				7C07551F26F6A68C006A4CDC /* VideoDepacketizer.c in Sources */,
 				7C07551926F6A68C006A4CDC /* FakeCallbacks.c in Sources */,
 				7C07555226F6A704006A4CDC /* image.cpp in Sources */,
@@ -2345,6 +2352,7 @@
 				7C18F142265C37DA000D3AF0 /* Connection.c in Sources */,
 				7C18F090265C1613000D3AF0 /* YGConfig.cpp in Sources */,
 				7CBE6B7E265DB027007DCC5A /* MbedTLSCryptoManager.cpp in Sources */,
+				7C6E0C6A2742E2130046F91C /* two_finger_scroll_recognizer.cpp in Sources */,
 				7C18F0A5265C165C000D3AF0 /* encoding_utf.c in Sources */,
 				7CBE6B71265DAF8D007DCC5A /* xml.cpp in Sources */,
 				7C0D7437265FA80D00077D33 /* MoonlightSession.cpp in Sources */,

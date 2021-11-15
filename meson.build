@@ -41,6 +41,7 @@ app_files = files(
 
     'app/src/gestures/fingers_gesture_recognizer.cpp',
     'app/src/gestures/click_gesture_recognizer.cpp',
+    'app/src/gestures/two_finger_scroll_recognizer.cpp',
 
     'app/src/crypto/Data.cpp',
     'app/src/crypto/MbedTLSCryptoManager.cpp',

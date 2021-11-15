@@ -14,6 +14,7 @@
 #include "helper.hpp"
 #include "InputManager.hpp"
 #include "click_gesture_recognizer.hpp"
+#include "two_finger_scroll_recognizer.hpp"
 
 using namespace brls;
 
@@ -69,6 +70,7 @@ StreamingView::StreamingView(Host host, AppInfo app) :
 
     addGestureRecognizer(new ClickGestureRecognizer(1, [this](TapGestureStatus status) {
         if (status.state == brls::GestureState::END) {
+            Logger::debug("Left mouse click");
             MoonlightInputManager::instance().leftMouseClick();
             lMouseKeyGate = true;
             delay(200, []{ lMouseKeyGate = false; });
@@ -77,6 +79,7 @@ StreamingView::StreamingView(Host host, AppInfo app) :
 
     addGestureRecognizer(new ClickGestureRecognizer(2, [this](TapGestureStatus status) {
         if (status.state == brls::GestureState::END) {
+            Logger::debug("Right mouse click");
             MoonlightInputManager::instance().rightMouseClick();
         }
     }));
@@ -89,6 +92,7 @@ StreamingView::StreamingView(Host host, AppInfo app) :
         else if (status.state == brls::GestureState::START) {
             removeKeyboard();
             if (lMouseKeyUsed) {
+                Logger::debug("Pressed key at {}", status.state);
                 LiSendMouseButtonEvent(BUTTON_ACTION_PRESS, BUTTON_MOUSE_LEFT);
             }
         }
@@ -96,10 +100,25 @@ StreamingView::StreamingView(Host host, AppInfo app) :
             MoonlightInputManager::instance().updateTouchScreenPanDelta(status);
         }
         else if (lMouseKeyUsed) {
+            Logger::debug("Release key at {}", status.state);
             LiSendMouseButtonEvent(BUTTON_ACTION_RELEASE, BUTTON_MOUSE_LEFT);
             lMouseKeyUsed = false;
         }
     }, PanAxis::ANY));
+
+    addGestureRecognizer(new TwoFingerScrollGestureRecognizer([this](TwoFingerScrollState state) {
+        if (state.state == brls::GestureState::START)
+            this->touchScrollCounter = 0;
+
+        int threashhold = state.delta.y / 25;
+        if (threashhold != this->touchScrollCounter) {
+            Logger::debug("Scroll on: {}", threashhold - this->touchScrollCounter);
+            int invert = Settings::instance().swap_mouse_scroll() ? -1 : 1;
+            char scrollCount = threashhold - this->touchScrollCounter;
+            LiSendScrollEvent(scrollCount * invert);
+            this->touchScrollCounter = threashhold;
+        }
+    }));
     
     keysSubscription = Application::getPlatform()->getInputManager()->getKeyboardKeyStateChanged()->subscribe([this, host, app](brls::KeyState state) {
         if (state.key == BRLS_KBD_KEY_ESCAPE)

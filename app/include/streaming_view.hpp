@@ -51,6 +51,7 @@ private:
     bool terminated = false;
     bool tempInputLock = false;
     brls::Event<brls::KeyState>::Subscription keysSubscription;
+    int touchScrollCounter = 0;
     
     void handleInput();
     void handleOverlayCombo();
