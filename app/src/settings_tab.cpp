@@ -219,7 +219,7 @@ SettingsTab::SettingsTab()
         return true;
     });
     
-    mouseInputTime->init("settings/overlay_time"_i18n, { "settings/overlay_zero_time"_i18n, "1", "2", "3", "4", "5" }, Settings::instance().overlay_options().holdTime, [](int value) {
+    mouseInputTime->init("settings/overlay_time"_i18n, { "settings/overlay_zero_time"_i18n, "1", "2", "3", "4", "5" }, Settings::instance().mouse_input_options().holdTime, [](int value) {
         auto options = Settings::instance().mouse_input_options();
         options.holdTime = value;
         Settings::instance().set_mouse_input_options(options);
