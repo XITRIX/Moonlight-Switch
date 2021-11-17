@@ -57,7 +57,7 @@ int main(int argc, char* argv[])
     
     
 #ifdef __SWITCH__
-    Settings::instance().set_working_dir("sdmc:/switch/moonlight");
+    Settings::instance().set_working_dir("sdmc:/switch/Moonlight-Switch");
 #else
     Settings::instance().set_working_dir("moonlight-nx");
 #endif

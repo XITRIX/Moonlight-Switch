@@ -37,7 +37,7 @@ include $(DEVKITPRO)/libnx/switch_rules
 #   of a homebrew executable (.nro). This is intended to be used for sysmodules.
 #   NACP building is skipped as well.
 #---------------------------------------------------------------------------------
-TARGET		:=	br_moonlight
+TARGET		:=	Moonlight-Switch
 BUILD		:=	build.nx
 SOURCES		:=	app/src
 DATA		:=	data
