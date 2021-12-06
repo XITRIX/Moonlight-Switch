@@ -22,6 +22,9 @@ Thanks a lot to [Rock88](https://github.com/rock88) and his [Moonlight-NX](https
 3. Launch hbmenu over *Title Redirection* (for FULL RAM access);
 4. Launch moonlight.
 
+# Discord
+Feel free to join [Moonlight discord server](https://discord.gg/fmtcVPzaG4), you will find me there in "switch-help" channel
+
 # Controls
 ## Mouse
 With touch screen you can move your coursor.
