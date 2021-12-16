@@ -1,0 +1,53 @@
+<brls:Box
+    width="auto"
+    height="auto"
+    axis="row"
+    focusable="true"
+    lineBottom="1px"
+    lineColor="@theme/brls/header/border">
+
+    <brls:Image
+        id="image"
+        width="60"
+        height="60"
+        image="@res/img/moonlight_96.png"
+        scalingType="fit"
+        margin="12"/>
+
+    <brls:Box
+        width="auto"
+        height="auto"
+        axis="column"
+        grow="1"
+        justifyContent="spaceAround"
+        marginTop="12"
+        marginBottom="12">
+
+        <brls:Label
+            id="title"
+            width="auto"
+            height="auto"
+            text="GitHub Page"
+            fontSize="21" />
+
+        <brls:Label
+            id="subtitle"
+            width="auto"
+            height="auto"
+            text="https://github.com/XITRIX/Moonlight-Switch"
+            fontSize="12"
+            textColor="@theme/brls/header/subtitle" />
+
+    </brls:Box>
+
+    <brls:Label
+        id="icon"
+        width="auto"
+        height="auto"
+        verticalAlign="bottom"
+        fontSize="18"
+        marginBottom="12"
+        marginRight="12"
+        textColor="@theme/brls/accent" />
+
+</brls:Box>

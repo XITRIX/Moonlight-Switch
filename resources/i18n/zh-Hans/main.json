@@ -1,0 +1,134 @@
+{
+    "title": "Moonlight",
+    "error": {
+        "dialog_header": "错误",
+        "stream_start": "开始串流失败...",
+        "unknown_error": "发生了未知的错误...",
+        "host_not_found": "没有找到主机...",
+        "ip_not_obtained": "无法获取IP地址..."
+    },
+    "common": {
+        "cancel": "取消",
+        "confirm": "确定",
+        "remove": "移除",
+        "edit": "编辑"
+    },
+    "tabs": {
+        "add_host": "添加计算机",
+        "settings": "设置",
+        "favorites": "最爱"
+    },
+    "host": {
+        "status": "状态",
+        "fetching": "收取中...",
+        "wait": "等待中...",
+        "ready": "准备完成",
+        "unable": "不可用",
+        "wake_up": "唤醒中…",
+        "wake_up_message": "发送唤醒请求",
+        "wake_up_error": "无法唤醒计算机",
+        "connect": "连接",
+        "remove": "移除",
+        "remove_message": "确定想要移除当前计算机吗?"
+    },
+    "add_host": {
+        "manual": "手动",
+        "host_ip": "计算机IP",
+        "connect": "连接",
+        "search": "搜索",
+        "search_error": "不可使用搜索",
+        "search_refresh": "刷新",
+        "paired_error": "已配对\n配置已经更新",
+        "pair_prefix": "配对\n\n进入 ",
+        "pair_postfix": " 在计算机设备上输入",
+        "try_connect": "尝试连接到当前计算机"
+    },
+    "discovery_manager": {
+        "no_ip": "无法获取IP地址",
+        "no_host": "没有找到当前计算机"
+    },
+    "settings": {
+        "quality": "串流质量",
+        "fps": "FPS",
+        "resolution": "分辨率",
+        "video_codec": "视频解码器",
+        "decoder_threads": "解码器线程",
+        "video_bitrate": "视频码率",
+        "stream_settings": "串流设置",
+        "usops": "使用串流优化设置",
+        "paop": "串流时在计算机上也同时播放音频",
+        "debug": "Debug",
+        "debugging_view": "显示Debug画面",
+        "h264": "H.264",
+        "h265": "HEVC (H.265, 实验性)",
+        "zero_threads": "0(不使用线程)",
+        "keys": "手柄设置",
+        "swap_ui": "在主画面中交换X/Y和A/B按纽",
+        "swap_game": "在游戏串流中交换X/Y和A/B按钮",
+        "mouse": "鼠标",
+        "swap_mouse_keys": "交换鼠标的zl和zr按键",
+        "swap_mouse_scroll": "交换鼠标垂直滚动方向",
+        "overlay": "在游戏中进行叠加层",
+        "overlay_setup_message": "按下想使用的按纽来打开叠加层:\n\n",
+        "overlay_zero_time": "0(立即)",
+        "overlay_time": "按住按钮几秒内打开叠加层",
+        "overlay_buttons": "按键组合",
+        "volume_amplification": "允许放大音量",
+        "guide_key_setup_message": "按下想使用的按钮来配置向导键:\n\n",
+        "guide_key": "向导按钮 (立即检查)",
+        "guide_key_buttons": "按键组合",
+        "mouse_speed": "鼠标速度",
+        "keys_mapping": "游戏按钮映射",
+        "keys_mapping_default": "Xbox(默认)",
+        "keys_mapping_swap": "Switch(交换X/Y和A/B)",
+        "keys_mapping_title": "按钮映射布局",
+        "keys_mapping_create_new": "按+创建新布局",
+        "keys_mapping_new_title": "新布局"
+    },
+    "app_list": {
+        "reload_app_list": "重新载入",
+        "terminate": "终止",
+        "terminate_current_app": "终止当前应用程序",
+        "terminate_prefix": "终止 ",
+        "terminate_postfix": "\n\n所有未保存的进程都有可能丢失",
+        "running": "启动中",
+        "run_current": "启动当前应用程序",
+        "star": "收藏",
+        "unstar": "取消收藏"
+    },
+    "streaming": {
+        "keys": "按键",
+        "options": "选项",
+        "logout": "登出",
+        "connection": "连接选项",
+        "terminate": "终止应用程序",
+        "disconnect": "断开连接",
+        "input": "输入",
+        "mouse_input": "进入鼠标输入模式",
+        "show_logs": "显示日志",
+        "debug_info": "Debug 信息",
+        "esc": "ESC按钮",
+        "volume": "音量",
+        "mouse_speed": "鼠标速度"
+    },
+    "mouse_input": {
+        "title": "进入鼠标输入模式",
+        "mouse": "鼠标",
+        "scroll": "滚动",
+        "keyboard": "键盘"
+    },
+    "hints": {
+        "ok": "确定",
+        "back": "返回",
+        "on": "打开",
+        "off": "关闭"
+    },
+    "mapping_layout_editor": {
+        "title": "布局映射编辑",
+        "remove": "移除布局",
+        "selection_dialog_title": "按下按钮重写",
+        "remove_dialog_title": "确定想要移除当前布局?",
+        "rename_title": "当前布局名称",
+        "reset": "重置"
+    }
+}

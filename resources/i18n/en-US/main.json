@@ -16,7 +16,8 @@
     "tabs": {
         "favorites": "Favorites",
         "add_host": "Add host",
-        "settings": "Settings"
+        "settings": "Settings",
+        "about": "About"
     },
     "host": {
         "status": "Status",
@@ -124,6 +125,21 @@
         "mouse": "Mouse",
         "scroll": "Scroll",
         "keyboard": "Keyboard"
+    },
+    "about": {
+        "title": "About",
+        "about": "Moonlight-Switch is a third-party game streaming client based on Moonlight-Common-C for the Nintendo Switch",
+        "links": "Links",
+        "link_github": "GitHub Page",
+        "link_patreon": "Patreon Page",
+        "link_gbatemp": "GbaTemp Page",
+        "thanks": "Special Thanks",
+        "thanks_1": " Rock88 and his Moonlight-NX, lots of code was reused in this app",
+        "thanks_2": " Natinusala for creating Borealis",
+        "thanks_3": " Moonlight team, it could not be possible without them",
+        "thanks_4": " Cameron Gutman for helping to solve an issue with LibNX",
+        "thanks_5": " Everyone envolved into app development",
+        "thanks_6": " You, for using my homebrew!"
     },
     "hints": {
         "ok": "OK",

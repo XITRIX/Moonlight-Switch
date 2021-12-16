@@ -266,6 +266,10 @@
 		7C3A96112662902900BAF8CA /* ingame_overlay_view.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C3A960F2662902900BAF8CA /* ingame_overlay_view.cpp */; };
 		7C471DA9266962E80059D144 /* grid_view.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C471DA7266962E80059D144 /* grid_view.cpp */; };
 		7C471DAE266970B00059D144 /* app_cell.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C471DAC266970B00059D144 /* app_cell.cpp */; };
+		7C4B12BD2748EB280097245B /* about_tab.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C4B12BC2748EB280097245B /* about_tab.cpp */; };
+		7C4B12BE2748EB280097245B /* about_tab.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C4B12BC2748EB280097245B /* about_tab.cpp */; };
+		7C4B12C3274A88670097245B /* link_cell.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C4B12C2274A88670097245B /* link_cell.cpp */; };
+		7C4B12C4274A88670097245B /* link_cell.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C4B12C2274A88670097245B /* link_cell.cpp */; };
 		7C52664C2670266500DA102F /* backward.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C52664A2670266500DA102F /* backward.cpp */; };
 		7C5DEBA6268FCA450067CF37 /* DiscoverManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C5DEBA4268FCA450067CF37 /* DiscoverManager.cpp */; };
 		7C6E0C6A2742E2130046F91C /* two_finger_scroll_recognizer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C6E0C682742E2130046F91C /* two_finger_scroll_recognizer.cpp */; };
@@ -703,6 +707,10 @@
 		7C471DA8266962E80059D144 /* grid_view.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = grid_view.hpp; sourceTree = "<group>"; };
 		7C471DAC266970B00059D144 /* app_cell.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = app_cell.cpp; sourceTree = "<group>"; };
 		7C471DAD266970B00059D144 /* app_cell.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = app_cell.hpp; sourceTree = "<group>"; };
+		7C4B12BA2748EB1D0097245B /* about_tab.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = about_tab.hpp; sourceTree = "<group>"; };
+		7C4B12BC2748EB280097245B /* about_tab.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = about_tab.cpp; sourceTree = "<group>"; };
+		7C4B12C0274A88610097245B /* link_cell.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = link_cell.hpp; sourceTree = "<group>"; };
+		7C4B12C2274A88670097245B /* link_cell.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = link_cell.cpp; sourceTree = "<group>"; };
 		7C52664A2670266500DA102F /* backward.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = backward.cpp; sourceTree = "<group>"; };
 		7C52664B2670266500DA102F /* backward.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = backward.hpp; sourceTree = "<group>"; };
 		7C5DEBA1268FC6830067CF37 /* zeroconf.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = zeroconf.hpp; sourceTree = "<group>"; };
@@ -1759,7 +1767,9 @@
 		7C18F0CD265C1BEB000D3AF0 /* include */ = {
 			isa = PBXGroup;
 			children = (
+				7C4B12C0274A88610097245B /* link_cell.hpp */,
 				7C373F6E2729A8CB005073A1 /* gestures */,
+				7C4B12BA2748EB1D0097245B /* about_tab.hpp */,
 				7C18F0D7265C273B000D3AF0 /* main_tabs_view.hpp */,
 				7C744DF526FE497C00BFACB5 /* favorite_tab.hpp */,
 				7C18E8C7265C158A000D3AF0 /* host_tab.hpp */,
@@ -1785,12 +1795,14 @@
 		7C18F0CE265C1BF0000D3AF0 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				7C4B12C2274A88670097245B /* link_cell.cpp */,
 				7C373F682729A88D005073A1 /* gestures */,
 				7CE6FA8C26823DC6005854FC /* keyboards */,
 				7CBE6B86265DB3D6007DCC5A /* streaming */,
 				7CBE6B75265DB027007DCC5A /* crypto */,
 				7CBE6B67265DAF8D007DCC5A /* libgamestream */,
 				7CBE6B59265DADD9007DCC5A /* utils */,
+				7C4B12BC2748EB280097245B /* about_tab.cpp */,
 				7C18F0D6265C273B000D3AF0 /* main_tabs_view.cpp */,
 				7C744DF426FE497C00BFACB5 /* favorite_tab.cpp */,
 				7C18E8CC265C158A000D3AF0 /* host_tab.cpp */,
@@ -2235,11 +2247,13 @@
 				7C0754F926F6A65D006A4CDC /* GameStreamClient.cpp in Sources */,
 				7C07556C26F6A7FA006A4CDC /* GLVideoRenderer.cpp in Sources */,
 				7C07552C26F6A6BF006A4CDC /* input.cpp in Sources */,
+				7C4B12C4274A88670097245B /* link_cell.cpp in Sources */,
 				7C07556726F6A7CD006A4CDC /* DiscoverManager.cpp in Sources */,
 				7C0754FF26F6A667006A4CDC /* client.cpp in Sources */,
 				7C0754EC26F6A5FF006A4CDC /* main.cpp in Sources */,
 				7C07550626F6A67F006A4CDC /* win32.c in Sources */,
 				7C07555826F6A704006A4CDC /* sidebar.cpp in Sources */,
+				7C4B12BE2748EB280097245B /* about_tab.cpp in Sources */,
 				7C07556626F6A704006A4CDC /* cell_bool.cpp in Sources */,
 				7C07556326F6A704006A4CDC /* progress_spinner.cpp in Sources */,
 				7C07551426F6A68C006A4CDC /* VideoStream.c in Sources */,
@@ -2383,11 +2397,13 @@
 				7C471DA9266962E80059D144 /* grid_view.cpp in Sources */,
 				7C18F143265C37DA000D3AF0 /* FakeCallbacks.c in Sources */,
 				7C5DEBA6268FCA450067CF37 /* DiscoverManager.cpp in Sources */,
+				7C4B12C3274A88670097245B /* link_cell.cpp in Sources */,
 				7C18F0A0265C1652000D3AF0 /* glad.c in Sources */,
 				7C18F136265C3786000D3AF0 /* win32.c in Sources */,
 				7C18F07A265C15E7000D3AF0 /* i18n.cpp in Sources */,
 				7C18F0B4265C177E000D3AF0 /* slider.cpp in Sources */,
 				7C18F13B265C3786000D3AF0 /* list.c in Sources */,
+				7C4B12BD2748EB280097245B /* about_tab.cpp in Sources */,
 				7C18F140265C37DA000D3AF0 /* ByteBuffer.c in Sources */,
 				7C18F079265C15E7000D3AF0 /* font.cpp in Sources */,
 				7C18F065265C15A7000D3AF0 /* host_tab.cpp in Sources */,

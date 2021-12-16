@@ -21,6 +21,7 @@
 #include "main_activity.hpp"
 #include "host_tab.hpp"
 #include "settings_tab.hpp"
+#include "link_cell.hpp"
 
 #include "MoonlightSession.hpp"
 #include "DiscoverManager.hpp"
@@ -64,12 +65,14 @@ int main(int argc, char* argv[])
     
     MoonlightSession::set_provider(new SwitchMoonlightSessionDecoderAndRenderProvider());
 
-    brls::Application::createWindow("title"_i18n);
+    brls::Application::createWindow("title"_i18n); 
 
     // Have the application register an action on every activity that will quit when you press BUTTON_START
     brls::Application::setGlobalQuit(false);
 
     // Register custom views (including tabs, which are views)
+    brls::Application::registerXMLView("LinkCell", LinkCell::create);
+
     brls::Application::registerXMLView("MainTabs", MainTabs::create);
     brls::Application::registerXMLView("HostTab", HostTab::create);
     brls::Application::registerXMLView("AddHostTab", AddHostTab::create);

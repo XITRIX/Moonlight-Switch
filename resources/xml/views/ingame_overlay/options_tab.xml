@@ -14,10 +14,10 @@
             height="auto"
             axis="column"
             alignItems="stretch"
-            paddingTop="@style/brls/sidebar/padding_top"
-            paddingRight="@style/brls/sidebar/padding_right"
-            paddingBottom="@style/brls/sidebar/padding_bottom"
-            paddingLeft="@style/brls/sidebar/padding_left">
+            paddingTop="@style/brls/tab_details/padding_top"
+            paddingRight="@style/brls/tab_details/padding_right"
+            paddingBottom="@style/brls/tab_details/padding_bottom"
+            paddingLeft="@style/brls/tab_details/padding_left">
             
             <brls:Header
                 title="@i18n/streaming/input"/>

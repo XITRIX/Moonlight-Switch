@@ -1,0 +1,22 @@
+//
+//  settings_tab.hpp
+//  Moonlight
+//
+//  Created by XITRIX on 26.05.2021.
+//
+
+#pragma once
+
+#include <borealis.hpp>
+#include "link_cell.hpp"
+
+class AboutTab : public brls::Box
+{
+  public:
+    AboutTab();
+    static brls::View* create();
+  private:
+    BRLS_BIND(LinkCell, github, "github");
+    BRLS_BIND(LinkCell, patreon, "patreon");
+    BRLS_BIND(LinkCell, gbatemp, "gbatemp");
+};

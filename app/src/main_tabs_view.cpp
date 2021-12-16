@@ -9,6 +9,7 @@
 #include "host_tab.hpp"
 #include "add_host_tab.hpp"
 #include "settings_tab.hpp"
+#include "about_tab.hpp"
 #include "Settings.hpp"
 
 MainTabs::MainTabs()
@@ -56,6 +57,8 @@ void MainTabs::refillTabs()
     
     addTab("tabs/add_host"_i18n, AddHostTab::create);
     addTab("tabs/settings"_i18n, SettingsTab::create);
+    addSeparator();
+    addTab("tabs/about"_i18n, AboutTab::create);
     focusTab(0);
 }
 
