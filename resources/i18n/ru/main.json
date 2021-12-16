@@ -9,14 +9,15 @@
     },
     "common": {
         "cancel": "Отмена",
-        "remove": "Удалить",
         "confirm": "Подтвердить",
+        "remove": "Удалить",
         "edit": "Изменить"
     },
     "tabs": {
-        "favorites": "Избранные",
         "add_host": "Добавить хост",
-        "settings": "Настройки"
+        "settings": "Настройки",
+        "favorites": "Избранные",
+        "about": "О программе"
     },
     "host": {
         "status": "Статус",
@@ -28,6 +29,7 @@
         "wake_up_message": "Пытаемся разбудить",
         "wake_up_error": "Не удалось разбудить хост",
         "connect": "Подключиться",
+        "remove": "Удалить",
         "remove_message": "Вы уверены что хотите удалить этот хост?"
     },
     "add_host": {
@@ -63,12 +65,7 @@
         "zero_threads": "0 (Не использовать потоки)",
         "keys": "Кнопки управления",
         "swap_ui": "Поменять / и / местами для интерфейса",
-        "keys_mapping": "Схема кнопок в игре",
-        "keys_mapping_default": "Xbox (По умолчанию)",
-        "keys_mapping_swap": "Switch (/ и /)",
-        "keys_mapping_title": "Схемы переназначения кнопок",
-        "keys_mapping_create_new": "+ Создать новую схему",
-        "keys_mapping_new_title": "Новая схема",
+        "swap_game": "Поменять местами для трансляции",
         "mouse": "Мышь",
         "swap_mouse_keys": "Поменять кнопки  и  местами",
         "swap_mouse_scroll": "Поменять направление вертикального скролла",
@@ -77,21 +74,19 @@
         "overlay_zero_time": "0 (Немедленно)",
         "overlay_time": "Удерживайте, чтобы открыть (в секундах)",
         "overlay_buttons": "Комбинация кнопок",
-        "mouse_input": "Режим ввода мышью",
-        "mouse_input_setup_message": "Нажмите клавиши, которые хотите использовать для открытия Режима ввода мышью:\n\n",
         "volume_amplification": "Разрешить усиление громкости",
         "guide_key_setup_message": "Нажмите клавиши, которые хотите использовать для нажатия кнопки \"Guide\":\n\n",
         "guide_key": "Кнопка \"Guide\" (нажимается немедленно)",
         "guide_key_buttons": "Комбинация кнопок",
-        "mouse_speed": "Скорость мыши"
-    },
-    "mapping_layout_editor": {
-        "title": "Редактор схем переназначения кнопок",
-        "remove": "Удалить схему",
-        "reset": "Сбросить",
-        "selection_dialog_title": "Нажмите кнопку для переназначения",
-        "remove_dialog_title": "Вы уверены что хотите удалить эту схему?",
-        "rename_title": "Название схемы"
+        "mouse_speed": "Скорость мыши",
+        "keys_mapping": "Схема кнопок в игре",
+        "keys_mapping_default": "Xbox (По умолчанию)",
+        "keys_mapping_swap": "Switch (/ и /)",
+        "keys_mapping_title": "Схемы переназначения кнопок",
+        "keys_mapping_create_new": "+ Создать новую схему",
+        "keys_mapping_new_title": "Новая схема",
+        "mouse_input": "Режим ввода мышью",
+        "mouse_input_setup_message": "Нажмите клавиши, которые хотите использовать для открытия Режима ввода мышью:\n\n"
     },
     "app_list": {
         "reload_app_list": "Перезагрузить",
@@ -130,5 +125,29 @@
         "back": "Назад",
         "on": "Вкл.",
         "off": "Выкл."
+    },
+    "mapping_layout_editor": {
+        "title": "Редактор схем переназначения кнопок",
+        "remove": "Удалить схему",
+        "selection_dialog_title": "Нажмите кнопку для переназначения",
+        "remove_dialog_title": "Вы уверены что хотите удалить эту схему?",
+        "rename_title": "Название схемы",
+        "reset": "Сбросить"
+    },
+    "about": {
+        "title": "О программе",
+        "version": "Moonlight-Switch v{} от XITRIX",
+        "about": "Moonlight-Switch - это сторонний клиент потоковой передачи игр для Nintendo Switch основанный на Moonlight-Common-C",
+        "links": "Ссылки",
+        "link_github": "Страница на GitHub",
+        "link_patreon": "Страница на Patreon",
+        "link_gbatemp": "Страница на GbaTemp",
+        "thanks": "Отдельное спасибо",
+        "thanks_1": " Rock88 и Moonlight-NX, много кода было переиспользовано в этом приложении",
+        "thanks_2": " Natinusala за создание Borealis",
+        "thanks_3": " Коменде Moonlight, без них это не было бы возможным",
+        "thanks_4": " Cameron Gutman за помощь в отладке проблемы с LibNX",
+        "thanks_5": " Всем, кто принимал участие в разработке данного приложения",
+        "thanks_6": " Вам, за то что используете моё Homebrew"
     }
 }
