@@ -26,8 +26,8 @@
                 scalingType="fit"/>
 
             <brls:Header
+                id="version_label"
                 title="@i18n/about/title"
-                subtitle="Moonlight-Switch v0.11 by XITRIX"
                 paddingTop="40"/>
 
             <brls:Label

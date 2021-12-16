@@ -65,7 +65,7 @@ CFLAGS	:=	-g -Wall -O2 -ffunction-sections \
 
 CFLAGS	+=	$(INCLUDE) -D__SWITCH__ -DMULTICAST_DISABLED \
 			-DBOREALIS_RESOURCES="\"$(BOREALIS_RESOURCES)\"" \
-			-DBRLS_I18N_PREFIX=\"main/\"
+			-DBRLS_I18N_PREFIX=\"main/\" -DAPP_VERSION="\"$(APP_VERSION)\""
 
 CXXFLAGS	:= $(CFLAGS) -std=c++1z -O2
 

@@ -1,4 +1,5 @@
 #include "about_tab.hpp"
+#include <fmt/core.h>
 
 #ifdef __SWITCH__
 #include <switch.h>
@@ -29,6 +30,9 @@ AboutTab::AboutTab()
 
     ThemeVariant variant = Application::getThemeVariant();
     std::string themePart = variant == brls::ThemeVariant::DARK ? "_dark" : "_light";
+
+    std::string subtitle = fmt::format("about/version"_i18n, APP_VERSION);
+    versionLabel->setSubtitle(subtitle);
 
     std::string githubLink = "https://github.com/XITRIX/Moonlight-Switch";
     github->title->setText("about/link_github"_i18n);
