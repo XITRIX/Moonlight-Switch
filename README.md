@@ -18,16 +18,18 @@ Thanks a lot to [Rock88](https://github.com/rock88) and his [Moonlight-NX](https
 
 # Installing
 1. Download latest Moonlight-Switch [release](https://github.com/XITRIX/Moonlight-Switch/releases).
-2. Put br_moonlight.nro to sdcard:/switch/moonlight;
+2. Put Moonlight-Switch.nro to sdcard:/switch/Moonlight-Switch;
 3. Launch hbmenu over *Title Redirection* (for FULL RAM access);
 4. Launch moonlight.
+
+Or download it from [HB App Store](https://apps.fortheusers.org/switch/Moonlight-Switch)
 
 # Discord
 Feel free to join [Moonlight discord server](https://discord.gg/fmtcVPzaG4), you will find me there in "switch-help" channel
 
 # Controls
 ## Mouse
-With touch screen you can move your coursor.
+With touch screen you can move your coursor, tap to left click, scroll 2 fingers to scroll.
 
 While touching screen ZR and ZL buttons will work like left and right mouse buttons.
 
@@ -41,22 +43,23 @@ You can use onscreen keyboard, tap 3 fingers on screen to show it.
 USB keyboard working as well.
 
 ## Gamepad
-By default Switch gamepad configured as X360 gamepad (A/B and X/Y swapped). 
+By default Switch gamepad configured as X360 gamepad (A/B and X/Y swapped). Key mapping availale in application settings.
 
-Multiple gamepad currently not supported.
+Up to 5 gamepads (includes handheld mode) supported. Half of joycons are also supported.
 
 ## Ingame overlay
 To open overlay, press - and + key simultaneously by default or Hold ESC on keyboard.
 
-Key combination and holding time are configurable in settings (gamepad only).
+Key combination and holding time are configurable in settings.
 
 # Localization
 - English (100%)
 - Russian (100%)
-- German (94%)
-- Spanish (94%)
-- Japanese (92%)
-- Czech (93%) - unsupported yet, as HOS has no such system language
+- German (86%)
+- Spanish (72%)
+- Japanese (70%)
+- Chinese (simplified) (86%)
+- Czech (70%) - unsupported yet, as HOS has no such system language
 
 ## Contribution
 If you'd like to improve existing language, or add a new one, follow the instruction:
