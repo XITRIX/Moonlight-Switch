@@ -122,4 +122,5 @@ int http_request(const std::string url, Data* data, HTTPRequestTimeout timeout) 
 
 void http_cleanup() {
     curl_easy_cleanup(curl);
+    curl_global_cleanup();
 }

@@ -35,6 +35,7 @@ AboutTab::AboutTab()
     versionLabel->setSubtitle(subtitle);
 
     std::string githubLink = "https://github.com/XITRIX/Moonlight-Switch";
+    github->addGestureRecognizer(new TapGestureRecognizer(github));
     github->title->setText("about/link_github"_i18n);
     github->subtitle->setText(githubLink);
     github->image->setImageFromRes("img/links/github" + themePart +".png");
@@ -44,6 +45,7 @@ AboutTab::AboutTab()
     });
 
     std::string patreonLink = "https://www.patreon.com/xitrix";
+    patreon->addGestureRecognizer(new TapGestureRecognizer(patreon));
     patreon->title->setText("about/link_patreon"_i18n);
     patreon->subtitle->setText(patreonLink);
     patreon->image->setImageFromRes("img/links/patreon.png");
@@ -53,6 +55,7 @@ AboutTab::AboutTab()
     });
 
     std::string gbatempLink = "https://gbatemp.net/threads/moonlight-switch-nvidia-game-stream-client.591408/";
+    gbatemp->addGestureRecognizer(new TapGestureRecognizer(gbatemp));
     gbatemp->title->setText("about/link_gbatemp"_i18n);
     gbatemp->subtitle->setText(gbatempLink);
     gbatemp->image->setImageFromRes("img/links/gbatemp.png");
