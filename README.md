@@ -84,6 +84,10 @@ ATTENTION! Currently there is no way to select language inside of app, it takes 
 4. If it doesn't work, try to install missing packages
 5. If it still doesn't work, god bless you!
 
+## Switch using Docker:
+3. `scripts/build-switch.sh`
+4. Find `Moonlight-Switch.nro`
+
 ## MacOS (XCode):
 3. Open .xcodeproj
 4. Fix dependency folders if you need inside `Project->Moonlight->Search Paths`
