@@ -3,14 +3,16 @@
     height="200"
     axis="column"
     alignItems="stretch"
-    focusable="true">
+    focusable="true"
+    highlightCornerRadius="14">
 
     <brls:Image
         id="image"
         width="auto"
         height="auto"
         grow="1"
-        scalingType="fill"/>
+        scalingType="fill"
+        cornerRadius="12"/>
 
     <brls:Box
         detachedX="0"
@@ -47,7 +49,8 @@
         detachedY="0"
         width="150"
         height="200"
-        color="#4A4A4AA0"/>
+        color="#4A4A4AA0"
+        cornerRadius="12"/>
 
     <brls:Box
         detachedX="0"
@@ -60,10 +63,12 @@
         <brls:Box
             width="auto"
             height="auto"
+            minHeight="34"
             axis="column"
             justifyContent="center"
             backgroundColor="@theme/brls/backdrop"
-            padding="8">
+            padding="8"
+            cornerRadius="12">
 
             <brls:Label
                 id="title"
