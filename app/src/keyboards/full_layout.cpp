@@ -89,7 +89,7 @@ void KeyboardView::createFullLayout()
     std::vector<KeyboardKeys> row4Keys = { VK_KEY_A, VK_KEY_S, VK_KEY_D, VK_KEY_F, VK_KEY_G, VK_KEY_H, VK_KEY_J, VK_KEY_K, VK_KEY_L, VK_OEM_1, VK_OEM_7 };
 
     ButtonView* capsButton = new ButtonView();
-    capsButton->setKey(VK_RETURN);
+    capsButton->setKey(VK_CAPITAL);
     capsButton->charLabel->setFontSize(21);
     capsButton->setMargins(4, 4, 4, 4);
     capsButton->setWidth(returnButtonWidth);
@@ -162,7 +162,6 @@ void KeyboardView::createFullLayout()
 
     ButtonView* lwinButton = new ButtonView();
     lwinButton->setKey(VK_LWIN);
-    lwinButton->triggerType = true;
     lwinButton->charLabel->setFontSize(21);
     lwinButton->setMargins(4, 4, 4, 4);
     lwinButton->setWidth(menuButtonWidth);

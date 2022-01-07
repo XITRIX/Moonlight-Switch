@@ -141,3 +141,7 @@ OptionsTab::OptionsTab(StreamingView* streamView) :
         streamView->draw_stats = value;
     });
 }
+
+OptionsTab::~OptionsTab() {
+    Settings::instance().save();
+}

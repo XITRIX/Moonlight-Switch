@@ -46,6 +46,7 @@ class OptionsTab : public brls::Box
 {
 public:
     OptionsTab(StreamingView* streamView);
+    ~OptionsTab();
 private:
     StreamingView* streamView;
     

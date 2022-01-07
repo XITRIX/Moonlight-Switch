@@ -22,7 +22,7 @@ short KeyboardCodes[_VK_KEY_MAX]
     0xA3, 0xA5, 0xA1, 0x5B, 0xBE, 0xBC, 0x70, 0x71, 0x72, 0x73,
     0x74, 0x75, 0x76, 0x77, 0x78, 0x79, 0x7A, 0x7B, 0x09, 0x2E,
     0xBA, 0xBF, 0xC0, 0xDB, 0xDC, 0xDD, 0xDE, 0xBD, 0xBB, 0x28,
-    0x25, 0x27, 0x26
+    0x25, 0x27, 0x26, 0x14,
 };
 
 std::string KeyboardLocalization[_VK_KEY_MAX]
@@ -34,7 +34,7 @@ std::string KeyboardLocalization[_VK_KEY_MAX]
     "Ctrl", "Alt", "Shift", "Win", ".", ",", "F1", "F2", "F3", "F4",
     "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12", "Tab", "Delete",
     ";", "/", "`", "[", "\\", "]", "'", "-", "=", "\u2193",
-    "\u2190", "\u2192", "\u2191",
+    "\u2190", "\u2192", "\u2191", "CapsLock",
 };
 
 std::string ShiftKeyboardLocalization[_VK_KEY_MAX]
@@ -46,7 +46,7 @@ std::string ShiftKeyboardLocalization[_VK_KEY_MAX]
     "Ctrl", "Alt", "Shift", "Win", ">", "<", "F1", "F2", "F3", "F4",
     "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12", "TAB", "Delete",
     ":", "?", "~", "{", "|", "}", "\"", "_", "+", "\u2193",
-    "\u2190", "\u2192", "\u2191",
+    "\u2190", "\u2192", "\u2191", "CapsLock",
 };
 
 std::chrono::high_resolution_clock::time_point rumbleLastButtonClicked;

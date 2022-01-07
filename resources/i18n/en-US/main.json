@@ -72,6 +72,8 @@
         "keys_mapping_new_title": "New layout",
         "keyboard": "Keyboard",
         "keyboard_type": "Keyboard type",
+        "keyboard_compact": "Compact",
+        "keyboard_fullsized": "Full-sized",
         "mouse": "Mouse",
         "swap_mouse_keys": "Swap mouse  and  buttons",
         "swap_mouse_scroll": "Swap mouse vertical scrolling direction",
