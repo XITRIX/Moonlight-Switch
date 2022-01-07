@@ -183,7 +183,7 @@ void MoonlightSession::start(ServerCallback<bool> callback) {
     m_config.fps = Settings::instance().fps();
     m_config.audioConfiguration = AUDIO_CONFIGURATION_STEREO;
     m_config.packetSize = 1392;
-    m_config.streamingRemotely = STREAM_CFG_LOCAL;
+    m_config.streamingRemotely = STREAM_CFG_AUTO;
     m_config.bitrate = Settings::instance().bitrate();
     
     switch (Settings::instance().video_codec()) {
