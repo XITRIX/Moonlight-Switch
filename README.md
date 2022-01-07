@@ -43,7 +43,7 @@ You can use onscreen keyboard, tap 3 fingers on screen to show it.
 USB keyboard working as well.
 
 ## Gamepad
-By default Switch gamepad configured as X360 gamepad (A/B and X/Y swapped). Key mapping availale in application settings.
+By default Switch gamepad configured as X360 gamepad (A/B and X/Y swapped). Key mapping available in application settings.
 
 Up to 5 gamepads (includes handheld mode) supported. Half of joycons are also supported.
 
