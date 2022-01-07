@@ -50,6 +50,7 @@ private:
     StreamingView* streamView;
     
     BRLS_BIND(brls::DetailCell, inputOverlayButton, "input_overlay");
+    BRLS_BIND(brls::SelectorCell, keyboardType, "keyboard_type");
     BRLS_BIND(brls::Header, volumeHeader, "volume_header");
     BRLS_BIND(brls::Slider, volumeSlider, "volume_slider");
     BRLS_BIND(brls::Header, mouseHeader, "mouse_speed_header");

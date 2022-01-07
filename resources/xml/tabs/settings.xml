@@ -96,6 +96,13 @@
             
             <brls:DetailCell
                 id="mouse_input_buttons"/>
+
+            <brls:Header
+                title="@i18n/settings/keyboard"
+                paddingTop="60"/>
+
+            <brls:SelectorCell
+                id="keyboard_type"/>
                 
             <brls:Header
                 title="@i18n/settings/mouse"

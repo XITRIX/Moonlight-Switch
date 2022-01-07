@@ -5,6 +5,7 @@
 //  Created by Даниил Виноградов on 14.06.2021.
 //
 
+#include "Settings.hpp"
 #include "keyboard_view.hpp"
 #include <chrono>
 #include <libretro-common/retro_timers.h>
@@ -20,7 +21,8 @@ short KeyboardCodes[_VK_KEY_MAX]
     0x53, 0x54, 0x55, 0x56, 0x57, 0x58, 0x59, 0x5A, 0x0D, 0x20,
     0xA3, 0xA5, 0xA1, 0x5B, 0xBE, 0xBC, 0x70, 0x71, 0x72, 0x73,
     0x74, 0x75, 0x76, 0x77, 0x78, 0x79, 0x7A, 0x7B, 0x09, 0x2E,
-    0xBA, 0xBF, 0xC0, 0xDB, 0xDC, 0xDD, 0xDE,
+    0xBA, 0xBF, 0xC0, 0xDB, 0xDC, 0xDD, 0xDE, 0xBD, 0xBB, 0x28,
+    0x25, 0x27, 0x26
 };
 
 std::string KeyboardLocalization[_VK_KEY_MAX]
@@ -30,8 +32,9 @@ std::string KeyboardLocalization[_VK_KEY_MAX]
     "i", "j", "k", "l", "m", "n", "o", "p", "q", "r",
     "s", "t", "u", "v", "w", "x", "y", "z", "Return", "Space",
     "Ctrl", "Alt", "Shift", "Win", ".", ",", "F1", "F2", "F3", "F4",
-    "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12", "TAB", "Delete",
-    ";", "/", "`", "[", "\\", "]", "'",
+    "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12", "Tab", "Delete",
+    ";", "/", "`", "[", "\\", "]", "'", "-", "=", "\u2193",
+    "\u2190", "\u2192", "\u2191",
 };
 
 std::string ShiftKeyboardLocalization[_VK_KEY_MAX]
@@ -42,7 +45,8 @@ std::string ShiftKeyboardLocalization[_VK_KEY_MAX]
     "S", "T", "U", "V", "W", "X", "Y", "Z", "Return", "Space",
     "Ctrl", "Alt", "Shift", "Win", ">", "<", "F1", "F2", "F3", "F4",
     "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12", "TAB", "Delete",
-    ":", "?", "`", "{", "|", "}", "\"",
+    ":", "?", "~", "{", "|", "}", "\"", "_", "+", "\u2193",
+    "\u2190", "\u2192", "\u2191",
 };
 
 std::chrono::high_resolution_clock::time_point rumbleLastButtonClicked;
@@ -229,8 +233,15 @@ KeyboardView::KeyboardView(bool focusable)
     setAlignItems(AlignItems::CENTER);
     setPaddingTop(24);
     setPaddingBottom(24);
-    
-    createEnglishLayout();
+
+    switch (Settings::instance().get_keyboard_type()) {
+        case COMPACT:
+            createEnglishLayout();
+            break;
+        case FULLSIZED:
+            createFullLayout();
+            break;
+    }
     
     addGestureRecognizer(new TapGestureRecognizer([](TapGestureStatus status, Sound* sound){}));
     addGestureRecognizer(new PanGestureRecognizer([](PanGestureStatus status, Sound* sound){}, PanAxis::ANY));

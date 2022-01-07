@@ -306,6 +306,12 @@ void Settings::load() {
                     m_current_mapping_layout = (int)json_integer_value(current_mapping_layout);
                 }
             }
+
+            if (json_t* keyboard_type = json_object_get(settings, "keyboard_type")) {
+                if (json_typeof(keyboard_type) == JSON_INTEGER) {
+                    m_keyboard_type = (KeyboardType)json_integer_value(keyboard_type);
+                }
+            }
             
             if (json_t* buttons = json_object_get(settings, "overlay_buttons")) {
                 m_overlay_options.buttons.clear();
@@ -431,6 +437,7 @@ void Settings::save() {
             json_object_set_new(settings, "mouse_input_hold_time", json_integer(m_mouse_input_options.holdTime));
             json_object_set_new(settings, "mouse_speed_multiplier", json_integer(m_mouse_speed_multiplier));
             json_object_set_new(settings, "current_mapping_layout", json_integer(m_current_mapping_layout));
+            json_object_set_new(settings, "keyboard_type", json_integer(m_keyboard_type));
             
             if (json_t* overlayButtons = json_array()) {
                 for (auto button: m_overlay_options.buttons) {

@@ -24,6 +24,7 @@ KeyboardKeys NUM_BUTTONS[] =
     VK_F10,
     VK_F11,
     VK_F12,
+    VK_OEM_3,
     VK_KEY_1,
     VK_KEY_2,
     VK_KEY_3,
@@ -34,6 +35,7 @@ KeyboardKeys NUM_BUTTONS[] =
     VK_KEY_8,
     VK_KEY_9,
     VK_KEY_0,
+    VK_OEM_5,
     VK_OEM_PERIOD,
     VK_OEM_COMMA,
     VK_OEM_1,
@@ -41,6 +43,8 @@ KeyboardKeys NUM_BUTTONS[] =
     VK_OEM_7,
     VK_OEM_4,
     VK_OEM_6,
+    VK_OEM_MINUS,
+    VK_OEM_PLUS,
 };
 
 void KeyboardView::createNumpadLayout()
@@ -62,11 +66,12 @@ void KeyboardView::createNumpadLayout()
     Box* secondRow = new Box(Axis::ROW);
     addView(secondRow);
     
-    for (int i = 13; i < 23; i++)
+    for (int i = 13; i < 25; i++)
     {
         ButtonView* button = new ButtonView();
         button->setKey(NUM_BUTTONS[i]);
         button->setMargins(4, 4, 4, 4);
+        button->setWidth(73.7f);
         secondRow->addView(button);
     }
     
@@ -84,11 +89,12 @@ void KeyboardView::createNumpadLayout()
     };
     thirdRow->addView(lshiftButton);
     
-    for (int i = 23; i < 30; i++)
+    for (int i = 25; i < 34; i++)
     {
         ButtonView* button = new ButtonView();
         button->setKey(NUM_BUTTONS[i]);
         button->setMargins(4, 4, 4, 4);
+        button->setWidth(68.25f);
         thirdRow->addView(button);
     }
     

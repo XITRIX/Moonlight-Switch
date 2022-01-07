@@ -24,6 +24,9 @@
             
             <brls:DetailCell
                 id="input_overlay"/>
+
+            <brls:SelectorCell
+                id="keyboard_type"/>
             
             <brls:Header
                 id="volume_header"

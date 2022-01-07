@@ -12,6 +12,11 @@ enum VideoCodec: int {
     H265
 };
 
+enum KeyboardType: int {
+    COMPACT,
+    FULLSIZED
+};
+
 struct KeyMappingLayout {
     std::string title;
     bool editable;
@@ -219,6 +224,14 @@ public:
         return m_volume;
     }
 
+    void set_keyboard_type(KeyboardType type) {
+        m_keyboard_type = type;
+    }
+
+    KeyboardType get_keyboard_type() {
+        return m_keyboard_type;
+    }
+
     void set_mouse_speed_multiplier(int mouse_speed_multiplier) {
         m_mouse_speed_multiplier = mouse_speed_multiplier;
     }
@@ -263,6 +276,7 @@ private:
     bool m_swap_mouse_keys = false;
     bool m_swap_mouse_scroll = false;
     int m_volume = 100;
+    KeyboardType m_keyboard_type = COMPACT;
     bool m_volume_amplification = false;
     int m_mouse_speed_multiplier = 34;
     int m_current_mapping_layout = 0;

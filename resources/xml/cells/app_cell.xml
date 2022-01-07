@@ -4,7 +4,8 @@
     axis="column"
     alignItems="stretch"
     focusable="true"
-    highlightCornerRadius="14">
+    cornerRadius="12"
+    highlightCornerRadius="15">
 
     <brls:Image
         id="image"
