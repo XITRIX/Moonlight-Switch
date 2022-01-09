@@ -50,13 +50,14 @@ KeyboardKeys NUM_BUTTONS[] =
 void KeyboardView::createNumpadLayout()
 {
     clearViews();
+    keyboardLangLock = 0;
     
     Box* firstRow = new Box(Axis::ROW);
     addView(firstRow);
     
     for (int i = 0; i < 13; i++)
     {
-        ButtonView* button = new ButtonView();
+        ButtonView* button = new ButtonView(this);
         button->setKey(NUM_BUTTONS[i]);
         button->setMargins(4, 4, 4, 4);
         button->setWidth(67.3f);
@@ -68,7 +69,7 @@ void KeyboardView::createNumpadLayout()
     
     for (int i = 13; i < 25; i++)
     {
-        ButtonView* button = new ButtonView();
+        ButtonView* button = new ButtonView(this);
         button->setKey(NUM_BUTTONS[i]);
         button->setMargins(4, 4, 4, 4);
         button->setWidth(73.7f);
@@ -78,7 +79,7 @@ void KeyboardView::createNumpadLayout()
     Box* thirdRow = new Box(Axis::ROW);
     addView(thirdRow);
     
-    ButtonView* lshiftButton = new ButtonView();
+    ButtonView* lshiftButton = new ButtonView(this);
     lshiftButton->setKey(VK_RSHIFT);
     lshiftButton->triggerType = true;
     lshiftButton->charLabel->setFontSize(21);
@@ -91,14 +92,14 @@ void KeyboardView::createNumpadLayout()
     
     for (int i = 25; i < 34; i++)
     {
-        ButtonView* button = new ButtonView();
+        ButtonView* button = new ButtonView(this);
         button->setKey(NUM_BUTTONS[i]);
         button->setMargins(4, 4, 4, 4);
         button->setWidth(68.25f);
         thirdRow->addView(button);
     }
     
-    ButtonView* deleteButton = new ButtonView();
+    ButtonView* deleteButton = new ButtonView(this);
     deleteButton->setKey(VK_DELETE);
     deleteButton->charLabel->setFontSize(21);
     deleteButton->setMargins(4, 4, 4, 24);
@@ -108,33 +109,35 @@ void KeyboardView::createNumpadLayout()
     Box* fourthRow = new Box(Axis::ROW);
     addView(fourthRow);
     
-    ButtonView* altButton = new ButtonView();
+    ButtonView* altButton = new ButtonView(this);
     altButton->charLabel->setText("ABC");
     altButton->charLabel->setFontSize(21);
     altButton->setMargins(4, 4, 4, 4);
     altButton->setWidth(120);
     altButton->event = [this] {
-        createEnglishLayout();
-        if (needFocus)
-            Application::giveFocus(this);
+        sync([this]{
+            createEnglishLayout();
+            if (needFocus)
+                Application::giveFocus(this);
+        });
     };
     fourthRow->addView(altButton);
     
-    ButtonView* winButton = new ButtonView();
+    ButtonView* winButton = new ButtonView(this);
     winButton->setKey(VK_TAB);
     winButton->charLabel->setFontSize(21);
     winButton->setMargins(4, 4, 4, 4);
     winButton->setWidth(120);
     fourthRow->addView(winButton);
     
-    ButtonView* spaceButton = new ButtonView();
+    ButtonView* spaceButton = new ButtonView(this);
     spaceButton->setKey(VK_SPACE);
     spaceButton->charLabel->setFontSize(21);
     spaceButton->setMargins(4, 4, 4, 4);
     spaceButton->setWidth(464);
     fourthRow->addView(spaceButton);
     
-    ButtonView* ctrlButton = new ButtonView();
+    ButtonView* ctrlButton = new ButtonView(this);
     ctrlButton->setKey(VK_RCONTROL);
     ctrlButton->triggerType = true;
     ctrlButton->charLabel->setFontSize(21);
@@ -142,7 +145,7 @@ void KeyboardView::createNumpadLayout()
     ctrlButton->setWidth(120);
     fourthRow->addView(ctrlButton);
     
-    ButtonView* returnButton = new ButtonView();
+    ButtonView* returnButton = new ButtonView(this);
     returnButton->setKey(VK_RMENU);
     returnButton->triggerType = true;
     returnButton->charLabel->setFontSize(21);

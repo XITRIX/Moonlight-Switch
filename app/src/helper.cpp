@@ -12,7 +12,7 @@ using namespace brls;
 void showAlert(std::string message, std::function<void(void)> cb)
 {
     auto alert = new brls::Dialog(message);
-    alert->addButton("Close", [alert, cb]
+    alert->addButton("common/сlose"_i18n, [alert, cb]
     {
         cb();
     });

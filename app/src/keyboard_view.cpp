@@ -25,30 +25,6 @@ short KeyboardCodes[_VK_KEY_MAX]
     0x25, 0x27, 0x26, 0x14,
 };
 
-std::string KeyboardLocalization[_VK_KEY_MAX]
-{
-    "Remove", "Esc", "0", "1", "2", "3", "4", "5", "6", "7",
-    "8", "9", "a", "b", "c", "d", "e", "f", "g", "h",
-    "i", "j", "k", "l", "m", "n", "o", "p", "q", "r",
-    "s", "t", "u", "v", "w", "x", "y", "z", "Return", "Space",
-    "Ctrl", "Alt", "Shift", "Win", ".", ",", "F1", "F2", "F3", "F4",
-    "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12", "Tab", "Delete",
-    ";", "/", "`", "[", "\\", "]", "'", "-", "=", "\u2193",
-    "\u2190", "\u2192", "\u2191", "CapsLock",
-};
-
-std::string ShiftKeyboardLocalization[_VK_KEY_MAX]
-{
-    "Remove", "Esc", ")", "!", "@", "#", "$", "%", "^", "&",
-    "*", "(", "A", "B", "C", "D", "E", "F", "G", "H",
-    "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R",
-    "S", "T", "U", "V", "W", "X", "Y", "Z", "Return", "Space",
-    "Ctrl", "Alt", "Shift", "Win", ">", "<", "F1", "F2", "F3", "F4",
-    "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12", "TAB", "Delete",
-    ":", "?", "~", "{", "|", "}", "\"", "_", "+", "\u2193",
-    "\u2190", "\u2192", "\u2191", "CapsLock",
-};
-
 std::chrono::high_resolution_clock::time_point rumbleLastButtonClicked;
 bool rumblingActive = false;
 
@@ -66,11 +42,12 @@ void startRumbling()
     }
 }
 
-ButtonView::ButtonView()
+ButtonView::ButtonView(KeyboardView *keyboardView):
+    keyboardView(keyboardView)
 {
     setFocusable(true);
     setHideHighlightBackground(true);
-    setHighlightCornerRadius(8);
+    setHighlightCornerRadius(11);
     setHideClickAnimation(true);
     
     registerClickAction([](View* view) { return true; });
@@ -96,7 +73,12 @@ ButtonView::ButtonView()
     setShadowVisibility(true);
     setShadowType(ShadowType::GENERIC);
     
-    shiftSubscription = KeyboardView::shiftUpdated.subscribe([this]{
+    shiftSubscription = KeyboardView::shiftUpdated.subscribe([this] {
+        if (!dummy) {
+            if ((this->getClickAlpha() == 0 && keysState[this->key]) ||
+                (this->getClickAlpha() > 0 && !keysState[this->key]))
+                this->playClickAnimation(!keysState[this->key], false, true);
+        }
         applyTitle();
     });
     
@@ -112,44 +94,68 @@ void ButtonView::draw(NVGcontext* vg, float x, float y, float width, float heigh
 {
     Box::draw(vg, x, y, width, height, style, ctx);
     if (!focused) return;
+
+    static ControllerState oldController;
+    ControllerState controller;
+    inputManager->updateUnifiedControllerState(&controller);
     
-    sync([this]() {
-        static ControllerState oldController;
-        ControllerState controller;
-        inputManager->updateUnifiedControllerState(&controller);
-        
-        auto button = inputManager->mapControllerState(BUTTON_A);
-        if (oldController.buttons[button] != controller.buttons[button])
+    auto button = inputManager->mapControllerState(BUTTON_A);
+    if (oldController.buttons[button] != controller.buttons[button])
+    {
+        bool pressed = controller.buttons[button];
+        if (!triggerType)
         {
-            bool pressed = controller.buttons[button];
-            if (!triggerType)
+            if (!dummy)
             {
-                if (!dummy)
-                {
-                    keysState[key] = pressed;
-                    this->playClickAnimation(!pressed, false, true);
-                }
+                keysState[key] = pressed;
+                this->playClickAnimation(!pressed, false, true);
             }
-            else if (pressed)
-            {
-                keysState[key] = !keysState[key];
-                this->playClickAnimation(!keysState[key], false, true);
-            }
-            
-            if (event != NULL)
-                event();
+        }
+        else if (pressed)
+        {
+            keysState[key] = !keysState[key];
+            this->playClickAnimation(!keysState[key], false, true);
         }
         
-        oldController = controller;
-    });
+        if (event != NULL)
+        {
+            if (pressed && !focusJustGained) {
+                event();
+            }
+        }
+    }
+
+    focusJustGained = false;
+    oldController = controller;
+}
+
+void ButtonView::onFocusGained() {
+    Box::onFocusGained();
+    focusJustGained = true;
+}
+
+void ButtonView::onFocusLost()
+{
+    Box::onFocusLost();
+    if (!triggerType && !dummy)
+    {
+        keysState[key] = false;
+        if (this->getClickAlpha() > 0 )
+            this->playClickAnimation(true, false, true);
+    }
 }
 
 void ButtonView::applyTitle()
 {
     if (dummy) return;
-    
+
     bool shifted = keysState[VK_RSHIFT];
-    charLabel->setText(shifted ? ShiftKeyboardLocalization[key] : KeyboardLocalization[key]);
+    int selectedLang = keyboardView->keyboardLangLock != -1 ? keyboardView->keyboardLangLock : Settings::instance().get_keyboard_locale();
+    if (KeyboardView::getLocales().size() <= selectedLang) {
+        Settings::instance().set_keyboard_locale(0);
+        selectedLang = 0;
+    }
+    charLabel->setText(KeyboardView::getLocales()[selectedLang].localization[key][shifted]);
 }
 
 void ButtonView::setKey(KeyboardKeys key)
@@ -222,6 +228,8 @@ void ButtonView::registerCallback()
 KeyboardView::KeyboardView(bool focusable)
     : Box(Axis::COLUMN), needFocus(focusable)
 {
+    createLocales();
+    
     if (!keysStateInited)
     {
         keysStateInited = true;
@@ -248,7 +256,10 @@ KeyboardView::KeyboardView(bool focusable)
 }
 
 KeyboardView::~KeyboardView()
-{ }
+{
+    if (rumblingActive)
+        inputManager->sendRumble(0, 0, 0);
+}
 
 void KeyboardView::draw(NVGcontext* vg, float x, float y, float width, float height, brls::Style style, brls::FrameContext* ctx) 
 {
@@ -297,4 +308,10 @@ View* KeyboardView::getParentNavigationDecision(View* from, View* newFocus, Focu
         return newParent->getChildren()[targetFocusIndex];
     }
     return Box::getParentNavigationDecision(from, newFocus, direction);
+}
+
+void KeyboardView::changeLang(int lang) {
+    Settings::instance().set_keyboard_locale(lang);
+    Settings::instance().save();
+    KeyboardView::shiftUpdated.fire();
 }

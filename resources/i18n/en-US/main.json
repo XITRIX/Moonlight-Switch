@@ -8,6 +8,7 @@
         "ip_not_obtained": "Can't obtain IP address..."
     },
     "common": {
+        "close": "Close",
         "cancel": "Cancel",
         "remove": "Remove",
         "confirm": "Confirm",

@@ -22,15 +22,22 @@ enum KeyboardKeys
     _VK_KEY_MAX
 };
 
+struct KeyboardLocale {
+    std::string name;
+    std::string localization[_VK_KEY_MAX][2];
+};
+
 struct KeyboardState
 {
     bool keys[_VK_KEY_MAX];
 };
 
+class KeyboardView;
+
 class ButtonView: public brls::Box
 {
 public:
-    ButtonView();
+    ButtonView(KeyboardView *keyboardView);
     ~ButtonView();
     brls::Label* charLabel;
     void setKey(KeyboardKeys key);
@@ -40,17 +47,24 @@ public:
     std::function<void(void)> event = NULL;
     
     void draw(NVGcontext* vg, float x, float y, float width, float height, brls::Style style, brls::FrameContext* ctx) override;
+    void onFocusGained() override;
+    void onFocusLost() override;
 private:
     brls::VoidEvent::Subscription shiftSubscription;
     bool dummy = true;
+    bool eventPressed = false;
+    bool focusJustGained = false;
     
     void applyTitle();
+    KeyboardView *keyboardView;
 };
 
 class KeyboardView: public brls::Box
 {
 public:
     inline static brls::VoidEvent shiftUpdated;
+    inline static std::vector<KeyboardLocale> getLocales() { return locales; }
+    
     KeyboardView(bool focusable);
     ~KeyboardView();
     KeyboardState getKeyboardState();
@@ -58,9 +72,16 @@ public:
     
     View* getParentNavigationDecision(View* from, View* newFocus, brls::FocusDirection direction) override;
     void draw(NVGcontext* vg, float x, float y, float width, float height, brls::Style style, brls::FrameContext* ctx) override;
+
 private:
+    int keyboardLangLock = -1;
     bool needFocus = false;
     void createEnglishLayout();
     void createNumpadLayout();
     void createFullLayout();
+    void changeLang(int lang);
+    void createLocales();
+    inline static std::vector<KeyboardLocale> locales;
+
+    friend class ButtonView;
 };

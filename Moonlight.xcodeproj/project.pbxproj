@@ -274,6 +274,8 @@
 		7C4B12BE2748EB280097245B /* about_tab.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C4B12BC2748EB280097245B /* about_tab.cpp */; };
 		7C4B12C3274A88670097245B /* link_cell.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C4B12C2274A88670097245B /* link_cell.cpp */; };
 		7C4B12C4274A88670097245B /* link_cell.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C4B12C2274A88670097245B /* link_cell.cpp */; };
+		7C4DD2A2278A51A20086DFB4 /* keyboard_locales.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C4DD2A1278A51A20086DFB4 /* keyboard_locales.cpp */; };
+		7C4DD2A3278A51A20086DFB4 /* keyboard_locales.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C4DD2A1278A51A20086DFB4 /* keyboard_locales.cpp */; };
 		7C52664C2670266500DA102F /* backward.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C52664A2670266500DA102F /* backward.cpp */; };
 		7C5DEBA6268FCA450067CF37 /* DiscoverManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C5DEBA4268FCA450067CF37 /* DiscoverManager.cpp */; };
 		7C6E0C6A2742E2130046F91C /* two_finger_scroll_recognizer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C6E0C682742E2130046F91C /* two_finger_scroll_recognizer.cpp */; };
@@ -718,6 +720,7 @@
 		7C4B12BC2748EB280097245B /* about_tab.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = about_tab.cpp; sourceTree = "<group>"; };
 		7C4B12C0274A88610097245B /* link_cell.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = link_cell.hpp; sourceTree = "<group>"; };
 		7C4B12C2274A88670097245B /* link_cell.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = link_cell.cpp; sourceTree = "<group>"; };
+		7C4DD2A1278A51A20086DFB4 /* keyboard_locales.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = keyboard_locales.cpp; sourceTree = "<group>"; };
 		7C52664A2670266500DA102F /* backward.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = backward.cpp; sourceTree = "<group>"; };
 		7C52664B2670266500DA102F /* backward.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = backward.hpp; sourceTree = "<group>"; };
 		7C5DEBA1268FC6830067CF37 /* zeroconf.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = zeroconf.hpp; sourceTree = "<group>"; };
@@ -2097,6 +2100,7 @@
 		7CE6FA8C26823DC6005854FC /* keyboards */ = {
 			isa = PBXGroup;
 			children = (
+				7C4DD2A1278A51A20086DFB4 /* keyboard_locales.cpp */,
 				7CE6FA8D26823DDE005854FC /* english_layout.cpp */,
 				7CE6FA8F26823E3A005854FC /* numpad_layout.cpp */,
 				7C29E46D27889D4B00115E95 /* full_layout.cpp */,
@@ -2325,6 +2329,7 @@
 				7C07556B26F6A7F7006A4CDC /* SwitchMoonlightSessionDecoderAndRenderProvider.cpp in Sources */,
 				7C07553E26F6A6CD006A4CDC /* YGConfig.cpp in Sources */,
 				7C07553D26F6A6CD006A4CDC /* Utils.cpp in Sources */,
+				7C4DD2A3278A51A20086DFB4 /* keyboard_locales.cpp in Sources */,
 				7C0754ED26F6A5FF006A4CDC /* main_tabs_view.cpp in Sources */,
 				7C07554F26F6A6FF006A4CDC /* battery.cpp in Sources */,
 				7C0754EA26F6A5FF006A4CDC /* keyboard_view.cpp in Sources */,
@@ -2477,6 +2482,7 @@
 				7C18F097265C161B000D3AF0 /* experiments.cpp in Sources */,
 				7C18F0B3265C177E000D3AF0 /* cell_detail.cpp in Sources */,
 				7C18F095265C1617000D3AF0 /* event.cpp in Sources */,
+				7C4DD2A2278A51A20086DFB4 /* keyboard_locales.cpp in Sources */,
 				7C18F07D265C15E7000D3AF0 /* application.cpp in Sources */,
 				7C2BCFF12667F47A005952F2 /* loading_overlay.cpp in Sources */,
 				7CE6FA8E26823DDE005854FC /* english_layout.cpp in Sources */,

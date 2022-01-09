@@ -232,6 +232,15 @@ public:
         return m_keyboard_type;
     }
 
+    void set_keyboard_locale(int locale) {
+        m_keyboard_locale = locale;
+    }
+
+    int get_keyboard_locale() {
+        return m_keyboard_locale;
+    }
+
+
     void set_mouse_speed_multiplier(int mouse_speed_multiplier) {
         m_mouse_speed_multiplier = mouse_speed_multiplier;
     }
@@ -277,6 +286,7 @@ private:
     bool m_swap_mouse_scroll = false;
     int m_volume = 100;
     KeyboardType m_keyboard_type = COMPACT;
+    int m_keyboard_locale = 0;
     bool m_volume_amplification = false;
     int m_mouse_speed_multiplier = 34;
     int m_current_mapping_layout = 0;
