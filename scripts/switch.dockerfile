@@ -16,4 +16,6 @@ WORKDIR /code
 
 RUN pacman -S --noconfirm make switch-ffmpeg switch-mbedtls switch-opusfile switch-sdl2 switch-curl switch-libexpat switch-jansson switch-glfw switch-glm switch-libvpx switch-glad
 
+ENV DEVKITPRO=/opt/devkitpro
+
 CMD make clean; make -j8

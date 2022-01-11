@@ -1,4 +1,4 @@
-name: Docker Image CI
+name: Build Moonlight-Switch
 
 on:
   push:
@@ -11,15 +11,18 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
+    
+    container:
+      image: docker://xitrix/moonlight:latest
 
     steps:
     - name: Check out repository
-      uses: actions/checkout@master
+      uses: actions/checkout@v1
       with:
         submodules: recursive
 
     - name: Run build
-      run: ./scripts/build-switch.sh
+      run: make -j8
 
     - name: Upload Moonlight-Switch.nro
       uses: actions/upload-artifact@master
