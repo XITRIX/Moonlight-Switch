@@ -13,6 +13,16 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
-    - name: Build the Docker image
-      run: docker build . --file scripts/switch.dockerfile --tag my-image-name:$(date +%s)
+    - name: Check out repository
+      uses: actions/checkout@master
+      with:
+        submodules: recursive
+
+    - name: Run build
+      run: ./scripts/build-switch.sh
+
+    - name: Upload Moonlight-Switch.nro
+      uses: actions/upload-artifact@master
+      with:
+        name: Moonlight-Switch
+        path: Moonlight-Switch.nro
