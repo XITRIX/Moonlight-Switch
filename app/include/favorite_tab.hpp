@@ -7,19 +7,19 @@
 
 #pragma once
 
-#include <borealis.hpp>
-#include <Settings.hpp>
 #include "grid_view.hpp"
+#include <Settings.hpp>
+#include <borealis.hpp>
 
-class FavoriteTab : public brls::Box
-{
+class FavoriteTab : public brls::Box {
   public:
     FavoriteTab();
 
     void refreshIfNeeded();
     void setRefreshNeeded() { isDirty = true; }
     static brls::View* create();
-private:
+
+  private:
     BRLS_BIND(brls::Box, container, "container");
 
     bool isDirty = false;

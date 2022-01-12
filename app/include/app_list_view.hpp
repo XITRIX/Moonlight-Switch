@@ -7,26 +7,25 @@
 
 #pragma once
 
-#include <borealis.hpp>
-#include <Settings.hpp>
 #include "GameStreamClient.hpp"
-#include "loading_overlay.hpp"
-#include "grid_view.hpp"
 #include "app_cell.hpp"
+#include "grid_view.hpp"
+#include "loading_overlay.hpp"
+#include <Settings.hpp>
+#include <borealis.hpp>
 
 #include <optional>
 
 using namespace brls;
 
-class AppListView : public Box
-{
-public:
+class AppListView : public Box {
+  public:
     AppListView(Host host);
-    
+
     void onLayout() override;
     void willAppear(bool resetState) override;
-    
-private:
+
+  private:
     Host host;
     View* hintView = nullptr;
     std::optional<AppInfo> currentApp;
@@ -34,10 +33,10 @@ private:
     bool inputBlocked = false;
     LoadingOverlay* loader = nullptr;
     void blockInput(bool block);
-    
+
     GridView* gridView;
     BRLS_BIND(Box, container, "container");
-    
+
     void setCurrentApp(AppInfo app);
     void terninateApp();
     void updateAppList();

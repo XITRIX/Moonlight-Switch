@@ -4,6 +4,12 @@ cd "$( dirname "${BASH_SOURCE[0]}" )/.."
 
 FIX=""
 COLOR="auto"
+STYLE="{ \
+BasedOnStyle: LLVM,             \
+IndentWidth: 4,                 \
+DerivePointerAlignment: false,  \
+PointerAlignment: Left,         \
+}"
 
 for v in "$@"; do
     if [[ "$v" == "--no-ansi" ]] || [[ "$v" == "-n" ]]; then
@@ -16,11 +22,11 @@ done
 
 function clang_format_run() {
     python ./scripts/run-clang-format.py -r \
-        --clang-format-executable="clang-format-8" \
+        --clang-format-executable="clang-format" \
+        --style="$STYLE" \
         --color="$COLOR" \
-        --exclude ./library/include/borealis/extern \
-        --exclude ./library/lib/extern \
-        ./library ./demo
+        --exclude ./extern \
+        ./app
 }
 
 if [[ -z "$FIX" ]]; then

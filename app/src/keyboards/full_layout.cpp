@@ -5,13 +5,12 @@
 //  Created by Даниил Виноградов on 07.01.2022.
 //
 
-#include "keyboard_view.hpp"
 #include "Settings.hpp"
+#include "keyboard_view.hpp"
 
 using namespace brls;
 
-void KeyboardView::createFullLayout()
-{
+void KeyboardView::createFullLayout() {
     clearViews();
     keyboardLangLock = -1;
 
@@ -28,8 +27,7 @@ void KeyboardView::createFullLayout()
 
     std::vector<KeyboardKeys> row1Keys = { VK_ESCAPE, VK_F1, VK_F2, VK_F3, VK_F4, VK_F5, VK_F6, VK_F7, VK_F8, VK_F9, VK_F10, VK_F11, VK_F12, VK_DELETE };
 
-    for (int i = 0; i < row1Keys.size(); i++)
-    {
+    for (int i = 0; i < row1Keys.size(); i++) {
         float margin = i % 4 == 0 ? funcMargins : 4;
 
         ButtonView* button = new ButtonView(this);
@@ -46,8 +44,7 @@ void KeyboardView::createFullLayout()
 
     std::vector<KeyboardKeys> row2Keys = { VK_OEM_3, VK_KEY_1, VK_KEY_2, VK_KEY_3, VK_KEY_4, VK_KEY_5, VK_KEY_6, VK_KEY_7, VK_KEY_8, VK_KEY_9, VK_KEY_0, VK_OEM_MINUS, VK_OEM_PLUS };
 
-    for (int i = 0; i < row2Keys.size(); i++)
-    {
+    for (int i = 0; i < row2Keys.size(); i++) {
         ButtonView* button = new ButtonView(this);
         button->setKey(row2Keys[i]);
         button->setMargins(4, 4, 4, 4);
@@ -75,8 +72,7 @@ void KeyboardView::createFullLayout()
     tabButton->setWidth(tabButtonWidth);
     row3->addView(tabButton);
 
-    for (int i = 0; i < row3Keys.size(); i++)
-    {
+    for (int i = 0; i < row3Keys.size(); i++) {
         ButtonView* button = new ButtonView(this);
         button->setKey(row3Keys[i]);
         button->setMargins(4, 4, 4, 4);
@@ -97,8 +93,7 @@ void KeyboardView::createFullLayout()
     capsButton->setWidth(returnButtonWidth);
     row4->addView(capsButton);
 
-    for (int i = 0; i < row4Keys.size(); i++)
-    {
+    for (int i = 0; i < row4Keys.size(); i++) {
         ButtonView* button = new ButtonView(this);
         button->setKey(row4Keys[i]);
         button->setMargins(4, 4, 4, 4);
@@ -125,13 +120,10 @@ void KeyboardView::createFullLayout()
     lshiftButton->charLabel->setFontSize(21);
     lshiftButton->setMargins(4, 4, 4, 4);
     lshiftButton->setWidth(shiftButtonWidth);
-    lshiftButton->event = [] {
-        KeyboardView::shiftUpdated.fire();
-    };
+    lshiftButton->event = [] { KeyboardView::shiftUpdated.fire(); };
     row5->addView(lshiftButton);
 
-    for (int i = 0; i < row5Keys.size(); i++)
-    {
+    for (int i = 0; i < row5Keys.size(); i++) {
         ButtonView* button = new ButtonView(this);
         button->setKey(row5Keys[i]);
         button->setMargins(4, 4, 4, 4);
@@ -145,9 +137,7 @@ void KeyboardView::createFullLayout()
     rshiftButton->charLabel->setFontSize(21);
     rshiftButton->setMargins(4, 4, 4, 4);
     rshiftButton->setWidth(shiftButtonWidth);
-    rshiftButton->event = [] {
-        KeyboardView::shiftUpdated.fire();
-    };
+    rshiftButton->event = [] { KeyboardView::shiftUpdated.fire(); };
     row5->addView(rshiftButton);
 
     // ROW 6
@@ -163,14 +153,14 @@ void KeyboardView::createFullLayout()
         auto locales = KeyboardView::getLocales();
         std::vector<std::string> langs;
 
-        std::transform(locales.begin(), locales.end(), std::back_inserter(langs), [](KeyboardLocale locale) {
-            return locale.name;
-        });
+        std::transform(locales.begin(), locales.end(),
+                       std::back_inserter(langs),
+                       [](KeyboardLocale locale) { return locale.name; });
 
         Dropdown* dropdown = new Dropdown(
-            "Select language", langs, [this](int selected) {
-                this->changeLang(selected);
-            }, Settings::instance().get_keyboard_locale());
+            "Select language", langs,
+            [this](int selected) { this->changeLang(selected); },
+            Settings::instance().get_keyboard_locale());
         Application::pushActivity(new Activity(dropdown));
     };
     row6->addView(langButton);

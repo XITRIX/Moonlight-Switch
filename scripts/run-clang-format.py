@@ -6,8 +6,6 @@ This is an alternative API for the clang-format command line.
 It runs over multiple files and directories in parallel.
 A diff output is produced and a sensible exit code is returned.
 
-https://github.com/Sarcasm/run-clang-format/blob/master/run-clang-format.py
-
 """
 
 from __future__ import print_function, unicode_literals
@@ -17,6 +15,7 @@ import codecs
 import difflib
 import fnmatch
 import io
+import errno
 import multiprocessing
 import os
 import signal
@@ -33,6 +32,7 @@ except ImportError:
 
 
 DEFAULT_EXTENSIONS = 'c,h,C,H,cpp,hpp,cc,hh,c++,h++,cxx,hxx'
+DEFAULT_CLANG_FORMAT_IGNORE = '.clang-format-ignore'
 
 
 class ExitStatus:
@@ -40,6 +40,23 @@ class ExitStatus:
     DIFF = 1
     TROUBLE = 2
 
+def excludes_from_file(ignore_file):
+    excludes = []
+    try:
+        with io.open(ignore_file, 'r', encoding='utf-8') as f:
+            for line in f:
+                if line.startswith('#'):
+                    # ignore comments
+                    continue
+                pattern = line.rstrip()
+                if not pattern:
+                    # allow empty lines
+                    continue
+                excludes.append(pattern)
+    except EnvironmentError as e:
+        if e.errno != errno.ENOENT:
+            raise
+    return excludes;
 
 def list_files(files, recursive=False, extensions=None, exclude=None):
     if extensions is None:
@@ -113,7 +130,18 @@ def run_clang_format_diff(args, file):
             original = f.readlines()
     except IOError as exc:
         raise DiffError(str(exc))
-    invocation = [args.clang_format_executable, file]
+
+    if args.in_place:
+        invocation = [args.clang_format_executable, '-i', file]
+    else:
+        invocation = [args.clang_format_executable, file]
+
+    if args.style:
+        invocation.extend(['--style', args.style])
+
+    if args.dry_run:
+        print(" ".join(invocation))
+        return [], []
 
     # Use of utf-8 to decode the process output.
     #
@@ -169,6 +197,8 @@ def run_clang_format_diff(args, file):
             ),
             errs,
         )
+    if args.in_place:
+        return [], errs
     return make_diff(file, original, outs), errs
 
 
@@ -235,11 +265,22 @@ def main():
         '--recursive',
         action='store_true',
         help='run recursively over directories')
+    parser.add_argument(
+        '-d',
+        '--dry-run',
+        action='store_true',
+        help='just print the list of files')
+    parser.add_argument(
+        '-i',
+        '--in-place',
+        action='store_true',
+        help='format file instead of printing differences')
     parser.add_argument('files', metavar='file', nargs='+')
     parser.add_argument(
         '-q',
         '--quiet',
-        action='store_true')
+        action='store_true',
+        help="disable output, useful for the exit code")
     parser.add_argument(
         '-j',
         metavar='N',
@@ -260,6 +301,9 @@ def main():
         default=[],
         help='exclude paths matching the given glob-like pattern(s)'
         ' from recursive search')
+    parser.add_argument(
+        '--style',
+        help='formatting style to apply (LLVM, Google, Chromium, Mozilla, WebKit)')
 
     args = parser.parse_args()
 
@@ -300,10 +344,14 @@ def main():
         return ExitStatus.TROUBLE
 
     retcode = ExitStatus.SUCCESS
+
+    excludes = excludes_from_file(DEFAULT_CLANG_FORMAT_IGNORE)
+    excludes.extend(args.exclude)
+
     files = list_files(
         args.files,
         recursive=args.recursive,
-        exclude=args.exclude,
+        exclude=excludes,
         extensions=args.extensions.split(','))
 
     if not files:
@@ -323,6 +371,7 @@ def main():
         pool = multiprocessing.Pool(njobs)
         it = pool.imap_unordered(
             partial(run_clang_format_diff_wrapper, args), files)
+        pool.close()
     while True:
         try:
             outs, errs = next(it)
@@ -350,6 +399,8 @@ def main():
                 print_diff(outs, use_color=colored_stdout)
             if retcode == ExitStatus.SUCCESS:
                 retcode = ExitStatus.DIFF
+    if pool:
+        pool.join()
     return retcode
 
 

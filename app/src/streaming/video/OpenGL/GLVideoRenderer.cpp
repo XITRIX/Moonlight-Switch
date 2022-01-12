@@ -7,7 +7,7 @@
 
 // TODO: GLES support
 
-static const char *vertex_shader_string_core = "\
+static const char* vertex_shader_string_core = "\
 #version 140\n\
 in vec2 position;\n\
 out mediump vec2 tex_position;\n\
@@ -16,7 +16,7 @@ void main() {\n\
     tex_position = vec2((position.x * 0.5 + 0.5), (0.5 - position.y * 0.5));\n\
 }";
 
-static const char *fragment_shader_string_core = "\
+static const char* fragment_shader_string_core = "\
 #version 140\n\
 uniform lowp sampler2D ymap;\n\
 uniform lowp sampler2D umap;\n\
@@ -33,7 +33,7 @@ void main() {\n\
     FragColor = vec4(clamp(yuvmat * YCbCr, 0.0, 1.0), 1.0);\n\
 }";
 
-static const char *vertex_shader_string = "\
+static const char* vertex_shader_string = "\
 #version 120\n\
 attribute vec2 position;\n\
 varying vec2 tex_position;\n\
@@ -43,7 +43,7 @@ void main() {\n\
     tex_position = vec2((position.x * 0.5 + 0.5), (0.5 - position.y * 0.5));\n\
 }";
 
-static const char *fragment_shader_string = "\
+static const char* fragment_shader_string = "\
 #version 120\n\
 uniform sampler2D ymap;\n\
 uniform sampler2D umap;\n\
@@ -59,64 +59,45 @@ void main() {\n\
     gl_FragColor = vec4(clamp(yuvmat * YCbCr, 0.0, 1.0), 1.0);\n\
 }";
 
-static const float vertices[] = {
-        -1.0f, -1.0f,
-        1.0f, -1.0f,
-        -1.0f, 1.0f,
-        1.0f, 1.0f
-};
+static const float vertices[] = {-1.0f, -1.0f, 1.0f, -1.0f,
+                                 -1.0f, 1.0f,  1.0f, 1.0f};
 
-static const char *texture_mappings[] = {"ymap", "umap", "vmap"};
+static const char* texture_mappings[] = {"ymap", "umap", "vmap"};
 
-static const float *gl_color_offset(bool color_full) {
-    static const float limitedOffsets[] = {16.0f / 255.0f, 128.0f / 255.0f, 128.0f / 255.0f};
+static const float* gl_color_offset(bool color_full) {
+    static const float limitedOffsets[] = {16.0f / 255.0f, 128.0f / 255.0f,
+                                           128.0f / 255.0f};
     static const float fullOffsets[] = {0.0f, 128.0f / 255.0f, 128.0f / 255.0f};
     return color_full ? fullOffsets : limitedOffsets;
 }
 
-static const float *gl_color_matrix(enum AVColorSpace color_space, bool color_full) {
-    static const float bt601Lim[] = {
-            1.1644f, 1.1644f, 1.1644f,
-            0.0f, -0.3917f, 2.0172f,
-            1.5960f, -0.8129f, 0.0f
-    };
+static const float* gl_color_matrix(enum AVColorSpace color_space,
+                                    bool color_full) {
+    static const float bt601Lim[] = {1.1644f, 1.1644f, 1.1644f,  0.0f, -0.3917f,
+                                     2.0172f, 1.5960f, -0.8129f, 0.0f};
     static const float bt601Full[] = {
-            1.0f, 1.0f, 1.0f,
-            0.0f, -0.3441f, 1.7720f,
-            1.4020f, -0.7141f, 0.0f
-    };
-    static const float bt709Lim[] = {
-            1.1644f, 1.1644f, 1.1644f,
-            0.0f, -0.2132f, 2.1124f,
-            1.7927f, -0.5329f, 0.0f
-    };
+        1.0f, 1.0f, 1.0f, 0.0f, -0.3441f, 1.7720f, 1.4020f, -0.7141f, 0.0f};
+    static const float bt709Lim[] = {1.1644f, 1.1644f, 1.1644f,  0.0f, -0.2132f,
+                                     2.1124f, 1.7927f, -0.5329f, 0.0f};
     static const float bt709Full[] = {
-            1.0f, 1.0f, 1.0f,
-            0.0f, -0.1873f, 1.8556f,
-            1.5748f, -0.4681f, 0.0f
-    };
-    static const float bt2020Lim[] = {
-            1.1644f, 1.1644f, 1.1644f,
-            0.0f, -0.1874f, 2.1418f,
-            1.6781f, -0.6505f, 0.0f
-    };
+        1.0f, 1.0f, 1.0f, 0.0f, -0.1873f, 1.8556f, 1.5748f, -0.4681f, 0.0f};
+    static const float bt2020Lim[] = {1.1644f, 1.1644f,  1.1644f,
+                                      0.0f,    -0.1874f, 2.1418f,
+                                      1.6781f, -0.6505f, 0.0f};
     static const float bt2020Full[] = {
-            1.0f, 1.0f, 1.0f,
-            0.0f, -0.1646f, 1.8814f,
-            1.4746f, -0.5714f, 0.0f
-    };
+        1.0f, 1.0f, 1.0f, 0.0f, -0.1646f, 1.8814f, 1.4746f, -0.5714f, 0.0f};
 
     switch (color_space) {
-        case AVCOL_SPC_SMPTE170M:
-        case AVCOL_SPC_BT470BG:
-            return color_full ? bt601Full : bt601Lim;
-        case AVCOL_SPC_BT709:
-            return color_full ? bt709Full : bt709Lim;
-        case AVCOL_SPC_BT2020_NCL:
-        case AVCOL_SPC_BT2020_CL:
-            return color_full ? bt2020Full : bt2020Lim;
-        default:
-            return bt601Lim;
+    case AVCOL_SPC_SMPTE170M:
+    case AVCOL_SPC_BT470BG:
+        return color_full ? bt601Full : bt601Lim;
+    case AVCOL_SPC_BT709:
+        return color_full ? bt709Full : bt709Lim;
+    case AVCOL_SPC_BT2020_NCL:
+    case AVCOL_SPC_BT2020_CL:
+        return color_full ? bt2020Full : bt2020Lim;
+    default:
+        return bt601Lim;
     }
 }
 
@@ -132,10 +113,10 @@ static void check_shader(GLuint handle) {
         GLint length = 0;
         glGetShaderiv(handle, GL_INFO_LOG_LENGTH, &length);
 
-        char *buffer = (char *) malloc(length);
+        char* buffer = (char*)malloc(length);
 
         glGetShaderInfoLog(handle, length, &length, buffer);
-        
+
 #ifndef _WIN32
         brls::Logger::error("GL: Compile shader error: {}", buffer);
 #endif
@@ -145,12 +126,12 @@ static void check_shader(GLuint handle) {
 }
 
 static bool use_core_shaders() {
-    char *version = (char *) glGetString(GL_SHADING_LANGUAGE_VERSION);
+    char* version = (char*)glGetString(GL_SHADING_LANGUAGE_VERSION);
     return version[0] == '3' || version[0] == '4';
 }
 
 GLVideoRenderer::~GLVideoRenderer() {
-    
+
 #ifndef _WIN32
     brls::Logger::info("GL: Cleanup...");
 #endif
@@ -185,11 +166,17 @@ void GLVideoRenderer::initialize() {
 
     bool use_gl_core = use_core_shaders();
 
-    glShaderSource(vert, 1, use_gl_core ? &vertex_shader_string_core : &vertex_shader_string, nullptr);
+    glShaderSource(vert, 1,
+                   use_gl_core ? &vertex_shader_string_core
+                               : &vertex_shader_string,
+                   nullptr);
     glCompileShader(vert);
     check_shader(vert);
 
-    glShaderSource(frag, 1, use_gl_core ? &fragment_shader_string_core : &fragment_shader_string, nullptr);
+    glShaderSource(frag, 1,
+                   use_gl_core ? &fragment_shader_string_core
+                               : &fragment_shader_string,
+                   nullptr);
     glCompileShader(frag);
     check_shader(frag);
 
@@ -205,7 +192,8 @@ void GLVideoRenderer::initialize() {
     glGenVertexArrays(1, &m_vao);
 
     for (int i = 0; i < 3; i++) {
-        m_texture_uniform[i] = glGetUniformLocation(m_shader_program, texture_mappings[i]);
+        m_texture_uniform[i] =
+            glGetUniformLocation(m_shader_program, texture_mappings[i]);
     }
 
     m_yuvmat_location = glGetUniformLocation(m_shader_program, "yuvmat");
@@ -220,31 +208,38 @@ void GLVideoRenderer::bindTexture(int id) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColorInternal);
+    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR,
+                     borderColorInternal);
     textureWidth[id] = id > 0 ? m_frame_width / 2 : m_frame_width;
     textureHeight[id] = id > 0 ? m_frame_height / 2 : m_frame_height;
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, textureWidth[id], textureHeight[id], 0, GL_RED, GL_UNSIGNED_BYTE, nullptr);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, textureWidth[id], textureHeight[id],
+                 0, GL_RED, GL_UNSIGNED_BYTE, nullptr);
     glUniform1i(m_texture_uniform[id], id);
 }
 
-void GLVideoRenderer::checkAndInitialize(int width, int height, AVFrame *frame) {
+void GLVideoRenderer::checkAndInitialize(int width, int height,
+                                         AVFrame* frame) {
     if (!m_is_initialized) {
 #ifndef _WIN32
-        brls::Logger::info("GL: GL: {}, GLSL: {}", glGetString(GL_VERSION), glGetString(GL_SHADING_LANGUAGE_VERSION));
-        brls::Logger::info("GL: Init with width: {}, height: {}", width, height);
+        brls::Logger::info("GL: GL: {}, GLSL: {}", glGetString(GL_VERSION),
+                           glGetString(GL_SHADING_LANGUAGE_VERSION));
+        brls::Logger::info("GL: Init with width: {}, height: {}", width,
+                           height);
 #endif
 
         initialize();
         m_is_initialized = true;
-        
+
 #ifndef _WIN32
         brls::Logger::info("GL: Init done");
 #endif
     }
 }
 
-void GLVideoRenderer::checkAndUpdateScale(int width, int height, AVFrame *frame) {
-    if ((m_frame_width != frame->width) || (m_frame_height != frame->height) || (m_screen_width != width) || (m_screen_height != height)) {
+void GLVideoRenderer::checkAndUpdateScale(int width, int height,
+                                          AVFrame* frame) {
+    if ((m_frame_width != frame->width) || (m_frame_height != frame->height) ||
+        (m_screen_width != width) || (m_screen_height != height)) {
 
         m_frame_width = frame->width;
         m_frame_height = frame->height;
@@ -253,9 +248,11 @@ void GLVideoRenderer::checkAndUpdateScale(int width, int height, AVFrame *frame)
         m_screen_height = height;
 
         glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices,
+                     GL_STATIC_DRAW);
 
-        int positionLocation = glGetAttribLocation(m_shader_program, "position");
+        int positionLocation =
+            glGetAttribLocation(m_shader_program, "position");
         glEnableVertexAttribArray(positionLocation);
         glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
 
@@ -274,22 +271,26 @@ void GLVideoRenderer::checkAndUpdateScale(int width, int height, AVFrame *frame)
         bool colorFull = frame->color_range == AVCOL_RANGE_JPEG;
 
         glUniform3fv(m_offset_location, 1, gl_color_offset(colorFull));
-        glUniformMatrix3fv(m_yuvmat_location, 1, GL_FALSE, gl_color_matrix(frame->colorspace, colorFull));
+        glUniformMatrix3fv(m_yuvmat_location, 1, GL_FALSE,
+                           gl_color_matrix(frame->colorspace, colorFull));
 
-        float frameAspect = ((float) m_frame_height / (float) m_frame_width);
-        float screenAspect = ((float) m_screen_height / (float) m_screen_width);
+        float frameAspect = ((float)m_frame_height / (float)m_frame_width);
+        float screenAspect = ((float)m_screen_height / (float)m_screen_width);
 
         if (frameAspect > screenAspect) {
             float multiplier = frameAspect / screenAspect;
-            glUniform4f(m_uv_data_location, 0.5f - 0.5f * (1.0f / multiplier), 0.0f, multiplier, 1.0f);
+            glUniform4f(m_uv_data_location, 0.5f - 0.5f * (1.0f / multiplier),
+                        0.0f, multiplier, 1.0f);
         } else {
             float multiplier = screenAspect / frameAspect;
-            glUniform4f(m_uv_data_location, 0.0f, 0.5f - 0.5f * (1.0f / multiplier), 1.0f, multiplier);
+            glUniform4f(m_uv_data_location, 0.0f,
+                        0.5f - 0.5f * (1.0f / multiplier), 1.0f, multiplier);
         }
     }
 }
 
-void GLVideoRenderer::draw(NVGcontext *vg, int width, int height, AVFrame *frame) {
+void GLVideoRenderer::draw(NVGcontext* vg, int width, int height,
+                           AVFrame* frame) {
 
     if (!m_video_render_stats.rendered_frames) {
         m_video_render_stats.measurement_start_timestamp = LiGetMillis();
@@ -308,10 +309,11 @@ void GLVideoRenderer::draw(NVGcontext *vg, int width, int height, AVFrame *frame
     glClear(GL_COLOR_BUFFER_BIT);
 
     for (int i = 0; i < 3; i++) {
-        uint8_t *image = frame->data[i];
+        uint8_t* image = frame->data[i];
         glActiveTexture(GL_TEXTURE0 + i);
         glBindTexture(GL_TEXTURE_2D, m_texture_id[i]);
-        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, textureWidth[i], textureHeight[i], GL_RED, GL_UNSIGNED_BYTE, image);
+        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, textureWidth[i],
+                        textureHeight[i], GL_RED, GL_UNSIGNED_BYTE, image);
         glActiveTexture(GL_TEXTURE0);
     }
 
@@ -321,7 +323,11 @@ void GLVideoRenderer::draw(NVGcontext *vg, int width, int height, AVFrame *frame
     m_video_render_stats.rendered_frames++;
 }
 
-VideoRenderStats *GLVideoRenderer::video_render_stats() {
-    m_video_render_stats.rendered_fps = (float)m_video_render_stats.rendered_frames / ((float)(LiGetMillis() - m_video_render_stats.measurement_start_timestamp) / 1000);
-    return (VideoRenderStats *) &m_video_render_stats;
+VideoRenderStats* GLVideoRenderer::video_render_stats() {
+    m_video_render_stats.rendered_fps =
+        (float)m_video_render_stats.rendered_frames /
+        ((float)(LiGetMillis() -
+                 m_video_render_stats.measurement_start_timestamp) /
+         1000);
+    return (VideoRenderStats*)&m_video_render_stats;
 }

@@ -9,25 +9,23 @@
 
 using namespace brls;
 
-FingersGestureRecognizer::FingersGestureRecognizer(int fingers, FingersGestureEvent::Callback respond)
-    : fingers(fingers)
-{
+FingersGestureRecognizer::FingersGestureRecognizer(
+    int fingers, FingersGestureEvent::Callback respond)
+    : fingers(fingers) {
     event.subscribe(respond);
 }
 
-GestureState FingersGestureRecognizer::recognitionLoop(TouchState touch, MouseState mouse, View* view, Sound* soundToPlay)
-{
-    if (touch.phase == brls::TouchPhase::START)
-    {
+GestureState FingersGestureRecognizer::recognitionLoop(TouchState touch,
+                                                       MouseState mouse,
+                                                       View* view,
+                                                       Sound* soundToPlay) {
+    if (touch.phase == brls::TouchPhase::START) {
         fingersCounter++;
-        if (fingersCounter == fingers)
-        {
+        if (fingersCounter == fingers) {
             event.fire();
             return brls::GestureState::END;
         }
-    }
-    else if (touch.phase == brls::TouchPhase::END)
-    {
+    } else if (touch.phase == brls::TouchPhase::END) {
         fingersCounter--;
     }
 

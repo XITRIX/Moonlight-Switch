@@ -19,10 +19,10 @@
 
 #pragma once
 
-#include <Limelight.h>
-#include <stdbool.h>
 #include "Data.hpp"
 #include "xml.h"
+#include <Limelight.h>
+#include <stdbool.h>
 
 #define MIN_SUPPORTED_GFE_VERSION 3
 #define MAX_SUPPORTED_GFE_VERSION 7
@@ -47,10 +47,12 @@ typedef struct _SERVER_DATA {
 void gs_set_error(std::string error);
 std::string gs_error();
 
-int gs_init(PSERVER_DATA server, const std::string address, bool skip_https = false);
+int gs_init(PSERVER_DATA server, const std::string address,
+            bool skip_https = false);
 int gs_app_boxart(PSERVER_DATA server, int app_id, Data* out);
-int gs_start_app(PSERVER_DATA server, PSTREAM_CONFIGURATION config, int appId, bool sops, bool localaudio, int gamepad_mask);
-int gs_applist(PSERVER_DATA server, PAPP_LIST *app_list);
+int gs_start_app(PSERVER_DATA server, PSTREAM_CONFIGURATION config, int appId,
+                 bool sops, bool localaudio, int gamepad_mask);
+int gs_applist(PSERVER_DATA server, PAPP_LIST* app_list);
 int gs_unpair(PSERVER_DATA server);
 int gs_pair(PSERVER_DATA server, char* pin);
 int gs_quit_app(PSERVER_DATA server);

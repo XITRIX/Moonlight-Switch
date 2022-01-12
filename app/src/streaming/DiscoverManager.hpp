@@ -7,39 +7,31 @@
 
 #pragma once
 
-#include <stdio.h>
-#include <pthread.h>
-#include <borealis.hpp>
-#include "Singleton.hpp"
-#include "Settings.hpp"
 #include "GameStreamClient.hpp"
+#include "Settings.hpp"
+#include "Singleton.hpp"
+#include <borealis.hpp>
+#include <pthread.h>
+#include <stdio.h>
 
-class DiscoverManager : public Singleton<DiscoverManager>
-{
-public:
+class DiscoverManager : public Singleton<DiscoverManager> {
+  public:
     DiscoverManager();
     ~DiscoverManager();
-    
-    brls::Event<GSResult<std::vector<Host>>>* getHostsUpdateEvent()
-    {
+
+    brls::Event<GSResult<std::vector<Host>>>* getHostsUpdateEvent() {
         return &hostsUpdateEvent;
     }
-    
-    GSResult<std::vector<Host>> getHosts()
-    {
-        return hosts;
-    }
-    
-    bool isPaused()
-    {
-        return paused;
-    }
-    
+
+    GSResult<std::vector<Host>> getHosts() { return hosts; }
+
+    bool isPaused() { return paused; }
+
     void reset();
     void start();
     void pause();
-    
-private:
+
+  private:
     void loop();
     std::vector<std::string> addresses;
     GSResult<std::vector<Host>> hosts;

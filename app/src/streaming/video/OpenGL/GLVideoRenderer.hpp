@@ -6,20 +6,20 @@
 #endif
 #pragma once
 
-class GLVideoRenderer: public IVideoRenderer {
-public:
-    GLVideoRenderer() {};
+class GLVideoRenderer : public IVideoRenderer {
+  public:
+    GLVideoRenderer(){};
     ~GLVideoRenderer();
 
-    void draw(NVGcontext* vg, int width, int height, AVFrame *frame) override;
+    void draw(NVGcontext* vg, int width, int height, AVFrame* frame) override;
 
     VideoRenderStats* video_render_stats() override;
 
-private:
+  private:
     void bindTexture(int id);
     void initialize();
-    void checkAndInitialize(int width, int height, AVFrame *frame);
-    void checkAndUpdateScale(int width, int height, AVFrame *frame);
+    void checkAndInitialize(int width, int height, AVFrame* frame);
+    void checkAndUpdateScale(int width, int height, AVFrame* frame);
 
     bool m_is_initialized = false;
     GLuint m_texture_id[3] = {0, 0, 0};

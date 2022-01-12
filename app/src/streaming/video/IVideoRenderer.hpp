@@ -4,8 +4,8 @@
 #include <nanovg.h>
 
 extern "C" {
-    #include <libavcodec/avcodec.h>
-    #include <libavformat/avformat.h>
+#include <libavcodec/avcodec.h>
+#include <libavformat/avformat.h>
 }
 
 struct VideoRenderStats {
@@ -16,8 +16,9 @@ struct VideoRenderStats {
 };
 
 class IVideoRenderer {
-public:
-    virtual ~IVideoRenderer() {};
-    virtual void draw(NVGcontext* vg, int width, int height, AVFrame* frame) = 0;
+  public:
+    virtual ~IVideoRenderer(){};
+    virtual void draw(NVGcontext* vg, int width, int height,
+                      AVFrame* frame) = 0;
     virtual VideoRenderStats* video_render_stats() = 0;
 };

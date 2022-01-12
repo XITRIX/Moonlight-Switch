@@ -6,38 +6,34 @@
 //
 
 #include "main_tabs_view.hpp"
-#include "host_tab.hpp"
-#include "add_host_tab.hpp"
-#include "settings_tab.hpp"
-#include "about_tab.hpp"
 #include "Settings.hpp"
+#include "about_tab.hpp"
+#include "add_host_tab.hpp"
+#include "host_tab.hpp"
+#include "settings_tab.hpp"
 
-MainTabs::MainTabs()
-{
+MainTabs::MainTabs() {
     favoriteTab = new FavoriteTab();
     favoriteTab->ptrLock();
-    
+
     MainTabs::instanse = this;
     refillTabs();
     lastHasAnyFavorites = Settings::instance().has_any_favorite();
 }
 
-void MainTabs::willAppear(bool resetState)
-{
+void MainTabs::willAppear(bool resetState) {
     Box::willAppear(resetState);
     updateFavoritesIfNeeded();
     favoriteTab->refreshIfNeeded();
 }
 
-void MainTabs::updateFavoritesIfNeeded()
-{
+void MainTabs::updateFavoritesIfNeeded() {
     if (lastHasAnyFavorites != Settings::instance().has_any_favorite()) {
         refillTabs();
     }
 }
 
-void MainTabs::refillTabs()
-{
+void MainTabs::refillTabs() {
     clearTabs();
 
     bool hasAnyFavorite = Settings::instance().has_any_favorite();
@@ -46,15 +42,14 @@ void MainTabs::refillTabs()
         addSeparator();
     }
     lastHasAnyFavorites = hasAnyFavorite;
-    
+
     auto hosts = Settings::instance().hosts();
-    for (Host host : hosts)
-    {
-        addTab(host.hostname, [host]{ return new HostTab(host); });
+    for (Host host : hosts) {
+        addTab(host.hostname, [host] { return new HostTab(host); });
     }
     if (hosts.size() > 0)
         addSeparator();
-    
+
     addTab("tabs/add_host"_i18n, AddHostTab::create);
     addTab("tabs/settings"_i18n, SettingsTab::create);
     addSeparator();
@@ -62,7 +57,4 @@ void MainTabs::refillTabs()
     focusTab(0);
 }
 
-View* MainTabs::create()
-{
-    return new MainTabs();
-}
+View* MainTabs::create() { return new MainTabs(); }

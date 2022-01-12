@@ -24,29 +24,24 @@ const std::string loadingOverlayXML = R"xml(
 </brls:Box>
 )xml";
 
-LoadingOverlay::LoadingOverlay(Box* holder)
-{
+LoadingOverlay::LoadingOverlay(Box* holder) {
     this->inflateFromXMLString(loadingOverlayXML);
-    
+
     detach();
     holder->addView(this);
-    
+
     this->holder = holder;
     layout();
 }
 
-void LoadingOverlay::layout()
-{
-    if (holder)
-    {
+void LoadingOverlay::layout() {
+    if (holder) {
         setWidth(holder->getWidth());
         setHeight(holder->getHeight());
     }
 }
 
-
-void LoadingOverlay::setHidden(bool hide)
-{
+void LoadingOverlay::setHidden(bool hide) {
     setAlpha(hide ? 0 : 1);
     progress->animate(!hide);
 }

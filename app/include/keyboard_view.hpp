@@ -27,17 +27,15 @@ struct KeyboardLocale {
     std::string localization[_VK_KEY_MAX][2];
 };
 
-struct KeyboardState
-{
+struct KeyboardState {
     bool keys[_VK_KEY_MAX];
 };
 
 class KeyboardView;
 
-class ButtonView: public brls::Box
-{
-public:
-    ButtonView(KeyboardView *keyboardView);
+class ButtonView : public brls::Box {
+  public:
+    ButtonView(KeyboardView* keyboardView);
     ~ButtonView();
     brls::Label* charLabel;
     void setKey(KeyboardKeys key);
@@ -45,35 +43,38 @@ public:
     bool triggerType = false;
     KeyboardKeys key;
     std::function<void(void)> event = NULL;
-    
-    void draw(NVGcontext* vg, float x, float y, float width, float height, brls::Style style, brls::FrameContext* ctx) override;
+
+    void draw(NVGcontext* vg, float x, float y, float width, float height,
+              brls::Style style, brls::FrameContext* ctx) override;
     void onFocusGained() override;
     void onFocusLost() override;
-private:
+
+  private:
     brls::VoidEvent::Subscription shiftSubscription;
     bool dummy = true;
     bool eventPressed = false;
     bool focusJustGained = false;
-    
+
     void applyTitle();
-    KeyboardView *keyboardView;
+    KeyboardView* keyboardView;
 };
 
-class KeyboardView: public brls::Box
-{
-public:
+class KeyboardView : public brls::Box {
+  public:
     inline static brls::VoidEvent shiftUpdated;
     inline static std::vector<KeyboardLocale> getLocales() { return locales; }
-    
+
     KeyboardView(bool focusable);
     ~KeyboardView();
     KeyboardState getKeyboardState();
     short getKeyCode(KeyboardKeys key);
-    
-    View* getParentNavigationDecision(View* from, View* newFocus, brls::FocusDirection direction) override;
-    void draw(NVGcontext* vg, float x, float y, float width, float height, brls::Style style, brls::FrameContext* ctx) override;
 
-private:
+    View* getParentNavigationDecision(View* from, View* newFocus,
+                                      brls::FocusDirection direction) override;
+    void draw(NVGcontext* vg, float x, float y, float width, float height,
+              brls::Style style, brls::FrameContext* ctx) override;
+
+  private:
     int keyboardLangLock = -1;
     bool needFocus = false;
     void createEnglishLayout();

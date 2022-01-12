@@ -37,5 +37,5 @@ void KeyboardView::createLocales() {
         }
     });
 
-    //TODO: - Add more languages
+    // TODO: - Add more languages
 }

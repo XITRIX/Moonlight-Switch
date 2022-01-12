@@ -15,12 +15,14 @@ struct TwoFingerScrollState {
 };
 
 typedef brls::Event<TwoFingerScrollState> ScrollGestureEvent;
-class TwoFingerScrollGestureRecognizer: public brls::GestureRecognizer
-{
-public:
+class TwoFingerScrollGestureRecognizer : public brls::GestureRecognizer {
+  public:
     TwoFingerScrollGestureRecognizer(ScrollGestureEvent::Callback respond);
-    brls::GestureState recognitionLoop(brls::TouchState touch, brls:: MouseState mouse, brls::View* view, brls::Sound* soundToPlay) override;
-private:
+    brls::GestureState recognitionLoop(brls::TouchState touch,
+                                       brls::MouseState mouse, brls::View* view,
+                                       brls::Sound* soundToPlay) override;
+
+  private:
     int fingers = 0;
     std::map<int, brls::Point> fingersStartPoints;
     std::map<int, brls::Point> fingersCurrentPoints;

@@ -11,13 +11,16 @@
 
 using namespace brls;
 
-class ButtonSelectingDialog: public Dialog {
-public:
+class ButtonSelectingDialog : public Dialog {
+  public:
     ~ButtonSelectingDialog();
-    static ButtonSelectingDialog* create(std::string titleText, std::function<void(std::vector<ControllerButton>)> callback, bool oneKey = false);
+    static ButtonSelectingDialog*
+    create(std::string titleText,
+           std::function<void(std::vector<ControllerButton>)> callback,
+           bool oneKey = false);
     void open() override;
-    
-private:
+
+  private:
     Animatable timer;
     std::function<void(std::vector<ControllerButton>)> callback;
     std::string titleText;
@@ -25,11 +28,14 @@ private:
     ControllerState oldState;
     Label* label;
     bool oneKey;
-    
-    ButtonSelectingDialog(Box* box, std::function<void(std::vector<ControllerButton>)> callback, bool oneKey);
-    
+
+    ButtonSelectingDialog(
+        Box* box, std::function<void(std::vector<ControllerButton>)> callback,
+        bool oneKey);
+
     void reloadLabel();
     std::string buttonsText();
-    
-    void draw(NVGcontext* vg, float x, float y, float width, float height, Style style, FrameContext* ctx) override;
+
+    void draw(NVGcontext* vg, float x, float y, float width, float height,
+              Style style, FrameContext* ctx) override;
 };

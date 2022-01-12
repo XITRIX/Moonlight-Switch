@@ -20,7 +20,7 @@
 #include "Data.hpp"
 #pragma once
 
-enum HTTPRequestTimeout: long {
+enum HTTPRequestTimeout : long {
     HTTPRequestTimeoutLow = 1,
     HTTPRequestTimeoutMedium = 5,
     HTTPRequestTimeoutLong = 120

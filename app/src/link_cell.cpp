@@ -9,14 +9,10 @@
 
 using namespace brls;
 
-LinkCell::LinkCell() 
-{
+LinkCell::LinkCell() {
     this->inflateFromXMLRes("xml/cells/link_cell.xml");
 
     icon->setText("\uE099");
 }
 
-View* LinkCell::create()
-{
-    return new LinkCell();
-}
+View* LinkCell::create() { return new LinkCell(); }

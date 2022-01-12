@@ -9,8 +9,7 @@
 
 #include <borealis.hpp>
 
-class SettingsTab : public brls::Box
-{
+class SettingsTab : public brls::Box {
   public:
     SettingsTab();
     ~SettingsTab();
@@ -37,12 +36,12 @@ class SettingsTab : public brls::Box
     BRLS_BIND(brls::Header, mouseSpeedHeader, "mouse_speed_header");
     BRLS_BIND(brls::Slider, mouseSpeedSlider, "mouse_speed_slider");
     BRLS_BIND(brls::BooleanCell, writeLog, "writeLog");
-    
 
     static brls::View* create();
-    
-private:
-    void setupButtonsSelectorCell(brls::DetailCell* cell, std::vector<brls::ControllerButton> buttons);
+
+  private:
+    void setupButtonsSelectorCell(brls::DetailCell* cell,
+                                  std::vector<brls::ControllerButton> buttons);
     std::string getTextFromButtons(std::vector<brls::ControllerButton> buttons);
     NVGcolor getColorFromButtons(std::vector<brls::ControllerButton> buttons);
 };

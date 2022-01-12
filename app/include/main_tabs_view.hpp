@@ -7,15 +7,14 @@
 
 #pragma once
 
-#include <borealis.hpp>
-#include <Singleton.hpp>
 #include "favorite_tab.hpp"
+#include <Singleton.hpp>
+#include <borealis.hpp>
 
 using namespace brls;
 
-class MainTabs : public brls::TabFrame
-{
-public:
+class MainTabs : public brls::TabFrame {
+  public:
     MainTabs();
     void refillTabs();
     static View* create();
@@ -24,12 +23,9 @@ public:
     FavoriteTab* getFavoriteTab() { return favoriteTab; }
     void updateFavoritesIfNeeded();
 
-    static MainTabs* getInstanse()
-    {
-        return instanse;
-    }
-    
-private:
+    static MainTabs* getInstanse() { return instanse; }
+
+  private:
     bool lastHasAnyFavorites = false;
     inline static MainTabs* instanse;
 

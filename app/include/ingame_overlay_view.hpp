@@ -11,45 +11,44 @@
 #include <borealis.hpp>
 
 // MARK: - Ingame Overlay View
-class IngameOverlay : public brls::Box
-{
-public:
+class IngameOverlay : public brls::Box {
+  public:
     IngameOverlay(StreamingView* streamView);
     ~IngameOverlay();
-    
+
     void show();
-    
+
     brls::AppletFrame* getAppletFrame() override;
     bool isTranslucent() override { return true; }
-    
-private:
+
+  private:
     StreamingView* streamView;
-    
+
     BRLS_BIND(brls::Box, backplate, "backplate");
     BRLS_BIND(brls::AppletFrame, applet, "applet");
 };
 
 // MARK: - Logout Tab
-class LogoutTab : public brls::Box
-{
-public:
+class LogoutTab : public brls::Box {
+  public:
     LogoutTab(StreamingView* streamView);
-private:
+
+  private:
     StreamingView* streamView;
-    
+
     BRLS_BIND(brls::DetailCell, disconnect, "disconnect");
     BRLS_BIND(brls::DetailCell, terminateButton, "terminate");
 };
 
 // MARK: - Debug Tab
-class OptionsTab : public brls::Box
-{
-public:
+class OptionsTab : public brls::Box {
+  public:
     OptionsTab(StreamingView* streamView);
     ~OptionsTab();
-private:
+
+  private:
     StreamingView* streamView;
-    
+
     BRLS_BIND(brls::DetailCell, inputOverlayButton, "input_overlay");
     BRLS_BIND(brls::SelectorCell, keyboardType, "keyboard_type");
     BRLS_BIND(brls::Header, volumeHeader, "volume_header");

@@ -21,15 +21,15 @@ struct GamepadState {
     short leftStickY = 0;
     short rightStickX = 0;
     short rightStickY = 0;
-    
+
     bool is_equal(GamepadState other) {
         return buttonFlags == other.buttonFlags &&
-        leftTrigger == other.leftTrigger &&
-        rightTrigger == other.rightTrigger &&
-        leftStickX == other.leftStickX &&
-        leftStickY == other.leftStickY &&
-        rightStickX == other.rightStickX &&
-        rightStickY == other.rightStickY;
+               leftTrigger == other.leftTrigger &&
+               rightTrigger == other.rightTrigger &&
+               leftStickX == other.leftStickX &&
+               leftStickY == other.leftStickY &&
+               rightStickX == other.rightStickX &&
+               rightStickY == other.rightStickY;
     }
 };
 
@@ -40,19 +40,19 @@ struct MouseStateS {
     bool r_pressed;
 };
 
-class MoonlightInputManager : public Singleton<MoonlightInputManager>
-{
-public:
+class MoonlightInputManager : public Singleton<MoonlightInputManager> {
+  public:
     MoonlightInputManager();
     void dropInput();
     void handleInput();
-    void handleRumble(unsigned short controller, unsigned short lowFreqMotor, unsigned short highFreqMotor);
+    void handleRumble(unsigned short controller, unsigned short lowFreqMotor,
+                      unsigned short highFreqMotor);
     void updateTouchScreenPanDelta(brls::PanGestureStatus panStatus);
     void reloadButtonMappingLayout();
     void leftMouseClick();
     void rightMouseClick();
-    
-private:
+
+  private:
     GamepadState lastGamepadStates[GAMEPADS_MAX];
     brls::ControllerButton mappingButtons[brls::_BUTTON_MAX];
     std::optional<brls::PanGestureStatus> panStatus;
@@ -66,4 +66,3 @@ private:
 
     short controllersToMap();
 };
-

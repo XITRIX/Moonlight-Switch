@@ -9,14 +9,14 @@
 
 #include <borealis.hpp>
 
-class LoadingOverlay : brls::Box
-{
-public:
+class LoadingOverlay : brls::Box {
+  public:
     LoadingOverlay(Box* holder);
-    
+
     void layout();
     void setHidden(bool hide);
-private:
+
+  private:
     Box* holder = nullptr;
     BRLS_BIND(brls::ProgressSpinner, progress, "progress");
 };

@@ -12,18 +12,18 @@
 #include <iomanip>
 #include <sstream>
 
-#define SET_SETTING(n, func) \
-    case n: \
-        Settings::instance().func; \
+#define SET_SETTING(n, func)                                                   \
+    case n:                                                                    \
+        Settings::instance().func;                                             \
         break;
 
-#define GET_SETTINGS(combo_box, n, i) \
-    case n: \
-        combo_box->setSelection(i); \
+#define GET_SETTINGS(combo_box, n, i)                                          \
+    case n:                                                                    \
+        combo_box->setSelection(i);                                            \
         break;
 
-#define DEFAULT \
-    default: \
+#define DEFAULT                                                                \
+    default:                                                                   \
         break;
 
 using namespace brls;
@@ -31,73 +31,69 @@ using namespace brls;
 bool debug = false;
 
 // MARK: - Ingame Overlay View
-IngameOverlay::IngameOverlay(StreamingView* streamView) :
-    streamView(streamView)
-{
-    brls::Application::registerXMLView("LogoutTab", [streamView]() { return new LogoutTab(streamView); });
-    brls::Application::registerXMLView("OptionsTab", [streamView]() { return new OptionsTab(streamView); });
-    
-    this->inflateFromXMLRes("xml/views/ingame_overlay/overlay.xml");
-    
-    addGestureRecognizer(new TapGestureRecognizer([this](TapGestureStatus status, Sound* sound) {
-        if (status.state == GestureState::END)
-            this->dismiss();
-    }));
-    
-    applet->addGestureRecognizer(new TapGestureRecognizer([this](TapGestureStatus status, Sound* sound) { }));
+IngameOverlay::IngameOverlay(StreamingView* streamView)
+    : streamView(streamView) {
+    brls::Application::registerXMLView(
+        "LogoutTab", [streamView]() { return new LogoutTab(streamView); });
+    brls::Application::registerXMLView(
+        "OptionsTab", [streamView]() { return new OptionsTab(streamView); });
 
-    getAppletFrameItem()->title = streamView->getHost().hostname + ": " + streamView->getApp().name;
+    this->inflateFromXMLRes("xml/views/ingame_overlay/overlay.xml");
+
+    addGestureRecognizer(
+        new TapGestureRecognizer([this](TapGestureStatus status, Sound* sound) {
+            if (status.state == GestureState::END)
+                this->dismiss();
+        }));
+
+    applet->addGestureRecognizer(new TapGestureRecognizer(
+        [this](TapGestureStatus status, Sound* sound) {}));
+
+    getAppletFrameItem()->title =
+        streamView->getHost().hostname + ": " + streamView->getApp().name;
     updateAppletFrameItem();
 }
 
-brls::AppletFrame* IngameOverlay::getAppletFrame()
-{
-    return applet;
-}
+brls::AppletFrame* IngameOverlay::getAppletFrame() { return applet; }
 
-IngameOverlay::~IngameOverlay() {
-}
+IngameOverlay::~IngameOverlay() {}
 
 // MARK: - Logout Tab
-LogoutTab::LogoutTab(StreamingView* streamView) :
-    streamView(streamView)
-{
+LogoutTab::LogoutTab(StreamingView* streamView) : streamView(streamView) {
     this->inflateFromXMLRes("xml/views/ingame_overlay/logout_tab.xml");
-    
+
     disconnect->setText("streaming/disconnect"_i18n);
     disconnect->registerClickAction([this, streamView](View* view) {
-        this->dismiss([streamView] {
-            streamView->terminate(false);
-        });
+        this->dismiss([streamView] { streamView->terminate(false); });
         return true;
     });
 
     terminateButton->setText("streaming/terminate"_i18n);
     terminateButton->registerClickAction([this, streamView](View* view) {
-        this->dismiss([streamView] {
-            streamView->terminate(true);
-        });
+        this->dismiss([streamView] { streamView->terminate(true); });
         return true;
     });
 }
 
 // MARK: - Options Tab
-OptionsTab::OptionsTab(StreamingView* streamView) :
-    streamView(streamView)
-{
+OptionsTab::OptionsTab(StreamingView* streamView) : streamView(streamView) {
     this->inflateFromXMLRes("xml/views/ingame_overlay/options_tab.xml");
-    
-    volumeHeader->setSubtitle(std::to_string(Settings::instance().get_volume()) + "%");
-    float amplification = Settings::instance().get_volume_amplification() ? 500.0f : 100.0f;
+
+    volumeHeader->setSubtitle(
+        std::to_string(Settings::instance().get_volume()) + "%");
+    float amplification =
+        Settings::instance().get_volume_amplification() ? 500.0f : 100.0f;
     float progress = Settings::instance().get_volume() / amplification;
-    volumeSlider->getProgressEvent()->subscribe([this, amplification](float progress) {
-        int volume = progress * amplification;
-        Settings::instance().set_volume(volume);
-        volumeHeader->setSubtitle(std::to_string(volume) + "%");
-    });
+    volumeSlider->getProgressEvent()->subscribe(
+        [this, amplification](float progress) {
+            int volume = progress * amplification;
+            Settings::instance().set_volume(volume);
+            volumeHeader->setSubtitle(std::to_string(volume) + "%");
+        });
     volumeSlider->setProgress(progress);
 
-    float mouseProgress = (Settings::instance().get_mouse_speed_multiplier() / 100.0f);
+    float mouseProgress =
+        (Settings::instance().get_mouse_speed_multiplier() / 100.0f);
     mouseSlider->getProgressEvent()->subscribe([this](float value) {
         float multiplier = value * 1.5f + 0.5f;
         std::stringstream stream;
@@ -106,17 +102,19 @@ OptionsTab::OptionsTab(StreamingView* streamView) :
         Settings::instance().set_mouse_speed_multiplier(value * 100);
     });
     mouseSlider->setProgress(mouseProgress);
-    
+
     inputOverlayButton->setText("streaming/mouse_input"_i18n);
     inputOverlayButton->registerClickAction([this, streamView](View* view) {
         this->dismiss([this]() {
-            StreamingInputOverlay* overlay = new StreamingInputOverlay(this->streamView);
+            StreamingInputOverlay* overlay =
+                new StreamingInputOverlay(this->streamView);
             Application::pushActivity(new Activity(overlay));
         });
         return true;
     });
 
-    std::vector<std::string> keyboardTypes = { "settings/keyboard_compact"_i18n, "settings/keyboard_fullsized"_i18n };
+    std::vector<std::string> keyboardTypes = {
+        "settings/keyboard_compact"_i18n, "settings/keyboard_fullsized"_i18n};
     keyboardType->setText("settings/keyboard_type"_i18n);
     keyboardType->setData(keyboardTypes);
     switch (Settings::instance().get_keyboard_type()) {
@@ -131,17 +129,16 @@ OptionsTab::OptionsTab(StreamingView* streamView) :
             DEFAULT;
         }
     });
-    
-    onscreenLogButton->init("streaming/show_logs"_i18n, Settings::instance().write_log(), [](bool value) {
-        Settings::instance().set_write_log(value);
-        brls::Application::enableDebuggingView(value);
-    });
-    
-    debugButton->init("streaming/debug_info"_i18n, streamView->draw_stats, [streamView](bool value) {
-        streamView->draw_stats = value;
-    });
+
+    onscreenLogButton->init("streaming/show_logs"_i18n,
+                            Settings::instance().write_log(), [](bool value) {
+                                Settings::instance().set_write_log(value);
+                                brls::Application::enableDebuggingView(value);
+                            });
+
+    debugButton->init(
+        "streaming/debug_info"_i18n, streamView->draw_stats,
+        [streamView](bool value) { streamView->draw_stats = value; });
 }
 
-OptionsTab::~OptionsTab() {
-    Settings::instance().save();
-}
+OptionsTab::~OptionsTab() { Settings::instance().save(); }

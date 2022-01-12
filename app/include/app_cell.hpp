@@ -12,11 +12,10 @@
 
 using namespace brls;
 
-class AppCell : public Box
-{
-public:
+class AppCell : public Box {
+  public:
     AppCell(Host host, AppInfo app, int currentApp);
-    
+
     BRLS_BIND(Image, image, "image");
     BRLS_BIND(Label, title, "title");
     BRLS_BIND(Image, currentAppImage, "current_app_image");
@@ -25,7 +24,6 @@ public:
 
     void setFavorite(bool favorite);
 
-private:
+  private:
     void updateFavoriteAction(Host host, AppInfo app);
 };
-

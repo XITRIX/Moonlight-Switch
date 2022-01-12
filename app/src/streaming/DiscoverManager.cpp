@@ -10,14 +10,12 @@
 
 using namespace brls::literals;
 
-DiscoverManager::DiscoverManager()
-{
+DiscoverManager::DiscoverManager() {
     reset();
     start();
 }
 
-void DiscoverManager::reset()
-{
+void DiscoverManager::reset() {
     pause();
     counter = 0;
     addresses.clear();
@@ -25,12 +23,11 @@ void DiscoverManager::reset()
     hosts = hosts.success(std::vector<Host>());
 }
 
-void DiscoverManager::start()
-{
+void DiscoverManager::start() {
     if (addresses.empty()) {
-        this->addresses = GameStreamClient::instance().host_addresses_for_find();
-        if (addresses.empty())
-        {
+        this->addresses =
+            GameStreamClient::instance().host_addresses_for_find();
+        if (addresses.empty()) {
             hosts = hosts.failure("discovery_manager/no_ip"_i18n);
             return;
         }
@@ -38,21 +35,16 @@ void DiscoverManager::start()
         paused = true;
     }
 
-    if (paused)
-    {
+    if (paused) {
         paused = false;
-        brls::async([]{ DiscoverManager::instance().loop(); });
+        brls::async([] { DiscoverManager::instance().loop(); });
     }
     brls::sync([this] { getHostsUpdateEvent()->fire(hosts); });
 }
 
-void DiscoverManager::pause()
-{
-    paused = true;
-}
+void DiscoverManager::pause() { paused = true; }
 
-void DiscoverManager::loop()
-{
+void DiscoverManager::loop() {
     brls::async([this] {
         while (counter < addresses.size() && !paused) {
             SERVER_DATA server_data;
@@ -71,8 +63,7 @@ void DiscoverManager::loop()
             counter++;
         }
 
-        if (counter == addresses.size() && _hosts.empty())
-        {
+        if (counter == addresses.size() && _hosts.empty()) {
             hosts = hosts.failure("discovery_manager/no_host"_i18n);
             brls::sync([this] { getHostsUpdateEvent()->fire(hosts); });
         }
@@ -81,7 +72,4 @@ void DiscoverManager::loop()
     });
 }
 
-DiscoverManager::~DiscoverManager()
-{
-    paused = true;
-}
+DiscoverManager::~DiscoverManager() { paused = true; }

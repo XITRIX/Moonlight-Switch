@@ -7,14 +7,14 @@
 
 #pragma once
 
-#include <borealis.hpp>
 #include "link_cell.hpp"
+#include <borealis.hpp>
 
-class AboutTab : public brls::Box
-{
+class AboutTab : public brls::Box {
   public:
     AboutTab();
     static brls::View* create();
+
   private:
     BRLS_BIND(brls::Header, versionLabel, "version_label");
     BRLS_BIND(LinkCell, github, "github");

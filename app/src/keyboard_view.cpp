@@ -5,11 +5,11 @@
 //  Created by Даниил Виноградов on 14.06.2021.
 //
 
-#include "Settings.hpp"
 #include "keyboard_view.hpp"
+#include "Settings.hpp"
 #include <chrono>
-#include <libretro-common/retro_timers.h>
 #include <cmath>
+#include <libretro-common/retro_timers.h>
 
 using namespace brls;
 
@@ -32,47 +32,44 @@ bool keysState[_VK_KEY_MAX];
 bool keysStateInited = false;
 brls::InputManager* inputManager = nullptr;
 
-void startRumbling()
-{
+void startRumbling() {
     rumbleLastButtonClicked = std::chrono::high_resolution_clock::now();
-    if (!rumblingActive)
-    {
+    if (!rumblingActive) {
         rumblingActive = true;
         inputManager->sendRumble(0, 32512, 32512);
     }
 }
 
-ButtonView::ButtonView(KeyboardView *keyboardView):
-    keyboardView(keyboardView)
-{
+ButtonView::ButtonView(KeyboardView* keyboardView)
+    : keyboardView(keyboardView) {
     setFocusable(true);
     setHideHighlightBackground(true);
     setHighlightCornerRadius(11);
     setHideClickAnimation(true);
-    
+
     registerClickAction([](View* view) { return true; });
-    
+
     if (inputManager == nullptr)
         inputManager = Application::getPlatform()->getInputManager();
-    
+
     setBackgroundColor(nvgRGB(60, 60, 60));
     setWidth(90);
     setHeight(56);
-    
+
     setAlignItems(AlignItems::CENTER);
     setJustifyContent(JustifyContent::CENTER);
-    
+
     charLabel = new Label();
     charLabel->setHorizontalAlign(HorizontalAlign::CENTER);
     charLabel->setVerticalAlign(VerticalAlign::CENTER);
     charLabel->setTextColor(nvgRGB(255, 255, 255));
     charLabel->setFontSize(27);
     addView(charLabel);
-    
+
     setCornerRadius(8);
     setShadowVisibility(true);
     setShadowType(ShadowType::GENERIC);
-    
+
     shiftSubscription = KeyboardView::shiftUpdated.subscribe([this] {
         if (!dummy) {
             if ((this->getClickAlpha() == 0 && keysState[this->key]) ||
@@ -81,44 +78,39 @@ ButtonView::ButtonView(KeyboardView *keyboardView):
         }
         applyTitle();
     });
-    
+
     registerCallback();
 }
 
-ButtonView::~ButtonView()
-{
+ButtonView::~ButtonView() {
     KeyboardView::shiftUpdated.unsubscribe(shiftSubscription);
 }
 
-void ButtonView::draw(NVGcontext* vg, float x, float y, float width, float height, brls::Style style, brls::FrameContext* ctx)
-{
+void ButtonView::draw(NVGcontext* vg, float x, float y, float width,
+                      float height, brls::Style style,
+                      brls::FrameContext* ctx) {
     Box::draw(vg, x, y, width, height, style, ctx);
-    if (!focused) return;
+    if (!focused)
+        return;
 
     static ControllerState oldController;
     ControllerState controller;
     inputManager->updateUnifiedControllerState(&controller);
-    
+
     auto button = inputManager->mapControllerState(BUTTON_A);
-    if (oldController.buttons[button] != controller.buttons[button])
-    {
+    if (oldController.buttons[button] != controller.buttons[button]) {
         bool pressed = controller.buttons[button];
-        if (!triggerType)
-        {
-            if (!dummy)
-            {
+        if (!triggerType) {
+            if (!dummy) {
                 keysState[key] = pressed;
                 this->playClickAnimation(!pressed, false, true);
             }
-        }
-        else if (pressed)
-        {
+        } else if (pressed) {
             keysState[key] = !keysState[key];
             this->playClickAnimation(!keysState[key], false, true);
         }
-        
-        if (event != NULL)
-        {
+
+        if (event != NULL) {
             if (pressed && !focusJustGained) {
                 event();
             }
@@ -134,48 +126,48 @@ void ButtonView::onFocusGained() {
     focusJustGained = true;
 }
 
-void ButtonView::onFocusLost()
-{
+void ButtonView::onFocusLost() {
     Box::onFocusLost();
-    if (!triggerType && !dummy)
-    {
+    if (!triggerType && !dummy) {
         keysState[key] = false;
-        if (this->getClickAlpha() > 0 )
+        if (this->getClickAlpha() > 0)
             this->playClickAnimation(true, false, true);
     }
 }
 
-void ButtonView::applyTitle()
-{
-    if (dummy) return;
+void ButtonView::applyTitle() {
+    if (dummy)
+        return;
 
     bool shifted = keysState[VK_RSHIFT];
-    int selectedLang = keyboardView->keyboardLangLock != -1 ? keyboardView->keyboardLangLock : Settings::instance().get_keyboard_locale();
+    int selectedLang = keyboardView->keyboardLangLock != -1
+                           ? keyboardView->keyboardLangLock
+                           : Settings::instance().get_keyboard_locale();
     if (KeyboardView::getLocales().size() <= selectedLang) {
         Settings::instance().set_keyboard_locale(0);
         selectedLang = 0;
     }
-    charLabel->setText(KeyboardView::getLocales()[selectedLang].localization[key][shifted]);
+    charLabel->setText(
+        KeyboardView::getLocales()[selectedLang].localization[key][shifted]);
 }
 
-void ButtonView::setKey(KeyboardKeys key)
-{
+void ButtonView::setKey(KeyboardKeys key) {
     this->dummy = false;
     this->key = key;
     this->applyTitle();
-    
+
     if (keysState[key])
         this->playClickAnimation(false, false, true);
 }
 
-void ButtonView::registerCallback()
-{
-    TapGestureRecognizer* tapRecognizer = new TapGestureRecognizer([this](TapGestureStatus status, Sound* sound) {
-        if (!triggerType)
-        {
-            this->playClickAnimation(status.state != brls::GestureState::START, false, true);
-            
-            switch (status.state) {
+void ButtonView::registerCallback() {
+    TapGestureRecognizer* tapRecognizer =
+        new TapGestureRecognizer([this](TapGestureStatus status, Sound* sound) {
+            if (!triggerType) {
+                this->playClickAnimation(
+                    status.state != brls::GestureState::START, false, true);
+
+                switch (status.state) {
                 case brls::GestureState::START:
                     startRumbling();
 
@@ -186,7 +178,7 @@ void ButtonView::registerCallback()
                 case brls::GestureState::FAILED:
                     if (!dummy)
                         keysState[key] = false;
-                    
+
                     if (event != NULL)
                         event();
                     break;
@@ -194,11 +186,9 @@ void ButtonView::registerCallback()
                     if (!dummy)
                         keysState[key] = false;
                     break;
-            }
-        }
-        else
-        {
-            switch (status.state) {
+                }
+            } else {
+                switch (status.state) {
                 case brls::GestureState::START:
                     startRumbling();
                     if (!keysState[key])
@@ -212,99 +202,98 @@ void ButtonView::registerCallback()
                     keysState[key] = !keysState[key];
                     if (event != NULL)
                         event();
-                    
+
                     if (!keysState[key])
                         this->playClickAnimation(!keysState[key], false, true);
                     break;
                 default:
                     break;
+                }
             }
-        }
-    });
+        });
     tapRecognizer->setForceRecognision(true);
     addGestureRecognizer(tapRecognizer);
 }
 
 KeyboardView::KeyboardView(bool focusable)
-    : Box(Axis::COLUMN), needFocus(focusable)
-{
+    : Box(Axis::COLUMN), needFocus(focusable) {
     createLocales();
-    
-    if (!keysStateInited)
-    {
+
+    if (!keysStateInited) {
         keysStateInited = true;
         for (int i = 0; i < _VK_KEY_MAX; i++)
             keysState[i] = false;
     }
-    
+
     setBackgroundColor(nvgRGBA(120, 120, 120, 200));
     setAlignItems(AlignItems::CENTER);
     setPaddingTop(24);
     setPaddingBottom(24);
 
     switch (Settings::instance().get_keyboard_type()) {
-        case COMPACT:
-            createEnglishLayout();
-            break;
-        case FULLSIZED:
-            createFullLayout();
-            break;
+    case COMPACT:
+        createEnglishLayout();
+        break;
+    case FULLSIZED:
+        createFullLayout();
+        break;
     }
-    
-    addGestureRecognizer(new TapGestureRecognizer([](TapGestureStatus status, Sound* sound){}));
-    addGestureRecognizer(new PanGestureRecognizer([](PanGestureStatus status, Sound* sound){}, PanAxis::ANY));
+
+    addGestureRecognizer(
+        new TapGestureRecognizer([](TapGestureStatus status, Sound* sound) {}));
+    addGestureRecognizer(new PanGestureRecognizer(
+        [](PanGestureStatus status, Sound* sound) {}, PanAxis::ANY));
 }
 
-KeyboardView::~KeyboardView()
-{
+KeyboardView::~KeyboardView() {
     if (rumblingActive)
         inputManager->sendRumble(0, 0, 0);
 }
 
-void KeyboardView::draw(NVGcontext* vg, float x, float y, float width, float height, brls::Style style, brls::FrameContext* ctx) 
-{
+void KeyboardView::draw(NVGcontext* vg, float x, float y, float width,
+                        float height, brls::Style style,
+                        brls::FrameContext* ctx) {
     Box::draw(vg, x, y, width, height, style, ctx);
 
-    if (rumblingActive) 
-    {
+    if (rumblingActive) {
         auto timeNow = std::chrono::high_resolution_clock::now();
-        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(timeNow - rumbleLastButtonClicked).count();
-        if (duration >= 100)
-        {
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
+                            timeNow - rumbleLastButtonClicked)
+                            .count();
+        if (duration >= 100) {
             inputManager->sendRumble(0, 0, 0);
             rumblingActive = false;
         }
     }
 }
 
-KeyboardState KeyboardView::getKeyboardState()
-{
+KeyboardState KeyboardView::getKeyboardState() {
     KeyboardState state;
-    
+
     for (int i = 0; i < _VK_KEY_MAX; i++)
         state.keys[i] = keysState[i];
-    
+
     return state;
 }
 
-short KeyboardView::getKeyCode(KeyboardKeys key)
-{
-    return KeyboardCodes[key];
-}
+short KeyboardView::getKeyCode(KeyboardKeys key) { return KeyboardCodes[key]; }
 
-View* KeyboardView::getParentNavigationDecision(View* from, View* newFocus, FocusDirection direction)
-{
-    if (newFocus && (direction == FocusDirection::UP || direction == FocusDirection::DOWN))
-    {
+View* KeyboardView::getParentNavigationDecision(View* from, View* newFocus,
+                                                FocusDirection direction) {
+    if (newFocus && (direction == FocusDirection::UP ||
+                     direction == FocusDirection::DOWN)) {
         View* source = Application::getCurrentFocus();
         void* currentparentUserData = source->getParentUserData();
-        
+
         Box* sourceParent = source->getParent();
         Box* newParent = newFocus->getParent();
-        
+
         size_t currentFocusIndex = *((size_t*)currentparentUserData);
-        size_t targetFocusIndex = round((float)currentFocusIndex / (float)(sourceParent->getChildren().size() - 1) * (float)(newParent->getChildren().size() - 1));
-        
+        size_t targetFocusIndex =
+            round((float)currentFocusIndex /
+                  (float)(sourceParent->getChildren().size() - 1) *
+                  (float)(newParent->getChildren().size() - 1));
+
         return newParent->getChildren()[targetFocusIndex];
     }
     return Box::getParentNavigationDecision(from, newFocus, direction);

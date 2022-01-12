@@ -7,8 +7,7 @@
 
 #include <borealis.hpp>
 
-class LinkCell : public brls::Box 
-{
+class LinkCell : public brls::Box {
   public:
     LinkCell();
     static View* create();
@@ -16,7 +15,7 @@ class LinkCell : public brls::Box
     BRLS_BIND(brls::Image, image, "image");
     BRLS_BIND(brls::Label, title, "title");
     BRLS_BIND(brls::Label, subtitle, "subtitle");
-    
+
   private:
     BRLS_BIND(brls::Label, icon, "icon");
 };

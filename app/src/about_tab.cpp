@@ -5,7 +5,7 @@
 #include <switch.h>
 #endif
 
-using namespace brls; 
+using namespace brls;
 
 void openWebpage(std::string url) {
 
@@ -21,15 +21,14 @@ void openWebpage(std::string url) {
             res = webConfigShow(&config, nullptr);
     }
 #endif
-
 }
 
-AboutTab::AboutTab() 
-{
+AboutTab::AboutTab() {
     this->inflateFromXMLRes("xml/tabs/about.xml");
 
     ThemeVariant variant = Application::getThemeVariant();
-    std::string themePart = variant == brls::ThemeVariant::DARK ? "_dark" : "_light";
+    std::string themePart =
+        variant == brls::ThemeVariant::DARK ? "_dark" : "_light";
 
     std::string subtitle = fmt::format("about/version"_i18n, APP_VERSION);
     versionLabel->setSubtitle(subtitle);
@@ -38,7 +37,7 @@ AboutTab::AboutTab()
     github->addGestureRecognizer(new TapGestureRecognizer(github));
     github->title->setText("about/link_github"_i18n);
     github->subtitle->setText(githubLink);
-    github->image->setImageFromRes("img/links/github" + themePart +".png");
+    github->image->setImageFromRes("img/links/github" + themePart + ".png");
     github->registerClickAction([this, githubLink](View* view) {
         openWebpage(githubLink);
         return true;
@@ -54,7 +53,9 @@ AboutTab::AboutTab()
         return true;
     });
 
-    std::string gbatempLink = "https://gbatemp.net/threads/moonlight-switch-nvidia-game-stream-client.591408/";
+    std::string gbatempLink =
+        "https://gbatemp.net/threads/"
+        "moonlight-switch-nvidia-game-stream-client.591408/";
     gbatemp->addGestureRecognizer(new TapGestureRecognizer(gbatemp));
     gbatemp->title->setText("about/link_gbatemp"_i18n);
     gbatemp->subtitle->setText(gbatempLink);
@@ -65,7 +66,4 @@ AboutTab::AboutTab()
     });
 }
 
-brls::View* AboutTab::create()
-{
-    return new AboutTab();
-}
+brls::View* AboutTab::create() { return new AboutTab(); }

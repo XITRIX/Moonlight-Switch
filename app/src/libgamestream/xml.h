@@ -21,19 +21,19 @@
 #pragma once
 
 typedef struct _APP_LIST {
-  char* name;
-  int id;
-  struct _APP_LIST *next;
+    char* name;
+    int id;
+    struct _APP_LIST* next;
 } APP_LIST, *PAPP_LIST;
 
 typedef struct _DISPLAY_MODE {
-  unsigned int height;
-  unsigned int width;
-  unsigned int refresh;
-  struct _DISPLAY_MODE *next;
+    unsigned int height;
+    unsigned int width;
+    unsigned int refresh;
+    struct _DISPLAY_MODE* next;
 } DISPLAY_MODE, *PDISPLAY_MODE;
 
 int xml_search(const Data& data, const std::string node, std::string* result);
-int xml_applist(const Data& data, PAPP_LIST *app_list);
-int xml_modelist(const Data& data, PDISPLAY_MODE *mode_list);
+int xml_applist(const Data& data, PAPP_LIST* app_list);
+int xml_modelist(const Data& data, PDISPLAY_MODE* mode_list);
 int xml_status(const Data& data);
