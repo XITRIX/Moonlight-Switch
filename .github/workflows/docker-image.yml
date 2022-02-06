@@ -21,6 +21,9 @@ jobs:
       with:
         submodules: recursive
 
+    - name: Remove useless fonts
+      run: rm -rf ./resources/font
+
     - name: Run build
       run: make -j8
 
