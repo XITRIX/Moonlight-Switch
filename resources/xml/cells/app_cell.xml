@@ -13,7 +13,8 @@
         height="auto"
         grow="1"
         scalingType="fill"
-        cornerRadius="12"/>
+        cornerRadius="12"
+        backgroundColor="#00000030"/>
 
     <brls:Box
         detachedX="0"
