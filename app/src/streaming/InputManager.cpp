@@ -33,7 +33,7 @@ MoonlightInputManager::MoonlightInputManager() {
             if (scroll.y != 0) {
                 //            signed char count = scroll.y > 0 ? 1 : -1;
                 //            LiSendScrollEvent(count);
-                LiSendHighResScrollEvent(scroll.y);
+                LiSendScrollEvent(scroll.y);
             }
         });
 
@@ -281,7 +281,7 @@ void MoonlightInputManager::handleInput() {
         timeStamp = timeNow;
         brls::Logger::info("Scroll sended: {}", mouseState.scroll_y);
         lastMouseState.scroll_y = mouseState.scroll_y;
-        LiSendHighResScrollEvent(mouseState.scroll_y > 0 ? 1 : -1);
+        LiSendScrollEvent(mouseState.scroll_y > 0 ? 1 : -1);
     }
 
     if (panStatus.has_value()) {

@@ -155,7 +155,7 @@ void StreamingInputOverlay::draw(NVGcontext* vg, float x, float y, float width,
         if (scroll_y != 0 && duration > 550 - abs(scroll_y) * 500) {
             timeStamp = timeNow;
             brls::Logger::info("Scroll sended: {}", scroll_y);
-            LiSendHighResScrollEvent(scroll_y > 0 ? 1 : -1);
+            LiSendScrollEvent(scroll_y > 0 ? 1 : -1);
         }
     }
 }
