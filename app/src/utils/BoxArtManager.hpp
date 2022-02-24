@@ -20,4 +20,5 @@ class BoxArtManager : public Singleton<BoxArtManager> {
   private:
     std::map<int, bool> m_has_boxart;
     std::map<int, int> m_texture_handle;
+    void compress_texture(std::string path);
 };

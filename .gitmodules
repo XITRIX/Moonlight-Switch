@@ -4,3 +4,6 @@
 [submodule "extern/moonlight-common-c"]
 	path = extern/moonlight-common-c
 	url = https://github.com/moonlight-stream/moonlight-common-c.git
+[submodule "extern/CImg"]
+	path = extern/CImg
+	url = https://github.com/dtschump/CImg.git

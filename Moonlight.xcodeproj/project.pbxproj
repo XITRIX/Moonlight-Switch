@@ -250,6 +250,8 @@
 		7C18F151265C37F3000D3AF0 /* VideoDepacketizer.c in Sources */ = {isa = PBXBuildFile; fileRef = 7C18F126265C3716000D3AF0 /* VideoDepacketizer.c */; };
 		7C18F152265C37F3000D3AF0 /* SdpGenerator.c in Sources */ = {isa = PBXBuildFile; fileRef = 7C18F12A265C3716000D3AF0 /* SdpGenerator.c */; };
 		7C18F153265C37F3000D3AF0 /* RtspConnection.c in Sources */ = {isa = PBXBuildFile; fileRef = 7C18F11D265C3716000D3AF0 /* RtspConnection.c */; };
+		7C2280AC27C2AFF300EB9B60 /* h_scrolling_frame.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C2280AB27C2AFF300EB9B60 /* h_scrolling_frame.cpp */; };
+		7C2280AD27C2AFF300EB9B60 /* h_scrolling_frame.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C2280AB27C2AFF300EB9B60 /* h_scrolling_frame.cpp */; };
 		7C29E46B278869B200115E95 /* account.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C29E46A278869B200115E95 /* account.cpp */; };
 		7C29E46C278869B200115E95 /* account.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C29E46A278869B200115E95 /* account.cpp */; };
 		7C29E46E27889D4B00115E95 /* full_layout.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C29E46D27889D4B00115E95 /* full_layout.cpp */; };
@@ -689,6 +691,8 @@
 		7C18F130265C3716000D3AF0 /* LinkedBlockingQueue.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = LinkedBlockingQueue.c; sourceTree = "<group>"; };
 		7C18F131265C3716000D3AF0 /* PlatformSockets.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PlatformSockets.h; sourceTree = "<group>"; };
 		7C18F132265C3716000D3AF0 /* ByteBuffer.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = ByteBuffer.c; sourceTree = "<group>"; };
+		7C2280A927C2AFBA00EB9B60 /* h_scrolling_frame.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = h_scrolling_frame.hpp; sourceTree = "<group>"; };
+		7C2280AB27C2AFF300EB9B60 /* h_scrolling_frame.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = h_scrolling_frame.cpp; sourceTree = "<group>"; };
 		7C29E468278869A700115E95 /* account.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = account.hpp; sourceTree = "<group>"; };
 		7C29E46A278869B200115E95 /* account.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = account.cpp; sourceTree = "<group>"; };
 		7C29E46D27889D4B00115E95 /* full_layout.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = full_layout.cpp; sourceTree = "<group>"; };
@@ -739,6 +743,7 @@
 		7C77C5202676C98600179EA8 /* keyboard_view.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = keyboard_view.hpp; sourceTree = "<group>"; };
 		7C8AE162269CBCDC00210332 /* Borealis.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = Borealis.xcodeproj; sourceTree = "<group>"; };
 		7CA52ECE270868A0008D04B8 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		7CB9ACFA27C834680004BA37 /* CImg.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CImg.h; sourceTree = "<group>"; };
 		7CBDEEA62683818A00C6C7B2 /* InputManager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = InputManager.cpp; sourceTree = "<group>"; };
 		7CBDEEA72683818A00C6C7B2 /* InputManager.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = InputManager.hpp; sourceTree = "<group>"; };
 		7CBE6B5A265DADD9007DCC5A /* Settings.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Settings.hpp; sourceTree = "<group>"; };
@@ -859,6 +864,7 @@
 		7C18E8CE265C158A000D3AF0 /* extern */ = {
 			isa = PBXGroup;
 			children = (
+				7CB9ACE727C834680004BA37 /* CImg */,
 				7C5DEBA0268FC6670067CF37 /* zeroconf */,
 				7C18F0DB265C3716000D3AF0 /* moonlight-common-c */,
 				7C18E8CF265C158A000D3AF0 /* borealis */,
@@ -1107,6 +1113,7 @@
 				7C18E979265C158A000D3AF0 /* hint.hpp */,
 				7C18E97A265C158A000D3AF0 /* header.hpp */,
 				7C18E97B265C158A000D3AF0 /* scrolling_frame.hpp */,
+				7C2280A927C2AFBA00EB9B60 /* h_scrolling_frame.hpp */,
 				7C18E97C265C158A000D3AF0 /* dropdown.hpp */,
 				7C18E97D265C158A000D3AF0 /* applet_frame.hpp */,
 				7C18E97E265C158A000D3AF0 /* progress_spinner.hpp */,
@@ -1749,6 +1756,7 @@
 				7C18EEAF265C158B000D3AF0 /* hint.cpp */,
 				7C18EEB0265C158B000D3AF0 /* header.cpp */,
 				7C18EEB1265C158B000D3AF0 /* scrolling_frame.cpp */,
+				7C2280AB27C2AFF300EB9B60 /* h_scrolling_frame.cpp */,
 				7C18EEB2265C158B000D3AF0 /* dropdown.cpp */,
 				7C18EEB3265C158B000D3AF0 /* applet_frame.cpp */,
 				7C18EEB4265C158B000D3AF0 /* label.cpp */,
@@ -1994,6 +2002,14 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		7CB9ACE727C834680004BA37 /* CImg */ = {
+			isa = PBXGroup;
+			children = (
+				7CB9ACFA27C834680004BA37 /* CImg.h */,
+			);
+			path = CImg;
+			sourceTree = "<group>";
+		};
 		7CBE6B59265DADD9007DCC5A /* utils */ = {
 			isa = PBXGroup;
 			children = (
@@ -2215,6 +2231,7 @@
 			files = (
 				7C07552226F6A6B9006A4CDC /* glfw_font.cpp in Sources */,
 				7C07554526F6A6CD006A4CDC /* YGStyle.cpp in Sources */,
+				7C2280AD27C2AFF300EB9B60 /* h_scrolling_frame.cpp in Sources */,
 				7C0754F526F6A656006A4CDC /* english_layout.cpp in Sources */,
 				7C07550E26F6A68C006A4CDC /* AudioStream.c in Sources */,
 				7C0754F826F6A65D006A4CDC /* MoonlightSession.cpp in Sources */,
@@ -2368,6 +2385,7 @@
 			files = (
 				7C18F149265C37E6000D3AF0 /* InputStream.c in Sources */,
 				7C18F082265C15E7000D3AF0 /* geometry.cpp in Sources */,
+				7C2280AC27C2AFF300EB9B60 /* h_scrolling_frame.cpp in Sources */,
 				7C18F07E265C15E7000D3AF0 /* style.cpp in Sources */,
 				7C18F07B265C15E7000D3AF0 /* task.cpp in Sources */,
 				7C18F067265C15A7000D3AF0 /* settings_tab.cpp in Sources */,
@@ -2611,6 +2629,8 @@
 					MULTICAST_DISABLED,
 					"BRLS_I18N_PREFIX=\\\"main/\\\"",
 					"APP_VERSION=\\\"0.11\\\"",
+					"cimg_display=0",
+					cimg_use_png,
 				);
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
@@ -2630,6 +2650,7 @@
 					"extern/moonlight-common-c/enet/src",
 					"extern/moonlight-common-c/src",
 					extern/zeroconf,
+					extern/CImg,
 					demo,
 					app/src/utils,
 					app/src,
@@ -2658,6 +2679,7 @@
 					"-lavutil",
 					"-lopus",
 					"-lSDL2",
+					"-lpng",
 				);
 				SDKROOT = macosx;
 			};
@@ -2712,6 +2734,8 @@
 					MULTICAST_DISABLED,
 					"BRLS_I18N_PREFIX=\\\"main/\\\"",
 					"APP_VERSION=\\\"0.11\\\"",
+					"cimg_display=0",
+					cimg_use_png,
 				);
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
@@ -2731,6 +2755,7 @@
 					"extern/moonlight-common-c/enet/src",
 					"extern/moonlight-common-c/src",
 					extern/zeroconf,
+					extern/CImg,
 					demo,
 					app/src/utils,
 					app/src,
@@ -2759,6 +2784,7 @@
 					"-lavutil",
 					"-lopus",
 					"-lSDL2",
+					"-lpng",
 				);
 				SDKROOT = macosx;
 			};
