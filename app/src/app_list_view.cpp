@@ -27,7 +27,7 @@ AppListView::AppListView(Host host) : host(host) {
     holder->addGestureRecognizer(new TapGestureRecognizer(holder));
 
     hintView = holder;
-    getAppletFrameItem()->hintView = hintView;
+    getAppletFrameItem()->setHintView(hintView);
 
     container->setHideHighlight(true);
     gridView = new GridView();

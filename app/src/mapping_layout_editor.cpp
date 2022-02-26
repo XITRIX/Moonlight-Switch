@@ -35,7 +35,7 @@ MappingLayoutEditor::MappingLayoutEditor(int layoutNumber,
     holder->setMargins(18, 0, 8, 0);
     holder->addGestureRecognizer(new TapGestureRecognizer(holder));
 
-    getAppletFrameItem()->hintView = holder;
+    getAppletFrameItem()->setHintView(holder);
 
     registerAction(
         "_rename", BUTTON_RB,
