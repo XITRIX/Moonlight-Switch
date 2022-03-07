@@ -32,3 +32,9 @@ jobs:
       with:
         name: Moonlight-Switch
         path: Moonlight-Switch.nro
+
+    - name: Upload Moonlight-Switch.elf
+      uses: actions/upload-artifact@master
+      with:
+        name: Debug.elf
+        path: Moonlight-Switch.elf
