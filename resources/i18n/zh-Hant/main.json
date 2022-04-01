@@ -1,0 +1,156 @@
+{
+    "title": "Moonlight",
+    "error": {
+        "dialog_header": "錯誤",
+        "stream_start": "串流啟動失敗...",
+        "unknown_error": "發生未知的錯誤...",
+        "host_not_found": "沒有找到主機...",
+        "ip_not_obtained": "無法取得IP位址..."
+    },
+    "common": {
+	    "close": "關閉",
+        "cancel": "取消",
+        "remove": "移除",
+		"confirm": "確定",
+        "edit": "編輯"
+    },
+    "tabs": {
+	    "favorites": "最愛"
+        "add_host": "新增主機",
+        "settings": "設定",
+        "about": "關於"
+    },
+    "host": {
+        "status": "狀態",
+        "fetching": "擷取中...",
+        "wait": "等待中...",
+        "ready": "準備完成",
+        "unable": "無法使用",
+        "wake_up": "喚醒",
+        "wake_up_message": "發送喚醒請求",
+        "wake_up_error": "無法喚醒主機",
+        "connect": "連接",
+        "remove_message": "確認要移除目前的主機嗎?"
+    },
+    "add_host": {
+        "manual": "手動",
+        "host_ip": "主機IP",
+        "connect": "連接",
+        "search": "搜尋",
+        "search_error": "無法使用搜尋",
+        "search_refresh": "重新整理",
+        "paired_error": "已配對\n已更新配置",
+        "pair_prefix": "配對\n\n確認 ",
+        "pair_postfix": "請在主機設備上輸入",
+        "try_connect": "嘗試連接到指定的主機"
+    },
+    "discovery_manager": {
+        "no_ip": "無法取得IP位址",
+        "no_host": "沒有找到指定的主機"
+    },
+    "settings": {
+        "quality": "串流播放品質",
+        "fps": "FPS",
+        "resolution": "解析度",
+        "video_codec": "影片解碼器",
+        "decoder_threads": "解碼器執行緒",
+        "video_bitrate": "影片位元率",
+        "stream_settings": "串流設定",
+        "usops": "使用串流最佳化設定",
+        "paop": "串流時在主機上播放音訊",
+        "debug": "偵錯模式",
+        "debugging_view": "顯示偵錯畫面",
+        "h264": "H.264",
+        "h265": "HEVC (H.265, 測試功能)",
+        "zero_threads": "0 (不使用執行緒)",
+        "keys": "手把設定",
+        "swap_ui": "將主畫面的 / 與 / 對調",
+		"keys_mapping": "遊戲按鈕映射",
+        "keys_mapping_default": "Xbox(預設)",
+        "keys_mapping_swap": "Switch (將 / 與 /對調)",
+        "keys_mapping_title": "按鈕映射佈局",
+        "keys_mapping_create_new": "按+建立新佈局",
+        "keys_mapping_new_title": "新佈局",
+        "keyboard": "鍵盤",
+        "keyboard_type": "鍵盤類型",
+        "keyboard_compact": "精簡",
+        "keyboard_fullsized": "完整",
+        "mouse": "滑鼠",
+        "swap_mouse_keys": "將滑鼠  與  鈕對調",
+        "swap_mouse_scroll": "對調滑鼠滾輪捲動方向",
+        "overlay": "顯示虛擬按鍵",
+        "overlay_setup_message": "設定顯示虛擬按鍵的啟動鍵:\n\n",
+        "overlay_zero_time": "0 (立刻)",
+        "overlay_time": "長按幾秒後顯示虛擬鍵盤",
+        "overlay_buttons": "按鍵組合",
+		"mouse_input": "滑鼠輸入模式",
+        "mouse_input_setup_message": "設定滑鼠輸入模式的啟動鍵:\n\n",
+        "volume_amplification": "允許放大音量",
+        "guide_key_setup_message": "設定遊戲工作列的啟動鍵:\n\n",
+        "guide_key": "遊戲工作列(點擊啟用)",
+        "guide_key_buttons": "按鍵組合",
+        "mouse_speed": "滑鼠速度"
+    },
+	"mapping_layout_editor": {
+        "title": "編輯映射佈局",
+        "remove": "移除佈局",
+		"reset": "重置",
+        "selection_dialog_title": "請重新輸入",
+        "remove_dialog_title": "確認要移除目前的佈局?",
+        "rename_title": "目前佈局名稱"
+    },
+    "app_list": {
+        "reload_app_list": "重新載入",
+        "terminate": "終止",
+        "terminate_current_app": "終止目前應用程式",
+        "terminate_prefix": "終止 ",
+        "terminate_postfix": "\n\n有可能會遺失所有未儲存的進度",
+        "running": "啟動中",
+        "run_current": "目前啟動的應用程式",
+        "star": "收藏",
+        "unstar": "取消收藏"
+    },
+    "streaming": {
+        "keys": "按鍵",
+        "options": "選項",
+        "logout": "登出",
+        "connection": "連接選項",
+        "terminate": "終止應用程式",
+        "disconnect": "斷開連接",
+        "input": "輸入",
+        "mouse_input": "進入滑鼠輸入模式",
+        "show_logs": "顯示日誌",
+        "debug_info": "偵錯日誌",
+        "esc": "ESC按鈕",
+        "volume": "音量",
+        "mouse_speed": "滑鼠游標速度"
+    },
+    "mouse_input": {
+        "title": "進入滑鼠輸入模式",
+        "mouse": "滑鼠",
+        "scroll": "滾輪",
+        "keyboard": "鍵盤"
+	},	
+    "about": {
+        "title": "關於",
+        "version": "Moonlight-Switch v{} by XITRIX",
+        "about": "Moonlight-Switch是以Moonlight-Common-C為基礎，專為Nintendo Switch設計的第三方遊戲串流客戶端軟體",
+        "links": "相關連結",
+        "link_github": "GitHub Page",
+        "link_patreon": "Patreon Page",
+        "link_gbatemp": "GbaTemp Page",
+        "thanks": "特別感謝",
+        "thanks_1": " Rock88 and his Moonlight-NX, lots of code was reused in this app",
+        "thanks_2": " Natinusala for creating Borealis",
+        "thanks_3": " Moonlight team, it could not be possible without them",
+        "thanks_4": " Cameron Gutman for helping to solve an issue with LibNX",
+        "thanks_5": " Everyone involved into app development",
+        "thanks_6": " You, for using my homebrew!"
+    },
+    "hints": {
+        "ok": "確定",
+        "back": "返回",
+        "on": "開",
+        "off": "關"
+    }
+}
