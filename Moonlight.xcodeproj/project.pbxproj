@@ -2639,6 +2639,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = (
+					"/opt/homebrew/opt/mbedtls@2/include",
 					extern/borealis/library/include,
 					extern/borealis/library/include/borealis/extern,
 					extern/borealis/library/include/borealis/extern/tinyxml2,
@@ -2655,7 +2656,6 @@
 					app/src/utils,
 					app/src,
 					/opt/homebrew/include,
-					"/opt/homebrew/opt/mbedtls@2/include",
 				);
 				LIBRARY_SEARCH_PATHS = (
 					"/opt/homebrew/opt/mbedtls@2/lib",
@@ -2744,6 +2744,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = (
+					"/opt/homebrew/opt/mbedtls@2/include",
 					extern/borealis/library/include,
 					extern/borealis/library/include/borealis/extern,
 					extern/borealis/library/include/borealis/extern/tinyxml2,
@@ -2760,7 +2761,6 @@
 					app/src/utils,
 					app/src,
 					/opt/homebrew/include,
-					"/opt/homebrew/opt/mbedtls@2/include",
 				);
 				LIBRARY_SEARCH_PATHS = (
 					"/opt/homebrew/opt/mbedtls@2/lib",
