@@ -2628,7 +2628,7 @@
 					USE_MBEDTLS,
 					MULTICAST_DISABLED,
 					"BRLS_I18N_PREFIX=\\\"main/\\\"",
-					"APP_VERSION=\\\"0.11\\\"",
+					"APP_VERSION=\\\"0.12\\\"",
 					"cimg_display=0",
 					cimg_use_png,
 				);
@@ -2733,7 +2733,7 @@
 					USE_MBEDTLS,
 					MULTICAST_DISABLED,
 					"BRLS_I18N_PREFIX=\\\"main/\\\"",
-					"APP_VERSION=\\\"0.11\\\"",
+					"APP_VERSION=\\\"0.12\\\"",
 					"cimg_display=0",
 					cimg_use_png,
 				);
