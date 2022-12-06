@@ -38,7 +38,7 @@
       enableUBSanitizer = "YES"
       launchStyle = "0"
       useCustomWorkingDirectory = "YES"
-      customWorkingDirectory = "/Users/xitrix/Documents/DEV/Switch/moonlight"
+      customWorkingDirectory = "/Users/xitrix/Documents/Dev/Moonlight-Switch"
       ignoresPersistentStateOnLaunch = "NO"
       debugDocumentVersioning = "YES"
       debugServiceExtension = "internal"
