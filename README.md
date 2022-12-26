@@ -80,9 +80,11 @@ ATTENTION! Currently there is no way to select language inside of app, it takes 
 2. `cd` into folder
 
 ## Switch:
-3. Build by `make -j4`
-4. If it doesn't work, try to install missing packages
-5. If it still doesn't work, god bless you!
+3. Install core Switch packages `dkp-pacman -Suy switch-dev`
+4. Install other packages `dkp-pacman -Suy switch-ffmpeg switch-mbedtls switch-opusfile switch-sdl2 switch-curl switch-libexpat switch-jansson switch-glfw switch-glm switch-libvpx switch-glad`
+5. Build by `make -j4`
+6. Moonlight-Switch.nro should be created. If it doesn't work, try to install missing packages
+7. If it still doesn't work, god bless you!
 
 ## Switch using Docker:
 3. `scripts/build-switch.sh`
