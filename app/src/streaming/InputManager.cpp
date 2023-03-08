@@ -218,7 +218,7 @@ void MoonlightInputManager::handleInput() {
 #ifdef __SWITCH__
     static HidTouchScreenState hidState = {0};
     hidGetTouchScreenStates(&hidState, 1);
-    bool specialKey = hidState.count > 0;
+    bool specialKey = hidState.count == 1;
 #else
     bool specialKey = false;
 #endif
@@ -231,13 +231,25 @@ void MoonlightInputManager::handleInput() {
             : 0;
 
     static MouseStateS lastMouseState;
-    MouseStateS mouseState{
-        .scroll_y = stickScrolling, // + mouse.scroll.y,
-        .l_pressed = (specialKey && controller.buttons[brls::BUTTON_RT]) ||
-                     mouse.leftButton,
-        .m_pressed = mouse.middleButton,
-        .r_pressed = (specialKey && controller.buttons[brls::BUTTON_LT]) ||
-                     mouse.rightButton};
+
+    MouseStateS mouseState;
+    if (!Settings::instance().touchscreen_mouse_mode()) {
+        mouseState = {
+            .scroll_y = stickScrolling, // + mouse.scroll.y,
+            .l_pressed = (specialKey && controller.buttons[brls::BUTTON_RT]) ||
+            mouse.leftButton,
+                .m_pressed = mouse.middleButton,
+                .r_pressed = (specialKey && controller.buttons[brls::BUTTON_LT]) ||
+            mouse.rightButton};
+    } else {
+        mouseState = {
+            .scroll_y = stickScrolling, // + mouse.scroll.y,
+            .l_pressed = (specialKey) ||
+            mouse.leftButton,
+                .m_pressed = mouse.middleButton,
+                .r_pressed = (specialKey && controller.buttons[brls::BUTTON_LT]) ||
+            mouse.rightButton};
+    }
 
     if (Settings::instance().swap_mouse_scroll())
         mouseState.scroll_y *= -1;
@@ -284,13 +296,23 @@ void MoonlightInputManager::handleInput() {
         LiSendScrollEvent(mouseState.scroll_y > 0 ? 1 : -1);
     }
 
-    if (panStatus.has_value()) {
-        float multiplier =
+    if (!Settings::instance().touchscreen_mouse_mode()) {
+        if (panStatus.has_value()) {
+            float multiplier =
             Settings::instance().get_mouse_speed_multiplier() / 100.f * 1.5f +
             0.5f;
-        LiSendMouseMoveEvent(-panStatus->delta.x * multiplier,
-                             -panStatus->delta.y * multiplier);
-        panStatus.reset();
+            LiSendMouseMoveEvent(-panStatus->delta.x * multiplier,
+                                 -panStatus->delta.y * multiplier);
+            panStatus.reset();
+        }
+    } else {
+        if (specialKey) {
+            std::vector<RawTouchState> rawTouch;
+            brls::Application::getPlatform()->getInputManager()->updateTouchStates(&rawTouch);
+            
+            auto mousePosition = rawTouch.front().position;
+            LiSendMousePositionEvent(mousePosition.x, mousePosition.y, 1, 1);
+        }
     }
 }
 

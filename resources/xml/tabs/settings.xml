@@ -107,6 +107,9 @@
             <brls:Header
                 title="@i18n/settings/mouse"
                 paddingTop="60"/>
+
+            <brls:BooleanCell
+                id="touchscreen_mouse_mode"/>
                 
             <brls:BooleanCell
                 id="swap_mouse_keys"/>

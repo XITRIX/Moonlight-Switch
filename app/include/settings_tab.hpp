@@ -31,6 +31,7 @@ class SettingsTab : public brls::Box {
     BRLS_BIND(brls::DetailCell, mouseInputButtons, "mouse_input_buttons");
     BRLS_BIND(brls::SelectorCell, keyboardType, "keyboard_type");
     BRLS_BIND(brls::BooleanCell, volumeAmplification, "volume_amplification");
+    BRLS_BIND(brls::BooleanCell, touchscreenMouseMode, "touchscreen_mouse_mode");
     BRLS_BIND(brls::BooleanCell, swapMouseKeys, "swap_mouse_keys");
     BRLS_BIND(brls::BooleanCell, swapMouseScroll, "swap_mouse_scroll");
     BRLS_BIND(brls::Header, mouseSpeedHeader, "mouse_speed_header");

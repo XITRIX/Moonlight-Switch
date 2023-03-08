@@ -311,6 +311,12 @@ SettingsTab::SettingsTab() {
                 Settings::instance().set_volume(100);
         });
 
+    touchscreenMouseMode->init("settings/touchscreen_mouse_mode"_i18n,
+                               Settings::instance().touchscreen_mouse_mode(),
+                               [this](bool value) {
+                                   Settings::instance().set_touchscreen_mouse_mode(value);
+                               });
+
     swapMouseKeys->init("settings/swap_mouse_keys"_i18n,
                         Settings::instance().swap_mouse_keys(),
                         [this](bool value) {

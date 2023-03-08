@@ -130,6 +130,12 @@ OptionsTab::OptionsTab(StreamingView* streamView) : streamView(streamView) {
         }
     });
 
+    touchscreenMouseMode->init("settings/touchscreen_mouse_mode"_i18n,
+                               Settings::instance().touchscreen_mouse_mode(),
+                               [this](bool value) {
+                                   Settings::instance().set_touchscreen_mouse_mode(value);
+                               });
+
     onscreenLogButton->init("streaming/show_logs"_i18n,
                             Settings::instance().write_log(), [](bool value) {
                                 Settings::instance().set_write_log(value);

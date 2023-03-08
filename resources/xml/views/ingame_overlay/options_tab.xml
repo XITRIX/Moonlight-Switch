@@ -27,6 +27,9 @@
 
             <brls:SelectorCell
                 id="keyboard_type"/>
+
+            <brls:BooleanCell
+                id="touchscreen_mouse_mode"/>
             
             <brls:Header
                 id="volume_header"

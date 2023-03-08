@@ -119,6 +119,12 @@ class Settings : public Singleton<Settings> {
         m_swap_mouse_keys = swap_mouse_keys;
     }
 
+    bool touchscreen_mouse_mode() const { return m_touchscreen_mouse_mode; }
+
+    void set_touchscreen_mouse_mode(bool touchscreen_mouse_mode) {
+        m_touchscreen_mouse_mode = touchscreen_mouse_mode;
+    }
+
     bool swap_mouse_keys() const { return m_swap_mouse_keys; }
 
     void set_swap_mouse_scroll(bool swap_mouse_scroll) {
@@ -204,6 +210,7 @@ class Settings : public Singleton<Settings> {
     bool m_write_log = false;
     bool m_swap_ui_keys = false;
     bool m_swap_game_keys = false;
+    bool m_touchscreen_mouse_mode = false;
     bool m_swap_mouse_keys = false;
     bool m_swap_mouse_scroll = false;
     int m_volume = 100;

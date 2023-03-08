@@ -264,6 +264,10 @@ void Settings::load() {
             if (json_t* swap_game_keys = json_object_get(settings, "swap_game_keys")) {
                 m_swap_game_keys = json_typeof(swap_game_keys) == JSON_TRUE;
             }
+
+            if (json_t* touchscreen_mouse_mode = json_object_get(settings, "touchscreen_mouse_mode")) {
+                m_touchscreen_mouse_mode = json_typeof(touchscreen_mouse_mode) == JSON_TRUE;
+            }
             
             if (json_t* swap_mouse_keys = json_object_get(settings, "swap_mouse_keys")) {
                 m_swap_mouse_keys = json_typeof(swap_mouse_keys) == JSON_TRUE;
@@ -429,6 +433,7 @@ void Settings::save() {
             json_object_set_new(settings, "write_log", m_write_log ? json_true() : json_false());
             json_object_set_new(settings, "swap_ui_keys", m_swap_ui_keys ? json_true() : json_false());
             json_object_set_new(settings, "swap_game_keys", m_swap_game_keys ? json_true() : json_false());
+            json_object_set_new(settings, "touchscreen_mouse_mode", m_touchscreen_mouse_mode ? json_true() : json_false());
             json_object_set_new(settings, "swap_mouse_keys", m_swap_mouse_keys ? json_true() : json_false());
             json_object_set_new(settings, "swap_mouse_scroll", m_swap_mouse_scroll ? json_true() : json_false());
             json_object_set_new(settings, "volume_amplification", m_volume_amplification ? json_true() : json_false());

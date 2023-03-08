@@ -51,6 +51,7 @@ class OptionsTab : public brls::Box {
 
     BRLS_BIND(brls::DetailCell, inputOverlayButton, "input_overlay");
     BRLS_BIND(brls::SelectorCell, keyboardType, "keyboard_type");
+    BRLS_BIND(brls::BooleanCell, touchscreenMouseMode, "touchscreen_mouse_mode");
     BRLS_BIND(brls::Header, volumeHeader, "volume_header");
     BRLS_BIND(brls::Slider, volumeSlider, "volume_slider");
     BRLS_BIND(brls::Header, mouseHeader, "mouse_speed_header");
