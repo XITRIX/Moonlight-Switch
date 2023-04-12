@@ -9,11 +9,8 @@ on:
 jobs:
 
   build:
-
     runs-on: ubuntu-latest
-    
-    container:
-      image: docker://xitrix/moonlight:latest
+    container: devkitpro/devkita64:latest
 
     steps:
     - name: Check out repository
@@ -23,7 +20,10 @@ jobs:
 
     - name: Remove useless fonts
       run: rm -rf ./resources/font
-
+      
+    - name: Update image
+      run: dkp-pacman -Syyu
+        
     - name: Run build
       run: make -j8
 
