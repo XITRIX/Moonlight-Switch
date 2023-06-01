@@ -23,6 +23,10 @@
 
 #endif
 
+#if defined(__SWITCH__)
+#include <switch.h>
+#endif
+
 #if defined(UNIX_SOCKS) || defined(WIN32_SOCKS)
 
 static Data mac_string_to_bytes(std::string mac) {
@@ -97,8 +101,18 @@ GSResult<bool> send_packet_unix(const Host& host, const Data& payload) {
 
     // Set server end point (the broadcast addres)
     udpServer.sin_family = AF_INET;
+#if defined(__SWITCH__)
+    uint32_t ip, subnet_mask;
+    // Get the current IP address and subnet mask to calculate subnet broadcast address
+    nifmGetCurrentIpConfigInfo(&ip, &subnet_mask, nullptr, nullptr, nullptr);
+    udpServer.sin_addr.s_addr = ip | ~subnet_mask;
+#else
     udpServer.sin_addr.s_addr = inet_addr(host.address.c_str());
+#endif
     udpServer.sin_port = htons(9);
+
+    brls::Logger::info("WakeOnLanManager: Sending magic packet to: '{}'",
+                    inet_ntoa(udpServer.sin_addr));
 
     // Send the packet
     ssize_t result =
@@ -140,8 +154,18 @@ GSResult<bool> send_packet_win32(const Host& host, const Data& payload) {
 
     // Set server end point (the broadcast addres)
     udpServer.sin_family = AF_INET;
+#if defined(__SWITCH__)
+    uint32_t ip, subnet_mask;
+    // Get the current IP address and subnet mask to calculate subnet broadcast address
+    nifmGetCurrentIpConfigInfo(&ip, &subnet_mask, nullptr, nullptr, nullptr);
+    udpServer.sin_addr.s_addr = ip | ~subnet_mask;
+#else
     udpServer.sin_addr.s_addr = inet_addr(host.address.c_str());
+#endif
     udpServer.sin_port = htons(9);
+
+    brls::Logger::info("WakeOnLanManager: Sending magic packet to: '{}'",
+                    inet_ntoa(udpServer.sin_addr));
 
     // Send the packet
     sendto(udpSocket, (const char*)payload.bytes(), sizeof(unsigned char) * 102,
