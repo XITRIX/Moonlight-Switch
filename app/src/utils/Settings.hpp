@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 
-enum VideoCodec : int { H264, H265 };
+enum VideoCodec : int { H264, H265, AV1 };
 
 enum KeyboardType : int { COMPACT, FULLSIZED };
 
