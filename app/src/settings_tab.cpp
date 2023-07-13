@@ -86,7 +86,7 @@ SettingsTab::SettingsTab() {
     });
 
     codec->init("settings/video_codec"_i18n,
-                {"settings/h264"_i18n, "settings/h265"_i18n},
+                {"settings/h264"_i18n, "settings/h265"_i18n, "settings/av1"_i18n},
                 Settings::instance().video_codec(), [](int selected) {
                     Settings::instance().set_video_codec((VideoCodec)selected);
                 });

@@ -62,6 +62,7 @@
         "debugging_view": "Show debugging view",
         "h264": "H.264",
         "h265": "HEVC (H.265, Experimental)",
+        "av1": "AV1 (Experimental)",
         "zero_threads": "0 (No use threads)",
         "keys": "Controller keys",
         "swap_ui": "Swap / and / for UI",
