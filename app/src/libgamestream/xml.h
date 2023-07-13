@@ -33,6 +33,7 @@ typedef struct _DISPLAY_MODE {
     struct _DISPLAY_MODE* next;
 } DISPLAY_MODE, *PDISPLAY_MODE;
 
+int xml_search(const Data& data, const std::string node, int* result);
 int xml_search(const Data& data, const std::string node, std::string* result);
 int xml_applist(const Data& data, PAPP_LIST* app_list);
 int xml_modelist(const Data& data, PDISPLAY_MODE* mode_list);

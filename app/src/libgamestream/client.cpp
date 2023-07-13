@@ -46,7 +46,6 @@ static int load_server_status(PSERVER_DATA server, bool skip_https) {
         std::string pairedText;
         std::string currentGameText;
         std::string stateText;
-        std::string serverCodecModeSupportText;
 
         ret = GS_INVALID;
 
@@ -88,7 +87,7 @@ static int load_server_status(PSERVER_DATA server, bool skip_https) {
             goto cleanup;
 
         if (xml_search(data, "ServerCodecModeSupport",
-                       &serverCodecModeSupportText) != GS_OK)
+                       &server->serverInfo.serverCodecModeSupport) != GS_OK)
             goto cleanup;
 
         if (xml_search(data, "gputype", &server->gpuType) != GS_OK)
@@ -120,7 +119,7 @@ static int load_server_status(PSERVER_DATA server, bool skip_https) {
         server->paired = pairedText == "1";
         server->currentGame =
             currentGameText.empty() ? 0 : atoi(currentGameText.c_str());
-        server->supports4K = !serverCodecModeSupportText.empty();
+        server->supports4K = server->serverInfo.serverCodecModeSupport != 0;
         server->serverMajorVersion = atoi(server->serverInfoAppVersion.c_str());
 
         if (stateText == "_SERVER_BUSY") {

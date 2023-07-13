@@ -152,6 +152,14 @@ static void XMLCALL _xml_write_data(void* userData, const XML_Char* s,
     }
 }
 
+
+int xml_search(const Data& data, const std::string node, int* result) {
+    std::string text;
+    auto res = xml_search(data, node, &text);
+    *result = std::stoi(text);
+    return res;
+}
+
 int xml_search(const Data& data, const std::string node, std::string* result) {
     struct xml_query search;
     search.data = (void*)node.c_str();
