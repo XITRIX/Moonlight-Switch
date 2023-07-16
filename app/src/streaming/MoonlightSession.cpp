@@ -208,8 +208,7 @@ void MoonlightSession::start(ServerCallback<bool> callback) {
         m_config.hevcBitratePercentageMultiplier = 75;
         break;
     case AV1:
-        m_config.supportedVideoFormats = VIDEO_FORMAT_AV1_MAIN8;
-        m_config.av1BitratePercentageMultiplier = 75;
+        m_config.supportedVideoFormats = VIDEO_FORMAT_AV1_MAIN10;
         break;
     default:
         break;
