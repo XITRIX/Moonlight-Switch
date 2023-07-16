@@ -41,7 +41,7 @@
         "no_host": "ホストPCが見つかりません"
     },
     "settings": {
-        "quality": "品質",
+        "quality": "品質 (Higher settings requires CPU overclock)",
         "fps": "FPS",
         "resolution": "解像度",
         "video_codec": "ビデオコーデック",

@@ -50,7 +50,7 @@
         "no_host": "沒有找到主機"
     },
     "settings": {
-        "quality": "串流質量",
+        "quality": "串流質量 (Higher settings requires CPU overclock)",
         "fps": "FPS",
         "resolution": "解析度",
         "video_codec": "影片解碼器",

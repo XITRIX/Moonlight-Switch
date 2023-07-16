@@ -49,7 +49,7 @@
         "no_host": "Machine hôte non trouvée"
     },
     "settings": {
-        "quality": "Qualité",
+        "quality": "Qualité (Higher settings requires CPU overclock)",
         "fps": "FPS",
         "resolution": "Résolution",
         "video_codec": "Codec vidéo",

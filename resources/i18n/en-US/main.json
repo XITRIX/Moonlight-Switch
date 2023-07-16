@@ -49,7 +49,7 @@
         "no_host": "Host PC not found"
     },
     "settings": {
-        "quality": "Quality",
+        "quality": "Quality (Higher settings requires CPU overclock)",
         "fps": "FPS",
         "resolution": "Resolution",
         "video_codec": "Video codec",

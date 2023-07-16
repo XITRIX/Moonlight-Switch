@@ -48,7 +48,7 @@
         "no_host": "Host nicht gefunden"
     },
     "settings": {
-        "quality": "Qualität",
+        "quality": "Qualität (Higher settings requires CPU overclock)",
         "fps": "FPS",
         "resolution": "Auflösung",
         "video_codec": "Video Codec",

@@ -49,7 +49,7 @@
     "no_host": "Servidor no encontrado"
   },
   "settings": {
-    "quality": "Calidad",
+    "quality": "Calidad (Higher settings requires CPU overclock)",
     "fps": "FPS",
     "resolution": "Resolución",
     "video_codec": "Códec de vídeo",
