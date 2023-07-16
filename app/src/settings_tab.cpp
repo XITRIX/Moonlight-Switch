@@ -91,9 +91,13 @@ SettingsTab::SettingsTab() {
                     Settings::instance().set_video_codec((VideoCodec)selected);
                 });
 
-    float progress = (Settings::instance().bitrate() - 500.0f) / 49500.0f;
-    slider->getProgressEvent()->subscribe([this](float progress) {
-        int bitrate = progress * 49500.0f + 500.0f;
+    const float maxLimit = 100000;
+    const float limitOffset = 500;
+    const float limit = maxLimit - limitOffset;
+
+    float progress = (Settings::instance().bitrate() - limitOffset) / limit;
+    slider->getProgressEvent()->subscribe([this, limitOffset, limit](float progress) {
+        int bitrate = progress * limit + limitOffset;
         float fbitrate = bitrate / 1000.0f;
         std::stringstream stream;
         stream << std::fixed << std::setprecision(1) << fbitrate;
