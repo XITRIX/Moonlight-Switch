@@ -91,9 +91,14 @@ SettingsTab::SettingsTab() {
                     Settings::instance().set_video_codec((VideoCodec)selected);
                 });
 
-    const float maxLimit = 100000;
+#ifdef __SWITCH__
+    const float mbpsMaxLimit = 50000;
+#else
+    const float mbpsMaxLimit = 100000;
+#endif
+
     const float limitOffset = 500;
-    const float limit = maxLimit - limitOffset;
+    const float limit = mbpsMaxLimit - limitOffset;
 
     float progress = (Settings::instance().bitrate() - limitOffset) / limit;
     slider->getProgressEvent()->subscribe([this, limitOffset, limit](float progress) {
