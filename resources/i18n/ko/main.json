@@ -49,7 +49,7 @@
         "no_host": "호스트 PC를 찾을 수 없음"
     },
     "settings": {
-        "quality": "품질 (Higher settings requires CPU overclock)",
+        "quality": "품질 (설정이 높을수록 CPU 오버클럭 필요)",
         "fps": "FPS",
         "resolution": "해상도",
         "video_codec": "동영상 코덱",
