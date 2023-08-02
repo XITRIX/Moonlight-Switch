@@ -96,8 +96,8 @@
         "terminate_postfix": "\n\nTodo progresso não salvo será perdido",
         "running": "Em execução",
         "run_current": "Executar aplicativo atual",
-        "star": "Estrela",
-        "unstar": "Remover estrela"
+        "star": "Favoritar",
+        "unstar": "Desfavoritar"
     },
     "streaming": {
         "keys": "Teclas",
