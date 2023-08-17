@@ -74,9 +74,9 @@ ASFLAGS	:=	-g $(ARCH)
 LDFLAGS	=	-specs=$(DEVKITPRO)/libnx/switch.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
 
 LIBS	:=  -lcurl -lmbedtls -lmbedx509 -lmbedcrypto \
-	-lavcodec -lavutil -lopus -lz -lexpat \
+	-lavcodec -lavutil -lopus -lexpat \
 	-lglad -lEGL -lglapi -ldrm_nouveau -lglfw3 \
-	-lswresample -lvpx -ljansson -lSDL2 -lpng -lnx
+	-lswresample -lvpx -ljansson -lSDL2 -lpng -lz -lnx
 
 #---------------------------------------------------------------------------------
 # list of directories containing libraries, this must be the top level containing
