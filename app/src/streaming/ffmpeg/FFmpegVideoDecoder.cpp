@@ -27,8 +27,7 @@ int FFmpegVideoDecoder::setup(int video_format, int width, int height,
 #if LIBAVCODEC_VERSION_INT < AV_VERSION_INT(58, 10, 100)
     avcodec_register_all();
 #endif
-
-    av_init_packet(&m_packet);
+    m_packet = av_packet_alloc();
 
     int perf_lvl = LOW_LATENCY_DECODE;
 
@@ -109,6 +108,8 @@ int FFmpegVideoDecoder::setup(int video_format, int width, int height,
 
 void FFmpegVideoDecoder::cleanup() {
     brls::Logger::info("FFmpeg: Cleanup...");
+
+    av_packet_free(&m_packet);
 
     if (m_decoder_context) {
         avcodec_close(m_decoder_context);
@@ -203,10 +204,10 @@ int FFmpegVideoDecoder::capabilities() const {
 }
 
 int FFmpegVideoDecoder::decode(char* indata, int inlen) {
-    m_packet.data = (uint8_t*)indata;
-    m_packet.size = inlen;
+    m_packet->data = (uint8_t*)indata;
+    m_packet->size = inlen;
 
-    int err = avcodec_send_packet(m_decoder_context, &m_packet);
+    int err = avcodec_send_packet(m_decoder_context, m_packet);
 
     if (err != 0) {
         char error[512];

@@ -63,8 +63,8 @@ dep_avformat = dependency('libavformat')
 compiler = meson.get_compiler('c')
 
 dep_curl = [ compiler.find_library('curl') ]
-dep_mbedtls = [ compiler.find_library('mbedtls') ]
-dep_mbedx509 = [ compiler.find_library('mbedx509') ]
+dep_mbedtls = dependency('mbedtls')
+dep_mbedx509 = dependency('mbedx509', method : 'system')
 dep_mbedcrypto = [ compiler.find_library('mbedcrypto') ]
 
 moonlight_dependencies = []
