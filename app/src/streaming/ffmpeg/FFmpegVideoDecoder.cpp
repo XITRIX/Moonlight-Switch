@@ -71,7 +71,11 @@ int FFmpegVideoDecoder::setup(int video_format, int width, int height,
 
     m_decoder_context->width = width;
     m_decoder_context->height = height;
+#ifdef __SWITCH__
+    m_decoder_context->pix_fmt = AV_PIX_FMT_TX1;
+#else
     m_decoder_context->pix_fmt = AV_PIX_FMT_YUV420P;
+#endif
 
     int err = avcodec_open2(m_decoder_context, m_decoder, NULL);
     if (err < 0) {
@@ -86,6 +90,7 @@ int FFmpegVideoDecoder::setup(int video_format, int width, int height,
         return -1;
     }
 
+    tmp_frame = av_frame_alloc();
     for (int i = 0; i < m_frames_count; i++) {
         m_frames[i] = av_frame_alloc();
         if (m_frames[i] == NULL) {
@@ -102,6 +107,14 @@ int FFmpegVideoDecoder::setup(int video_format, int width, int height,
         return -1;
     }
 
+#ifdef __SWITCH__
+    if ((err = av_hwdevice_ctx_create(&hw_device_ctx, AV_HWDEVICE_TYPE_TX1, NULL, NULL, 0)) < 0) {
+        brls::Logger::error("FFmpeg: Error initializing hardware decoder - {}", err);
+        return -1;
+    }
+    m_decoder_context->hw_device_ctx = av_buffer_ref(hw_device_ctx);
+#endif
+
     brls::Logger::info("FFmpeg: Setup done!");
 
     return DR_OK;
@@ -109,6 +122,10 @@ int FFmpegVideoDecoder::setup(int video_format, int width, int height,
 
 void FFmpegVideoDecoder::cleanup() {
     brls::Logger::info("FFmpeg: Cleanup...");
+
+    if (hw_device_ctx) {
+        av_buffer_unref(&hw_device_ctx);
+    }
 
     if (m_decoder_context) {
         avcodec_close(m_decoder_context);
@@ -124,6 +141,10 @@ void FFmpegVideoDecoder::cleanup() {
 
         free(m_frames);
         m_frames = nullptr;
+    }
+
+    if (tmp_frame) {
+        av_frame_free(&tmp_frame);
     }
 
     if (m_ffmpeg_buffer) {
@@ -217,7 +238,17 @@ int FFmpegVideoDecoder::decode(char* indata, int inlen) {
 }
 
 AVFrame* FFmpegVideoDecoder::get_frame(bool native_frame) {
-    int err = avcodec_receive_frame(m_decoder_context, m_frames[m_next_frame]);
+    int err = avcodec_receive_frame(m_decoder_context, tmp_frame);
+
+    if (hw_device_ctx) {
+        if ((err = av_hwframe_transfer_data(m_frames[m_next_frame], tmp_frame, 0)) < 0) {
+            brls::Logger::error("FFmpeg: Error transferring the data to system memory");
+            return NULL;
+        }
+//        m_frames[m_next_frame] = sw_frame;
+    } else {
+        m_frames[m_next_frame] = tmp_frame;
+    }
 
     if (err == 0) {
         m_current_frame = m_next_frame;

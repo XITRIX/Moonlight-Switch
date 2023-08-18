@@ -18,9 +18,11 @@ class FFmpegVideoDecoder : public IFFmpegVideoDecoder {
     AVFrame* get_frame(bool native_frame);
 
     AVPacket m_packet;
+    AVBufferRef *hw_device_ctx = nullptr;
     const AVCodec* m_decoder = nullptr;
     AVCodecContext* m_decoder_context = nullptr;
     AVFrame** m_frames = nullptr;
+    AVFrame *tmp_frame = nullptr;
 
     int m_stream_fps = 0;
     int m_frames_in = 0;
