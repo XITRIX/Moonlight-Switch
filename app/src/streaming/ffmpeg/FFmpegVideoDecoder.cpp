@@ -14,6 +14,17 @@ FFmpegVideoDecoder::FFmpegVideoDecoder() {}
 
 FFmpegVideoDecoder::~FFmpegVideoDecoder() {}
 
+void ffmpegLog(void* ptr, int level, const char* fmt, va_list vargs) {
+    std::string message;
+    va_list ap_copy;
+    va_copy(ap_copy, vargs);
+    size_t len = vsnprintf(0, 0, fmt, ap_copy);
+    message.resize(len + 1);  // need space for NUL
+    vsnprintf(&message[0], len + 1,fmt, vargs);
+    message.resize(len);  // remove the NUL
+    brls::Logger::debug("FFmpeg [LOG]: {}", message.c_str());
+}
+
 int FFmpegVideoDecoder::setup(int video_format, int width, int height,
                               int redraw_rate, void* context, int dr_flags) {
     m_stream_fps = redraw_rate;
@@ -23,10 +34,12 @@ int FFmpegVideoDecoder::setup(int video_format, int width, int height,
         video_format == VIDEO_FORMAT_H264 ? "H264" : "HEVC", width, height,
         redraw_rate);
 
-    av_log_set_level(AV_LOG_QUIET);
+    av_log_set_level(AV_LOG_DEBUG);
+    av_log_set_callback(&ffmpegLog);
 #if LIBAVCODEC_VERSION_INT < AV_VERSION_INT(58, 10, 100)
     avcodec_register_all();
 #endif
+
     m_packet = av_packet_alloc();
 
     int perf_lvl = LOW_LATENCY_DECODE;
@@ -51,6 +64,8 @@ int FFmpegVideoDecoder::setup(int video_format, int width, int height,
         return -1;
     }
 
+    int err;
+
     if (perf_lvl & DISABLE_LOOP_FILTER)
         // Skip the loop filter for performance reasons
         m_decoder_context->skip_loop_filter = AVDISCARD_ALL;
@@ -70,9 +85,13 @@ int FFmpegVideoDecoder::setup(int video_format, int width, int height,
 
     m_decoder_context->width = width;
     m_decoder_context->height = height;
+#ifdef __SWITCH__
+    m_decoder_context->pix_fmt = AV_PIX_FMT_TX1;
+#else
     m_decoder_context->pix_fmt = AV_PIX_FMT_YUV420P;
+#endif
 
-    int err = avcodec_open2(m_decoder_context, m_decoder, NULL);
+    err = avcodec_open2(m_decoder_context, m_decoder, NULL);
     if (err < 0) {
         brls::Logger::error("FFmpeg: Couldn't open codec");
         return err;
@@ -101,7 +120,17 @@ int FFmpegVideoDecoder::setup(int video_format, int width, int height,
         return -1;
     }
 
+    ENOMEM;
+#ifdef __SWITCH__
+    if ((err = av_hwdevice_ctx_create(&hw_device_ctx, AV_HWDEVICE_TYPE_TX1, NULL, NULL, 0)) < 0) {
+        brls::Logger::error("FFmpeg: Error initializing hardware decoder - {}", err);
+        return -1;
+    }
+    m_decoder_context->hw_device_ctx = av_buffer_ref(hw_device_ctx);
+#endif
+
     brls::Logger::info("FFmpeg: Setup done!");
+
 
     return DR_OK;
 }
@@ -218,7 +247,17 @@ int FFmpegVideoDecoder::decode(char* indata, int inlen) {
 }
 
 AVFrame* FFmpegVideoDecoder::get_frame(bool native_frame) {
-    int err = avcodec_receive_frame(m_decoder_context, m_frames[m_next_frame]);
+    int err = avcodec_receive_frame(m_decoder_context, tmp_frame);
+
+#ifdef __SWITCH__
+   /* retrieve data from GPU to CPU */
+    if ((err = av_hwframe_transfer_data(m_frames[m_next_frame], tmp_frame, 0)) < 0) {
+        brls::Logger::error("FFmpeg: Error transferring the data to system memory");
+        return NULL;
+    }
+#else
+    m_frames[m_next_frame] = tmp_frame;
+#endif
 
     if (err == 0) {
         m_current_frame = m_next_frame;
