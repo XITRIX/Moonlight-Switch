@@ -38,6 +38,7 @@ class AudrenAudioRenderer : public IAudioRenderer {
     int m_sample_rate = 0;
     int m_buffer_size = 0;
     int m_samples = 0;
+    size_t m_total_queued_samples = 0;
     ssize_t m_current_size = 0;
 
     const int m_samples_per_frame = AUDREN_SAMPLES_PER_FRAME_48KHZ;
