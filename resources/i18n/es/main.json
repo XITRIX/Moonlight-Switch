@@ -61,7 +61,7 @@
     "debug": "Debug",
     "debugging_view": "Mostrar la vista de debug",
     "h264": "H.264",
-    "h265": "HEVC (H.265, Experimental)",
+    "h265": "HEVC (H.265)",
     "av1": "AV1 (Experimental)",
     "zero_threads": "0 (No usar threads)",
     "keys": "Orden de los botones / y /",

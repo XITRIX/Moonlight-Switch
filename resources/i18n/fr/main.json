@@ -61,7 +61,7 @@
         "debug": "Debug",
         "debugging_view": "Afficher la vue Debug",
         "h264": "H.264",
-        "h265": "HEVC (H.265, Expérimental)",
+        "h265": "HEVC (H.265)",
         "av1": "AV1 (Expérimental)",
         "zero_threads": "0 (pas de threads)",
         "keys": "Touches de la manette",

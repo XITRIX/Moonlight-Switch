@@ -60,7 +60,7 @@
         "debug": "Debug",
         "debugging_view": "Debugansicht anzeigen",
         "h264": "H.264",
-        "h265": "HEVC (H.265, Experimentell)",
+        "h265": "HEVC (H.265)",
         "av1": "AV1 (Experimentell)",
         "zero_threads": "0 (Keine Threads benutzen)",
         "keys": "/ und / Tasten",
