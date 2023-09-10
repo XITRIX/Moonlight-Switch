@@ -2,8 +2,6 @@
 
 Moonlight-Switch is a port of [Moonlight Game Streaming Project](https://github.com/moonlight-stream "Moonlight Game Streaming Project") for Nintendo Switch.
 
-Thanks a lot to [Rock88](https://github.com/rock88) and his [Moonlight-NX](https://github.com/rock88/moonlight-nx), lots of streaming code has been lend from it 👍.
-
 # Screenshots
 <details>
   <summary>Preview</summary>
@@ -117,3 +115,8 @@ ATTENTION! Currently there is no way to select language inside of app, it takes 
 5. Run `ninja -C build`
 6. Install every dependency which compiler asks and return to `5`
 7. Start app with `./build/moonlight`
+
+# Credits
+Thanks a lot to [Rock88](https://github.com/rock88) and his [Moonlight-NX](https://github.com/rock88/moonlight-nx), lots of streaming code has been lend from it 👍.
+
+Also thanks to [Averne](https://github.com/averne) for NVDEC implementation into [FFmpeg](https://github.com/averne/FFmpeg) and useful guidance of how to enable it 

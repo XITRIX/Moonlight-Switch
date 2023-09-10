@@ -244,7 +244,7 @@ void MoonlightInputManager::handleInput() {
     } else {
         mouseState = {
             .scroll_y = stickScrolling, // + mouse.scroll.y,
-            .l_pressed = (specialKey) ||
+            .l_pressed = false ||
             mouse.leftButton,
                 .m_pressed = mouse.middleButton,
                 .r_pressed = (specialKey && controller.buttons[brls::BUTTON_LT]) ||
@@ -306,13 +306,26 @@ void MoonlightInputManager::handleInput() {
             panStatus.reset();
         }
     } else {
-        if (specialKey) {
-            std::vector<RawTouchState> rawTouch;
-            brls::Application::getPlatform()->getInputManager()->updateTouchStates(&rawTouch);
-            
-            auto mousePosition = rawTouch.front().position;
-            LiSendMousePositionEvent(mousePosition.x, mousePosition.y, 1, 1);
+        static bool specialKeyOld = specialKey;
+        uint8_t eventType;
+
+        if (!specialKeyOld && specialKey) {
+            eventType = LI_TOUCH_EVENT_DOWN;
+        } else if (specialKeyOld && specialKey) {
+            eventType = LI_TOUCH_EVENT_MOVE;
+        } else if (specialKeyOld && !specialKey) {
+            eventType = LI_TOUCH_EVENT_UP;
+        } else { return; }
+
+        std::vector<RawTouchState> rawTouch;
+        brls::Application::getPlatform()->getInputManager()->updateTouchStates(&rawTouch);
+
+        auto mousePosition = rawTouch.front().position;
+
+        if (LiSendTouchEvent(eventType, 0, mousePosition.x, mousePosition.y, 0, 0, 0, LI_ROT_UNKNOWN) == LI_ERR_UNSUPPORTED) {
+            LiSendMousePositionEvent(mousePosition.x, mousePosition.y, Application::getWindowWidth(), Application::getWindowHeight());
         }
+
     }
 }
 
