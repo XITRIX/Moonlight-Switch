@@ -224,7 +224,13 @@ void Settings::load() {
                     m_video_codec = (VideoCodec)json_integer_value(video_codec);
                 }
             }
-            
+
+            if (json_t* audio_backend = json_object_get(settings, "audio_backend")) {
+                if (json_typeof(audio_backend) == JSON_INTEGER) {
+                    m_audio_backend = (AudioBackend)json_integer_value(audio_backend);
+                }
+            }
+
             if (json_t* bitrate = json_object_get(settings, "bitrate")) {
                 if (json_typeof(bitrate) == JSON_INTEGER) {
                     m_bitrate = (int)json_integer_value(bitrate);
@@ -244,7 +250,11 @@ void Settings::load() {
                     m_decoder_threads = (int)json_integer_value(decoder_threads);
                 }
             }
-            
+
+            if (json_t* hw_decoding = json_object_get(settings, "use_hw_decoding")) {
+                m_use_hw_decoding = json_typeof(hw_decoding) == JSON_TRUE;
+            }
+
             if (json_t* sops = json_object_get(settings, "sops")) {
                 m_sops = json_typeof(sops) == JSON_TRUE;
             }
@@ -260,7 +270,11 @@ void Settings::load() {
             if (json_t* swap_ui_keys = json_object_get(settings, "swap_ui_keys")) {
                 m_swap_ui_keys = json_typeof(swap_ui_keys) == JSON_TRUE;
             }
-            
+
+            if (json_t* swap_joycon_stick_to_dpad = json_object_get(settings, "swap_joycon_stick_to_dpad")) {
+                m_swap_joycon_stick_to_dpad = json_typeof(swap_joycon_stick_to_dpad) == JSON_TRUE;
+            }
+
             if (json_t* swap_game_keys = json_object_get(settings, "swap_game_keys")) {
                 m_swap_game_keys = json_typeof(swap_game_keys) == JSON_TRUE;
             }
@@ -424,14 +438,17 @@ void Settings::save() {
             json_object_set_new(settings, "resolution", json_integer(m_resolution));
             json_object_set_new(settings, "fps", json_integer(m_fps));
             json_object_set_new(settings, "video_codec", json_integer(m_video_codec));
+            json_object_set_new(settings, "audio_backend", json_integer(m_audio_backend));
             json_object_set_new(settings, "bitrate", json_integer(m_bitrate));
             json_object_set_new(settings, "ignore_unsupported_resolutions", m_ignore_unsupported_resolutions ? json_true() : json_false());
             json_object_set_new(settings, "decoder_threads", json_integer(m_decoder_threads));
             json_object_set_new(settings, "click_by_tap", m_click_by_tap ? json_true() : json_false());
+            json_object_set_new(settings, "use_hw_decoding", m_use_hw_decoding ? json_true() : json_false());
             json_object_set_new(settings, "sops", m_sops ? json_true() : json_false());
             json_object_set_new(settings, "play_audio", m_play_audio ? json_true() : json_false());
             json_object_set_new(settings, "write_log", m_write_log ? json_true() : json_false());
             json_object_set_new(settings, "swap_ui_keys", m_swap_ui_keys ? json_true() : json_false());
+            json_object_set_new(settings, "swap_joycon_stick_to_dpad", m_swap_joycon_stick_to_dpad ? json_true() : json_false());
             json_object_set_new(settings, "swap_game_keys", m_swap_game_keys ? json_true() : json_false());
             json_object_set_new(settings, "touchscreen_mouse_mode", m_touchscreen_mouse_mode ? json_true() : json_false());
             json_object_set_new(settings, "swap_mouse_keys", m_swap_mouse_keys ? json_true() : json_false());

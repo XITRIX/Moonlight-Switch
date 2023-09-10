@@ -55,7 +55,9 @@
         "video_codec": "Codec vidéo",
         "decoder_threads": "Threads de décodage",
         "video_bitrate": "Débit vidéo",
+        "use_hw_decoding": "Enable hardware acceleration",
         "stream_settings": "Paramètres de diffusion",
+        "audio_backend": "Audio driver",
         "usops": "Utiliser les paramètres optimaux pour le jeu",
         "paop": "Jouer l'audio sur la machine hôte",
         "debug": "Debug",
@@ -87,7 +89,9 @@
         "keys_mapping_create_new": "+ Créer une nouvelle configuration",
         "keys_mapping_new_title": "Ma configuration",
         "mouse_input": "Mode souris",
-        "mouse_input_setup_message": "Appuyez sur les boutons à utiliser pour le mode souris :"
+        "mouse_input_setup_message": "Appuyez sur les boutons à utiliser pour le mode souris :",
+        "single_joycon": "Single Joycon",
+        "swap_stick_to_dpad": "Use Stick as D-Pad",
     },
     "app_list": {
         "reload_app_list": "Recharger",

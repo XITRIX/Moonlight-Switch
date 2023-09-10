@@ -131,19 +131,21 @@ int FFmpegVideoDecoder::setup(int video_format, int width, int height,
         return -1;
     }
 
+    if (Settings::instance().use_hw_decoding()) {
 #ifdef __SWITCH__
-    if ((err = av_hwdevice_ctx_create(&hw_device_ctx, AV_HWDEVICE_TYPE_TX1, NULL, NULL, 0)) < 0) {
-        brls::Logger::error("FFmpeg: Error initializing hardware decoder - {}", err);
-        return -1;
-    }
-    m_decoder_context->hw_device_ctx = av_buffer_ref(hw_device_ctx);
+        if ((err = av_hwdevice_ctx_create(&hw_device_ctx, AV_HWDEVICE_TYPE_TX1, NULL, NULL, 0)) < 0) {
+            brls::Logger::error("FFmpeg: Error initializing hardware decoder - {}", err);
+            return -1;
+        }
+        m_decoder_context->hw_device_ctx = av_buffer_ref(hw_device_ctx);
 #else
-    if ((err = av_hwdevice_ctx_create(&hw_device_ctx, AV_HWDEVICE_TYPE_VIDEOTOOLBOX, NULL, NULL, 0)) < 0) {
-        brls::Logger::error("FFmpeg: Error initializing hardware decoder - {}", err);
-        return -1;
-    }
-    m_decoder_context->hw_device_ctx = av_buffer_ref(hw_device_ctx);
+        if ((err = av_hwdevice_ctx_create(&hw_device_ctx, AV_HWDEVICE_TYPE_VIDEOTOOLBOX, NULL, NULL, 0)) < 0) {
+            brls::Logger::error("FFmpeg: Error initializing hardware decoder - {}", err);
+            return -1;
+        }
+        m_decoder_context->hw_device_ctx = av_buffer_ref(hw_device_ctx);
 #endif
+    }
 
     brls::Logger::info("FFmpeg: Setup done!");
 

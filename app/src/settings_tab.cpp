@@ -28,6 +28,14 @@
 
 using namespace brls::literals;
 
+std::vector<std::string> audio_backends {
+    "SDL2",
+#ifdef __SWITCH__
+    "Audren",
+#endif
+};
+
+
 SettingsTab::SettingsTab() {
     // Inflate the tab from the XML file
     this->inflateFromXMLRes("xml/tabs/settings.xml");
@@ -95,6 +103,9 @@ SettingsTab::SettingsTab() {
                     Settings::instance().set_video_codec((VideoCodec)selected);
                 });
 
+    hwDecoding->init("settings/use_hw_decoding"_i18n, Settings::instance().use_hw_decoding(),
+                     [](bool value) { Settings::instance().set_use_hw_decoding(value); });
+
 #ifdef __SWITCH__
     const float mbpsMaxLimit = 50000;
 #else
@@ -114,6 +125,9 @@ SettingsTab::SettingsTab() {
         Settings::instance().set_bitrate(bitrate);
     });
     slider->setProgress(progress);
+
+    audioBackend->init("settings/audio_backend"_i18n, audio_backends, Settings::instance().audio_backend(),
+                       [](int selected) { Settings::instance().set_audio_backend((AudioBackend)selected); });
 
     optimal->init("settings/usops"_i18n, Settings::instance().sops(),
                   [](bool value) { Settings::instance().set_sops(value); });
@@ -228,6 +242,9 @@ SettingsTab::SettingsTab() {
         Application::pushActivity(new Activity(dropdown));
         return true;
     });
+
+    swapStickToDpad->init("settings/swap_stick_to_dpad"_i18n, Settings::instance().swap_joycon_stick_to_dpad(),
+                          [](bool value) { Settings::instance().set_swap_joycon_stick_to_dpad(value); });
 
     guideKeyButtons->setText("settings/guide_key_buttons"_i18n);
     setupButtonsSelectorCell(guideKeyButtons,

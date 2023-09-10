@@ -54,7 +54,9 @@
         "video_codec": "Video Codec",
         "decoder_threads": "Decoder Threads",
         "video_bitrate": "Video Bitrate",
+        "use_hw_decoding": "Enable hardware acceleration",
         "stream_settings": "Streameinstellungen",
+        "audio_backend": "Audio driver",
         "usops": "Optimale Streameinstellungen benutzen",
         "paop": "Audio auf Host abspielen",
         "debug": "Debug",
@@ -84,7 +86,9 @@
         "keys_mapping_swap": "Switch (/ und / vertauschen)",
         "keys_mapping_title": "Tastenlayout",
         "keys_mapping_create_new": "+ Neues Layout erstellen",
-        "keys_mapping_new_title": "Neues Layout"
+        "keys_mapping_new_title": "Neues Layout",
+        "single_joycon": "Single Joycon",
+        "swap_stick_to_dpad": "Use Stick as D-Pad",
     },
     "app_list": {
         "reload_app_list": "Neu laden",
