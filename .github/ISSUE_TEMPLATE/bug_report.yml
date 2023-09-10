@@ -1,0 +1,32 @@
+name: Bug report
+description: Create a report to help us improve
+body:
+  - type: textarea
+    attributes:
+      label: Describe the bug
+      description: A clear and concise description of what the bug is.
+  - type: textarea
+    attributes:
+      label: To reproduce
+      description: Steps to reproduce the behavior.
+      value: |
+        1. Go to '...'
+        2. Tap on '....'
+        3. Scroll down to '....'
+        4. See error
+  - type: textarea
+    attributes:
+      label: Expected behavior
+      description: A clear and concise description of what you expected to happen.
+  - type: textarea
+    attributes:
+      label: Screenshots
+      description: If applicable, add screenshots to help explain your problem.
+  - type: input
+    attributes:
+      label: Operating system
+      description: e.g. 16.0.3|AMS 1.5.4|S
+  - type: textarea
+    attributes:
+      label: Additional context
+      description: Add any other context about the problem here.
