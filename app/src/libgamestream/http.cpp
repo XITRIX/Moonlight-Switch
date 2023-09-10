@@ -26,6 +26,7 @@
 #include <curl/curl.h>
 #include <stdbool.h>
 #include <string.h>
+#include <stdio.h>
 
 static CURL* curl;
 
@@ -63,11 +64,11 @@ int http_init(const std::string key_directory) {
         return GS_FAILED;
 
     char certificateFilePath[4096];
-    sprintf(certificateFilePath, "%s/%s", key_directory.c_str(),
+    snprintf(certificateFilePath, sizeof(certificateFilePath), "%s/%s", key_directory.c_str(),
             CERTIFICATE_FILE_NAME);
 
     char keyFilePath[4096];
-    sprintf(&keyFilePath[0], "%s/%s", key_directory.c_str(), KEY_FILE_NAME);
+    snprintf(keyFilePath, sizeof(keyFilePath), "%s/%s", key_directory.c_str(), KEY_FILE_NAME);
 
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
     curl_easy_setopt(curl, CURLOPT_SSLENGINE_DEFAULT, 1L);

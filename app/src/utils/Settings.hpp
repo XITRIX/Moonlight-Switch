@@ -9,6 +9,13 @@
 
 enum VideoCodec : int { H264, H265, AV1 };
 
+enum AudioBackend : int {
+    SDL,
+#ifdef __SWITCH__
+    AUDREN,
+#endif
+};
+
 enum KeyboardType : int { COMPACT, FULLSIZED };
 
 struct KeyMappingLayout {
@@ -57,21 +64,18 @@ class Settings : public Singleton<Settings> {
     bool has_any_favorite();
 
     int resolution() const { return m_resolution; }
-
     void set_resolution(int resolution) { m_resolution = resolution; }
 
     int fps() const { return m_fps; }
-
     void set_fps(int fps) { m_fps = fps; }
 
     VideoCodec video_codec() const { return m_video_codec; }
+    void set_video_codec(VideoCodec video_codec) { m_video_codec = video_codec; }
 
-    void set_video_codec(VideoCodec video_codec) {
-        m_video_codec = video_codec;
-    }
+    AudioBackend audio_backend() const { return m_audio_backend; }
+    void set_audio_backend(AudioBackend audio_backend) { m_audio_backend = audio_backend; }
 
     int bitrate() const { return m_bitrate; }
-
     void set_bitrate(int bitrate) { m_bitrate = bitrate; }
 
     void
@@ -84,7 +88,6 @@ class Settings : public Singleton<Settings> {
     }
 
     bool click_by_tap() const { return m_click_by_tap; }
-
     void set_click_by_tap(bool click_by_tap) { m_click_by_tap = click_by_tap; }
 
     void set_decoder_threads(int decoder_threads) {
@@ -94,20 +97,19 @@ class Settings : public Singleton<Settings> {
     int decoder_threads() const { return m_decoder_threads; }
 
     void set_sops(bool sops) { m_sops = sops; }
-
     bool sops() const { return m_sops; }
 
     void set_play_audio(bool play_audio) { m_play_audio = play_audio; }
-
     bool play_audio() const { return m_play_audio; }
 
     void set_write_log(bool write_log) { m_write_log = write_log; }
-
     bool write_log() const { return m_write_log; }
 
     void set_swap_ui_keys(bool swap_ui_keys) { m_swap_ui_keys = swap_ui_keys; }
-
     bool swap_ui_keys() const { return m_swap_ui_keys; }
+
+    void set_swap_joycon_stick_to_dpad(bool value) { m_swap_joycon_stick_to_dpad = value; }
+    bool swap_joycon_stick_to_dpad() { return m_swap_joycon_stick_to_dpad; }
 
     void set_swap_game_keys(bool swap_game_keys) {
         m_swap_game_keys = swap_game_keys;
@@ -163,13 +165,17 @@ class Settings : public Singleton<Settings> {
 
     int get_volume() const { return m_volume; }
 
+    void set_use_hw_decoding(bool hw_decoding) { m_use_hw_decoding = hw_decoding; }
+
+    bool use_hw_decoding() const { return m_use_hw_decoding; }
+
     void set_keyboard_type(KeyboardType type) { m_keyboard_type = type; }
 
-    KeyboardType get_keyboard_type() { return m_keyboard_type; }
+    KeyboardType get_keyboard_type() const { return m_keyboard_type; }
 
     void set_keyboard_locale(int locale) { m_keyboard_locale = locale; }
 
-    int get_keyboard_locale() { return m_keyboard_locale; }
+    int get_keyboard_locale() const { return m_keyboard_locale; }
 
     void set_mouse_speed_multiplier(int mouse_speed_multiplier) {
         m_mouse_speed_multiplier = mouse_speed_multiplier;
@@ -201,6 +207,7 @@ class Settings : public Singleton<Settings> {
     int m_resolution = 720;
     int m_fps = 60;
     VideoCodec m_video_codec = H264;
+    AudioBackend m_audio_backend = SDL;
     int m_bitrate = 10000;
     bool m_ignore_unsupported_resolutions = false;
     bool m_click_by_tap = false;
@@ -209,11 +216,13 @@ class Settings : public Singleton<Settings> {
     bool m_play_audio = false;
     bool m_write_log = false;
     bool m_swap_ui_keys = false;
+    bool m_swap_joycon_stick_to_dpad = true;
     bool m_swap_game_keys = false;
     bool m_touchscreen_mouse_mode = false;
     bool m_swap_mouse_keys = false;
     bool m_swap_mouse_scroll = false;
     int m_volume = 100;
+    bool m_use_hw_decoding = true;
     KeyboardType m_keyboard_type = COMPACT;
     int m_keyboard_locale = 0;
     bool m_volume_amplification = false;

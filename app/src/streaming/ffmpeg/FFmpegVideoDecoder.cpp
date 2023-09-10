@@ -14,6 +14,17 @@ FFmpegVideoDecoder::FFmpegVideoDecoder() {}
 
 FFmpegVideoDecoder::~FFmpegVideoDecoder() {}
 
+void ffmpegLog(void* ptr, int level, const char* fmt, va_list vargs) {
+    std::string message;
+    va_list ap_copy;
+    va_copy(ap_copy, vargs);
+    size_t len = vsnprintf(0, 0, fmt, ap_copy);
+    message.resize(len + 1);  // need space for NUL
+    vsnprintf(&message[0], len + 1,fmt, vargs);
+    message.resize(len);  // remove the NUL
+    brls::Logger::debug("FFmpeg [LOG]: {}", message.c_str());
+}
+
 int FFmpegVideoDecoder::setup(int video_format, int width, int height,
                               int redraw_rate, void* context, int dr_flags) {
     m_stream_fps = redraw_rate;
@@ -23,12 +34,13 @@ int FFmpegVideoDecoder::setup(int video_format, int width, int height,
         video_format == VIDEO_FORMAT_H264 ? "H264" : "HEVC", width, height,
         redraw_rate);
 
-    av_log_set_level(AV_LOG_QUIET);
+    av_log_set_level(AV_LOG_DEBUG);
+    av_log_set_callback(&ffmpegLog);
 #if LIBAVCODEC_VERSION_INT < AV_VERSION_INT(58, 10, 100)
     avcodec_register_all();
 #endif
 
-    av_init_packet(&m_packet);
+    m_packet = av_packet_alloc();
 
     int perf_lvl = LOW_LATENCY_DECODE;
 
@@ -71,7 +83,12 @@ int FFmpegVideoDecoder::setup(int video_format, int width, int height,
 
     m_decoder_context->width = width;
     m_decoder_context->height = height;
-    m_decoder_context->pix_fmt = AV_PIX_FMT_YUV420P;
+//#ifdef __SWITCH__
+//    m_decoder_context->pix_fmt = AV_PIX_FMT_TX1;
+//#else
+    m_decoder_context->pix_fmt = AV_PIX_FMT_VIDEOTOOLBOX;
+//    m_decoder_context->pix_fmt = AV_PIX_FMT_YUV420P;
+//#endif
 
     int err = avcodec_open2(m_decoder_context, m_decoder, NULL);
     if (err < 0) {
@@ -86,10 +103,22 @@ int FFmpegVideoDecoder::setup(int video_format, int width, int height,
         return -1;
     }
 
+    tmp_frame = av_frame_alloc();
     for (int i = 0; i < m_frames_count; i++) {
         m_frames[i] = av_frame_alloc();
         if (m_frames[i] == NULL) {
             brls::Logger::error("FFmpeg: Couldn't allocate frame");
+            return -1;
+        }
+
+//        m_frames[i]->format = AV_PIX_FMT_VIDEOTOOLBOX;
+        m_frames[i]->format = AV_PIX_FMT_YUV420P;
+        m_frames[i]->width  = width;
+        m_frames[i]->height = height;
+
+        int err = av_frame_get_buffer(m_frames[i], 256);
+        if (err < 0) {
+            brls::Logger::error("FFmpeg: Couldn't allocate frame buffer:");
             return -1;
         }
     }
@@ -102,6 +131,22 @@ int FFmpegVideoDecoder::setup(int video_format, int width, int height,
         return -1;
     }
 
+    if (Settings::instance().use_hw_decoding()) {
+#ifdef __SWITCH__
+        if ((err = av_hwdevice_ctx_create(&hw_device_ctx, AV_HWDEVICE_TYPE_TX1, NULL, NULL, 0)) < 0) {
+            brls::Logger::error("FFmpeg: Error initializing hardware decoder - {}", err);
+            return -1;
+        }
+        m_decoder_context->hw_device_ctx = av_buffer_ref(hw_device_ctx);
+#else
+        if ((err = av_hwdevice_ctx_create(&hw_device_ctx, AV_HWDEVICE_TYPE_VIDEOTOOLBOX, NULL, NULL, 0)) < 0) {
+            brls::Logger::error("FFmpeg: Error initializing hardware decoder - {}", err);
+            return -1;
+        }
+        m_decoder_context->hw_device_ctx = av_buffer_ref(hw_device_ctx);
+#endif
+    }
+
     brls::Logger::info("FFmpeg: Setup done!");
 
     return DR_OK;
@@ -109,6 +154,12 @@ int FFmpegVideoDecoder::setup(int video_format, int width, int height,
 
 void FFmpegVideoDecoder::cleanup() {
     brls::Logger::info("FFmpeg: Cleanup...");
+
+    av_packet_free(&m_packet);
+
+    if (hw_device_ctx) {
+        av_buffer_unref(&hw_device_ctx);
+    }
 
     if (m_decoder_context) {
         avcodec_close(m_decoder_context);
@@ -124,6 +175,10 @@ void FFmpegVideoDecoder::cleanup() {
 
         free(m_frames);
         m_frames = nullptr;
+    }
+
+    if (tmp_frame) {
+        av_frame_free(&tmp_frame);
     }
 
     if (m_ffmpeg_buffer) {
@@ -203,10 +258,10 @@ int FFmpegVideoDecoder::capabilities() const {
 }
 
 int FFmpegVideoDecoder::decode(char* indata, int inlen) {
-    m_packet.data = (uint8_t*)indata;
-    m_packet.size = inlen;
+    m_packet->data = (uint8_t*)indata;
+    m_packet->size = inlen;
 
-    int err = avcodec_send_packet(m_decoder_context, &m_packet);
+    int err = avcodec_send_packet(m_decoder_context, m_packet);
 
     if (err != 0) {
         char error[512];
@@ -217,7 +272,18 @@ int FFmpegVideoDecoder::decode(char* indata, int inlen) {
 }
 
 AVFrame* FFmpegVideoDecoder::get_frame(bool native_frame) {
-    int err = avcodec_receive_frame(m_decoder_context, m_frames[m_next_frame]);
+    int err = avcodec_receive_frame(m_decoder_context, tmp_frame);
+
+    if (hw_device_ctx) {
+        if ((err = av_hwframe_transfer_data(m_frames[m_next_frame], tmp_frame, 0)) < 0) {
+            brls::Logger::error("FFmpeg: Error transferring the data to system memory with error {}", err);
+            return NULL;
+        }
+        av_frame_copy_props(m_frames[m_next_frame], tmp_frame);
+//        m_frames[m_next_frame] = sw_frame;
+    } else {
+        m_frames[m_next_frame] = tmp_frame;
+    }
 
     if (err == 0) {
         m_current_frame = m_next_frame;

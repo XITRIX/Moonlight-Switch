@@ -33,7 +33,10 @@
                 
             <brls:SelectorCell
                 id="decoder"/>
-        
+
+            <brls:BooleanCell
+                id="use_hw_decoding"/>
+
             <brls:Header
                 id="header"
                 title="@i18n/settings/video_bitrate"
@@ -50,7 +53,10 @@
                 title="@i18n/settings/stream_settings"
                 paddingTop="60"
                 lineTop="1px"/>
-                
+
+            <brls:SelectorCell
+                id="audio_backend"/>
+
             <brls:BooleanCell
                 id="optimal"/>
             
@@ -69,7 +75,14 @@
                 
             <brls:DetailCell
                 id="swap_game"/>
-                
+
+            <brls:Header
+                title="@i18n/settings/single_joycon"
+                paddingTop="60"/>
+
+            <brls:BooleanCell
+                id="swap_stick_to_dpad"/>
+
             <brls:Header
                 title="@i18n/settings/guide_key"
                 paddingTop="60"/>

@@ -45,7 +45,7 @@ ICON		:=	resources/img/moonlight_icon.jpg
 INCLUDES	:=	app/src app/include
 APP_TITLE	:=	Moonlight
 APP_AUTHOR	:=	XITRIX
-APP_VERSION	:=	0.13.0
+APP_VERSION	:=	0.13.3
 
 ROMFS				:=	resources
 EXTERN_PATH			:=	extern
@@ -74,9 +74,9 @@ ASFLAGS	:=	-g $(ARCH)
 LDFLAGS	=	-specs=$(DEVKITPRO)/libnx/switch.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
 
 LIBS	:=  -lcurl -lmbedtls -lmbedx509 -lmbedcrypto \
-	-lavcodec -lavutil -lopus -lz -lexpat \
+	-lavcodec -lavutil -lopus -lexpat \
 	-lglad -lEGL -lglapi -ldrm_nouveau -lglfw3 \
-	-lswresample -lvpx -ljansson -lSDL2 -lpng -lnx
+	-lswresample -lvpx -ljansson -lSDL2 -lpng -lz -lnx
 
 #---------------------------------------------------------------------------------
 # list of directories containing libraries, this must be the top level containing

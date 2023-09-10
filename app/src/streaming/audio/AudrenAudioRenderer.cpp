@@ -185,19 +185,10 @@ size_t AudrenAudioRenderer::append_audio(const void* buf, size_t size) {
     armDCacheFlush(dstbuf, size);
 
     m_current_size += size;
+    m_total_queued_samples += size / m_channel_count / sizeof(s16);
 
     if (m_current_size == m_buffer_size) {
-        if (flush()) {
-            // audrvVoiceStop creates sound flickering, if I could know the
-            // delay, I could call it only if it's huge but I have no idea how
-            // to get that delay, so skipping every 400 sample sounds fine, not
-            // so effective, but doesn't create flickering sounds
-
-            // brls::Logger::error("Audio Flushed!");
-            // audrvVoiceStop(&m_driver, 0);
-        } else {
-            audrvVoiceAddWaveBuf(&m_driver, 0, m_current_wavebuf);
-        }
+        audrvVoiceAddWaveBuf(&m_driver, 0, m_current_wavebuf);
 
         mutexLock(&m_update_lock);
         audrvUpdate(&m_driver);
@@ -230,8 +221,16 @@ void AudrenAudioRenderer::write_audio(const void* buf, size_t size) {
         return;
     }
 
-    size_t written = 0;
+    audrvUpdate(&m_driver);
 
+    size_t queued_samples = m_total_queued_samples -
+        audrvVoiceGetPlayedSampleCount(&m_driver, 0);
+
+    // If we have over 0.5 desync, drop samples
+    if (queued_samples > m_sample_rate / 2)
+        return;
+
+    size_t written = 0;
     while (written < size) {
         written += append_audio(buf + written, size - written);
 

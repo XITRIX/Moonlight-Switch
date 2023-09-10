@@ -18,12 +18,15 @@ class SettingsTab : public brls::Box {
     BRLS_BIND(brls::SelectorCell, fps, "fps");
     BRLS_BIND(brls::SelectorCell, codec, "codec");
     BRLS_BIND(brls::SelectorCell, decoder, "decoder");
+    BRLS_BIND(brls::BooleanCell, hwDecoding, "use_hw_decoding");
     BRLS_BIND(brls::Header, header, "header");
     BRLS_BIND(brls::Slider, slider, "slider");
+    BRLS_BIND(brls::SelectorCell, audioBackend, "audio_backend");
     BRLS_BIND(brls::BooleanCell, optimal, "optimal");
     BRLS_BIND(brls::BooleanCell, pcAudio, "pcAudio");
     BRLS_BIND(brls::BooleanCell, swapUi, "swap_ui");
     BRLS_BIND(brls::DetailCell, swapGame, "swap_game");
+    BRLS_BIND(brls::BooleanCell, swapStickToDpad, "swap_stick_to_dpad");
     BRLS_BIND(brls::DetailCell, guideKeyButtons, "guide_key_buttons");
     BRLS_BIND(brls::SelectorCell, overlayTime, "overlay_time");
     BRLS_BIND(brls::DetailCell, overlayButtons, "overlay_buttons");

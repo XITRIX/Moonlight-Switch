@@ -42,6 +42,12 @@ int main(int argc, char* argv[]) {
 #ifdef __SWITCH__
     appletInitializeGamePlayRecording();
     appletSetWirelessPriorityMode(AppletWirelessPriorityMode_OptimizedForWlan);
+
+    extern u32 __nx_applet_type;
+    auto saved_applet_type = std::exchange(__nx_applet_type, AppletType_LibraryApplet);
+
+    nvInitialize();
+    __nx_applet_type = saved_applet_type;
 #endif
 
     // Set log level
@@ -102,5 +108,8 @@ int main(int argc, char* argv[]) {
     DiscoverManager::instance().pause();
 
     // Exit
+#ifdef __SWITCH__
+    nvExit();
+#endif
     return EXIT_SUCCESS;
 }

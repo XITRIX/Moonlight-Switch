@@ -312,6 +312,7 @@ void GLVideoRenderer::draw(NVGcontext* vg, int width, int height,
         uint8_t* image = frame->data[i];
         glActiveTexture(GL_TEXTURE0 + i);
         glBindTexture(GL_TEXTURE_2D, m_texture_id[i]);
+        glPixelStorei(GL_UNPACK_ROW_LENGTH, frame->linesize[i]);
         glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, textureWidth[i],
                         textureHeight[i], GL_RED, GL_UNSIGNED_BYTE, image);
         glActiveTexture(GL_TEXTURE0);
