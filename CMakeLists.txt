@@ -1,9 +1,10 @@
 cmake_minimum_required(VERSION 3.10)
 
-set(BOREALIS_LIBRARY ${CMAKE_CURRENT_SOURCE_DIR}/extern/borealis/library)
+set(EXTERN_PATH ${CMAKE_CURRENT_SOURCE_DIR}/extern)
+set(BOREALIS_LIBRARY ${EXTERN_PATH}/borealis/library)
 
 # build options
-include(${BOREALIS_LIBRARY}/cmake/commonOption.cmake)
+include(${EXTERN_PATH}/cmake/commonOption.cmake)
 
 # Dependencies
 option(USE_SHARED_LIB "Whether to use shared libs provided by system" OFF)
@@ -19,7 +20,7 @@ if (APPLE AND PLATFORM_DESKTOP)
 endif ()
 
 # toolchain
-include(${BOREALIS_LIBRARY}/cmake/toolchain.cmake)
+include(${EXTERN_PATH}/cmake/toolchain.cmake)
 
 # project info
 project(borealis_demo)
@@ -131,4 +132,4 @@ endif ()
 
 target_include_directories(${PROJECT_NAME} PRIVATE app ${APP_PLATFORM_INCLUDE})
 target_compile_options(${PROJECT_NAME} PRIVATE -ffunction-sections -fdata-sections ${APP_PLATFORM_OPTION})
-target_link_libraries(${PROJECT_NAME} PRIVATE borealis ${APP_PLATFORM_LIB})
+target_link_libraries(${PROJECT_NAME} PRIVATE borealis moonlight-common-c CImg ${APP_PLATFORM_LIB})
