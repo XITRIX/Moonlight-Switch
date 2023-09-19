@@ -1,0 +1,45 @@
+{
+  "title": "Borealis Demo App",
+  "tabs": {
+    "components": "Basic components",
+    "scroll": "Scroll test",
+    "layout": "Layout and alignment",
+    "pokedex": "Pokedex",
+    "settings": "Settings",
+    "popups": "Popups, notifications and dialogs",
+    "hos_layout": "Horizon layouts",
+    "misc_layouts": "Misc. layouts",
+    "misc_components": "Misc. components",
+    "misc_tools": "Misc. dev tools",
+    "about": "About borealis"
+  },
+  "welcome": "Welcome to the borealis demo! Feel free to explore and discover what the library can do.",
+  "components": {
+    "buttons_header": "Buttons",
+    "button_primary": "Primary button",
+    "button_highlight": "\uE13C  Highlight button",
+    "button_wrapping": "Default button with wrapping text",
+    "button_bordered": "Bordered button",
+    "button_borderless": "Borderless button",
+    "slider_header": "Slider",
+    "labels_header": "Labels",
+    "regular_label": "This is a label. By default, they will automatically wrap and expand their height, should the remaining vertical space allow it. Otherwise, they will be truncated, like some of the tabs of the sidebar.\nThis is a label. By default, they will automatically wrap and expand their height, should the remaining vertical space allow it. Otherwise, they will be truncated, like some of the tabs of the sidebar.",
+    "label_left": "This label is left-aligned",
+    "label_center": "This label is center-aligned",
+    "label_right": "This label is right-aligned",
+    "images_header_title": "Images",
+    "images_header_subtitle": "Focus them to see the scaling method",
+    "images_downscaled": "Downscaled",
+    "images_original": "Original",
+    "images_upscaled": "Upscaled",
+    "images_stretched": "Stretched",
+    "images_cropped": "Cropped"
+  },
+  "about": {
+    "title": "borealis",
+    "description": "A hardware accelerated, controller and TV oriented UI library for PC and Nintendo Switch (libnx).",
+    "github": "Find it on github.com/natinusala/borealis",
+    "licence": "Licensed under Apache 2.0",
+    "logo_credit": "Logo by @MeganRoshelle"
+  }
+}
