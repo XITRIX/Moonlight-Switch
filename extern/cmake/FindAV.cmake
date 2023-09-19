@@ -1,0 +1,36 @@
+find_path(AVFORMAT_INCLUDE_DIRS libavformat/version.h)
+find_path(AVCODEC_INCLUDE_DIRS libavcodec/version.h)
+find_path(AVUTIL_INCLUDE_DIRS libavutil/version.h)
+
+if (AVFORMAT_INCLUDE_DIRS AND EXISTS ${AVFORMAT_INCLUDE_DIRS}/libavformat/version.h)
+    file(STRINGS "${AVFORMAT_INCLUDE_DIRS}/libavformat/version.h" AVFORMAT_VERSION_STRING_LINE REGEX "^#define[ \t]+AVFORMAT_VERSION_STRING[ \t]+\"[0-9.]+\"$")
+    string(REGEX REPLACE "^#define[ \t]+AVFORMAT_VERSION_STRING[ \t]+\"([0-9.]+)\"$" "\\1" AVFORMAT_VERSION_STRING "${AVFORMAT_VERSION_STRING_LINE}")
+    unset(AVFORMAT_VERSION_STRING_LINE)
+endif()
+
+if (AVCODEC_INCLUDE_DIRS AND EXISTS ${AVCODEC_INCLUDE_DIRS}/libavcodec/version.h)
+    file(STRINGS "${AVCODEC_INCLUDE_DIRS}/libavcodec/version.h" AVCODEC_VERSION_STRING_LINE REGEX "^#define[ \t]+AVCODEC_VERSION_STRING[ \t]+\"[0-9.]+\"$")
+    string(REGEX REPLACE "^#define[ \t]+AVCODEC_VERSION_STRING[ \t]+\"([0-9.]+)\"$" "\\1" AVCODEC_VERSION_STRING "${AVCODEC_VERSION_STRING_LINE}")
+    unset(AVCODEC_VERSION_STRING_LINE)
+endif()
+
+if (AVUTIL_INCLUDE_DIRS AND EXISTS ${AVUTIL_INCLUDE_DIRS}/libavutil/version.h)
+    file(STRINGS "${AVUTIL_INCLUDE_DIRS}/libavutil/version.h" AVUTIL_VERSION_STRING_LINE REGEX "^#define[ \t]+AVUTIL_VERSION_STRING[ \t]+\"[0-9.]+\"$")
+    string(REGEX REPLACE "^#define[ \t]+AVUTIL_VERSION_STRING[ \t]+\"([0-9.]+)\"$" "\\1" AVUTIL_VERSION_STRING "${AVUTIL_VERSION_STRING_LINE}")
+    unset(AVUTIL_VERSION_STRING_LINE)
+endif()
+
+find_library(AVFORMAT_LIBRARY avformat)
+find_library(AVCODEC_LIBRARY avcodec)
+find_library(AVUTIL_LIBRARY avutil)
+
+set(AV_LIBRARIES "${AVFORMAT_LIBRARY}" "${AVCODEC_LIBRARY}" "${AVUTIL_LIBRARY}")
+set(AV_INCLUDE_DIRS "${AVFORMAT_INCLUDE_DIRS}" "${AVCODEC_INCLUDE_DIRS}" "${AVUTIL_INCLUDE_DIRS}")
+
+include(FindPackageHandleStandardArgs)
+find_package_handle_standard_args(AV
+        REQUIRED_VARS AV_LIBRARIES AV_INCLUDE_DIRS
+        VERSION_VAR AVUTIL_VERSION_STRING
+        )
+
+mark_as_advanced(AV_INCLUDE_DIRS AVFORMAT_LIBRARY AVCODEC_LIBRARY AVUTIL_LIBRARY)

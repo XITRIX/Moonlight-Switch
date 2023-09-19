@@ -14,47 +14,141 @@
             height="auto"
             axis="column"
             alignItems="stretch"
-            paddingTop="@style/brls/sidebar/padding_top"
-            paddingRight="@style/brls/sidebar/padding_right"
-            paddingBottom="@style/brls/sidebar/padding_bottom"
-            paddingLeft="@style/brls/sidebar/padding_left">
+            paddingTop="@style/brls/tab_details/padding_top"
+            paddingRight="@style/brls/tab_details/padding_right"
+            paddingBottom="@style/brls/tab_details/padding_bottom"
+            paddingLeft="@style/brls/tab_details/padding_left">
             
-            <brls:RadioCell
-                id="radio"/>
-                
-            <brls:BooleanCell
-                id="boolean"/>
+            <brls:Header
+                title="@i18n/settings/quality"/>
                 
             <brls:SelectorCell
-                id="selector"/>
+                id="fps"/>
+                    
+            <brls:SelectorCell
+                id="resolution"/>
                 
-            <brls:InputCell
-                id="input"/>
+            <brls:SelectorCell
+                id="codec"/>
                 
-            <brls:InputNumericCell
-                id="inputNumeric"/>
+            <brls:SelectorCell
+                id="decoder"/>
 
-            <brls:DetailCell
-                title="IP"
-                id="ipAddress"/>
-            
-            <brls:DetailCell
-                title="DNS"
-                id="dnsServer"/>
+            <brls:BooleanCell
+                id="use_hw_decoding"/>
+
+            <brls:Header
+                id="header"
+                title="@i18n/settings/video_bitrate"
+                subtitle="10.0 Mbps"
+                paddingTop="60"/>
                 
-            <brls:RadioCell/>
-            <brls:RadioCell/>
-            <brls:RadioCell/>
-            <brls:RadioCell/>
-            <brls:RadioCell/>
-            <brls:RadioCell/>
-            <brls:RadioCell/>
-            <brls:RadioCell/>
-            <brls:RadioCell/>
-            <brls:RadioCell/>
-            <brls:RadioCell/>
-            <brls:RadioCell/>
+            <brls:Slider
+                id="slider"
+                width="auto"
+                height="84"
+                grow="1"/>
             
+            <brls:Header
+                title="@i18n/settings/stream_settings"
+                paddingTop="60"
+                lineTop="1px"/>
+
+            <brls:SelectorCell
+                id="audio_backend"/>
+
+            <brls:BooleanCell
+                id="optimal"/>
+            
+            <brls:BooleanCell
+                id="pcAudio"/>
+                
+            <brls:BooleanCell
+                id="volume_amplification"/>
+                
+            <brls:Header
+                title="@i18n/settings/keys"
+                paddingTop="60"/>
+                
+            <brls:BooleanCell
+                id="swap_ui"/>
+                
+            <brls:DetailCell
+                id="swap_game"/>
+
+            <brls:Header
+                title="@i18n/settings/single_joycon"
+                paddingTop="60"/>
+
+            <brls:BooleanCell
+                id="swap_stick_to_dpad"/>
+
+            <brls:Header
+                title="@i18n/settings/guide_key"
+                paddingTop="60"/>
+            
+            <brls:DetailCell
+                id="guide_key_buttons"/>
+                
+            <brls:Header
+                title="@i18n/settings/overlay"
+                paddingTop="60"/>
+                
+            <brls:SelectorCell
+                id="overlay_time"/>
+            
+            <brls:DetailCell
+                id="overlay_buttons"/>
+                
+            <brls:Header
+                title="@i18n/settings/mouse_input"
+                paddingTop="60"/>
+                
+            <brls:SelectorCell
+                id="mouse_input_time"/>
+            
+            <brls:DetailCell
+                id="mouse_input_buttons"/>
+
+            <brls:Header
+                title="@i18n/settings/keyboard"
+                paddingTop="60"/>
+
+            <brls:SelectorCell
+                id="keyboard_type"/>
+                
+            <brls:Header
+                title="@i18n/settings/mouse"
+                paddingTop="60"/>
+
+            <brls:BooleanCell
+                id="touchscreen_mouse_mode"/>
+                
+            <brls:BooleanCell
+                id="swap_mouse_keys"/>
+                
+            <brls:BooleanCell
+                id="swap_mouse_scroll"/>
+        
+            <brls:Header
+                id="mouse_speed_header"
+                title="@i18n/settings/mouse_speed"
+                subtitle="x1.0"
+                paddingTop="60"/>
+                
+            <brls:Slider
+                id="mouse_speed_slider"
+                width="auto"
+                height="84"
+                grow="1"/>
+                
+            <brls:Header
+                title="@i18n/settings/debug"
+                paddingTop="60"
+                lineTop="1px"/>
+                
+            <brls:BooleanCell
+                id="writeLog"/>
             
         </brls:Box>
 

@@ -1,0 +1,36 @@
+<brls:Box
+    width="auto"
+    height="auto">
+    
+    <brls:ScrollingFrame
+        width="auto"
+        height="auto"
+        axis="column"
+        alignItems="stretch"
+        grow="1.0" >
+        
+        <brls:Box
+            width="10000"
+            height="auto"
+            axis="column"
+            alignItems="stretch"
+            paddingTop="@style/brls/tab_details/padding_top"
+            paddingRight="@style/brls/tab_details/padding_right"
+            paddingBottom="@style/brls/tab_details/padding_bottom"
+            paddingLeft="@style/brls/tab_details/padding_left">
+        
+            <brls:Header
+                id="header"
+                title="@i18n/streaming/connection"/>
+                
+            <brls:DetailCell
+                id="disconnect"/>
+                
+            <brls:DetailCell
+                id="terminate"/>
+        
+        </brls:Box>
+        
+    </brls:ScrollingFrame>
+    
+</brls:Box>

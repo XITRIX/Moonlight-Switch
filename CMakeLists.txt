@@ -13,7 +13,7 @@ cmake_dependent_option(USE_SYSTEM_TINYXML2 "" OFF "NOT USE_SHARED_LIB" ON)
 
 if (APPLE AND PLATFORM_DESKTOP)
     option(BUNDLE_MACOS_APP "Bundle a app for macOS" OFF)
-    set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64" CACHE STRING "" FORCE)
+    set(CMAKE_OSX_ARCHITECTURES "arm64" CACHE STRING "" FORCE)
     set(CMAKE_OSX_DEPLOYMENT_TARGET "10.15" CACHE STRING "" FORCE)
     set(CMAKE_XCODE_ATTRIBUTE_MACOSX_DEPLOYMENT_TARGET[arch=arm64] "11.0" CACHE STRING "" FORCE)
     message(STATUS "CMAKE_OSX_ARCHITECTURES: ${CMAKE_OSX_ARCHITECTURES}")
@@ -24,16 +24,24 @@ include(${EXTERN_PATH}/cmake/toolchain.cmake)
 
 # project info
 project(borealis_demo)
-set(VERSION_MAJOR "1")
-set(VERSION_MINOR "0")
-set(VERSION_ALTER "0")
+set(VERSION_MAJOR "0")
+set(VERSION_MINOR "13")
+set(VERSION_ALTER "3")
 set(VERSION_BUILD "0")
 set(PACKAGE_NAME "com.borealis.demo")
 set(VITA_TITLEID  "BOREALIS0")
 set(VITA_VERSION  "01.00")
 set(PROJECT_AUTHOR "borealis")
-set(PROJECT_ICON ${CMAKE_CURRENT_SOURCE_DIR}/resources/img/demo_icon.jpg)
+set(PROJECT_ICON ${CMAKE_CURRENT_SOURCE_DIR}/resources/img/moonlight_icon.jpg)
 set(PROJECT_RESOURCES ${CMAKE_CURRENT_SOURCE_DIR}/resources)
+
+add_definitions(
+        -DAPP_VERSION="${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_ALTER}"
+        -DUSE_MBEDTLS_CRYPTO
+        -DMULTICAST_DISABLED
+        -Dcimg_display=0
+        -Dcimg_use_png
+        -DBRLS_I18N_PREFIX=\"main/\")
 
 if (USE_LIBROMFS)
     add_libromfs(${PROJECT_NAME} ${PROJECT_RESOURCES})
@@ -42,7 +50,12 @@ endif ()
 add_subdirectory(extern)
 
 # setting src and include
-file(GLOB_RECURSE MAIN_SRC app/*.cpp)
+file(GLOB_RECURSE MAIN_SRC app/src/*.cpp)
+
+# Fmt
+list(APPEND MAIN_SRC
+        ${BOREALIS_LIBRARY}/lib/extern/fmt/src/format.cc
+        ${BOREALIS_LIBRARY}/lib/extern/fmt/src/os.cc)
 
 set(PLATFORM_OPTION)
 if (PLATFORM_DESKTOP)
@@ -59,7 +72,10 @@ elseif (PLATFORM_SWITCH)
         # base lib
         nx m
     )
-    list(APPEND MAIN_SRC ${CMAKE_SOURCE_DIR}/library/lib/platforms/switch/switch_wrapper.c)
+    list(APPEND MAIN_SRC
+            ${BOREALIS_LIBRARY}/lib/platforms/switch/switch_wrapper.c
+            app/src/switch/wrapper.c
+            )
 elseif (PLATFORM_PSV)
     add_definitions(-D__psp2__ -D__PSV__)
 endif ()
@@ -120,6 +136,7 @@ elseif (PLATFORM_SWITCH)
         COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_BINARY_DIR}/resources/font
         COMMAND ${NX_ELF2NRO_EXE} ${PROJECT_NAME}.elf ${PROJECT_NAME}.nro --icon=${PROJECT_ICON} --nacp=${PROJECT_NAME}.nacp --romfsdir=${CMAKE_BINARY_DIR}/resources
     )
+    list(APPEND APP_PLATFORM_LIB swresample dav1d z)
 elseif (PLATFORM_IOS)
     ios_bundle(
             "${CMAKE_CURRENT_SOURCE_DIR}/app/ios/tvos/Splash.storyboard"
@@ -130,6 +147,83 @@ elseif (PLATFORM_IOS)
             "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_ALTER}")
 endif ()
 
-target_include_directories(${PROJECT_NAME} PRIVATE app ${APP_PLATFORM_INCLUDE})
+target_include_directories(${PROJECT_NAME} PUBLIC
+        app/include
+        app/include/gestures
+        app/src/crypto
+        app/src/gestures
+        app/src/keyboards
+        app/src/libgamestream
+        app/src/streaming
+        app/src/streaming/audio
+        app/src/streaming/ffmpeg
+        app/src/streaming/switch
+        app/src/streaming/video
+        app/src/streaming/video/deko3d
+        app/src/streaming/video/OpenGL
+        app/src/utils
+        extern/CImg
+        extern/zeroconf
+        ${MBEDTLS_INCLUDE_DIRS}
+        ${APP_PLATFORM_INCLUDE})
 target_compile_options(${PROJECT_NAME} PRIVATE -ffunction-sections -fdata-sections ${APP_PLATFORM_OPTION})
-target_link_libraries(${PROJECT_NAME} PRIVATE borealis moonlight-common-c CImg ${APP_PLATFORM_LIB})
+
+
+
+find_package(PkgConfig REQUIRED)
+
+pkg_check_modules(jansson REQUIRED IMPORTED_TARGET jansson)
+add_library(libjansson ALIAS PkgConfig::jansson)
+
+pkg_check_modules(opus REQUIRED IMPORTED_TARGET opus)
+add_library(libopus ALIAS PkgConfig::opus)
+
+#pkg_check_modules(fmt REQUIRED IMPORTED_TARGET fmt)
+#add_library(libfmt ALIAS PkgConfig::fmt)
+
+pkg_check_modules(expat REQUIRED IMPORTED_TARGET expat)
+add_library(libexpat ALIAS PkgConfig::expat)
+
+find_library(PNG_LIBRARY png)
+message("png: ${PNG_LIBRARY}")
+
+find_library(CURL_LIBRARY curl)
+message("curl: ${CURL_LIBRARY}")
+
+find_library(SDL2_LIBRARY sdl2)
+message("sdl2: ${SDL2_LIBRARY}")
+
+find_library(MBEDTLS_LIBRARY mbedtls)
+message("mbedtls: ${MBEDTLS_LIBRARY}")
+
+find_library(MBEDX509_LIBRARY mbedx509)
+message("mbedx509: ${MBEDTLS_LIBRARY}")
+
+find_library(MBEDCRYPTO_LIBRARY mbedcrypto)
+message("mbedcrypto: ${MBEDTLS_LIBRARY}")
+
+find_library(AVCODEC_LIBRARY avcodec)
+message("avcodec: ${AVCODEC_LIBRARY}")
+
+find_library(AVFORMAT_LIBRARY avformat)
+message("avformat: ${AVFORMAT_LIBRARY}")
+
+find_library(AVUTIL_LIBRARY avutil)
+message("avutil: ${AVUTIL_LIBRARY}")
+
+target_link_libraries(${PROJECT_NAME} PRIVATE
+        borealis
+        moonlight-common-c
+        libjansson
+        libexpat
+        ${CURL_LIBRARY}
+        ${MBEDTLS_LIBRARY}
+        ${MBEDX509_LIBRARY}
+        ${MBEDCRYPTO_LIBRARY}
+        ${AVCODEC_LIBRARY}
+        ${AVUTIL_LIBRARY}
+        ${AVFORMAT_LIBRARY}
+        libopus
+        ${SDL2_LIBRARY}
+        ${PNG_LIBRARY}
+        ${APP_PLATFORM_LIB})

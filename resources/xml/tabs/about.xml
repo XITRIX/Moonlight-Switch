@@ -1,0 +1,110 @@
+<brls:Box
+    width="auto"
+    height="auto">
+
+    <brls:ScrollingFrame
+        width="auto"
+        height="auto"
+        axis="column"
+        alignItems="stretch"
+        grow="1.0" >
+        
+        <brls:Box
+            width="10000"
+            height="auto"
+            axis="column"
+            alignItems="stretch"
+            paddingTop="@style/brls/tab_details/padding_top"
+            paddingRight="@style/brls/tab_details/padding_right"
+            paddingBottom="@style/brls/tab_details/padding_bottom"
+            paddingLeft="@style/brls/tab_details/padding_left">
+
+            <brls:Image
+                width="auto"
+                height="160"
+                image="@res/img/moonlight_store_logo.png"
+                scalingType="fit"/>
+
+            <brls:Header
+                id="version_label"
+                title="@i18n/about/title"
+                paddingTop="40"/>
+
+            <brls:Label
+                width="auto"
+                height="auto"
+                fontSize="15"
+                textColor="@theme/brls/header/subtitle"
+                text="@i18n/about/about"
+                marginTop="8"/>
+
+            <brls:Header
+                title="@i18n/about/links"
+                paddingTop="60"/>
+
+            <LinkCell 
+                id="github"/>
+
+            <LinkCell 
+                id="patreon"/>
+
+            <LinkCell 
+                id="gbatemp"/>
+
+            <brls:Header
+                title="@i18n/about/thanks"
+                paddingTop="60"/>
+
+            <brls:Label
+                width="auto"
+                height="auto"
+                fontSize="15"
+                textColor="@theme/brls/header/subtitle"
+                text="@i18n/about/thanks_1"
+                marginTop="8"/>
+
+            <brls:Label
+                width="auto"
+                height="auto"
+                fontSize="15"
+                textColor="@theme/brls/header/subtitle"
+                text="@i18n/about/thanks_2"
+                marginTop="8"/>
+
+            <brls:Label
+                width="auto"
+                height="auto"
+                fontSize="15"
+                textColor="@theme/brls/header/subtitle"
+                text="@i18n/about/thanks_3"
+                marginTop="8"/>
+
+            <brls:Label
+                width="auto"
+                height="auto"
+                fontSize="15"
+                textColor="@theme/brls/header/subtitle"
+                text="@i18n/about/thanks_4"
+                marginTop="8"/>
+
+            <brls:Label
+                width="auto"
+                height="auto"
+                fontSize="15"
+                textColor="@theme/brls/header/subtitle"
+                text="@i18n/about/thanks_5"
+                marginTop="8"/>
+
+            <brls:Label
+                width="auto"
+                height="auto"
+                fontSize="15"
+                textColor="@theme/brls/header/subtitle"
+                text="@i18n/about/thanks_6"
+                marginTop="8"/>
+
+        </brls:Box>
+        
+    </brls:ScrollingFrame>
+
+</brls:Box>

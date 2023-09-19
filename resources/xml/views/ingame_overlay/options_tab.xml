@@ -1,0 +1,72 @@
+<brls:Box
+    width="auto"
+    height="auto">
+    
+    <brls:ScrollingFrame
+        width="auto"
+        height="auto"
+        axis="column"
+        alignItems="stretch"
+        grow="1.0" >
+        
+        <brls:Box
+            width="10000"
+            height="auto"
+            axis="column"
+            alignItems="stretch"
+            paddingTop="@style/brls/tab_details/padding_top"
+            paddingRight="@style/brls/tab_details/padding_right"
+            paddingBottom="@style/brls/tab_details/padding_bottom"
+            paddingLeft="@style/brls/tab_details/padding_left">
+            
+            <brls:Header
+                title="@i18n/streaming/input"/>
+            
+            <brls:DetailCell
+                id="input_overlay"/>
+
+            <brls:SelectorCell
+                id="keyboard_type"/>
+
+            <brls:BooleanCell
+                id="touchscreen_mouse_mode"/>
+            
+            <brls:Header
+                id="volume_header"
+                paddingTop="60"
+                title="@i18n/streaming/volume"/>
+                
+            <brls:Slider
+                id="volume_slider"
+                width="auto"
+                height="84"/>
+        
+            <brls:Header
+                id="mouse_speed_header"
+                title="@i18n/streaming/mouse_speed"
+                subtitle="x1.0"
+                paddingTop="60"
+                lineTop="1px"/>
+                
+            <brls:Slider
+                id="mouse_speed_slider"
+                width="auto"
+                height="84"
+                grow="1"/>
+            
+            <brls:Header
+                title="@i18n/settings/debug"
+                paddingTop="60"
+                lineTop="1px"/>
+                
+            <brls:BooleanCell
+                id="debug"/>
+                
+            <brls:BooleanCell
+                id="onscreen_log"/>
+        
+        </brls:Box>
+    
+    </brls:ScrollingFrame>
+    
+</brls:Box>

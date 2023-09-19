@@ -6,8 +6,17 @@ find_library(MbedTLS MbedTLS)
 
 set(BUILD_SHARED_LIBS OFF)
 set(USE_MBEDTLS ON)
-set(USE_MBEDTLS_CRYPTO ON)
 add_subdirectory(moonlight-common-c)
 
-add_library(CImg INTERFACE)
-target_include_directories(CImg INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/CImg/CImg.h)
+#include(FindPkgConfig)
+#find_package(PkgConfig REQUIRED)
+#pkg_check_modules(LIBAV REQUIRED
+#        libavformat
+#        libavcodec
+#        libavutil
+#        )
+
+
+
+#pkg_check_modules(av REQUIRED IMPORTED_TARGET avcodec avformat avutil)
+#add_library(libav ALIAS PkgConfig::av)
