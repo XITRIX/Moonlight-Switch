@@ -23,7 +23,7 @@ To learn more about that you can take a look at [Sys-Clk homebrew](https://githu
 
 I DO NOT RESPOSIBLE FOR ANY DAMAGE TO YOUR CONSOLE IF ANYTHING WILL GO WRONG! I am using 4IFIR by myself and not find any issue, but everything possible. So think by you own head and be responsible for what you do with your devices!
 
-# Attension for developers
+# Attention for developers
 If you know how to debug Nintendo Switch Homebrew applications please let me know! I have no idea how to do this, I'm just an iOS developer who wants "click-click, UI debugger here we go" and not this GDB and Coredump stuff...
 
 Jokes aside, I seriously couldn't find any usefull information about it, all crashes shows ?? instead of function names and I cannot understand what I do wrong.
