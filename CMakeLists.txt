@@ -19,6 +19,10 @@ if (APPLE AND PLATFORM_DESKTOP)
     message(STATUS "CMAKE_OSX_ARCHITECTURES: ${CMAKE_OSX_ARCHITECTURES}")
 endif ()
 
+if (PLATFORM_IOS)
+    set(ENABLE_ARC OFF)
+endif ()
+
 # toolchain
 include(${EXTERN_PATH}/cmake/toolchain.cmake)
 
@@ -41,6 +45,7 @@ add_definitions(
         -DMULTICAST_DISABLED
         -Dcimg_display=0
         -Dcimg_use_png
+        -Dcimg_no_system_calls
         -DBRLS_I18N_PREFIX=\"main/\")
 
 if (USE_LIBROMFS)
@@ -168,39 +173,27 @@ target_include_directories(${PROJECT_NAME} PUBLIC
         ${APP_PLATFORM_INCLUDE})
 target_compile_options(${PROJECT_NAME} PRIVATE -ffunction-sections -fdata-sections ${APP_PLATFORM_OPTION})
 
+set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "${EXTERN_PATH}/cmake")
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${EXTERN_PATH}/cmake")
+#find_package(PkgConfig REQUIRED)
 
+#pkg_check_modules(jansson REQUIRED IMPORTED_TARGET jansson)
+#add_library(libjansson ALIAS PkgConfig::jansson)
 
-find_package(PkgConfig REQUIRED)
+#pkg_check_modules(opus REQUIRED IMPORTED_TARGET opus)
+#add_library(libopus ALIAS PkgConfig::opus)
 
-pkg_check_modules(jansson REQUIRED IMPORTED_TARGET jansson)
-add_library(libjansson ALIAS PkgConfig::jansson)
+#pkg_check_modules(expat REQUIRED IMPORTED_TARGET expat)
+#add_library(libexpat ALIAS PkgConfig::expat)
 
-pkg_check_modules(opus REQUIRED IMPORTED_TARGET opus)
-add_library(libopus ALIAS PkgConfig::opus)
-
-#pkg_check_modules(fmt REQUIRED IMPORTED_TARGET fmt)
-#add_library(libfmt ALIAS PkgConfig::fmt)
-
-pkg_check_modules(expat REQUIRED IMPORTED_TARGET expat)
-add_library(libexpat ALIAS PkgConfig::expat)
-
-find_library(PNG_LIBRARY png)
-message("png: ${PNG_LIBRARY}")
-
-find_library(CURL_LIBRARY curl)
-message("curl: ${CURL_LIBRARY}")
-
-find_library(SDL2_LIBRARY sdl2)
-message("sdl2: ${SDL2_LIBRARY}")
-
-find_library(MBEDTLS_LIBRARY mbedtls)
-message("mbedtls: ${MBEDTLS_LIBRARY}")
-
-find_library(MBEDX509_LIBRARY mbedx509)
-message("mbedx509: ${MBEDTLS_LIBRARY}")
-
-find_library(MBEDCRYPTO_LIBRARY mbedcrypto)
-message("mbedcrypto: ${MBEDTLS_LIBRARY}")
+find_package(PNG REQUIRED)
+find_package(CURL REQUIRED)
+find_package(mbedTLS REQUIRED)
+find_package(SDL2 REQUIRED)
+find_package(Opus REQUIRED)
+find_package(Jansson REQUIRED)
+find_package(EXPAT REQUIRED)
+#find_package(FFMPEG REQUIRED)
 
 find_library(AVCODEC_LIBRARY avcodec)
 message("avcodec: ${AVCODEC_LIBRARY}")
@@ -211,19 +204,23 @@ message("avformat: ${AVFORMAT_LIBRARY}")
 find_library(AVUTIL_LIBRARY avutil)
 message("avutil: ${AVUTIL_LIBRARY}")
 
+find_library(SWRESAMPLE_LIBRARY swresample)
+message("swresample: ${SWRESAMPLE_LIBRARY}")
+
 target_link_libraries(${PROJECT_NAME} PRIVATE
         borealis
         moonlight-common-c
-        libjansson
-        libexpat
-        ${CURL_LIBRARY}
-        ${MBEDTLS_LIBRARY}
-        ${MBEDX509_LIBRARY}
-        ${MBEDCRYPTO_LIBRARY}
+        Jansson::Jansson
+        EXPAT::EXPAT
+        CURL::libcurl
+        mbed::tls
+        mbed::x509
+        mbed::crypto
         ${AVCODEC_LIBRARY}
         ${AVUTIL_LIBRARY}
         ${AVFORMAT_LIBRARY}
-        libopus
-        ${SDL2_LIBRARY}
-        ${PNG_LIBRARY}
+        ${SWRESAMPLE_LIBRARY}
+        opus
+        SDL2::SDL2
+        PNG::PNG
         ${APP_PLATFORM_LIB})

@@ -14,7 +14,7 @@ AddHostTab::AddHostTab() {
     // Inflate the tab from the XML file
     this->inflateFromXMLRes("xml/tabs/add_host.xml");
 
-    hostIP->init("add_host/host_ip"_i18n, "10.0.0.19");
+    hostIP->init("add_host/host_ip"_i18n, "192.168.1.109");
 
     connect->setText("add_host/connect"_i18n);
     connect->registerClickAction([this](View* view) {

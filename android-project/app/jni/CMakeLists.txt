@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.6)
 
 project(BOREALIS_DEMO)
+set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
+
+set(CMAKE_TOOLCHAIN_FILE ${CMAKE_CURRENT_SOURCE_DIR}/vcpkg/scripts/buildsystems/vcpkg.cmake CACHE PATH "vcpkg toolchain file")
 
 # armeabi-v7a requires cpufeatures library
 # include(AndroidNdkModules)

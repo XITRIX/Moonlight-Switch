@@ -1,3 +1,5 @@
 cmake-build-debug
 .DS_Store
 build_switch
+libromfs-generator
+build-ios

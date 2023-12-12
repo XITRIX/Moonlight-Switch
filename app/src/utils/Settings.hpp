@@ -206,7 +206,7 @@ class Settings : public Singleton<Settings> {
     std::vector<Host> m_hosts;
     int m_resolution = 720;
     int m_fps = 60;
-    VideoCodec m_video_codec = H264;
+    VideoCodec m_video_codec = H265;
     AudioBackend m_audio_backend = SDL;
     int m_bitrate = 10000;
     bool m_ignore_unsupported_resolutions = false;

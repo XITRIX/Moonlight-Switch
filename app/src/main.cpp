@@ -35,6 +35,8 @@
 #define SDL_MAIN
 #endif
 
+#include <SDL_main.h>
+
 using namespace brls::literals; // for _i18n
 
 int main(int argc, char* argv[]) {
@@ -63,7 +65,9 @@ int main(int argc, char* argv[]) {
 #ifdef __SWITCH__
     Settings::instance().set_working_dir("sdmc:/switch/Moonlight-Switch");
 #else
-    Settings::instance().set_working_dir("moonlight-nx");
+    std::string home(getenv("HOME"));
+    Settings::instance().set_working_dir(home + "/Documents/moonlight-nx");
+    brls::Logger::info("Working dir, {}", home + "/Documents/moonlight-nx");
 #endif
 
     MoonlightSession::set_provider(

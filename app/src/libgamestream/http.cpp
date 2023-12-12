@@ -52,6 +52,7 @@ static size_t _write_curl(void* contents, size_t size, size_t nmemb,
 
 int http_init(const std::string key_directory) {
     if (!curl) {
+        curl_global_sslset(CURLSSLBACKEND_MBEDTLS, NULL, NULL);
         curl_global_init(CURL_GLOBAL_ALL);
         brls::Logger::info("Curl: {}", curl_version());
     } else {

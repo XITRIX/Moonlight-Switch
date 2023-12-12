@@ -22,7 +22,7 @@ void ffmpegLog(void* ptr, int level, const char* fmt, va_list vargs) {
     message.resize(len + 1);  // need space for NUL
     vsnprintf(&message[0], len + 1,fmt, vargs);
     message.resize(len);  // remove the NUL
-    brls::Logger::debug("FFmpeg [LOG]: {}", message.c_str());
+//    brls::Logger::debug("FFmpeg [LOG]: {}", message.c_str());
 }
 
 int FFmpegVideoDecoder::setup(int video_format, int width, int height,
@@ -84,10 +84,10 @@ int FFmpegVideoDecoder::setup(int video_format, int width, int height,
     m_decoder_context->width = width;
     m_decoder_context->height = height;
 //#ifdef __SWITCH__
-//    m_decoder_context->pix_fmt = AV_PIX_FMT_TX1;
+////    m_decoder_context->pix_fmt = AV_PIX_FMT_TX1;
 //#else
-    m_decoder_context->pix_fmt = AV_PIX_FMT_VIDEOTOOLBOX;
-//    m_decoder_context->pix_fmt = AV_PIX_FMT_YUV420P;
+//    m_decoder_context->pix_fmt = AV_PIX_FMT_VIDEOTOOLBOX;
+    m_decoder_context->pix_fmt = AV_PIX_FMT_YUV420P;
 //#endif
 
     int err = avcodec_open2(m_decoder_context, m_decoder, NULL);
@@ -111,8 +111,12 @@ int FFmpegVideoDecoder::setup(int video_format, int width, int height,
             return -1;
         }
 
+//#ifdef __SWITCH__
+//        m_frames[i]->format = AV_PIX_FMT_TX1;
+//#else
 //        m_frames[i]->format = AV_PIX_FMT_VIDEOTOOLBOX;
         m_frames[i]->format = AV_PIX_FMT_YUV420P;
+//#endif
         m_frames[i]->width  = width;
         m_frames[i]->height = height;
 

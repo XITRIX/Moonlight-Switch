@@ -34,9 +34,9 @@ void main() {\n\
 }";
 
 static const char* vertex_shader_string = "\
-#version 120\n\
-attribute vec2 position;\n\
-varying vec2 tex_position;\n\
+#version 300 es\n\
+in vec2 position;\n\
+out vec2 tex_position;\n\
 \
 void main() {\n\
     gl_Position = vec4(position, 1, 1);\n\
@@ -44,19 +44,20 @@ void main() {\n\
 }";
 
 static const char* fragment_shader_string = "\
-#version 120\n\
+#version 300 es\n\
 uniform sampler2D ymap;\n\
 uniform sampler2D umap;\n\
 uniform sampler2D vmap;\n\
-uniform mat3 yuvmat;\n\
-uniform vec3 offset;\n\
-uniform vec4 uv_data;\n\
-varying vec2 tex_position;\n\
+uniform highp mat3 yuvmat;\n\
+uniform highp vec3 offset;\n\
+uniform highp vec4 uv_data;\n\
+in highp vec2 tex_position;\n\
+out mediump vec4 fragmentColor;\n\
 \
 void main() {\n\
-    vec2 uv = (tex_position - uv_data.xy) * uv_data.zw;\n\
-    vec3 YCbCr = vec3(texture(ymap, uv).r, texture(umap, uv).r, texture(vmap, uv).r) - offset;\n\
-    gl_FragColor = vec4(clamp(yuvmat * YCbCr, 0.0, 1.0), 1.0);\n\
+    highp vec2 uv = (tex_position - uv_data.xy) * uv_data.zw;\n\
+    highp vec3 YCbCr = vec3(texture(ymap, uv).r, texture(umap, uv).r, texture(vmap, uv).r) - offset;\n\
+    fragmentColor = vec4(clamp(yuvmat * YCbCr, 0.0, 1.0), 1.0);\n\
 }";
 
 static const float vertices[] = {-1.0f, -1.0f, 1.0f, -1.0f,
@@ -305,7 +306,7 @@ void GLVideoRenderer::draw(NVGcontext* vg, int width, int height,
     glUseProgram(m_shader_program);
     checkAndUpdateScale(width, height, frame);
 
-    glClearColor(0, 0, 0, 1);
+    glClearColor(1, 0, 0, 1);
     glClear(GL_COLOR_BUFFER_BIT);
 
     for (int i = 0; i < 3; i++) {
