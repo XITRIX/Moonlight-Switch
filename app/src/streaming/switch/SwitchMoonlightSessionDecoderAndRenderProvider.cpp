@@ -4,12 +4,14 @@
 #include "SDLAudiorenderer.hpp"
 
 #ifdef __SWITCH__
-//#include "DKVideoRenderer.hpp"
 #include "AudrenAudioRenderer.hpp"
-//#else
-//#include "GLVideoRenderer.hpp"
 #endif
+
+#ifdef BOREALIS_USE_DEKO3D
+#include "DKVideoRenderer.hpp"
+#else
 #include "GLVideoRenderer.hpp"
+#endif
 
 IFFmpegVideoDecoder*
 SwitchMoonlightSessionDecoderAndRenderProvider::video_decoder() {
@@ -18,11 +20,11 @@ SwitchMoonlightSessionDecoderAndRenderProvider::video_decoder() {
 
 IVideoRenderer*
 SwitchMoonlightSessionDecoderAndRenderProvider::video_renderer() {
-//#ifdef __SWITCH__
-//    return new DKVideoRenderer();
-//#else
+#ifdef BOREALIS_USE_DEKO3D
+    return new DKVideoRenderer();
+#else
     return new GLVideoRenderer();
-//#endif
+#endif
 }
 
 IAudioRenderer*

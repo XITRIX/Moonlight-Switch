@@ -1,0 +1,42 @@
+{
+    "configurations": [
+        {
+            "name": "Mac",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "${vcpkgRoot}/arm64-ios/include",
+                "${vcpkgRoot}/arm64-osx/include"
+            ],
+            "defines": [],
+            "macFrameworkPath": [
+                "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks"
+            ],
+            "compilerPath": "/usr/bin/clang",
+            "cStandard": "c17",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "macos-clang-arm64"
+        },
+        {
+            "name": "Switch",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "/opt/devkitpro/portlibs/switch/include",
+                "/opt/devkitpro/libnx/include",
+                "/opt/devkitpro/devkitA64/aarch64-none-elf/include"
+            ],
+            "defines": [
+                "__SWITCH__",
+                "USE_DEKO3D",
+                "BOREALIS_USE_DEKO3D"
+            ],
+            "macFrameworkPath": [
+                "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks"
+            ],
+            "compilerPath": "/opt/devkitpro/devkitA64/bin/aarch64-none-elf-gcc",
+            "cStandard": "c17",
+            "cppStandard": "c++20",
+            "intelliSenseMode": "gcc-arm64"
+        }
+    ],
+    "version": 4
+}

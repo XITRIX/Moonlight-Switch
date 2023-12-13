@@ -1,4 +1,4 @@
-#if defined(__SWITCH__) && defined(USE_DEKO3D)
+#if defined(__SWITCH__) && defined(BOREALIS_USE_DEKO3D)
 
 #pragma once
 #include "IVideoRenderer.hpp"
@@ -8,9 +8,7 @@
 
 class DKVideoRenderer : public IVideoRenderer {
   public:
-    DKVideoRenderer(){
-      brls::Logger::info("{}", __PRETTY_FUNCTION__);
-    };
+    DKVideoRenderer();
     ~DKVideoRenderer();
 
     void draw(NVGcontext* vg, int width, int height, AVFrame* frame) override;

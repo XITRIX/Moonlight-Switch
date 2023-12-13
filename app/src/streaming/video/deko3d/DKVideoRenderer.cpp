@@ -1,4 +1,4 @@
-#if defined(__SWITCH__) && defined(USE_DEKO3D)
+#if defined(__SWITCH__) && defined(BOREALIS_USE_DEKO3D)
 
 #include "DKVideoRenderer.hpp"
 
@@ -200,6 +200,10 @@ constexpr std::size_t cmdbuf_1_offset = vbo_offset      + align_up(sizeof(vertic
 constexpr std::size_t cmdbuf_2_offset = cmdbuf_1_offset + align_up(cmdbuf_size,         DK_CMDMEM_ALIGNMENT);
 
 constexpr std::size_t memblock_size = align_up(cmdbuf_2_offset + align_up(cmdbuf_size, DK_CMDMEM_ALIGNMENT), DK_MEMBLOCK_ALIGNMENT);
+
+DKVideoRenderer::DKVideoRenderer() {
+    brls::Logger::info("{}", __PRETTY_FUNCTION__);
+};
 
 DKVideoRenderer::~DKVideoRenderer() {
     brls::Logger::info("{}", __PRETTY_FUNCTION__);

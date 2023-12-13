@@ -135,6 +135,9 @@ elseif (PLATFORM_PSV)
         )
     endif()
 elseif (PLATFORM_SWITCH)
+    if (USE_DEKO3D)
+        gen_dksh("${PROJECT_RESOURCES}/shaders")
+    endif ()
     add_custom_target(${PROJECT_NAME}.nro DEPENDS ${PROJECT_NAME}
         COMMAND ${NX_NACPTOOL_EXE} --create "${PROJECT_NAME}" "${PROJECT_AUTHOR}" "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_ALTER}" ${PROJECT_NAME}.nacp --titleid=${PROJECT_TITLEID}
         COMMAND ${CMAKE_COMMAND} -E copy_directory ${PROJECT_RESOURCES} ${CMAKE_BINARY_DIR}/resources
