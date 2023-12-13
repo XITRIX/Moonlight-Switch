@@ -224,3 +224,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
         SDL2::SDL2
         PNG::PNG
         ${APP_PLATFORM_LIB})
+
+if (APPLE)
+    target_link_libraries(${PROJECT_NAME} PRIVATE "-framework CoreMedia" "-framework VideoToolbox")
+endif ()
