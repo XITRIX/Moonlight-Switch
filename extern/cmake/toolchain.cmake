@@ -153,6 +153,8 @@ function(ios_bundle tvosStoryBoard iosStoryBoard assets plist name version)
             XCODE_ATTRIBUTE_ENABLE_BITCODE NO
             XCODE_ATTRIBUTE_SKIP_INSTALL NO
             XCODE_ATTRIBUTE_ASSETCATALOG_COMPILER_APPICON_NAME "AppIcon"
+            XCODE_ATTRIBUTE_LD_RUNPATH_SEARCH_PATHS "@executable_path/Frameworks"
+            XCODE_ATTRIBUTE_FRAMEWORK_SEARCH_PATHS "$(SRCROOT)/extern/borealis/library/lib/extern/angle"
             )
     set_property(
             SOURCE ${IOS_ASSETS}

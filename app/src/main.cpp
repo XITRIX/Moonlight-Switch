@@ -78,6 +78,7 @@ int main(int argc, char* argv[]) {
     // Have the application register an action on every activity that will quit
     // when you press BUTTON_START
     brls::Application::setGlobalQuit(false);
+    brls::Application::setFPSStatus(true);
 
     // Register custom views (including tabs, which are views)
     brls::Application::registerXMLView("LinkCell", LinkCell::create);
