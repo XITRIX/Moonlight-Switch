@@ -120,7 +120,7 @@ int FFmpegVideoDecoder::setup(int video_format, int width, int height,
         m_frames[i]->width  = width;
         m_frames[i]->height = height;
 
-        int err = av_frame_get_buffer(m_frames[i], 256);
+        int err = av_frame_get_buffer(m_frames[i], 0);
         if (err < 0) {
             brls::Logger::error("FFmpeg: Couldn't allocate frame buffer:");
             return -1;

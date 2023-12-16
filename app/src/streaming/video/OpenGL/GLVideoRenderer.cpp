@@ -306,7 +306,7 @@ void GLVideoRenderer::draw(NVGcontext* vg, int width, int height,
     glUseProgram(m_shader_program);
     checkAndUpdateScale(width, height, frame);
 
-    glClearColor(1, 0, 0, 1);
+    glClearColor(1, 1, 0, 1);
     glClear(GL_COLOR_BUFFER_BIT);
 
     for (int i = 0; i < 3; i++) {

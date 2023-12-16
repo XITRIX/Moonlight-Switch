@@ -157,6 +157,7 @@
         "ok": "OK",
         "back": "Back",
         "on": "On",
-        "off": "Off"
+        "off": "Off",
+        "submit": "Done"
     }
 }

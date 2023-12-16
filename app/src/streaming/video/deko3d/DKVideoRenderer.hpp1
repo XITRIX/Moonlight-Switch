@@ -5,10 +5,6 @@
 #include <deko3d.hpp>
 
 #include <borealis.hpp>
-#include <nanovg/framework/CShader.h>
-#include <nanovg/framework/CExternalImage.h>
-#include <nanovg/framework/CDescriptorSet.h>
-#include <optional>
 
 class DKVideoRenderer : public IVideoRenderer {
   public:
@@ -20,30 +16,33 @@ class DKVideoRenderer : public IVideoRenderer {
     VideoRenderStats* video_render_stats() override;
 
   private:
+    // void bindTexture(int id);
+    void initialize();
     void checkAndInitialize(int width, int height, AVFrame* frame);
-    void createFramebufferResources(int width, int height);
+    // void checkAndUpdateScale(int width, int height, AVFrame* frame);
 
     bool m_is_initialized = false;
 
     dk::Device dev;
     dk::Queue queue;
 
-    std::optional<CMemPool> pool_images;
-    std::optional<CMemPool> pool_code;
-    std::optional<CMemPool> pool_data;
-
+    dk::UniqueMemBlock memblk;;
     dk::UniqueCmdBuf cmdbuf;
+    int cmdbuf_slice = 0;
 
-    CDescriptorSet<4096U> *imageDescriptorSet;
-    // CDescriptorSet<1> samplerDescriptorSet;
+    dk::UniqueMemBlock shader_memblk;
+    dk::Shader vert_sh, frag_sh;
+    dk::ImageDescriptor m_descriptor;
 
-    CShader vertexShader;
-    CShader fragmentShader;
+    dk::Sampler sampler;
+    dk::SamplerDescriptor samplerDescriptor;
 
-    CMemPool::Handle vertexBuffer;
-    CExternalImage texImage;
-    int texId = 0;
-
+    int m_frame_width = 0;
+    int m_frame_height = 0;
+    int m_screen_width = 0;
+    int m_screen_height = 0;
+    int textureWidth[3];
+    int textureHeight[3];
     VideoRenderStats m_video_render_stats = {};
 };
 
