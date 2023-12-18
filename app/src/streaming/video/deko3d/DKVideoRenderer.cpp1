@@ -241,12 +241,9 @@ void DKVideoRenderer::initialize() {
     this->cmdbuf = dk::CmdBufMaker{this->dev}
         .create();
 
-    sampler.setFilter(DkFilter_Linear, DkFilter_Linear);
-    sampler.setWrapMode(DkWrapMode_ClampToEdge, DkWrapMode_ClampToEdge, DkWrapMode_ClampToEdge);
-
-    samplerDescriptor.initialize(sampler);
-    cmdbuf.pushData(this->memblk.getGpuAddr())
-    samplerDescriptorSet.update(cmdbuf, 0, samplerDescriptor);
+    imageDescriptorSet = vctx->getImageDescriptor();
+    lumaTextureId = vctx->allocateImageIndex();
+    chromaTextureId = vctx->allocateImageIndex();
 }
 
 void DKVideoRenderer::checkAndInitialize(int width, int height, AVFrame* frame) {
@@ -276,24 +273,13 @@ void DKVideoRenderer::draw(NVGcontext* vg, int width, int height, AVFrame* frame
     dk::ColorWriteState colorWriteState;
     dk::DepthStencilState depthStencilState;
 
-    auto buf = this->memblk.getGpuAddr();
-    this->cmdbuf.bindShaders(DkStageFlag_GraphicsMask, { &this->vert_sh, &this->frag_sh });
-    this->cmdbuf.bindUniformBuffer(DkStage_Fragment, 0, buf + ubo_offset, sizeof(UniformBufferLayout));
-    this->cmdbuf.bindRasterizerState(rasterizerState);
-    this->cmdbuf.bindColorState(colorState);
-    this->cmdbuf.bindColorWriteState(colorWriteState);
-    this->cmdbuf.bindDepthStencilState(depthStencilState);
-    this->cmdbuf.bindVtxBuffer(0, buf + vbo_offset, sizeof(vertices));
-    this->cmdbuf.bindVtxAttribState(vertex_attrib_state);
-    this->cmdbuf.bindVtxBufferState(vertex_buffer_state);
-
     // Create layout for the texture
     // The important part is to use DkImageFlags_UsageVideo, 
     // which ensures a consistent texture layout between NVDEC and the GPU
     dk::ImageLayout layout; 
     dk::ImageLayoutMaker{this->dev}
         .setType(DkImageType_2D)
-        .setFormat(DkImageFormat_R8_Unorm)
+        .setFormat(DkImageFormat_RG8_Unorm)
         .setDimensions(width, height, 1)
         .setFlags(DkImageFlags_UsageLoadStore | DkImageFlags_Usage2DEngine | DkImageFlags_UsageVideo)
         .initialize(layout);
@@ -313,15 +299,34 @@ void DKVideoRenderer::draw(NVGcontext* vg, int width, int height, AVFrame* frame
     // DkImage image;
     // dkImageInitialize(&image, &layout, memblock, 0);
 
-    dk::Image image;
-    image.initialize(layout, memblock, 0);
+    dk::Image lumaImage;
+    lumaImage.initialize(layout, memblock, 0);
+
+    dk::Image chromaImage;
+    chromaImage.initialize(layout, memblock, frame->data[1] - frame->data[0]);
 
     // Initialize image/sample descriptors as usual,
     // and invalidate the texture cache before use
-    m_descriptor.initialize(image);
+    luma_descriptor.initialize(lumaImage);
+    chroma_descriptor.initialize(chromaImage);
 
-    // Deinitialization
-    dkMemBlockDestroy(memblock);
+    imageDescriptorSet->update(cmdbuf, lumaTextureId, luma_descriptor);
+    imageDescriptorSet->update(cmdbuf, chromaTextureId, chroma_descriptor);
+
+    auto buf = this->memblk.getGpuAddr();
+    this->cmdbuf.bindShaders(DkStageFlag_GraphicsMask, { &this->vert_sh, &this->frag_sh });
+    this->cmdbuf.bindUniformBuffer(DkStage_Fragment, 0, buf + ubo_offset, sizeof(UniformBufferLayout));
+    this->cmdbuf.bindTextures(DkStage_Fragment, 0, dkMakeTextureHandle(lumaTextureId, 0));
+    this->cmdbuf.bindTextures(DkStage_Fragment, 1, dkMakeTextureHandle(chromaTextureId, 0));
+    this->cmdbuf.bindRasterizerState(rasterizerState);
+    this->cmdbuf.bindColorState(colorState);
+    this->cmdbuf.bindColorWriteState(colorWriteState);
+    this->cmdbuf.bindDepthStencilState(depthStencilState);
+    this->cmdbuf.bindVtxBuffer(0, buf + vbo_offset, sizeof(vertices));
+    this->cmdbuf.bindVtxAttribState(vertex_attrib_state);
+    this->cmdbuf.bindVtxBufferState(vertex_buffer_state);
+
+
 
     this->queue.submitCommands(this->cmdbuf.finishList());
 
@@ -329,6 +334,8 @@ void DKVideoRenderer::draw(NVGcontext* vg, int width, int height, AVFrame* frame
     this->queue.waitIdle();
     m_video_render_stats.total_render_time += LiGetMillis() - before_render;
     m_video_render_stats.rendered_frames++;
+
+    dkMemBlockDestroy(memblock);
 }
 
 VideoRenderStats* DKVideoRenderer::video_render_stats() {

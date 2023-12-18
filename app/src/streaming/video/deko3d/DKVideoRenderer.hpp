@@ -42,7 +42,8 @@ class DKVideoRenderer : public IVideoRenderer {
 
     CMemPool::Handle vertexBuffer;
     CExternalImage texImage;
-    int texId = 0;
+    int lumaTextureId = 0;
+    int chromaTextureId = 0;
 
     VideoRenderStats m_video_render_stats = {};
 };

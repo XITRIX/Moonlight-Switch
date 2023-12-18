@@ -4,6 +4,7 @@
 #include "IVideoRenderer.hpp"
 #include <deko3d.hpp>
 
+#include <nanovg/framework/CDescriptorSet.h>
 #include <borealis.hpp>
 
 class DKVideoRenderer : public IVideoRenderer {
@@ -32,10 +33,12 @@ class DKVideoRenderer : public IVideoRenderer {
 
     dk::UniqueMemBlock shader_memblk;
     dk::Shader vert_sh, frag_sh;
-    dk::ImageDescriptor m_descriptor;
+    dk::ImageDescriptor luma_descriptor;
+    dk::ImageDescriptor chroma_descriptor;
 
-    dk::Sampler sampler;
-    dk::SamplerDescriptor samplerDescriptor;
+    CDescriptorSet<4096U> *imageDescriptorSet;
+    int lumaTextureId = 0;
+    int chromaTextureId = 0;
 
     int m_frame_width = 0;
     int m_frame_height = 0;
