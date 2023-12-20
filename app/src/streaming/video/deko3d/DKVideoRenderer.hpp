@@ -21,7 +21,6 @@ class DKVideoRenderer : public IVideoRenderer {
 
   private:
     void checkAndInitialize(int width, int height, AVFrame* frame);
-    void createFramebufferResources(int width, int height);
 
     bool m_is_initialized = false;
 
@@ -41,7 +40,16 @@ class DKVideoRenderer : public IVideoRenderer {
     CShader fragmentShader;
 
     CMemPool::Handle vertexBuffer;
-    CExternalImage texImage;
+
+    dk::ImageLayout mappingLayout; 
+    dk::MemBlock mappingMemblock;
+
+    dk::Image luma;
+    dk::Image chroma;
+
+    dk::ImageDescriptor lumaDesc;
+    dk::ImageDescriptor chromaDesc;
+
     int lumaTextureId = 0;
     int chromaTextureId = 0;
 

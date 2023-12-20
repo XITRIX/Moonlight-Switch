@@ -46,6 +46,7 @@ DKVideoRenderer::DKVideoRenderer() {}
 DKVideoRenderer::~DKVideoRenderer() {
     // Destroy the vertex buffer (not strictly needed in this case)
     vertexBuffer.destroy();
+    dkMemBlockDestroy(mappingMemblock);
 }
 
 void DKVideoRenderer::checkAndInitialize(int width, int height, AVFrame* frame) {
@@ -68,7 +69,6 @@ void DKVideoRenderer::checkAndInitialize(int width, int height, AVFrame* frame) 
 
 // Create the image and sampler descriptor sets
     imageDescriptorSet = vctx->getImageDescriptor();
-    // samplerDescriptorSet.allocate(*pool_data);
 
 // Load the shaders
     vertexShader.load(*pool_code, "romfs:/shaders/basic_vsh.dksh");
@@ -78,37 +78,44 @@ void DKVideoRenderer::checkAndInitialize(int width, int height, AVFrame* frame) 
     vertexBuffer = pool_data->allocate(sizeof(QuadVertexData), alignof(Vertex));
     memcpy(vertexBuffer.getCpuAddr(), QuadVertexData.data(), vertexBuffer.getSize());
 
-// Load the image
-    texImage.load(*pool_images, *pool_data, dev, queue, "romfs:/cat-256x256.bc1", 256, 256, DkImageFormat_RGB_BC1);
+// Allocate image indexes for planes
     lumaTextureId = vctx->allocateImageIndex();
     chromaTextureId = vctx->allocateImageIndex();
 
-// Configure persistent state in the queue
-    {
-        // Upload the image descriptor
-        imageDescriptorSet->update(cmdbuf, lumaTextureId, texImage.getDescriptor());
-        brls::Logger::debug("{}: Texture ID {}", __PRETTY_FUNCTION__, lumaTextureId);
+    brls::Logger::debug("{}: Luma texture ID {}", __PRETTY_FUNCTION__, lumaTextureId);
+    brls::Logger::debug("{}: Chroma texture ID {}", __PRETTY_FUNCTION__, chromaTextureId);
 
-        // // Submit the configuration commands to the queue
-        queue.submitCommands(cmdbuf.finishList());
-        queue.waitIdle();
-        // cmdbuf.clear();
-    }
+    AVTX1Map *map = ff_tx1_frame_get_fbuf_map(frame);
+    brls::Logger::info("{}: Map size: {} | {} | {} | {}", __PRETTY_FUNCTION__, map->map.handle, map->map.has_init, map->map.cpu_addr, map->map.size);
+
+    dk::ImageLayoutMaker { dev }
+        .setType(DkImageType_2D)
+        .setFormat(DkImageFormat_R8_Unorm)
+        .setDimensions(width, height, 1)
+        .setFlags(DkImageFlags_UsageLoadStore | DkImageFlags_Usage2DEngine | DkImageFlags_UsageVideo)
+        .initialize(mappingLayout);
+
+    mappingMemblock = dk::MemBlockMaker { dev, ff_tx1_map_get_size(map) }
+        .setFlags(DkMemBlockFlags_CpuUncached | DkMemBlockFlags_GpuCached | DkMemBlockFlags_Image)
+        .setStorage(ff_tx1_map_get_addr(map))
+        .create();
+
+    luma.initialize(mappingLayout, mappingMemblock, 0);
+    chroma.initialize(mappingLayout, mappingMemblock, frame->data[1] - frame->data[0]);
+
+    lumaDesc.initialize(luma);
+    chromaDesc.initialize(chroma);
+
+    imageDescriptorSet->update(cmdbuf, lumaTextureId, lumaDesc);
+    imageDescriptorSet->update(cmdbuf, chromaTextureId, chromaDesc);
+
+    queue.submitCommands(cmdbuf.finishList());
+    queue.waitIdle();
 
     m_is_initialized = true;
 }
 
-void DKVideoRenderer::createFramebufferResources(int width, int height) {
-    // Initialize state structs with deko3d defaults
-}
-
 void DKVideoRenderer::draw(NVGcontext* vg, int width, int height, AVFrame* frame) {
-    // brls::Logger::info("{}: Check!!!!", __PRETTY_FUNCTION__);
-    // int frameSize = frame->width * frame->height * 3 / 2;
-    // int frameSize = av_image_get_buffer_size((AVPixelFormat) frame->format, frame->width, frame->height, DK_IMAGE_LINEAR_STRIDE_ALIGNMENT);
-    // int frameSize = avpicture_get_size((AVPixelFormat) frame->format, frame->width, frame->height);
-    // brls::Logger::debug("{}: frame data size {}", __PRETTY_FUNCTION__, frameSize);
-    // brls::Logger::debug("{}: frame width {}", __PRETTY_FUNCTION__, frame->linesize[0]);
     checkAndInitialize(width, height, frame);
 
     dk::RasterizerState rasterizerState;
@@ -118,43 +125,6 @@ void DKVideoRenderer::draw(NVGcontext* vg, int width, int height, AVFrame* frame
     // Clear the color buffer
     cmdbuf.clear();
     cmdbuf.clearColor(0, DkColorMask_RGBA, 0.0f, 0.0f, 0.0f, 0.0f);
-
-//////////////////////////////////////////////////////////////
-    AVTX1Map *map = ff_tx1_frame_get_fbuf_map(frame);
-    brls::Logger::info("{}: Map size: {} | {} | {} | {}", __PRETTY_FUNCTION__, map->map.handle, map->map.has_init, map->map.cpu_addr, map->map.size);
-
-    dk::ImageLayout layout; 
-    dk::ImageLayoutMaker { dev }
-        .setType(DkImageType_2D)
-        .setFormat(DkImageFormat_R8_Unorm)
-        .setDimensions(width, height, 1)
-        .setFlags(DkImageFlags_UsageLoadStore | DkImageFlags_Usage2DEngine | DkImageFlags_UsageVideo)
-        .initialize(layout);
-
-    dk::MemBlock memblock = dk::MemBlockMaker { dev, ff_tx1_map_get_size(map) }
-        .setFlags(DkMemBlockFlags_CpuUncached | DkMemBlockFlags_GpuCached | DkMemBlockFlags_Image)
-        .setStorage(ff_tx1_map_get_addr(map))
-        .create();
-
-    dk::Image luma;
-    luma.initialize(layout, memblock, 0);
-
-    dk::Image chroma;
-    chroma.initialize(layout, memblock, frame->data[1] - frame->data[0]);
-
-    dk::ImageDescriptor lumaDesc;
-    lumaDesc.initialize(luma);
-
-    dk::ImageDescriptor chromaDesc;
-    chromaDesc.initialize(chroma);
-
-    imageDescriptorSet->update(cmdbuf, lumaTextureId, lumaDesc);
-    imageDescriptorSet->update(cmdbuf, chromaTextureId, chromaDesc);
-
-    queue.submitCommands(cmdbuf.finishList());
-    queue.waitIdle();
-
-//////////////////////////////////////////////////////////////
 
     // Bind state required for drawing the triangle
     cmdbuf.bindShaders(DkStageFlag_GraphicsMask, { vertexShader, fragmentShader });
@@ -173,8 +143,6 @@ void DKVideoRenderer::draw(NVGcontext* vg, int width, int height, AVFrame* frame
     // Finish off this command list
     queue.submitCommands(cmdbuf.finishList());
     queue.waitIdle();
-
-    dkMemBlockDestroy(memblock);
 }
 
 VideoRenderStats* DKVideoRenderer::video_render_stats() {
