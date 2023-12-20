@@ -41,7 +41,8 @@ class DKVideoRenderer : public IVideoRenderer {
 
     CMemPool::Handle vertexBuffer;
 
-    dk::ImageLayout mappingLayout; 
+    dk::ImageLayout lumaMappingLayout; 
+    dk::ImageLayout chromaMappingLayout; 
     dk::MemBlock mappingMemblock;
 
     dk::Image luma;

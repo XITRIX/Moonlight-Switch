@@ -93,15 +93,22 @@ void DKVideoRenderer::checkAndInitialize(int width, int height, AVFrame* frame) 
         .setFormat(DkImageFormat_R8_Unorm)
         .setDimensions(width, height, 1)
         .setFlags(DkImageFlags_UsageLoadStore | DkImageFlags_Usage2DEngine | DkImageFlags_UsageVideo)
-        .initialize(mappingLayout);
+        .initialize(lumaMappingLayout);
+
+    dk::ImageLayoutMaker { dev }
+        .setType(DkImageType_2D)
+        .setFormat(DkImageFormat_RG8_Unorm)
+        .setDimensions(width / 2, height / 2, 1)
+        .setFlags(DkImageFlags_UsageLoadStore | DkImageFlags_Usage2DEngine | DkImageFlags_UsageVideo)
+        .initialize(chromaMappingLayout);
 
     mappingMemblock = dk::MemBlockMaker { dev, ff_tx1_map_get_size(map) }
         .setFlags(DkMemBlockFlags_CpuUncached | DkMemBlockFlags_GpuCached | DkMemBlockFlags_Image)
         .setStorage(ff_tx1_map_get_addr(map))
         .create();
 
-    luma.initialize(mappingLayout, mappingMemblock, 0);
-    chroma.initialize(mappingLayout, mappingMemblock, frame->data[1] - frame->data[0]);
+    luma.initialize(lumaMappingLayout, mappingMemblock, 0);
+    chroma.initialize(chromaMappingLayout, mappingMemblock, frame->data[1] - frame->data[0]);
 
     lumaDesc.initialize(luma);
     chromaDesc.initialize(chroma);

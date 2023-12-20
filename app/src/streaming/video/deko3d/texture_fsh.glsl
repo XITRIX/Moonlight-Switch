@@ -9,14 +9,16 @@ layout (binding = 1) uniform sampler2D sTextureUV;
 void main()
 {
     float r, g, b, y, u, v;
+    
+    vec2 uCoord = vec2(vTextureCoord.x, vTextureCoord.y);
+
     y = texture2D(sTextureY, vTextureCoord).r;
-    u = texture2D(sTextureUV, vTextureCoord).r - 0.5;
-    v = texture2D(sTextureUV, vTextureCoord).g - 0.5;
+    u = texture2D(sTextureUV, uCoord).r - 0.5;
+    v = texture2D(sTextureUV, uCoord).g - 0.5;
 
-    r = y;// + 1.13983*v;
-    g = y;// - 0.39465*u - 0.58060*v;
-    b = y;// + 2.03211*u;
+    r = y + 1.13983*v;
+    g = y - 0.39465*u - 0.58060*v;
+    b = y + 2.03211*u;
 
-    outColor = vec4(r, g, b, 1.0);//texture(texture0, inTexCoord);
-    // outColor = texture(sTextureUV, vTextureCoord / 2);
+    outColor = vec4(r, g, b, 1.0);
 }
