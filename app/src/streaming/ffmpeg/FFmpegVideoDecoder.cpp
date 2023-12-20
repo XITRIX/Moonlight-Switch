@@ -84,10 +84,12 @@ int FFmpegVideoDecoder::setup(int video_format, int width, int height,
     m_decoder_context->width = width;
     m_decoder_context->height = height;
 #ifdef __SWITCH__
-//    m_decoder_context->pix_fmt = AV_PIX_FMT_NV12;
+#ifdef BOREALIS_USE_DEKO3D
    m_decoder_context->pix_fmt = AV_PIX_FMT_TX1;
 #else
-//    m_decoder_context->pix_fmt = AV_PIX_FMT_VIDEOTOOLBOX;
+   m_decoder_context->pix_fmt = AV_PIX_FMT_YUV420P;
+#endif
+#else
     m_decoder_context->pix_fmt = AV_PIX_FMT_YUV420P;
 #endif
 
@@ -113,8 +115,9 @@ int FFmpegVideoDecoder::setup(int video_format, int width, int height,
         }
 
 #ifdef __SWITCH__
-    //    m_frames[i]->format = AV_PIX_FMT_NV12;
-        // m_frames[i]->format = AV_PIX_FMT_TX1;
+#ifndef BOREALIS_USE_DEKO3D
+        m_frames[i]->format = AV_PIX_FMT_YUV420P;
+#endif
 #else
 //        m_frames[i]->format = AV_PIX_FMT_VIDEOTOOLBOX;
         m_frames[i]->format = AV_PIX_FMT_YUV420P;
@@ -122,12 +125,14 @@ int FFmpegVideoDecoder::setup(int video_format, int width, int height,
         m_frames[i]->width  = width;
         m_frames[i]->height = height;
 
-        // int err = av_frame_get_buffer(m_frames[i], 0);
-        // if (err < 0) {
-        //     char errs[64]; 
-        //     brls::Logger::error("FFmpeg: Couldn't allocate frame buffer: {}", av_make_error_string(errs, 64, err));
-        //     return -1;
-        // }
+#ifndef BOREALIS_USE_DEKO3D
+        int err = av_frame_get_buffer(m_frames[i], 256);
+        if (err < 0) {
+            char errs[64]; 
+            brls::Logger::error("FFmpeg: Couldn't allocate frame buffer: {}", av_make_error_string(errs, 64, err));
+            return -1;
+        }
+#endif
     }
 
     m_ffmpeg_buffer =
@@ -282,7 +287,7 @@ AVFrame* FFmpegVideoDecoder::get_frame(bool native_frame) {
     int err = avcodec_receive_frame(m_decoder_context, tmp_frame);
 
     if (hw_device_ctx) {
-#ifdef __SWITCH__
+#ifdef BOREALIS_USE_DEKO3D
         return tmp_frame;
 #else
         if ((err = av_hwframe_transfer_data(m_frames[m_next_frame], tmp_frame, 0)) < 0) {
