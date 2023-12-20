@@ -125,6 +125,12 @@ void DKVideoRenderer::checkAndInitialize(int width, int height, AVFrame* frame) 
 void DKVideoRenderer::draw(NVGcontext* vg, int width, int height, AVFrame* frame) {
     checkAndInitialize(width, height, frame);
 
+    if (!m_video_render_stats.rendered_frames) {
+        m_video_render_stats.measurement_start_timestamp = LiGetMillis();
+    }
+
+    uint64_t before_render = LiGetMillis();
+
     dk::RasterizerState rasterizerState;
     dk::ColorState colorState;
     dk::ColorWriteState colorWriteState;
@@ -150,6 +156,9 @@ void DKVideoRenderer::draw(NVGcontext* vg, int width, int height, AVFrame* frame
     // Finish off this command list
     queue.submitCommands(cmdbuf.finishList());
     queue.waitIdle();
+
+    m_video_render_stats.total_render_time += LiGetMillis() - before_render;
+    m_video_render_stats.rendered_frames++;
 }
 
 VideoRenderStats* DKVideoRenderer::video_render_stats() {
