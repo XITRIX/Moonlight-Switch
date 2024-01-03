@@ -27,15 +27,15 @@ endif ()
 include(${EXTERN_PATH}/cmake/toolchain.cmake)
 
 # project info
-project(borealis_demo)
+project(Moonlight-Switch)
 set(VERSION_MAJOR "0")
 set(VERSION_MINOR "13")
 set(VERSION_ALTER "3")
 set(VERSION_BUILD "0")
-set(PACKAGE_NAME "com.borealis.demo")
-set(VITA_TITLEID  "BOREALIS0")
+set(PACKAGE_NAME "com.xitrix.moonlight")
+set(VITA_TITLEID  "MOONLIGHT0")
 set(VITA_VERSION  "01.00")
-set(PROJECT_AUTHOR "borealis")
+set(PROJECT_AUTHOR "XITRIX")
 set(PROJECT_ICON ${CMAKE_CURRENT_SOURCE_DIR}/resources/img/moonlight_icon.jpg)
 set(PROJECT_RESOURCES ${CMAKE_CURRENT_SOURCE_DIR}/resources)
 
@@ -73,7 +73,7 @@ if (PLATFORM_DESKTOP)
 elseif (PLATFORM_SWITCH)
     set(PLATFORM_LIBS
         # needed by borealis
-        glfw3 EGL glapi drm_nouveau
+        EGL glapi drm_nouveau
         # base lib
         nx m
     )
