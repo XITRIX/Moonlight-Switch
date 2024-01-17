@@ -27,7 +27,7 @@ endif ()
 include(${EXTERN_PATH}/cmake/toolchain.cmake)
 
 # project info
-project(Moonlight-Switch)
+project(Moonlight)
 set(VERSION_MAJOR "0")
 set(VERSION_MINOR "13")
 set(VERSION_ALTER "3")
@@ -189,14 +189,17 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${EXTERN_PATH}/cmake")
 #pkg_check_modules(expat REQUIRED IMPORTED_TARGET expat)
 #add_library(libexpat ALIAS PkgConfig::expat)
 
-find_package(PNG REQUIRED)
 find_package(CURL REQUIRED)
 find_package(mbedTLS REQUIRED)
 find_package(SDL2 REQUIRED)
-find_package(Opus REQUIRED)
 find_package(Jansson REQUIRED)
 find_package(EXPAT REQUIRED)
-#find_package(FFMPEG REQUIRED)
+
+find_library(PNG_LIBRARY png)
+message("png: ${PNG_LIBRARY}")
+
+find_library(OPUS_LIBRARY opus)
+message("opus: ${OPUS_LIBRARY}")
 
 find_library(AVCODEC_LIBRARY avcodec)
 message("avcodec: ${AVCODEC_LIBRARY}")
@@ -223,9 +226,9 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
         ${AVUTIL_LIBRARY}
         ${AVFORMAT_LIBRARY}
         ${SWRESAMPLE_LIBRARY}
-        opus
+        ${OPUS_LIBRARY}
+        ${PNG_LIBRARY}
         SDL2::SDL2
-        PNG::PNG
         ${APP_PLATFORM_LIB})
 
 if (APPLE)

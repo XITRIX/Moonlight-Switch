@@ -8,19 +8,7 @@
 using namespace brls;
 
 void openWebpage(std::string url) {
-
-#ifdef __SWITCH__
-    Result res;
-    WebCommonConfig config;
-
-    res = webPageCreate(&config, url.c_str());
-    if (res == 0) {
-        res = webConfigSetWhitelist(&config, "^.*");
-        webConfigSetFooter(&config, true);
-        if (res == 0)
-            res = webConfigShow(&config, nullptr);
-    }
-#endif
+    Application::getPlatform()->openBrowser(url);
 }
 
 AboutTab::AboutTab() {
