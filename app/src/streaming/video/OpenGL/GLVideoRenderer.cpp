@@ -240,7 +240,9 @@ void GLVideoRenderer::checkAndInitialize(int width, int height,
 void GLVideoRenderer::checkAndUpdateScale(int width, int height,
                                           AVFrame* frame) {
     if ((m_frame_width != frame->width) || (m_frame_height != frame->height) ||
-        (m_screen_width != width) || (m_screen_height != height)) {
+        (m_screen_width != width) || (m_screen_height != height) ||
+        !use_core_shaders()) // Dirty fix for GLES, need to investigate the source of issue
+    {
 
         m_frame_width = frame->width;
         m_frame_height = frame->height;

@@ -151,7 +151,7 @@ elseif (PLATFORM_IOS)
             "${CMAKE_CURRENT_SOURCE_DIR}/app/ios/iphoneos/Splash.storyboard"
             "${CMAKE_CURRENT_SOURCE_DIR}/app/ios/Images.xcassets"
             "${CMAKE_CURRENT_SOURCE_DIR}/app/ios/iOSBundleInfo.plist.in"
-            "borealis"
+            ${PROJECT_NAME}
             "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_ALTER}")
     set_target_properties(${PROJECT_NAME} PROPERTIES
             XCODE_EMBED_FRAMEWORKS_CODE_SIGN_ON_COPY "${CMAKE_CURRENT_SOURCE_DIR}/extern/borealis/library/lib/extern/angle/MetalANGLE.framework")
