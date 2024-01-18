@@ -153,6 +153,8 @@ elseif (PLATFORM_IOS)
             "${CMAKE_CURRENT_SOURCE_DIR}/app/ios/iOSBundleInfo.plist.in"
             "borealis"
             "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_ALTER}")
+    set_target_properties(${PROJECT_NAME} PROPERTIES
+            XCODE_EMBED_FRAMEWORKS_CODE_SIGN_ON_COPY "${CMAKE_CURRENT_SOURCE_DIR}/extern/borealis/library/lib/extern/angle/MetalANGLE.framework")
 endif ()
 
 target_include_directories(${PROJECT_NAME} PUBLIC
@@ -180,13 +182,15 @@ set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "${EXTERN_PATH}/cmake")
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${EXTERN_PATH}/cmake")
 #find_package(PkgConfig REQUIRED)
 
-find_package(CURL CONFIG REQUIRED)
+find_package(CURL REQUIRED)
 find_package(mbedTLS REQUIRED)
 find_package(SDL2 REQUIRED)
 find_package(Jansson REQUIRED)
 find_package(EXPAT REQUIRED)
-find_package(Opus CONFIG REQUIRED)
 find_package(PNG REQUIRED)
+
+find_library(OPUS_LIBRARY opus)
+message("opus: ${OPUS_LIBRARY}")
 
 find_library(AVCODEC_LIBRARY avcodec)
 message("avcodec: ${AVCODEC_LIBRARY}")
@@ -199,9 +203,6 @@ message("avutil: ${AVUTIL_LIBRARY}")
 
 find_library(SWRESAMPLE_LIBRARY swresample)
 message("swresample: ${SWRESAMPLE_LIBRARY}")
-
-target_include_directories(moonlight-common-c PUBLIC
-        ${MBEDTLS_INCLUDE})
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
         borealis
@@ -216,11 +217,12 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
         ${AVUTIL_LIBRARY}
         ${AVFORMAT_LIBRARY}
         ${SWRESAMPLE_LIBRARY}
-        Opus::opus
+        ${OPUS_LIBRARY}
         PNG::PNG
         SDL2::SDL2
         ${APP_PLATFORM_LIB})
 
 if (APPLE)
-    target_link_libraries(${PROJECT_NAME} PRIVATE "-framework CoreMedia" "-framework CoreVideo" "-framework VideoToolbox" "-framework AudioToolbox")
+    set(XCODE_ATTRIBUTE_CLANG_ENABLE_OBJC_ARC OFF)
+    target_link_libraries(${PROJECT_NAME} PRIVATE "-framework CoreMedia" "-framework VideoToolbox")
 endif ()

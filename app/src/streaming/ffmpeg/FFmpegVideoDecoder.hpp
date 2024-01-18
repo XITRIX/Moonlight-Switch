@@ -1,6 +1,8 @@
 #include "IFFmpegVideoDecoder.hpp"
 #pragma once
 
+#define m_frames_count 2
+
 class FFmpegVideoDecoder : public IFFmpegVideoDecoder {
   public:
     FFmpegVideoDecoder();
@@ -21,13 +23,13 @@ class FFmpegVideoDecoder : public IFFmpegVideoDecoder {
     AVBufferRef *hw_device_ctx = nullptr;
     const AVCodec* m_decoder = nullptr;
     AVCodecContext* m_decoder_context = nullptr;
-    AVFrame** m_frames = nullptr;
     AVFrame *tmp_frame = nullptr;
+    AVFrame* m_extra_frames[m_frames_count];
+    AVFrame* m_frames[m_frames_count];
 
     int m_stream_fps = 0;
     int m_frames_in = 0;
     int m_frames_out = 0;
-    int m_frames_count = 0;
     int m_current_frame = 0, m_next_frame = 0;
     uint32_t m_last_frame = 0;
 

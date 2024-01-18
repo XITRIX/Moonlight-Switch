@@ -99,16 +99,16 @@ int FFmpegVideoDecoder::setup(int video_format, int width, int height,
         return err;
     }
 
-    m_frames_count = 2;
-    m_frames = (AVFrame**)malloc(m_frames_count * sizeof(AVFrame*));
-    if (m_frames == NULL) {
-        brls::Logger::error("FFmpeg: Couldn't allocate frames");
-        return -1;
-    }
+//    m_frames = (AVFrame**)malloc(m_frames_count * sizeof(AVFrame*));
+//    if (m_frames == NULL) {
+//        brls::Logger::error("FFmpeg: Couldn't allocate frames");
+//        return -1;
+//    }
 
     tmp_frame = av_frame_alloc();
     for (int i = 0; i < m_frames_count; i++) {
-        m_frames[i] = av_frame_alloc();
+        m_extra_frames[i] = av_frame_alloc();
+        m_frames[i] = m_extra_frames[i];
         if (m_frames[i] == NULL) {
             brls::Logger::error("FFmpeg: Couldn't allocate frame");
             return -1;
@@ -116,24 +116,24 @@ int FFmpegVideoDecoder::setup(int video_format, int width, int height,
 
 #ifdef __SWITCH__
 #ifndef BOREALIS_USE_DEKO3D
-        m_frames[i]->format = AV_PIX_FMT_YUV420P;
+       m_frames[i]->format = AV_PIX_FMT_YUV420P;
 #endif
 #else
 //        m_frames[i]->format = AV_PIX_FMT_VIDEOTOOLBOX;
-        m_frames[i]->format = AV_PIX_FMT_YUV420P;
+       m_frames[i]->format = AV_PIX_FMT_YUV420P;
 #endif
-        m_frames[i]->width  = width;
-        m_frames[i]->height = height;
+       m_frames[i]->width  = width;
+       m_frames[i]->height = height;
 
 #ifndef BOREALIS_USE_DEKO3D
-        int err = av_frame_get_buffer(m_frames[i], 256);
-        if (err < 0) {
-            char errs[64]; 
-            brls::Logger::error("FFmpeg: Couldn't allocate frame buffer: {}", av_make_error_string(errs, 64, err));
-            return -1;
-        }
+//        int err = av_frame_get_buffer(m_frames[i], 256);
+//        if (err < 0) {
+//            char errs[64]; 
+//            brls::Logger::error("FFmpeg: Couldn't allocate frame buffer: {}", av_make_error_string(errs, 64, err));
+//            return -1;
+//        }
 #endif
-    }
+   }
 
     m_ffmpeg_buffer =
         (char*)malloc(DECODER_BUFFER_SIZE + AV_INPUT_BUFFER_PADDING_SIZE);
@@ -179,15 +179,15 @@ void FFmpegVideoDecoder::cleanup() {
         m_decoder_context = NULL;
     }
 
-    if (m_frames) {
-        for (int i = 0; i < m_frames_count; i++) {
-            if (m_frames[i])
-                av_frame_free(&m_frames[i]);
-        }
+//    if (m_frames) {
+       for (int i = 0; i < m_frames_count; i++) {
+        //    if (m_extra_frames[i])
+               av_frame_free(&m_extra_frames[i]);
+       }
 
-        free(m_frames);
-        m_frames = nullptr;
-    }
+//        free(m_frames);
+//        m_frames = nullptr;
+//    }
 
     if (tmp_frame) {
         av_frame_free(&tmp_frame);

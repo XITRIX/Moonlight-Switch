@@ -14,19 +14,12 @@ Moonlight-Switch is a port of [Moonlight Game Streaming Project](https://github.
   </p>
 </details>
 
-# If you cannot use bitrate higher than 10 Mbps - read this!
-To be able to use any streaming setting higher than 720p - resolution, 10MBbps - Bitrate, you need to overclock CPU of your console.
-
-This leads from lack of access to GPU decoder and because of that all decoding performs on CPU, while it is not powerfull enough to handle it.
+# How to reach higher bitrate
+To be able to use high bitrate setting especially with 1080p - resolution, you need to overclock CPU/GPU of your console.
 
 To learn more about that you can take a look at [Sys-Clk homebrew](https://github.com/retronx-team/sys-clk) or entire [Atmosphere build - 4IFIR](https://github.com/rashevskyv/4IFIR/blob/main/README_ENG.md) which includes everything you need to overclock your console
 
 I DO NOT RESPOSIBLE FOR ANY DAMAGE TO YOUR CONSOLE IF ANYTHING WILL GO WRONG! I am using 4IFIR by myself and not find any issue, but everything possible. So think by you own head and be responsible for what you do with your devices!
-
-# Attention for developers
-If you know how to debug Nintendo Switch Homebrew applications please let me know! I have no idea how to do this, I'm just an iOS developer who wants "click-click, UI debugger here we go" and not this GDB and Coredump stuff...
-
-Jokes aside, I seriously couldn't find any usefull information about it, all crashes shows ?? instead of function names and I cannot understand what I do wrong.
 
 # Installing
 1. Download latest Moonlight-Switch [release](https://github.com/XITRIX/Moonlight-Switch/releases).
@@ -91,13 +84,36 @@ ATTENTION! Currently there is no way to select language inside of app, it takes 
 1. Clone this repo with submodules by `git clone https://github.com/XITRIX/Moonlight-Switch.git --recursive`
 2. `cd` into folder
 
-## Switch:
-3. Install core Switch packages `dkp-pacman -Suy switch-dev`
-4. Install other packages `dkp-pacman -Suy switch-ffmpeg switch-mbedtls switch-opusfile switch-sdl2 switch-curl switch-libexpat switch-jansson switch-glfw switch-glm switch-libvpx switch-glad`
-5. Configure by `cmake -B build_switch -DPLATFORM_SWITCH=ON`
-6. Build by `make -C build_switch borealis_demo.nro -j$(nproc)`
-7. Moonlight-Switch.nro should be created. If it doesn't work, try to install missing packages
-8. If it still doesn't work, god bless you!
+```bash
+cd 'folder/to/store/the/sources'
+git clone https://github.com/XITRIX/Moonlight-Switch.git --recursive
+cd Moonlight-Switch
+```
+
+## Switch
+
+To build for Switch, a standard development environment must first be set up. In order to do so, [refer to the Getting Started guide](https://devkitpro.org/wiki/Getting_Started).
+
+```bash
+cmake -B build_switch -DPLATFORM_SWITCH=ON -DUSE_SDL2=ON
+make -C build_switch Moonlight-Switch.nro -j$(nproc)
+```
+
+## PC (Windows/Linux/MacOS)
+
+To build for PC, the following components are required:
+
+- cmake/make build system
+- A C++ compiler supporting the C++17 standard
+
+Please refer to the usual sources of information for your particular operating system. Usually the commands needed to build this project will look like this:
+
+```bash
+cmake -B build_pc -DPLATFORM_DESKTOP=ON -DCMAKE_BUILD_TYPE=Release
+make -C build_pc -j$(nproc)
+```
+
+Also, please note that the `resources` folder must be available in the working directory, otherwise the program will fail to find the shaders.
 
 ## iOS:
 
