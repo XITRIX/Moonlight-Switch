@@ -112,7 +112,7 @@ ATTENTION! Currently there is no way to select language inside of app, it takes 
 ./extern/vcpkg/vcpkg --triplet arm64-ios mbedtls
 ./extern/vcpkg/vcpkg --triplet arm64-ios jansson
 ./extern/vcpkg/vcpkg --triplet arm64-ios ffmpeg
-./extern/vcpkg/vcpkg --triplet arm64-ios curl
+./extern/vcpkg/vcpkg --triplet arm64-ios "curl[mbedtls]"
 ./extern/vcpkg/vcpkg --triplet arm64-ios libpng
 ./extern/vcpkg/vcpkg --triplet arm64-ios opus
 ```

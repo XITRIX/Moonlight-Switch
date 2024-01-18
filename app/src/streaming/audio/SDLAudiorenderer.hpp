@@ -2,8 +2,8 @@
 
 #include "IAudioRenderer.hpp"
 
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_audio.h>
+#include <SDL.h>
+#include <SDL_audio.h>
 #include <opus/opus_multistream.h>
 
 #define MAX_CHANNEL_COUNT 6

@@ -180,26 +180,13 @@ set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "${EXTERN_PATH}/cmake")
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${EXTERN_PATH}/cmake")
 #find_package(PkgConfig REQUIRED)
 
-#pkg_check_modules(jansson REQUIRED IMPORTED_TARGET jansson)
-#add_library(libjansson ALIAS PkgConfig::jansson)
-
-#pkg_check_modules(opus REQUIRED IMPORTED_TARGET opus)
-#add_library(libopus ALIAS PkgConfig::opus)
-
-#pkg_check_modules(expat REQUIRED IMPORTED_TARGET expat)
-#add_library(libexpat ALIAS PkgConfig::expat)
-
-find_package(CURL REQUIRED)
+find_package(CURL CONFIG REQUIRED)
 find_package(mbedTLS REQUIRED)
 find_package(SDL2 REQUIRED)
 find_package(Jansson REQUIRED)
 find_package(EXPAT REQUIRED)
-
-find_library(PNG_LIBRARY png)
-message("png: ${PNG_LIBRARY}")
-
-find_library(OPUS_LIBRARY opus)
-message("opus: ${OPUS_LIBRARY}")
+find_package(Opus CONFIG REQUIRED)
+find_package(PNG REQUIRED)
 
 find_library(AVCODEC_LIBRARY avcodec)
 message("avcodec: ${AVCODEC_LIBRARY}")
@@ -212,6 +199,9 @@ message("avutil: ${AVUTIL_LIBRARY}")
 
 find_library(SWRESAMPLE_LIBRARY swresample)
 message("swresample: ${SWRESAMPLE_LIBRARY}")
+
+target_include_directories(moonlight-common-c PUBLIC
+        ${MBEDTLS_INCLUDE})
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
         borealis
@@ -226,11 +216,11 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
         ${AVUTIL_LIBRARY}
         ${AVFORMAT_LIBRARY}
         ${SWRESAMPLE_LIBRARY}
-        ${OPUS_LIBRARY}
-        ${PNG_LIBRARY}
+        Opus::opus
+        PNG::PNG
         SDL2::SDL2
         ${APP_PLATFORM_LIB})
 
 if (APPLE)
-    target_link_libraries(${PROJECT_NAME} PRIVATE "-framework CoreMedia" "-framework VideoToolbox")
+    target_link_libraries(${PROJECT_NAME} PRIVATE "-framework CoreMedia" "-framework CoreVideo" "-framework VideoToolbox" "-framework AudioToolbox")
 endif ()
