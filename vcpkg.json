@@ -1,0 +1,16 @@
+{
+  "dependencies": [
+    {
+      "name": "curl",
+      "features": [
+        "mbedtls"
+      ]
+    },
+    "ffmpeg",
+    "jansson",
+    "libpng",
+    "mbedtls",
+    "opus",
+    "expat"
+  ]
+}
