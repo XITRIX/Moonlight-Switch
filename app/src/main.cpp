@@ -36,6 +36,7 @@
 #endif
 
 #include <SDL_main.h>
+#include <main_args.hpp>
 
 using namespace brls::literals; // for _i18n
 
@@ -99,8 +100,10 @@ int main(int argc, char* argv[]) {
     brls::getStyle().addMetric("about/padding_sides", 75);
     brls::getStyle().addMetric("about/description_margin", 50);
 
-    // Create and push the main activity to the stack
-    brls::Application::pushActivity(new MainActivity());
+    // Create and push the main activity to the stack if cannot run game from arguments
+    if (!startFromArgs(argc, argv)) {
+        brls::Application::pushActivity(new MainActivity());
+    }
 
     brls::Application::enableDebuggingView(Settings::instance().write_log());
     brls::Application::setSwapInputKeys(Settings::instance().swap_ui_keys());
