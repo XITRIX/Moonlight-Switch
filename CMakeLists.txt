@@ -147,10 +147,10 @@ elseif (PLATFORM_SWITCH)
     list(APPEND APP_PLATFORM_LIB swresample dav1d z)
 elseif (PLATFORM_IOS)
     ios_bundle(
-            "${CMAKE_CURRENT_SOURCE_DIR}/app/ios/tvos/Splash.storyboard"
-            "${CMAKE_CURRENT_SOURCE_DIR}/app/ios/iphoneos/Splash.storyboard"
-            "${CMAKE_CURRENT_SOURCE_DIR}/app/ios/Images.xcassets"
-            "${CMAKE_CURRENT_SOURCE_DIR}/app/ios/iOSBundleInfo.plist.in"
+            "${CMAKE_CURRENT_SOURCE_DIR}/app/platforms/ios/tvos/Splash.storyboard"
+            "${CMAKE_CURRENT_SOURCE_DIR}/app/platforms/ios/iphoneos/Splash.storyboard"
+            "${CMAKE_CURRENT_SOURCE_DIR}/app/platforms/ios/Images.xcassets"
+            "${CMAKE_CURRENT_SOURCE_DIR}/app/platforms/ios/iOSBundleInfo.plist.in"
             ${PROJECT_NAME}
             "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_ALTER}")
     set_target_properties(${PROJECT_NAME} PROPERTIES

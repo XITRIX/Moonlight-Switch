@@ -205,7 +205,6 @@ void MoonlightSession::start(ServerCallback<bool> callback) {
         break;
     case H265:
         m_config.supportedVideoFormats = VIDEO_FORMAT_H265;
-        m_config.hevcBitratePercentageMultiplier = 75;
         break;
     case AV1:
         m_config.supportedVideoFormats = VIDEO_FORMAT_AV1_MAIN10;

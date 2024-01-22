@@ -108,11 +108,7 @@ SettingsTab::SettingsTab() {
     hwDecoding->init("settings/use_hw_decoding"_i18n, Settings::instance().use_hw_decoding(),
                      [](bool value) { Settings::instance().set_use_hw_decoding(value); });
 
-#ifdef __SWITCH__
-    const float mbpsMaxLimit = 50000;
-#else
     const float mbpsMaxLimit = 100000;
-#endif
 
     const float limitOffset = 500;
     const float limit = mbpsMaxLimit - limitOffset;
