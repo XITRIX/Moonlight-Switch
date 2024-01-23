@@ -173,6 +173,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
         app/src/streaming/video/OpenGL
         app/src/utils
         extern/CImg
+        extern/hacBrewPack
         extern/zeroconf
         ${MBEDTLS_INCLUDE_DIRS}
         ${APP_PLATFORM_INCLUDE})
@@ -205,6 +206,7 @@ find_library(SWRESAMPLE_LIBRARY swresample)
 message("swresample: ${SWRESAMPLE_LIBRARY}")
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
+        HackBrewPack
         borealis
         moonlight-common-c
         Jansson::Jansson

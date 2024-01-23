@@ -10,3 +10,6 @@
 [submodule "extern/vcpkg"]
 	path = extern/vcpkg
 	url = https://github.com/microsoft/vcpkg.git
+[submodule "extern/hacBrewPack"]
+	path = extern/hacBrewPack
+	url = https://github.com/The-4n/hacBrewPack
