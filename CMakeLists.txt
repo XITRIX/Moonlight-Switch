@@ -285,6 +285,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
         app/src/streaming/video/Metal
         app/src/utils
         extern/CImg
+        extern/hacBrewPack
         ${MBEDTLS_INCLUDE_DIRS}
         ${APP_PLATFORM_INCLUDE})
 target_compile_options(${PROJECT_NAME} PRIVATE -ffunction-sections -fdata-sections ${APP_PLATFORM_OPTION})
@@ -339,6 +340,7 @@ else()
 endif ()
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
+        HackBrewPack
         borealis
         moonlight-common-c
         Jansson::Jansson
