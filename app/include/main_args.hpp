@@ -1,6 +1,10 @@
 //
-// Created by Даниил Виноградов on 22.01.2024.
+//  main_args.hpp
+//  Moonlight
 //
+//  Created by XITRIX on 22.01.2024.
+//
+
 
 #pragma once
 

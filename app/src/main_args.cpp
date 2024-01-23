@@ -1,8 +1,8 @@
 //
-//  main_activity.cpp
+//  main_args.cpp
 //  Moonlight
 //
-//  Created by XITRIX on 26.05.2021.
+//  Created by XITRIX on 22.01.2024.
 //
 
 #include "main_args.hpp"
@@ -29,22 +29,20 @@ bool startFromArgs(int argc, char** argv) {
 
     Application::enableDebuggingView(true);
 
-//    Threading::delay(1000, [args]() {
-        Logger::debug("Host {}", args[0]);
-        Logger::debug("Id {}", args[1]);
-        Logger::debug("Name {}", args[2]);
-//    });
+    Logger::debug("Host {}", args[0]);
+    Logger::debug("Id {}", args[1]);
+    Logger::debug("Name {}", args[2]);
 
     if (args_pref[0].empty() || args_pref[1].empty()) { return false; }
 
     auto hosts = Settings::instance().hosts();
-    if (auto it = std::find_if(hosts.begin(), hosts.end(), [args](Host host) {
+    if (auto it = std::find_if(hosts.begin(), hosts.end(), [args](const Host& host) {
         return host.mac == args[0];
     }); it != std::end(hosts)) {
         Host host = *it;
         AppInfo info { args[2], stoi(args[1]) };
 
-        AppletFrame* frame = new AppletFrame(new StreamingView(host, info));
+        auto* frame = new AppletFrame(new StreamingView(host, info));
         frame->setHeaderVisibility(brls::Visibility::GONE);
         frame->setFooterVisibility(brls::Visibility::GONE);
         Application::pushActivity(new Activity(frame));
