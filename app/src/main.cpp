@@ -115,6 +115,7 @@ int main(int argc, char* argv[]) {
 
     auto home = Application::getPlatform()->getHomeDirectory("Moonlight-Switch");
     Settings::instance().set_working_dir(home);
+    Settings::instance().set_launch_path(argc > 0 ? argv[0] : "");
     brls::Logger::info("Working dir, {}", home);
 
     // Have the application register an action on every activity that will quit

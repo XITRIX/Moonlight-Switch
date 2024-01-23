@@ -8,6 +8,8 @@
 #include "favorite_tab.hpp"
 #include "app_cell.hpp"
 #include "main_tabs_view.hpp"
+#include "forwarder_maker.hpp"
+#include <cstdio>
 
 using namespace brls;
 using namespace brls::literals;
@@ -49,6 +51,25 @@ void FavoriteTab::updateAppList() {
             AppInfo info{app.name, app.app_id};
             auto* cell = new AppCell(host, info, 0);
             gridView->addView(cell);
+
+            #ifdef PLATFORM_SWITCH
+            cell->registerAction(
+                "Make forwarder", BUTTON_X,
+                [host, app](View* view) {
+                    const int rc = makeForwarder(host, app, false);
+                    char message[160];
+                    if (rc == EXIT_SUCCESS) {
+                        std::snprintf(message, sizeof(message), "Forwarder installed");
+                    } else {
+                        std::snprintf(message, sizeof(message), "Forwarder install failed\n0x%X", rc);
+                    }
+
+                    auto dialog = new Dialog(message);
+                    dialog->addButton("common/cancel"_i18n, [](){});
+                    dialog->open();
+                    return true;
+            });
+            #endif
 
             cell->registerAction(
                 "app_list/unstar"_i18n, BUTTON_Y,

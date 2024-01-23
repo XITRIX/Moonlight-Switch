@@ -14,16 +14,3 @@ if (NOT MULTICAST_DISABLED)
     set(MDNS_BUILD_EXAMPLE OFF)
     add_subdirectory(mdns)
 endif ()
-
-#include(FindPkgConfig)
-#find_package(PkgConfig REQUIRED)
-#pkg_check_modules(LIBAV REQUIRED
-#        libavformat
-#        libavcodec
-#        libavutil
-#        )
-
-
-
-#pkg_check_modules(av REQUIRED IMPORTED_TARGET avcodec avformat avutil)
-#add_library(libav ALIAS PkgConfig::av)

@@ -47,7 +47,12 @@ struct Host {
 
 class Settings : public Singleton<Settings> {
   public:
+    [[nodiscard]] std::string working_dir() const { return m_working_dir; }
+
     void set_working_dir(const std::string& working_dir);
+
+    [[nodiscard]] std::string launch_path() const { return m_launch_path; }
+    void set_launch_path(const std::string& launch_path) { m_launch_path = launch_path; }
 
     [[nodiscard]] std::string key_dir() const { return m_key_dir; }
 
@@ -179,6 +184,7 @@ class Settings : public Singleton<Settings> {
 
   private:
     std::string m_working_dir;
+    std::string m_launch_path;
     std::string m_key_dir;
     std::string m_boxart_dir;
     std::string m_log_path;
