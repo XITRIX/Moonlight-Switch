@@ -85,11 +85,9 @@ elseif (PLATFORM_PSV)
     add_definitions(-D__psp2__ -D__PSV__)
 endif ()
 
-
 # building target
 program_target(${PROJECT_NAME} "${MAIN_SRC}")
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 17)
-
 
 # building release file
 if (PLATFORM_DESKTOP)
@@ -181,14 +179,16 @@ target_compile_options(${PROJECT_NAME} PRIVATE -ffunction-sections -fdata-sectio
 
 set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "${EXTERN_PATH}/cmake")
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${EXTERN_PATH}/cmake")
-#find_package(PkgConfig REQUIRED)
 
-find_package(CURL REQUIRED)
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(dav1d REQUIRED IMPORTED_TARGET dav1d)
+
 find_package(mbedTLS REQUIRED)
 find_package(SDL2 REQUIRED)
 find_package(Jansson REQUIRED)
 find_package(EXPAT REQUIRED)
 find_package(PNG REQUIRED)
+find_package(CURL REQUIRED)
 
 find_library(OPUS_LIBRARY opus)
 message("opus: ${OPUS_LIBRARY}")
@@ -215,6 +215,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
         mbed::tls
         mbed::x509
         mbed::crypto
+        PkgConfig::dav1d
         ${AVCODEC_LIBRARY}
         ${AVUTIL_LIBRARY}
         ${AVFORMAT_LIBRARY}
