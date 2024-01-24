@@ -172,6 +172,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
         app/src/utils
         extern/CImg
         extern/hacBrewPack
+        extern/hacPack/hacPack-Tools/hacPackTools-NACP
         extern/zeroconf
         ${MBEDTLS_INCLUDE_DIRS}
         ${APP_PLATFORM_INCLUDE})
@@ -180,8 +181,7 @@ target_compile_options(${PROJECT_NAME} PRIVATE -ffunction-sections -fdata-sectio
 set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "${EXTERN_PATH}/cmake")
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${EXTERN_PATH}/cmake")
 
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(dav1d REQUIRED IMPORTED_TARGET dav1d)
+#find_package(PkgConfig REQUIRED)
 
 find_package(mbedTLS REQUIRED)
 find_package(SDL2 REQUIRED)
@@ -207,6 +207,7 @@ message("swresample: ${SWRESAMPLE_LIBRARY}")
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
         HackBrewPack
+        HacPackToolNACP
         borealis
         moonlight-common-c
         Jansson::Jansson
@@ -215,7 +216,6 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
         mbed::tls
         mbed::x509
         mbed::crypto
-        PkgConfig::dav1d
         ${AVCODEC_LIBRARY}
         ${AVUTIL_LIBRARY}
         ${AVFORMAT_LIBRARY}

@@ -55,6 +55,8 @@ void FavoriteTab::updateAppList() {
                 "Make forwarder", BUTTON_X,
                 [host, app](View* view) {
                     makeForwarder(host, app);
+                    auto dialog = new Dialog("Forwarder was generated");
+                    dialog->open();
                     return true;
             });
             cell->registerAction(

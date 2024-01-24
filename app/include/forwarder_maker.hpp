@@ -8,4 +8,5 @@
 #pragma once
 #include <Settings.hpp>
 
+void prepareNacp();
 int makeForwarder(const Host& host, const App& app);

@@ -24,6 +24,7 @@ int makeForwarder(const Host& host, const App& app) {
     memset(&settings, 0, sizeof(settings));
     memset(&cnmt_ctx, 0, sizeof(cnmt_ctx));
 
+    prepareNacp();
 //    printf("hacBrewPack %s by The-4n\n\n", HACBREWPACK_VERSION);
 
     // Hardcode default temp directory
@@ -73,8 +74,6 @@ int makeForwarder(const Host& host, const App& app) {
     filepath_set(&keypath, (Settings::instance().working_dir() + "/forwarder/prod.keys").c_str());
     settings.title_id = strtoull("01723bae95e06000", NULL, 16);
     strcpy(settings.titlename, "Moonlight");
-    settings.noromfs = 1;
-    settings.nologo = 1;
 
     // Remove existing temp and nca directories and Create new ones + nsp directory
     printf("Removing existing temp and nca directories\n");
