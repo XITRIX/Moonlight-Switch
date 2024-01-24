@@ -120,7 +120,6 @@ endif ()
 program_target(${PROJECT_NAME} "${MAIN_SRC}")
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 20)
 
-
 # building release file
 if (PLATFORM_DESKTOP)
     if (BUNDLE_MACOS_APP)
@@ -304,6 +303,7 @@ endif()
 find_package(Jansson REQUIRED)
 find_package(EXPAT REQUIRED)
 find_package(PNG REQUIRED)
+find_package(CURL REQUIRED)
 
 find_library(OPUS_LIBRARY opus)
 message("opus: ${OPUS_LIBRARY}")

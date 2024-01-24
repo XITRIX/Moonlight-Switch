@@ -8,6 +8,7 @@
 #include "favorite_tab.hpp"
 #include "app_cell.hpp"
 #include "main_tabs_view.hpp"
+#include "forwarder_maker.hpp"
 
 using namespace brls;
 using namespace brls::literals;
@@ -50,6 +51,12 @@ void FavoriteTab::updateAppList() {
             auto* cell = new AppCell(host, info, 0);
             gridView->addView(cell);
 
+            cell->registerAction(
+                "Make forwarder", BUTTON_X,
+                [host, app](View* view) {
+                    makeForwarder(host, app);
+                    return true;
+            });
             cell->registerAction(
                 "app_list/unstar"_i18n, BUTTON_Y,
                 [this, gridView, cell, host, app](View* view) {

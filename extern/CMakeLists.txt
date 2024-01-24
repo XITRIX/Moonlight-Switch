@@ -33,19 +33,10 @@ add_library(HackBrewPack
         hacBrewPack/sha.c
         hacBrewPack/utils.c
 )
-#target_link_libraries(HackBrewPack PRIVATE mbed::crypto)
-target_link_libraries(HackBrewPack PRIVATE ${MBEDCRYPTO_LIBRARY})
-target_include_directories(HackBrewPack SYSTEM PRIVATE ${MBEDTLS_INCLUDE_DIRS})
 
-#include(FindPkgConfig)
-#find_package(PkgConfig REQUIRED)
-#pkg_check_modules(LIBAV REQUIRED
-#        libavformat
-#        libavcodec
-#        libavutil
-#        )
-
-
-
-#pkg_check_modules(av REQUIRED IMPORTED_TARGET avcodec avformat avutil)
-#add_library(libav ALIAS PkgConfig::av)
+target_link_libraries(HackBrewPack PRIVATE
+        mbed::tls
+        mbed::x509
+        mbed::crypto
+)
+target_include_directories(HackBrewPack PRIVATE ${MBEDTLS_INCLUDE_DIRS})

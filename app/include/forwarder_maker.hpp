@@ -8,4 +8,4 @@
 #pragma once
 #include <Settings.hpp>
 
-void makeForwarder(Host host, App app);
+int makeForwarder(const Host& host, const App& app);
