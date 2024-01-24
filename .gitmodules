@@ -15,4 +15,7 @@
 	url = https://github.com/mjansson/mdns.git
 [submodule "extern/hacBrewPack"]
 	path = extern/hacBrewPack
-	url = https://github.com/The-4n/hacBrewPack
+	url = https://github.com/XITRIX/hacBrewPack
+[submodule "extern/hacPack"]
+	path = extern/hacPack
+	url = https://github.com/XITRIX/hacPack.git
