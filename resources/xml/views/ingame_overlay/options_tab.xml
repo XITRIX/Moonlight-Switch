@@ -30,6 +30,13 @@
 
             <brls:BooleanCell
                 id="touchscreen_mouse_mode"/>
+
+            <brls:Header
+                    title="@i18n/settings/single_joycon"
+                    paddingTop="60"/>
+
+            <brls:BooleanCell
+                    id="swap_stick_to_dpad"/>
             
             <brls:Header
                 id="volume_header"

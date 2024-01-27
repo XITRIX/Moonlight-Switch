@@ -135,6 +135,9 @@ OptionsTab::OptionsTab(StreamingView* streamView) : streamView(streamView) {
                                [this](bool value) {
                                    Settings::instance().set_touchscreen_mouse_mode(value);
                                });
+    
+    swapStickToDpad->init("settings/swap_stick_to_dpad"_i18n, Settings::instance().swap_joycon_stick_to_dpad(),
+                          [](bool value) { Settings::instance().set_swap_joycon_stick_to_dpad(value); });
 
     onscreenLogButton->init("streaming/show_logs"_i18n,
                             Settings::instance().write_log(), [](bool value) {

@@ -97,6 +97,7 @@ GamepadState MoonlightInputManager::getControllerState(int controllerNum,
     brls::ControllerState rawController;
     brls::ControllerState controller;
 
+    brls::Application::setSwapHalfJoyconStickToDpad(Settings::instance().swap_joycon_stick_to_dpad());
     brls::Application::getPlatform()->getInputManager()->updateControllerState(
         &rawController, controllerNum);
     controller = mapController(rawController);

@@ -13,10 +13,8 @@
 // MARK: - Ingame Overlay View
 class IngameOverlay : public brls::Box {
   public:
-    IngameOverlay(StreamingView* streamView);
-    ~IngameOverlay();
-
-    void show();
+    explicit IngameOverlay(StreamingView* streamView);
+    ~IngameOverlay() override;
 
     brls::AppletFrame* getAppletFrame() override;
     bool isTranslucent() override { return true; }
@@ -31,7 +29,7 @@ class IngameOverlay : public brls::Box {
 // MARK: - Logout Tab
 class LogoutTab : public brls::Box {
   public:
-    LogoutTab(StreamingView* streamView);
+    explicit LogoutTab(StreamingView* streamView);
 
   private:
     StreamingView* streamView;
@@ -43,8 +41,8 @@ class LogoutTab : public brls::Box {
 // MARK: - Debug Tab
 class OptionsTab : public brls::Box {
   public:
-    OptionsTab(StreamingView* streamView);
-    ~OptionsTab();
+    explicit OptionsTab(StreamingView* streamView);
+    ~OptionsTab() override;
 
   private:
     StreamingView* streamView;
@@ -52,6 +50,7 @@ class OptionsTab : public brls::Box {
     BRLS_BIND(brls::DetailCell, inputOverlayButton, "input_overlay");
     BRLS_BIND(brls::SelectorCell, keyboardType, "keyboard_type");
     BRLS_BIND(brls::BooleanCell, touchscreenMouseMode, "touchscreen_mouse_mode");
+    BRLS_BIND(brls::BooleanCell, swapStickToDpad, "swap_stick_to_dpad");
     BRLS_BIND(brls::Header, volumeHeader, "volume_header");
     BRLS_BIND(brls::Slider, volumeSlider, "volume_slider");
     BRLS_BIND(brls::Header, mouseHeader, "mouse_speed_header");
