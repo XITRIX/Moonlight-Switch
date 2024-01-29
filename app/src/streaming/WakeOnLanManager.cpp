@@ -2,9 +2,8 @@
 #include "Data.hpp"
 #include "Settings.hpp"
 #include <borealis.hpp>
-#include <errno.h>
-#include <string.h>
-#include <unistd.h>
+#include <cerrno>
+#include <cstring>
 
 #if defined(__linux) || defined(__APPLE__) || defined(__SWITCH__)
 #define UNIX_SOCKS
@@ -61,7 +60,7 @@ static Data create_payload(const Host& host) {
 
 #if defined(UNIX_SOCKS)
 GSResult<bool> send_packet_unix(const Host& host, const Data& payload) {
-    struct sockaddr_in udpClient, udpServer;
+    struct sockaddr_in udpClient{}, udpServer{};
     int broadcast = 1;
 
     int udpSocket = socket(AF_INET, SOCK_DGRAM, 0);

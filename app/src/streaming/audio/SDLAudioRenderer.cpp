@@ -19,14 +19,12 @@
 
 #include "SDLAudiorenderer.hpp"
 
-#include <stdbool.h>
-
 #include <Limelight.h>
 #include <Settings.hpp>
 
 #include <algorithm>
 #include <climits>
-#include <stdio.h>
+#include <cstdio>
 
 int SDLAudioRenderer::init(int audio_configuration,
                            const POPUS_MULTISTREAM_CONFIGURATION opus_config,
@@ -49,7 +47,7 @@ int SDLAudioRenderer::init(int audio_configuration,
     want.samples = 1024;
 
     dev =
-        SDL_OpenAudioDevice(NULL, 0, &want, &have, SDL_AUDIO_ALLOW_ANY_CHANGE);
+        SDL_OpenAudioDevice(nullptr, 0, &want, &have, SDL_AUDIO_ALLOW_ANY_CHANGE);
     if (dev == 0) {
         printf("Failed to open audio: %s\n", SDL_GetError());
         return -1;
@@ -63,7 +61,7 @@ int SDLAudioRenderer::init(int audio_configuration,
 }
 
 void SDLAudioRenderer::cleanup() {
-    if (decoder != NULL)
+    if (decoder != nullptr)
         opus_multistream_decoder_destroy(decoder);
 
     SDL_CloseAudioDevice(dev);
@@ -74,9 +72,9 @@ void SDLAudioRenderer::decode_and_play_sample(char* sample_data,
     int decodeLen =
         opus_multistream_decode(decoder, (const unsigned char*)sample_data,
                                 sample_length, pcmBuffer, FRAME_SIZE, 0);
-    for (int i = 0; i < FRAME_SIZE * MAX_CHANNEL_COUNT; i++) {
-        int scale = pcmBuffer[i] * (Settings::instance().get_volume() / 100.0);
-        pcmBuffer[i] = std::min(SHRT_MAX, std::max(SHRT_MIN, scale));
+    for (short & i : pcmBuffer) {
+        int scale = (int)((double)i * (Settings::instance().get_volume() / 100.0));
+        i = (short) std::min(SHRT_MAX, std::max(SHRT_MIN, scale));
     }
 
     if (decodeLen > 0) {

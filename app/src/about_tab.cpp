@@ -1,6 +1,8 @@
 #include "about_tab.hpp"
 #include <fmt/core.h>
 
+#include <utility>
+
 #ifdef __SWITCH__
 #include <switch.h>
 #endif
@@ -8,7 +10,7 @@
 using namespace brls;
 
 void openWebpage(std::string url) {
-    Application::getPlatform()->openBrowser(url);
+    Application::getPlatform()->openBrowser(std::move(url));
 }
 
 AboutTab::AboutTab() {
@@ -26,7 +28,7 @@ AboutTab::AboutTab() {
     github->title->setText("about/link_github"_i18n);
     github->subtitle->setText(githubLink);
     github->image->setImageFromRes("img/links/github" + themePart + ".png");
-    github->registerClickAction([this, githubLink](View* view) {
+    github->registerClickAction([githubLink](View* view) {
         openWebpage(githubLink);
         return true;
     });
@@ -36,7 +38,7 @@ AboutTab::AboutTab() {
     patreon->title->setText("about/link_patreon"_i18n);
     patreon->subtitle->setText(patreonLink);
     patreon->image->setImageFromRes("img/links/patreon.png");
-    patreon->registerClickAction([this, patreonLink](View* view) {
+    patreon->registerClickAction([patreonLink](View* view) {
         openWebpage(patreonLink);
         return true;
     });
@@ -48,7 +50,7 @@ AboutTab::AboutTab() {
     gbatemp->title->setText("about/link_gbatemp"_i18n);
     gbatemp->subtitle->setText(gbatempLink);
     gbatemp->image->setImageFromRes("img/links/gbatemp.png");
-    gbatemp->registerClickAction([this, gbatempLink](View* view) {
+    gbatemp->registerClickAction([gbatempLink](View* view) {
         openWebpage(gbatempLink);
         return true;
     });

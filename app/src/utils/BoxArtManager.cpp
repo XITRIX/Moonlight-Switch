@@ -33,7 +33,7 @@ void BoxArtManager::set_data(Data data, int app_id) {
     m_has_boxart[app_id] = true;
 }
 
-void BoxArtManager::compress_texture(std::string path) {
+void BoxArtManager::compress_texture(const std::string& path) {
     using namespace cimg_library;
 
     /*
@@ -44,9 +44,9 @@ void BoxArtManager::compress_texture(std::string path) {
 
     CImg<unsigned char> pic(path.c_str());
     if (float(pic.width()) / float(pic.height()) < 0.75f) {
-        pic = pic.resize(300, float(pic.height()) * 300.0f / float(pic.width()), 1, 3);
+        pic = pic.resize(300, int(float(pic.height()) * 300.0f / float(pic.width())), 1, 3);
     } else {
-        pic = pic.resize(float(pic.width()) * 400.0f / float(pic.height()), 400, 1, 3);
+        pic = pic.resize(int(float(pic.width()) * 400.0f / float(pic.height())), 400, 1, 3);
     }
     pic.save(path.c_str());
 }

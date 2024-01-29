@@ -15,19 +15,19 @@ class AddHostTab : public brls::Box
 {
   public:
     AddHostTab();
-    ~AddHostTab();
+    ~AddHostTab() override;
 
     static brls::View* create();
 
   private:
     void findHost();
-    void connectHost(std::string address);
-    void fillSearchBox(GSResult<std::vector<Host>> hostsRes);
-    void pauseSearching();
-    void startSearching();
+    void connectHost(const std::string& address);
+    void fillSearchBox(const GSResult<std::vector<Host>>& hostsRes);
+    static void pauseSearching();
+    static void startSearching();
     brls::Event<GSResult<std::vector<Host>>>::Subscription searchSubscription;
 
-    bool searchBoxIpExists(std::string ip);
+    bool searchBoxIpExists(const std::string& ip);
     
     BRLS_BIND(brls::InputCell, hostIP, "hostIP");
     BRLS_BIND(brls::DetailCell, connect, "connect");

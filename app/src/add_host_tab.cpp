@@ -40,18 +40,18 @@ AddHostTab::AddHostTab() {
     setActionAvailable(BUTTON_X, GameStreamClient::instance().can_find_host());
 }
 
-void AddHostTab::fillSearchBox(GSResult<std::vector<Host>> hostsRes) {
+void AddHostTab::fillSearchBox(const GSResult<std::vector<Host>>& hostsRes) {
     loader->setVisibility(DiscoverManager::instance().isPaused()
                               ? brls::Visibility::GONE
                               : brls::Visibility::VISIBLE);
 
     if (hostsRes.isSuccess()) {
         std::vector<Host> hosts = hostsRes.value();
-        for (Host host : hosts) {
+        for (const Host& host : hosts) {
             if (searchBoxIpExists(host.address))
                 continue;
 
-            brls::DetailCell* hostButton = new brls::DetailCell();
+            auto hostButton = new brls::DetailCell();
             hostButton->setText(host.hostname);
             hostButton->setDetailText(host.address);
             hostButton->setDetailTextColor(
@@ -69,13 +69,11 @@ void AddHostTab::fillSearchBox(GSResult<std::vector<Host>> hostsRes) {
     }
 }
 
-bool AddHostTab::searchBoxIpExists(std::string ip) {
-    for (View* child : searchBox->getChildren()) {
-        DetailCell* cell = dynamic_cast<DetailCell*>(child);
-        if (cell->detail->getFullText() == ip)
-            return true;
-    }
-    return false;
+bool AddHostTab::searchBoxIpExists(const std::string& ip) {
+    return std::any_of(searchBox->getChildren().begin(), searchBox->getChildren().end(), [ip](View* child) {
+        auto cell = dynamic_cast<DetailCell*>(child);
+        return cell->detail->getFullText() == ip;
+    });
 }
 
 void AddHostTab::findHost() {
@@ -116,15 +114,15 @@ void AddHostTab::findHost() {
 #endif
 }
 
-void AddHostTab::connectHost(std::string address) {
+void AddHostTab::connectHost(const std::string& address) {
     pauseSearching();
 
-    Dialog* loader = createLoadingDialog("add_host/try_connect"_i18n);
-    loader->open();
+    Dialog* loaderView = createLoadingDialog("add_host/try_connect"_i18n);
+    loaderView->open();
 
     GameStreamClient::instance().connect(
-        address, [this, loader](GSResult<SERVER_DATA> result) {
-            loader->close([this, result] {
+        address, [this, loaderView](const GSResult<SERVER_DATA>& result) {
+                loaderView->close([this, result] {
                 if (result.isSuccess()) {
                     Host host{.address = result.value().address,
                               .hostname = result.value().hostname,
@@ -152,23 +150,23 @@ void AddHostTab::connectHost(std::string address) {
                     ASYNC_RETAIN
                     GameStreamClient::instance().pair(
                         result.value().address, pin,
-                        [ASYNC_TOKEN, host, dialog](GSResult<bool> result) {
+                        [ASYNC_TOKEN, host, dialog](const GSResult<bool>& result) {
                             ASYNC_RELEASE
-                            dialog->dismiss([this, result, host] {
+                            dialog->dismiss([result, host] {
                                 if (result.isSuccess()) {
                                     Settings::instance().add_host(host);
                                     MainTabs::getInstanse()->refillTabs();
-                                    this->startSearching();
+                                    AddHostTab::startSearching();
                                 } else {
-                                    showError(result.error(), [this] {
-                                        this->startSearching();
+                                    showError(result.error(), [] {
+                                        AddHostTab::startSearching();
                                     });
                                 }
                             });
                         });
                 } else {
                     showError(result.error(),
-                              [this] { this->startSearching(); });
+                              [] { AddHostTab::startSearching(); });
                 }
             });
         });
