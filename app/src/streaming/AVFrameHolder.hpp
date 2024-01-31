@@ -1,5 +1,6 @@
 #include "Singleton.hpp"
 #include <mutex>
+#include <functional>
 
 extern "C" {
 #include <libavcodec/avcodec.h>

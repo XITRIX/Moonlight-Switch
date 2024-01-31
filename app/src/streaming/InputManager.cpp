@@ -47,6 +47,20 @@ MoonlightInputManager::MoonlightInputManager() {
                                 state.pressed ? KEY_ACTION_DOWN : KEY_ACTION_UP,
                                 modifiers);
         });
+
+    brls::Application::getPlatform()
+        ->getInputManager()
+        ->getControllerSensorStateChanged()
+        ->subscribe([this](brls::SensorEvent event) {
+            switch (event.type) {
+                case brls::SensorEventType::ACCEL:
+                    LiSendControllerMotionEvent((uint8_t)event.controllerIndex, LI_MOTION_TYPE_ACCEL, event.data[0], event.data[1], event.data[2]);
+                    break;
+                case brls::SensorEventType::GYRO:
+                    LiSendControllerMotionEvent((uint8_t)event.controllerIndex, LI_MOTION_TYPE_GYRO, event.data[0], event.data[1], event.data[2]);
+                    break;
+            }
+        });
 }
 
 void MoonlightInputManager::reloadButtonMappingLayout() {
