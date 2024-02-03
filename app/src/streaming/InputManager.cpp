@@ -33,7 +33,8 @@ MoonlightInputManager::MoonlightInputManager() {
             if (scroll.y != 0) {
                 //            signed char count = scroll.y > 0 ? 1 : -1;
                 //            LiSendScrollEvent(count);
-                LiSendScrollEvent(scroll.y);
+                brls::Logger::info("Mouse scroll sended: {}", scroll.y);
+                LiSendHighResScrollEvent( short(scroll.y));
             }
         });
 
@@ -127,8 +128,8 @@ void MoonlightInputManager::dropInput() {
 
 GamepadState MoonlightInputManager::getControllerState(int controllerNum,
                                                        bool specialKey) {
-    brls::ControllerState rawController;
-    brls::ControllerState controller;
+    brls::ControllerState rawController{};
+    brls::ControllerState controller{};
 
     brls::Application::setSwapHalfJoyconStickToDpad(Settings::instance().swap_joycon_stick_to_dpad());
     brls::Application::getPlatform()->getInputManager()->updateControllerState(
