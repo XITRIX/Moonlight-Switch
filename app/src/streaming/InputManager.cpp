@@ -83,8 +83,27 @@ void MoonlightInputManager::updateTouchScreenPanDelta(
 void MoonlightInputManager::handleRumble(unsigned short controller,
                                          unsigned short lowFreqMotor,
                                          unsigned short highFreqMotor) {
+    brls::Logger::debug("Rumble {} {}", lowFreqMotor, highFreqMotor);
+    rumbleCache[controller].lowFreqMotor = lowFreqMotor;
+    rumbleCache[controller].highFreqMotor = highFreqMotor;
     brls::Application::getPlatform()->getInputManager()->sendRumble(
-        controller, lowFreqMotor, highFreqMotor);
+        controller, 
+        rumbleCache[controller].lowFreqMotor,
+        rumbleCache[controller].highFreqMotor);
+}
+
+void MoonlightInputManager::handleRumbleTriggers(uint16_t controllerNumber, 
+                                                  uint16_t leftTriggerMotor, 
+                                                  uint16_t rightTriggerMotor) {
+                                                    brls::Logger::debug("Rumble Trigger {} {}", leftTriggerMotor, rightTriggerMotor);
+    rumbleCache[controllerNumber].leftTriggerMotor = leftTriggerMotor;
+    rumbleCache[controllerNumber].rightTriggerMotor = rightTriggerMotor;
+    brls::Application::getPlatform()->getInputManager()->sendRumble(
+        controllerNumber, 
+        rumbleCache[controllerNumber].lowFreqMotor,
+        rumbleCache[controllerNumber].highFreqMotor,
+        rumbleCache[controllerNumber].leftTriggerMotor,
+        rumbleCache[controllerNumber].rightTriggerMotor);
 }
 
 void MoonlightInputManager::dropInput() {

@@ -41,6 +41,8 @@ class MoonlightSession {
     static void connection_log_message(const char* format, ...);
     static void connection_rumble(unsigned short, unsigned short,
                                   unsigned short);
+    static void connection_rumble_triggers(uint16_t controllerNumber, 
+                                           uint16_t leftTriggerMotor, uint16_t rightTriggerMotor);
     static void connection_status_update(int);
 
     static int video_decoder_setup(int, int, int, int, void*, int);

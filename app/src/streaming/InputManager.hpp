@@ -34,10 +34,17 @@ struct GamepadState {
 };
 
 struct MouseStateS {
-    float scroll_y;
-    bool l_pressed;
-    bool m_pressed;
-    bool r_pressed;
+    float scroll_y = 0;
+    bool l_pressed = 0;
+    bool m_pressed = 0;
+    bool r_pressed = 0;
+};
+
+struct RumbleValues {
+    unsigned short lowFreqMotor;
+    unsigned short highFreqMotor;
+    uint16_t leftTriggerMotor;
+    uint16_t rightTriggerMotor;
 };
 
 class MoonlightInputManager : public Singleton<MoonlightInputManager> {
@@ -45,14 +52,15 @@ class MoonlightInputManager : public Singleton<MoonlightInputManager> {
     MoonlightInputManager();
     void dropInput();
     void handleInput();
-    void handleRumble(unsigned short controller, unsigned short lowFreqMotor,
-                      unsigned short highFreqMotor);
+    void handleRumble(unsigned short controller, unsigned short lowFreqMotor, unsigned short highFreqMotor);
+    void handleRumbleTriggers(unsigned short controller, unsigned short lowFreqMotor, unsigned short highFreqMotor);
     void updateTouchScreenPanDelta(brls::PanGestureStatus panStatus);
     void reloadButtonMappingLayout();
     void leftMouseClick();
     void rightMouseClick();
 
   private:
+    RumbleValues rumbleCache[GAMEPADS_MAX];
     GamepadState lastGamepadStates[GAMEPADS_MAX];
     brls::ControllerButton mappingButtons[brls::_BUTTON_MAX];
     std::optional<brls::PanGestureStatus> panStatus;

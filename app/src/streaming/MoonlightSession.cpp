@@ -100,6 +100,14 @@ void MoonlightSession::connection_rumble(unsigned short controller,
                                                    highFreqMotor);
 }
 
+
+void MoonlightSession::connection_rumble_triggers(uint16_t controllerNumber, 
+                                                  uint16_t leftTriggerMotor, 
+                                                  uint16_t rightTriggerMotor) 
+{
+    // MoonlightInputManager::instance().handleRumbleTriggers(controllerNumber, leftTriggerMotor, rightTriggerMotor);                                                
+}
+
 void MoonlightSession::connection_status_update(int connection_status) {
     if (m_active_session) {
         m_active_session->m_connection_status_is_poor =
@@ -221,6 +229,7 @@ void MoonlightSession::start(ServerCallback<bool> callback) {
     m_connection_callbacks.connectionTerminated = connection_terminated;
     m_connection_callbacks.logMessage = connection_log_message;
     m_connection_callbacks.rumble = connection_rumble;
+    m_connection_callbacks.rumbleTriggers = connection_rumble_triggers;
     m_connection_callbacks.connectionStatusUpdate = connection_status_update;
 
     LiInitializeVideoCallbacks(&m_video_callbacks);
