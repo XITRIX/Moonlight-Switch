@@ -36,7 +36,7 @@ void startRumbling() {
     rumbleLastButtonClicked = std::chrono::high_resolution_clock::now();
     if (!rumblingActive) {
         rumblingActive = true;
-        inputManager->sendRumble(0, 32512, 32512);
+        inputManager->sendRumble(0, 20000, 20000);
     }
 }
 
