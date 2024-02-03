@@ -14,6 +14,10 @@ static int mkdir(const char* dir, mode_t mode) {
 }
 #endif
 
+#ifndef PATH_MAX
+#define PATH_MAX 1024
+#endif
+
 static int mkdirtree(const char* directory) {
     char buffer[PATH_MAX];
     char* p = buffer;

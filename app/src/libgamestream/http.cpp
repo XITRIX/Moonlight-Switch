@@ -52,7 +52,13 @@ static size_t _write_curl(void* contents, size_t size, size_t nmemb,
 
 int http_init(const std::string key_directory) {
     if (!curl) {
+#if LIBCURL_VERSION_NUM >= 0x075600
+#ifdef USE_OPENSSL_CRYPTO
+        curl_global_sslset(CURLSSLBACKEND_OPENSSL, NULL, NULL);
+#elif USE_MBEDTLS_CRYPTO
         curl_global_sslset(CURLSSLBACKEND_MBEDTLS, NULL, NULL);
+#endif
+#endif
         curl_global_init(CURL_GLOBAL_ALL);
         brls::Logger::info("Curl: {}", curl_version());
     } else {

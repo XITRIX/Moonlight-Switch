@@ -33,20 +33,27 @@ set(VERSION_MINOR "0")
 set(VERSION_ALTER "0")
 set(VERSION_BUILD "1")
 set(PACKAGE_NAME "com.xitrix.moonlight")
-set(VITA_TITLEID  "MOONLIGHT0")
-set(VITA_VERSION  "01.00")
+set(PSN_TITLE_ID  "MNTL00000")
+set(PSN_VERSION  "01.00")
 set(PROJECT_AUTHOR "XITRIX")
 set(PROJECT_ICON ${CMAKE_CURRENT_SOURCE_DIR}/resources/img/moonlight_icon.jpg)
 set(PROJECT_RESOURCES ${CMAKE_CURRENT_SOURCE_DIR}/resources)
 
 add_definitions(
         -DAPP_VERSION="${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_ALTER}"
-        -DUSE_MBEDTLS_CRYPTO
         -DMULTICAST_DISABLED
         -Dcimg_display=0
         -Dcimg_use_png
         -Dcimg_no_system_calls
         -DBRLS_I18N_PREFIX=\"main/\")
+
+if (PLATFORM_PSV)
+    set(USE_OPENSSL_CRYPTO ON)
+    add_definitions(-DUSE_OPENSSL_CRYPTO)
+else ()
+    set(USE_MBEDTLS_CRYPTO ON)
+    add_compile_definitions(USE_MBEDTLS_CRYPTO)
+endif ()
 
 if (USE_LIBROMFS)
     add_libromfs(${PROJECT_NAME} ${PROJECT_RESOURCES})
@@ -56,11 +63,6 @@ add_subdirectory(extern)
 
 # setting src and include
 file(GLOB_RECURSE MAIN_SRC app/src/*.cpp)
-
-# Fmt
-list(APPEND MAIN_SRC
-        ${BOREALIS_LIBRARY}/lib/extern/fmt/src/format.cc
-        ${BOREALIS_LIBRARY}/lib/extern/fmt/src/os.cc)
 
 set(PLATFORM_OPTION)
 if (PLATFORM_DESKTOP)
@@ -119,15 +121,15 @@ elseif (PLATFORM_PSV)
     set(VITA_MKSFOEX_FLAGS "${VITA_MKSFOEX_FLAGS} -d ATTRIBUTE2=12") # max heap size mode
     vita_create_self(${PROJECT_NAME}.self ${PROJECT_NAME} UNSAFE)
     if (USE_LIBROMFS)
-        vita_create_vpk(${PROJECT_NAME}.vpk ${VITA_TITLEID} ${PROJECT_NAME}.self
-            VERSION ${VITA_VERSION}
+        vita_create_vpk(${PROJECT_NAME}.vpk ${PSN_TITLE_ID} ${PROJECT_NAME}.self
+            VERSION ${PSN_VERSION}
             NAME ${PROJECT_NAME}
             FILE ${CMAKE_SOURCE_DIR}/psv/sce_sys sce_sys
             FILE ${CMAKE_SOURCE_DIR}/psv/module/ module
         )
     else()
-        vita_create_vpk(${PROJECT_NAME}.vpk ${VITA_TITLEID} ${PROJECT_NAME}.self
-            VERSION ${VITA_VERSION}
+        vita_create_vpk(${PROJECT_NAME}.vpk ${PSN_TITLE_ID} ${PROJECT_NAME}.self
+            VERSION ${PSN_VERSION}
             NAME ${PROJECT_NAME}
             FILE ${CMAKE_SOURCE_DIR}/resources resources
             FILE ${CMAKE_SOURCE_DIR}/psv/sce_sys sce_sys
@@ -182,8 +184,15 @@ set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "${EXTERN_PATH}/cmake")
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${EXTERN_PATH}/cmake")
 #find_package(PkgConfig REQUIRED)
 
+if (USE_MBEDTLS_CRYPTO)
+    find_package(mbedTLS REQUIRED)
+else ()
+    find_package(OpenSSL REQUIRED)
+endif ()
+
+
 find_package(CURL REQUIRED)
-find_package(mbedTLS REQUIRED)
+#find_package(mbedTLS REQUIRED)
 find_package(SDL2 REQUIRED)
 find_package(Jansson REQUIRED)
 find_package(EXPAT REQUIRED)
@@ -210,9 +219,6 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
         Jansson::Jansson
         EXPAT::EXPAT
         CURL::libcurl
-        mbed::tls
-        mbed::x509
-        mbed::crypto
         ${AVCODEC_LIBRARY}
         ${AVUTIL_LIBRARY}
         ${AVFORMAT_LIBRARY}
@@ -222,7 +228,22 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
         SDL2::SDL2
         ${APP_PLATFORM_LIB})
 
+if (USE_MBEDTLS_CRYPTO)
+    target_link_libraries(${PROJECT_NAME} PRIVATE
+            mbed::tls
+            mbed::x509
+            mbed::crypto)
+else ()
+    target_link_libraries(${PROJECT_NAME} PRIVATE
+            OpenSSL::SSL
+            OpenSSL::Crypto)
+endif ()
+
 if (APPLE)
     set(XCODE_ATTRIBUTE_CLANG_ENABLE_OBJC_ARC OFF)
     target_link_libraries(${PROJECT_NAME} PRIVATE "-framework CoreMedia" "-framework VideoToolbox")
+endif ()
+
+if (PLATFORM_PSV)
+    target_link_libraries(${PROJECT_NAME} PRIVATE mp3lame libGLESv2_stub)
 endif ()

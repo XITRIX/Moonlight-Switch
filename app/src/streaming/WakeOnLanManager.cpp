@@ -5,7 +5,7 @@
 #include <cerrno>
 #include <cstring>
 
-#if defined(__linux) || defined(__APPLE__) || defined(__SWITCH__)
+#if defined(__linux) || defined(__APPLE__) || defined(__SWITCH__) || defined(__vita__)
 #define UNIX_SOCKS
 #include <arpa/inet.h>
 #include <netdb.h>

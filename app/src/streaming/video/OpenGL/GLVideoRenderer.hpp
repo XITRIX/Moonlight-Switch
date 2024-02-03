@@ -1,6 +1,15 @@
 #include "IVideoRenderer.hpp"
 #if defined(__LIBRETRO__)
 #include "glsym.h"
+#elif defined(__PSV__)
+#define GL_GLEXT_PROTOTYPES
+#include <GLES2/gl2.h>
+#include <GLES2/gl2ext.h>
+extern "C"
+{
+#include <gpu_es4/psp2_pvr_hint.h>
+#include <psp2/kernel/modulemgr.h>
+}
 #else
 #include <glad/glad.h>
 #endif

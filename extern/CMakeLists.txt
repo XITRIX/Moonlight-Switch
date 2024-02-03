@@ -2,10 +2,14 @@
 add_subdirectory(borealis/library)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/")
-find_library(MbedTLS MbedTLS)
 
 set(BUILD_SHARED_LIBS OFF)
-set(USE_MBEDTLS ON)
+
+if (USE_MBEDTLS_CRYPTO)
+    find_library(MbedTLS MbedTLS)
+    set(USE_MBEDTLS ON)
+endif ()
+
 add_subdirectory(moonlight-common-c)
 
 #include(FindPkgConfig)

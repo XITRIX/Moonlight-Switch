@@ -1,3 +1,5 @@
+#ifdef USE_MBEDTLS_CRYPTO
+
 #include "MbedTLSCryptoManager.hpp"
 #include "Settings.hpp"
 #include <mbedtls/aes.h>
@@ -263,3 +265,5 @@ static bool _generate_new_cert_key_pair() {
     mbedtls_entropy_free(&entropy);
     return true;
 }
+
+#endif
