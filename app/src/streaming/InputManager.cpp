@@ -30,10 +30,12 @@ MoonlightInputManager::MoonlightInputManager() {
         ->getInputManager()
         ->getMouseScrollOffsetChanged()
         ->subscribe([](brls::Point scroll) {
+            if (scroll.x != 0) {
+                brls::Logger::info("Mouse scroll X sended: {}", scroll.x);
+                LiSendHighResHScrollEvent( short(scroll.x));
+            }
             if (scroll.y != 0) {
-                //            signed char count = scroll.y > 0 ? 1 : -1;
-                //            LiSendScrollEvent(count);
-                brls::Logger::info("Mouse scroll sended: {}", scroll.y);
+                brls::Logger::info("Mouse scroll Y sended: {}", scroll.y);
                 LiSendHighResScrollEvent( short(scroll.y));
             }
         });

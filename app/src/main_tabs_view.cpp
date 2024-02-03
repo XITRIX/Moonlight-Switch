@@ -55,6 +55,7 @@ void MainTabs::refillTabs() {
     addSeparator();
     addTab("tabs/about"_i18n, AboutTab::create);
     focusTab(0);
+    sidebar->setContentOffsetY(-40, false);
 }
 
 View* MainTabs::create() { return new MainTabs(); }

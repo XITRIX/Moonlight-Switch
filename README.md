@@ -23,7 +23,7 @@ I DO NOT RESPOSIBLE FOR ANY DAMAGE TO YOUR CONSOLE IF ANYTHING WILL GO WRONG! I 
 
 # Installing
 1. Download latest Moonlight-Switch [release](https://github.com/XITRIX/Moonlight-Switch/releases).
-2. Put Moonlight-Switch.nro to sdcard:/switch/Moonlight-Switch;
+2. Put Moonlight.nro to sdcard:/switch/Moonlight-Switch;
 3. Launch hbmenu over *Title Redirection* (for FULL RAM access);
 4. Launch moonlight.
 
@@ -81,11 +81,11 @@ If you'd like to test your translation, you could follow build instructions, or 
 ATTENTION! Currently there is no way to select language inside of app, it takes from system settings, so it is impossible to add locatization, that HOS doesn't support (that happend with Czech language).
 
 # Build Moonlight-Switch
-1. Clone this repo with submodules by `git clone https://github.com/XITRIX/Moonlight-Switch.git --recursive`
-2. `cd` into folder
 
 ```bash
 cd 'folder/to/store/the/sources'
+
+# Clone this repo with submodules
 git clone https://github.com/XITRIX/Moonlight-Switch.git --recursive
 cd Moonlight-Switch
 ```
@@ -95,8 +95,8 @@ cd Moonlight-Switch
 To build for Switch, a standard development environment must first be set up. In order to do so, [refer to the Getting Started guide](https://devkitpro.org/wiki/Getting_Started).
 
 ```bash
-cmake -B build_switch -DPLATFORM_SWITCH=ON -DUSE_SDL2=ON
-make -C build_switch Moonlight-Switch.nro -j$(nproc)
+cmake -B build/switch -DPLATFORM_SWITCH=ON
+make -C build/switch Moonlight.nro -j$(nproc)
 ```
 
 ## PC (Windows/Linux/MacOS)

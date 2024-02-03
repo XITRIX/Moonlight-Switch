@@ -19,7 +19,7 @@ class MainTabs : public brls::TabFrame {
     void refillTabs();
     static View* create();
 
-    void willAppear(bool resetState = false) override;
+    void willAppear(bool resetState) override;
     FavoriteTab* getFavoriteTab() { return favoriteTab; }
     void updateFavoritesIfNeeded();
 
