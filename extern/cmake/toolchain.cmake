@@ -65,6 +65,7 @@ elseif (PLATFORM_SWITCH)
     endif ()
     set(DEVKITPRO $ENV{DEVKITPRO} CACHE BOOL "DEVKITPRO")
     set(__SWITCH__ ON)
+    add_compile_definitions("HAS_SOCKLEN_T=1") # Requires by GitHub Workflow for Enet
     set(CMAKE_C_FLAGS "-I${DEVKITPRO}/libnx/include -I${DEVKITPRO}/portlibs/switch/include")
     set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS}")
     include(${DEVKITPRO}/cmake/Switch.cmake REQUIRED)

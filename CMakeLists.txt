@@ -26,6 +26,10 @@ endif ()
 # toolchain
 include(${EXTERN_PATH}/cmake/toolchain.cmake)
 
+set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "${EXTERN_PATH}/cmake")
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${EXTERN_PATH}/cmake")
+#find_package(PkgConfig REQUIRED)
+
 # project info
 project(Moonlight)
 set(VERSION_MAJOR "1")
@@ -59,6 +63,13 @@ if (USE_LIBROMFS)
     add_libromfs(${PROJECT_NAME} ${PROJECT_RESOURCES})
 endif ()
 
+if (USE_MBEDTLS_CRYPTO)
+    find_package(MbedTLS REQUIRED)
+else ()
+    find_package(OpenSSL REQUIRED)
+endif ()
+
+set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
 add_subdirectory(extern)
 
 # setting src and include
@@ -180,19 +191,8 @@ target_include_directories(${PROJECT_NAME} PUBLIC
         ${APP_PLATFORM_INCLUDE})
 target_compile_options(${PROJECT_NAME} PRIVATE -ffunction-sections -fdata-sections ${APP_PLATFORM_OPTION})
 
-set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "${EXTERN_PATH}/cmake")
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${EXTERN_PATH}/cmake")
-#find_package(PkgConfig REQUIRED)
-
-if (USE_MBEDTLS_CRYPTO)
-    find_package(mbedTLS REQUIRED)
-else ()
-    find_package(OpenSSL REQUIRED)
-endif ()
-
-
 find_package(CURL REQUIRED)
-#find_package(mbedTLS REQUIRED)
+#find_package(MbedTLS REQUIRED)
 find_package(SDL2 REQUIRED)
 find_package(Jansson REQUIRED)
 find_package(EXPAT REQUIRED)
@@ -213,12 +213,18 @@ message("avutil: ${AVUTIL_LIBRARY}")
 find_library(SWRESAMPLE_LIBRARY swresample)
 message("swresample: ${SWRESAMPLE_LIBRARY}")
 
+# Recompiled CURL with Mbedtls support for Switch
+if(PLATFORM_SWITCH)
+    target_link_libraries(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/lib/libcurl.a)
+else()
+    target_link_libraries(${PROJECT_NAME} PRIVATE CURL::libcurl)
+endif ()
+
 target_link_libraries(${PROJECT_NAME} PRIVATE
         borealis
         moonlight-common-c
         Jansson::Jansson
         EXPAT::EXPAT
-        CURL::libcurl
         ${AVCODEC_LIBRARY}
         ${AVUTIL_LIBRARY}
         ${AVFORMAT_LIBRARY}
@@ -242,8 +248,6 @@ endif ()
 if (APPLE)
     set(XCODE_ATTRIBUTE_CLANG_ENABLE_OBJC_ARC OFF)
     target_link_libraries(${PROJECT_NAME} PRIVATE "-framework CoreMedia" "-framework VideoToolbox")
-endif ()
-
-if (PLATFORM_PSV)
+elseif (PLATFORM_PSV)
     target_link_libraries(${PROJECT_NAME} PRIVATE mp3lame libGLESv2_stub)
 endif ()

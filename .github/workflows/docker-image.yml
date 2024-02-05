@@ -1,0 +1,53 @@
+name: Build Moonlight-Switch
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+    
+    container:
+      image: docker://devkitpro/devkita64:20240120
+
+    steps:
+    - name: Check out repository
+      uses: actions/checkout@v1
+      with:
+        submodules: recursive
+
+    - name: Remove useless fonts
+      run: rm -rf ./resources/font
+
+    - name: Remove enet
+      run: dkp-pacman --noconfirm -R switch-enet
+
+    - name: Run cmake
+      continue-on-error: true
+      run: cmake -B build/switch -DPLATFORM_SWITCH=ON
+    
+    - name: Dirty second cmake run
+      run: cmake -B build/switch -DPLATFORM_SWITCH=ON
+
+    - name: Run build
+      run: make -C build/switch Moonlight.nro -j8
+
+    - name: Rename artifact 
+      run: mv build/switch/Moonlight.nro build/switch/Moonlight-Switch.nro
+
+    - name: Upload Moonlight-Switch.nro
+      uses: actions/upload-artifact@master
+      with:
+        name: Moonlight-Switch.nro
+        path: build/switch/Moonlight-Switch.nro
+
+    - name: Upload Moonlight-Switch.elf
+      uses: actions/upload-artifact@master
+      with:
+        name: Debug.elf
+        path: build/switch/Moonlight.elf
