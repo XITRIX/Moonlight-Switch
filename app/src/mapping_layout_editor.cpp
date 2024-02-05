@@ -6,6 +6,8 @@
 //
 
 #include "mapping_layout_editor.hpp"
+
+#include <utility>
 #include "button_selecting_dialog.hpp"
 
 //#include <borealis/platforms/switch/swkbd.hpp>
@@ -14,7 +16,7 @@ using namespace brls;
 
 MappingLayoutEditor::MappingLayoutEditor(int layoutNumber,
                                          std::function<void(void)> dismissCb)
-    : layoutNumber(layoutNumber), dismissCb(dismissCb) {
+    : dismissCb(std::move(dismissCb)), layoutNumber(layoutNumber) {
     std::vector<KeyMappingLayout>* layouts =
         Settings::instance().get_mapping_laouts();
 
@@ -86,7 +88,7 @@ MappingLayoutEditor::MappingLayoutEditor(int layoutNumber,
 
     int counter = 0;
     for (ControllerButton button : buttons) {
-        Button* buttonView = new Button();
+        auto buttonView = new Button();
         buttonView->setStyle(&BUTTONSTYLE_BORDERED);
 
         buttonView->registerAction(
@@ -126,7 +128,7 @@ MappingLayoutEditor::MappingLayoutEditor(int layoutNumber,
                     Hint::getKeyIcon(button, true),
                 [this, layouts, buttonView,
                  button](std::vector<ControllerButton> selectedButtons) {
-                    if (selectedButtons.size() > 0) {
+                    if (!selectedButtons.empty()) {
                         if (selectedButtons[0] == button) {
                             buttonView->setText(Hint::getKeyIcon(button, true));
                             buttonView->setTextColor(
@@ -164,7 +166,7 @@ void MappingLayoutEditor::renameLayout() {
     std::string title =
         Settings::instance().get_mapping_laouts()->at(layoutNumber).title;
     Application::getPlatform()->getImeManager()->openForText(
-        [this](std::string text) {
+        [this](const std::string& text) {
             this->titleLabel->setText(
                 brls::Hint::getKeyIcon(ControllerButton::BUTTON_RB, true) +
                 "  " + text);
@@ -175,7 +177,7 @@ void MappingLayoutEditor::renameLayout() {
 }
 
 void MappingLayoutEditor::removeLayout() {
-    Dialog* dialog =
+    auto dialog =
         new Dialog("mapping_layout_editor/remove_dialog_title"_i18n);
     dialog->addButton("common/cancel"_i18n, []() {});
     dialog->addButton("common/remove"_i18n, [this]() {
