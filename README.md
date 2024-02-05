@@ -38,7 +38,7 @@ With touch screen you can move your coursor, tap to left click, scroll 2 fingers
 
 While touching screen ZR and ZL buttons will work like left and right mouse buttons.
 
-Also While touching screen L and R sticks will work like scrolling wheel.
+Also while touching screen L and R sticks will work like scrolling wheel.
 
 USB mouse working as well.
 
@@ -48,14 +48,28 @@ You can use onscreen keyboard, tap 3 fingers on screen to show it.
 USB keyboard working as well.
 
 ## Gamepad
-By default Switch gamepad configured as X360 gamepad (A/B and X/Y swapped). Key mapping available in application settings.
+By default, Switch gamepad configured as X360 gamepad (A/B and X/Y swapped). Key mapping available in application settings.
 
 Up to 5 gamepads (includes handheld mode) supported. Half of joycons are also supported.
+
+## SixAxis
+You should configure your Sunshine server to recognise controller as DS4 one to be able to use Gyro and Accelerometer. Only works for player 1 controller.
 
 ## Ingame overlay
 To open overlay, press - and + key simultaneously by default or Hold ESC on keyboard.
 
 Key combination and holding time are configurable in settings.
+
+## NSP forwarder
+App supports NSP forwarders to start stream immediately with predefined configuration. Add app you want to launch in Favorites list first.
+
+You'll need to add thees arguments to the forwarder:
+- `--host` - Mac address of your PC (you could find it in /switch/Moonlight-Switch/settings.json)
+- `--appid` - ID of the app to launch
+- `--appname` - The name of the app without any spacings
+
+example:
+`--host=a2:34:de:ad:12:3b --appid=1233211234 --appname=Steam`
 
 # Localization
 - English (100%)
@@ -109,8 +123,8 @@ To build for PC, the following components are required:
 Please refer to the usual sources of information for your particular operating system. Usually the commands needed to build this project will look like this:
 
 ```bash
-cmake -B build_pc -DPLATFORM_DESKTOP=ON -DCMAKE_BUILD_TYPE=Release
-make -C build_pc -j$(nproc)
+cmake -B build/pc -DPLATFORM_DESKTOP=ON -DCMAKE_BUILD_TYPE=Release
+make -C build/pc -j$(nproc)
 ```
 
 Also, please note that the `resources` folder must be available in the working directory, otherwise the program will fail to find the shaders.
@@ -139,12 +153,10 @@ Also, please note that the `resources` folder must be available in the working d
 # 1. Generate a Xcode project
 # IOS_CODE_SIGN_IDENTITY: code is not signed when IOS_CODE_SIGN_IDENTITY is empty
 # IOS_GUI_IDENTIFIER: optional, default is com.borealis.demo
-cmake -B build-ios -G Xcode -DPLATFORM_IOS=ON -DPLATFORM=OS64 -DDEPLOYMENT_TARGET=13.0 \
-  -DIOS_CODE_SIGN_IDENTITY="Your identity" \
-  -DIOS_GUI_IDENTIFIER="com.xitrix.moonlight"
+cmake -B build/ios -G Xcode -DPLATFORM_IOS=ON
 
 # 2. open project in Xcode
-open build-ios/*.xcodeproj
+open build/ios/*.xcodeproj
 
 # 3. Set up Team and Bundle Identifiers in Xcode, then connect devices to run.
 ```
