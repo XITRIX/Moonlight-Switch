@@ -5,7 +5,8 @@
         "stream_start": "Failed to start stream...",
         "unknown_error": "Unknown problem has been occured...",
         "host_not_found": "Host PC not found...",
-        "ip_not_obtained": "Can't obtain IP address..."
+        "ip_not_obtained": "Can't obtain IP address...",
+        "applet_not_supported": "This app cannot be launched in Applet Mode\nPlease, use Title Redirection (By default it's hold R and start any game)"
     },
     "common": {
         "close": "Close",

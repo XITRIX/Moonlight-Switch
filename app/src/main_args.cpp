@@ -9,9 +9,28 @@
 #include <borealis.hpp>
 #include "streaming_view.hpp"
 
+#ifdef __SWITCH__
+#include <switch.h>
+#endif
+
 using namespace brls;
 
+bool canStartApp(int argc, char** argv) {
+#ifdef __SWITCH__
+    AppletType at = appletGetAppletType();
+    if (at != AppletType_Application && at != AppletType_SystemApplication) {
+        auto dialog = new Dialog("error/applet_not_supported"_i18n);
+        dialog->addButton("common/close"_i18n, [] {});
+        dialog->open();
+        return false;
+    }
+#endif
+    return true;
+}
+
 bool startFromArgs(int argc, char** argv) {
+    if (!canStartApp(argc, argv)) return true;
+
     if (argc <= 1) return false;
 
     std::string args_pref[3] = {"--host=", "--appid=", "--appname="};
