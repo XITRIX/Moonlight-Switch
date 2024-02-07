@@ -166,8 +166,9 @@ elseif (PLATFORM_IOS)
             "${CMAKE_CURRENT_SOURCE_DIR}/app/platforms/ios/iOSBundleInfo.plist.in"
             ${PROJECT_NAME}
             "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_ALTER}")
-    set_target_properties(${PROJECT_NAME} PROPERTIES
-            XCODE_EMBED_FRAMEWORKS_CODE_SIGN_ON_COPY "${CMAKE_CURRENT_SOURCE_DIR}/extern/borealis/library/lib/extern/angle/MetalANGLE.framework")
+    list(APPEND IOS_FRAMEWORKS ${CMAKE_CURRENT_SOURCE_DIR}/extern/borealis/library/lib/extern/angle/MetalANGLE.framework)
+    set_target_properties(${PROJECT_NAME} PROPERTIES 
+        XCODE_EMBED_FRAMEWORKS_CODE_SIGN_ON_COPY ON)
 endif ()
 
 target_include_directories(${PROJECT_NAME} PUBLIC
@@ -215,7 +216,7 @@ message("swresample: ${SWRESAMPLE_LIBRARY}")
 
 # Recompiled CURL with Mbedtls support for Switch
 if(PLATFORM_SWITCH)
-    target_link_libraries(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/lib/libcurl.a)
+    target_link_libraries(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/lib/switch/libcurl.a)
 else()
     target_link_libraries(${PROJECT_NAME} PRIVATE CURL::libcurl)
 endif ()
@@ -244,6 +245,11 @@ else ()
             OpenSSL::SSL
             OpenSSL::Crypto)
 endif ()
+
+if (PLATFORM_IOS)
+    set_target_properties(${PROJECT_NAME} PROPERTIES
+        XCODE_EMBED_FRAMEWORKS "${IOS_FRAMEWORKS}")
+endif()
 
 if (APPLE)
     set(XCODE_ATTRIBUTE_CLANG_ENABLE_OBJC_ARC OFF)
