@@ -40,18 +40,20 @@ SettingsTab::SettingsTab() {
     // Inflate the tab from the XML file
     this->inflateFromXMLRes("xml/tabs/settings.xml");
 
-    std::vector<std::string> resolutions = {"720p", "1080p"};
+    std::vector<std::string> resolutions = {"720p", "1080p", "Native"};
     resolution->setText("settings/resolution"_i18n);
     resolution->setData(resolutions);
     switch (Settings::instance().resolution()) {
         GET_SETTINGS(resolution, 720, 0);
         GET_SETTINGS(resolution, 1080, 1);
+        GET_SETTINGS(resolution, -1, 2);
         DEFAULT;
     }
     resolution->getEvent()->subscribe([](int selected) {
         switch (selected) {
             SET_SETTING(0, set_resolution(720));
             SET_SETTING(1, set_resolution(1080));
+            SET_SETTING(2, set_resolution(-1));
             DEFAULT;
         }
     });

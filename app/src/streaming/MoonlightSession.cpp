@@ -199,6 +199,10 @@ void MoonlightSession::start(ServerCallback<bool> callback) {
 
     int h = Settings::instance().resolution();
     int w = h * 16 / 9;
+    if (h == -1) {
+        h = Application::windowHeight;
+        w = Application::windowWidth;
+    }
     m_config.width = w;
     m_config.height = h;
     m_config.fps = Settings::instance().fps();
