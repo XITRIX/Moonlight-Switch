@@ -87,8 +87,12 @@ void MoonlightInputManager::handleRumble(unsigned short controller,
                                          unsigned short lowFreqMotor,
                                          unsigned short highFreqMotor) {
     brls::Logger::debug("Rumble {} {}", lowFreqMotor, highFreqMotor);
-    rumbleCache[controller].lowFreqMotor = lowFreqMotor;
-    rumbleCache[controller].highFreqMotor = highFreqMotor;
+
+    float rumbleMultiplier = Settings::instance().get_rumble_force();
+
+    rumbleCache[controller].lowFreqMotor = lowFreqMotor * rumbleMultiplier;
+    rumbleCache[controller].highFreqMotor = highFreqMotor * rumbleMultiplier;
+
     brls::Application::getPlatform()->getInputManager()->sendRumble(
         controller, 
         rumbleCache[controller].lowFreqMotor,
@@ -98,9 +102,13 @@ void MoonlightInputManager::handleRumble(unsigned short controller,
 void MoonlightInputManager::handleRumbleTriggers(uint16_t controllerNumber, 
                                                   uint16_t leftTriggerMotor, 
                                                   uint16_t rightTriggerMotor) {
-                                                    brls::Logger::debug("Rumble Trigger {} {}", leftTriggerMotor, rightTriggerMotor);
-    rumbleCache[controllerNumber].leftTriggerMotor = leftTriggerMotor;
-    rumbleCache[controllerNumber].rightTriggerMotor = rightTriggerMotor;
+    brls::Logger::debug("Rumble Trigger {} {}", leftTriggerMotor, rightTriggerMotor);
+
+    float rumbleMultiplier = Settings::instance().get_rumble_force();
+
+    rumbleCache[controllerNumber].leftTriggerMotor = leftTriggerMotor * rumbleMultiplier;
+    rumbleCache[controllerNumber].rightTriggerMotor = rightTriggerMotor * rumbleMultiplier;
+
     brls::Application::getPlatform()->getInputManager()->sendRumble(
         controllerNumber, 
         rumbleCache[controllerNumber].lowFreqMotor,

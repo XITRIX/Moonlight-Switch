@@ -243,6 +243,15 @@ SettingsTab::SettingsTab() {
         return true;
     });
 
+    float rumbleForceProgress = Settings::instance().get_rumble_force();
+    rumbleForceSlider->getProgressEvent()->subscribe([this](float value) {
+        std::stringstream stream;
+        stream << std::fixed << std::setprecision(1) << int(value * 100);
+        rumbleForceHeader->setSubtitle(stream.str() + "%");
+        Settings::instance().set_rumble_force(value);
+    });
+    rumbleForceSlider->setProgress(rumbleForceProgress);
+
     swapStickToDpad->init("settings/swap_stick_to_dpad"_i18n, Settings::instance().swap_joycon_stick_to_dpad(),
                           [](bool value) { Settings::instance().set_swap_joycon_stick_to_dpad(value); });
 

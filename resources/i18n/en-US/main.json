@@ -75,6 +75,7 @@
         "keys_mapping_title": "Keys mapping layout",
         "keys_mapping_create_new": "+ Create new layout",
         "keys_mapping_new_title": "New layout",
+        "rumble_force": "Rumble force",
         "single_joycon": "Single Joycon",
         "swap_stick_to_dpad": "Use Stick as D-Pad",
         "keyboard": "Keyboard",

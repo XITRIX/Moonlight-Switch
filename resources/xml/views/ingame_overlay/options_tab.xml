@@ -30,13 +30,6 @@
 
             <brls:BooleanCell
                 id="touchscreen_mouse_mode"/>
-
-            <brls:Header
-                    title="@i18n/settings/single_joycon"
-                    paddingTop="60"/>
-
-            <brls:BooleanCell
-                    id="swap_stick_to_dpad"/>
             
             <brls:Header
                 id="volume_header"
@@ -47,13 +40,33 @@
                 id="volume_slider"
                 width="auto"
                 height="84"/>
+
+            <brls:Header
+                id="rumble_slider_header"
+                title="@i18n/settings/rumble_force"
+                subtitle="100%"
+                paddingTop="60"
+                lineTop="1px"/>
+                
+            <brls:Slider
+                id="rumble_slider"
+                width="auto"
+                height="84"
+                grow="1"/>
+
+            <brls:Header
+                title="@i18n/settings/single_joycon"
+                paddingTop="60"
+                lineTop="1px"/>
+
+            <brls:BooleanCell
+                    id="swap_stick_to_dpad"/>
         
             <brls:Header
                 id="mouse_speed_header"
                 title="@i18n/streaming/mouse_speed"
                 subtitle="x1.0"
-                paddingTop="60"
-                lineTop="1px"/>
+                paddingTop="60"/>
                 
             <brls:Slider
                 id="mouse_speed_slider"

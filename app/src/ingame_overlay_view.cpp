@@ -92,6 +92,15 @@ OptionsTab::OptionsTab(StreamingView* streamView) : streamView(streamView) {
         });
     volumeSlider->setProgress(progress);
 
+    float rumbleForceProgress = Settings::instance().get_rumble_force();
+    rumbleForceSlider->getProgressEvent()->subscribe([this](float value) {
+        std::stringstream stream;
+        stream << std::fixed << std::setprecision(1) << int(value * 100);
+        rumbleForceHeader->setSubtitle(stream.str() + "%");
+        Settings::instance().set_rumble_force(value);
+    });
+    rumbleForceSlider->setProgress(rumbleForceProgress);
+
     float mouseProgress =
         (Settings::instance().get_mouse_speed_multiplier() / 100.0f);
     mouseSlider->getProgressEvent()->subscribe([this](float value) {

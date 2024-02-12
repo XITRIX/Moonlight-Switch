@@ -178,6 +178,10 @@ class Settings : public Singleton<Settings> {
 
     [[nodiscard]] int get_keyboard_locale() const { return m_keyboard_locale; }
 
+    void set_rumble_force(float rumble_force) { m_rumble_force = int(rumble_force * 100); }
+
+    [[nodiscard]] float get_rumble_force() const { return float(m_rumble_force) / 100.f; }
+
     void set_mouse_speed_multiplier(int mouse_speed_multiplier) {
         m_mouse_speed_multiplier = mouse_speed_multiplier;
     }
@@ -222,6 +226,7 @@ class Settings : public Singleton<Settings> {
     bool m_touchscreen_mouse_mode = false;
     bool m_swap_mouse_keys = false;
     bool m_swap_mouse_scroll = false;
+    int m_rumble_force = 100;
     int m_volume = 100;
     bool m_use_hw_decoding = true;
     KeyboardType m_keyboard_type = COMPACT;

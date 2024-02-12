@@ -91,6 +91,7 @@
         "keys_mapping_title": "Схемы переназначения кнопок",
         "keys_mapping_create_new": "+ Создать новую схему",
         "keys_mapping_new_title": "Новая схема",
+        "rumble_force": "Сила вибрации",
         "single_joycon": "Одиночный Joycon",
         "swap_stick_to_dpad": "Использовать стик как D-Pad",
         "keyboard": "Клавиатура",

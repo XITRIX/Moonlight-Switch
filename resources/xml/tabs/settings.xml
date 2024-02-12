@@ -77,8 +77,21 @@
                 id="swap_game"/>
 
             <brls:Header
-                title="@i18n/settings/single_joycon"
+                id="rumble_slider_header"
+                title="@i18n/settings/rumble_force"
+                subtitle="100%"
                 paddingTop="60"/>
+                
+            <brls:Slider
+                id="rumble_slider"
+                width="auto"
+                height="84"
+                grow="1"/>
+
+            <brls:Header
+                title="@i18n/settings/single_joycon"
+                paddingTop="60"
+                lineTop="1px"/>
 
             <brls:BooleanCell
                 id="swap_stick_to_dpad"/>

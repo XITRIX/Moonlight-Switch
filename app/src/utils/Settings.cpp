@@ -322,6 +322,12 @@ void Settings::load() {
                     m_mouse_speed_multiplier = (int)json_integer_value(mouse_speed_multiplier);
                 }
             }
+            
+            if (json_t* rumble_force = json_object_get(settings, "rumble_force")) {
+                if (json_typeof(rumble_force) == JSON_INTEGER) {
+                    m_rumble_force = (int)json_integer_value(rumble_force);
+                }
+            }
 
             if (json_t* current_mapping_layout = json_object_get(settings, "current_mapping_layout")) {
                 if (json_typeof(current_mapping_layout) == JSON_INTEGER) {
@@ -462,6 +468,7 @@ void Settings::save() {
             json_object_set_new(settings, "overlay_hold_time", json_integer(m_overlay_options.holdTime));
             json_object_set_new(settings, "mouse_input_hold_time", json_integer(m_mouse_input_options.holdTime));
             json_object_set_new(settings, "mouse_speed_multiplier", json_integer(m_mouse_speed_multiplier));
+            json_object_set_new(settings, "rumble_force", json_integer(m_rumble_force));
             json_object_set_new(settings, "current_mapping_layout", json_integer(m_current_mapping_layout));
             json_object_set_new(settings, "keyboard_type", json_integer(m_keyboard_type));
             
