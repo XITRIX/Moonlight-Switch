@@ -1,6 +1,7 @@
 #ifdef __SWITCH__
 
 #include "AudrenAudioRenderer.hpp"
+#include <Settings.hpp>
 #include <borealis.hpp>
 #include <inttypes.h>
 #include <malloc.h>
@@ -141,6 +142,11 @@ void AudrenAudioRenderer::decode_and_play_sample(char* data, int length) {
             int decoded_samples = opus_multistream_decode(
                 m_decoder, (const unsigned char*)data, length, m_decoded_buffer,
                 m_samples_per_frame, 0);
+
+            for (int i = 0; i < m_samples_per_frame * m_channel_count; i++) {
+                int scale = (int)((double)m_decoded_buffer[i] * (Settings::instance().get_volume() / 100.0));
+                m_decoded_buffer[i] = (s16) std::min(SHRT_MAX, std::max(SHRT_MIN, scale));
+            }
 
             if (decoded_samples > 0) {
                 write_audio(m_decoded_buffer,
