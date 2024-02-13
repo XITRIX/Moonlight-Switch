@@ -432,16 +432,32 @@ int MoonlightInputManager::glfwKeyToVKKey(BrlsKeyboardScancode key) {
     switch (key) {
     case BRLS_KBD_KEY_BACKSPACE:
         return 0x08;
+    case BRLS_KBD_KEY_SEMICOLON:
+        return 0xBA;
+    case BRLS_KBD_KEY_EQUAL:
+        return 0xBB;
+    case BRLS_KBD_KEY_COMMA:
+        return 0xBC;
+    case BRLS_KBD_KEY_MINUS:
+        return 0xBD;
     case BRLS_KBD_KEY_PERIOD:
         return 0xBE;
+    // case FIND_PROPER_NAME: // OEM_102 (> <)
+    //     return 0xE2;
+    case BRLS_KBD_KEY_SLASH:
+        return 0xBF;
     case BRLS_KBD_KEY_GRAVE_ACCENT:
         return 0xC0;
     case BRLS_KBD_KEY_LEFT_BRACKET:
         return 0xDB;
     case BRLS_KBD_KEY_BACKSLASH:
         return 0xDC;
+    case BRLS_KBD_KEY_RIGHT_BRACKET:
+        return 0xDD;
     case BRLS_KBD_KEY_APOSTROPHE:
         return 0xDE;
+    // case FIND_PROPER_NAME: // OEM_8 (§ !)
+    //     return 0xDF;
     case BRLS_KBD_KEY_TAB:
         return 0x09;
     case BRLS_KBD_KEY_CAPS_LOCK:
@@ -458,22 +474,12 @@ int MoonlightInputManager::glfwKeyToVKKey(BrlsKeyboardScancode key) {
         return 0xA4;
     case BRLS_KBD_KEY_RIGHT_ALT:
         return 0xA5;
-    case BRLS_KBD_KEY_DELETE:
-        return 0x2E;
     case BRLS_KBD_KEY_ENTER:
         return 0x0D;
     case BRLS_KBD_KEY_LEFT_SUPER:
         return 0x5B;
     case BRLS_KBD_KEY_RIGHT_SUPER:
         return 0x5C;
-    case BRLS_KBD_KEY_LEFT:
-        return 0x25;
-    case BRLS_KBD_KEY_UP:
-        return 0x26;
-    case BRLS_KBD_KEY_RIGHT:
-        return 0x27;
-    case BRLS_KBD_KEY_DOWN:
-        return 0x28;
     case BRLS_KBD_KEY_ESCAPE:
         return 0x1B;
     case BRLS_KBD_KEY_KP_ADD:
@@ -490,6 +496,28 @@ int MoonlightInputManager::glfwKeyToVKKey(BrlsKeyboardScancode key) {
         return 0x90;
     case BRLS_KBD_KEY_SCROLL_LOCK:
         return 0x91;
+    case BRLS_KBD_KEY_PAGE_UP:
+        return 0x21;
+    case BRLS_KBD_KEY_PAGE_DOWN:
+        return 0x22;
+    case BRLS_KBD_KEY_END:
+        return 0x23;
+    case BRLS_KBD_KEY_HOME:
+        return 0x24;
+    case BRLS_KBD_KEY_LEFT:
+        return 0x25;
+    case BRLS_KBD_KEY_UP:
+        return 0x26;
+    case BRLS_KBD_KEY_RIGHT:
+        return 0x27;
+    case BRLS_KBD_KEY_DOWN:
+        return 0x28;
+    case BRLS_KBD_KEY_PRINT_SCREEN:
+        return 0x2C;
+    case BRLS_KBD_KEY_INSERT:
+        return 0x2D;
+    case BRLS_KBD_KEY_DELETE:
+        return 0x2E;
 
     default:
         return key;
