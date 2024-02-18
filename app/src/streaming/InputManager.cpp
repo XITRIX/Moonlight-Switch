@@ -133,6 +133,9 @@ void MoonlightInputManager::dropInput() {
                    gamepadState.leftStickX, gamepadState.leftStickY,
                    gamepadState.rightStickX, gamepadState.rightStickY) == 0;
     }
+    for (int i = 0; i < 10; i++) {
+        LiSendTouchEvent(LI_TOUCH_EVENT_CANCEL, i, 0, 0, 0, 0, 0, LI_ROT_UNKNOWN);
+    }
     inputDropped = res;
 }
 
@@ -351,28 +354,28 @@ void MoonlightInputManager::handleInput() {
     } else {
         uint8_t eventType;
 
-        std::vector<RawTouchState> rawTouch;
-        static std::vector<RawTouchState> oldRawTouch = rawTouch;
-        brls::Application::getPlatform()->getInputManager()->updateTouchStates(&rawTouch);
+        auto touches = brls::Application::currentTouchState;
+        for (int i = 0; i < touches.size(); i++) {
+            auto touch = touches[i];
 
-        Point mousePosition;
+            switch (touch.phase) {
+                case TouchPhase::START:
+                    eventType = LI_TOUCH_EVENT_DOWN;
+                    break;
+                case TouchPhase::STAY:
+                    eventType = LI_TOUCH_EVENT_MOVE;
+                    break;
+                case TouchPhase::END:
+                    eventType = LI_TOUCH_EVENT_UP;
+                    break;
+                case TouchPhase::NONE:
+                    eventType = LI_TOUCH_EVENT_CANCEL;
+                    break;
+            }
 
-        if (rawTouch.size() > 0 && oldRawTouch.size() == 0) {
-            mousePosition = rawTouch.front().position;
-            eventType = LI_TOUCH_EVENT_DOWN;
-        } else if (rawTouch.size() > 0 && oldRawTouch.size() > 0) {
-            mousePosition = rawTouch.front().position;
-            eventType = LI_TOUCH_EVENT_MOVE;
-        } else if (rawTouch.size() == 0 && oldRawTouch.size() > 0) {
-            mousePosition = oldRawTouch.front().position;
-            eventType = LI_TOUCH_EVENT_UP;
-        } else {
-            mousePosition = { 0, 0 };
-            eventType = LI_TOUCH_EVENT_CANCEL;
-        }
-
-        if (LiSendTouchEvent(eventType, 0, mousePosition.x / (float) Application::windowWidth, mousePosition.y / (float) Application::windowHeight, 0, 0, 0, LI_ROT_UNKNOWN) == LI_ERR_UNSUPPORTED) {
-            LiSendMousePositionEvent(mousePosition.x, mousePosition.y, Application::windowWidth, Application::windowHeight);
+            if (LiSendTouchEvent(eventType, touch.fingerId, touch.position.x / (float) Application::windowWidth, touch.position.y / (float) Application::windowHeight, 0, 0, 0, LI_ROT_UNKNOWN) == LI_ERR_UNSUPPORTED && i == 0) {
+                LiSendMousePositionEvent(touch.position.x, touch.position.y, Application::windowWidth, Application::windowHeight);
+            }
         }
     }
 }

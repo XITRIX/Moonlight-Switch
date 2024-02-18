@@ -293,8 +293,6 @@ void StreamingView::handleInput() {
         return;
     }
 
-    MoonlightInputManager::instance().handleInput();
-
     if (keyboard) {
         static KeyboardState oldKeyboardState;
         KeyboardState keyboardState = keyboard->getKeyboardState();
@@ -307,6 +305,11 @@ void StreamingView::handleInput() {
                     keyboardState.keys[i] ? KEY_ACTION_DOWN : KEY_ACTION_UP, 0);
             }
         }
+
+        // Drop input if keyboard overlay presented
+        MoonlightInputManager::instance().dropInput();
+    } else {
+        MoonlightInputManager::instance().handleInput();
     }
 }
 
