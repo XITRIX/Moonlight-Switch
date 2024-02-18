@@ -260,13 +260,9 @@ void MoonlightInputManager::handleInput() {
         &mouse);
     controller = mapController(rawController);
 
-#ifdef __SWITCH__
-    static HidTouchScreenState hidState = {0};
-    hidGetTouchScreenStates(&hidState, 1);
-    bool specialKey = hidState.count == 1;
-#else
-    bool specialKey = false;
-#endif
+    std::vector<brls::RawTouchState> states;
+    brls::Application::getPlatform()->getInputManager()->updateTouchStates(&states);
+    bool specialKey = states.size() == 1;
 
     handleControllers(specialKey);
 
