@@ -5,65 +5,25 @@
 #include "borealis.hpp"
 #endif
 
-// TODO: GLES support
+#include "GLShaders.hpp"
 
-static const char* vertex_shader_string_core = "\
-#version 140\n\
-in vec2 position;\n\
-out mediump vec2 tex_position;\n\
-void main() {\n\
-    gl_Position = vec4(position, 1.0, 1.0);\n\
-    tex_position = vec2((position.x * 0.5 + 0.5), (0.5 - position.y * 0.5));\n\
-}";
+// tex width | frame width | from color space | to color space
+static const int nv12Planes[][4] = {
+    {1, 1, GL_R8, GL_RED},  // Y
+    {2, 2, GL_RG8, GL_RG},  // UV
+    {0, 0, 0, 0}            // NOT EXISTS
+};
 
-static const char* fragment_shader_string_core = "\
-#version 140\n\
-uniform lowp sampler2D ymap;\n\
-uniform lowp sampler2D umap;\n\
-uniform lowp sampler2D vmap;\n\
-uniform mat3 yuvmat;\n\
-uniform vec3 offset;\n\
-uniform vec4 uv_data; \n\
-in mediump vec2 tex_position;\n\
-out vec4 FragColor;\n\
-\
-void main() {\n\
-    vec2 uv = (tex_position - uv_data.xy) * uv_data.zw;\n\
-    vec3 YCbCr = vec3(texture(ymap, uv).r, texture(umap, uv).r, texture(vmap, uv).r) - offset;\n\
-    FragColor = vec4(clamp(yuvmat * YCbCr, 0.0, 1.0), 1.0);\n\
-}";
-
-static const char* vertex_shader_string = "\
-#version 300 es\n\
-in vec2 position;\n\
-out vec2 tex_position;\n\
-\
-void main() {\n\
-    gl_Position = vec4(position, 1, 1);\n\
-    tex_position = vec2((position.x * 0.5 + 0.5), (0.5 - position.y * 0.5));\n\
-}";
-
-static const char* fragment_shader_string = "\
-#version 300 es\n\
-uniform sampler2D ymap;\n\
-uniform sampler2D umap;\n\
-uniform sampler2D vmap;\n\
-uniform highp mat3 yuvmat;\n\
-uniform highp vec3 offset;\n\
-uniform highp vec4 uv_data;\n\
-in highp vec2 tex_position;\n\
-out mediump vec4 fragmentColor;\n\
-\
-void main() {\n\
-    highp vec2 uv = (tex_position - uv_data.xy) * uv_data.zw;\n\
-    highp vec3 YCbCr = vec3(texture(ymap, uv).r, texture(umap, uv).r, texture(vmap, uv).r) - offset;\n\
-    fragmentColor = vec4(clamp(yuvmat * YCbCr, 0.0, 1.0), 1.0);\n\
-}";
+static const int yuv420Planes[][4] = {
+    {1, 1, GL_R8, GL_RED}, // Y
+    {1, 2, GL_R8, GL_RED}, // U
+    {1, 2, GL_R8, GL_RED}  // V
+};
 
 static const float vertices[] = {-1.0f, -1.0f, 1.0f, -1.0f,
                                  -1.0f, 1.0f,  1.0f, 1.0f};
 
-static const char* texture_mappings[] = {"ymap", "umap", "vmap"};
+static const char* texture_mappings[] = {"plane0", "plane1", "plane2"};
 
 static const float* gl_color_offset(bool color_full) {
     static const float limitedOffsets[] = {16.0f / 255.0f, 128.0f / 255.0f,
@@ -149,7 +109,7 @@ GLVideoRenderer::~GLVideoRenderer() {
         glDeleteVertexArrays(1, &m_vao);
     }
 
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < currentFrameTypePlanesNum; i++) {
         if (m_texture_id[i]) {
             glDeleteTextures(1, &m_texture_id[i]);
         }
@@ -160,7 +120,7 @@ GLVideoRenderer::~GLVideoRenderer() {
 #endif
 }
 
-void GLVideoRenderer::initialize() {
+void GLVideoRenderer::initialize(AVFrame* frame) {
     m_shader_program = glCreateProgram();
     GLuint vert = glCreateShader(GL_VERTEX_SHADER);
     GLuint frag = glCreateShader(GL_FRAGMENT_SHADER);
@@ -174,10 +134,26 @@ void GLVideoRenderer::initialize() {
     glCompileShader(vert);
     check_shader(vert);
 
-    glShaderSource(frag, 1,
-                   use_gl_core ? &fragment_shader_string_core
-                               : &fragment_shader_string,
-                   nullptr);
+    switch (frame->format) {
+        case AV_PIX_FMT_YUV420P:
+            currentFrameTypePlanesNum = 3;
+            currentPlanes = yuv420Planes;
+
+            glShaderSource(frag, 1,
+                   use_gl_core ? &fragment_yuv420_shader_string_core
+                               : &fragment_shader_string, nullptr);
+            break;
+        case AV_PIX_FMT_NV12:
+            currentFrameTypePlanesNum = 2;
+            currentPlanes = nv12Planes;
+
+            glShaderSource(frag, 1,
+                   use_gl_core ? &fragment_nv12_shader_string_core
+                               : &fragment_shader_string, nullptr);
+            break;
+        default: break;
+    }
+
     glCompileShader(frag);
     check_shader(frag);
 
@@ -192,7 +168,7 @@ void GLVideoRenderer::initialize() {
     glGenBuffers(1, &m_vbo);
     glGenVertexArrays(1, &m_vao);
 
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < currentFrameTypePlanesNum; i++) {
         m_texture_uniform[i] =
             glGetUniformLocation(m_shader_program, texture_mappings[i]);
     }
@@ -207,14 +183,13 @@ void GLVideoRenderer::bindTexture(int id) {
     glBindTexture(GL_TEXTURE_2D, m_texture_id[id]);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR,
-                     borderColorInternal);
-    textureWidth[id] = id > 0 ? m_frame_width / 2 : m_frame_width;
-    textureHeight[id] = id > 0 ? m_frame_height / 2 : m_frame_height;
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, textureWidth[id], textureHeight[id],
-                 0, GL_RED, GL_UNSIGNED_BYTE, nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColorInternal);
+    textureWidth[id] = m_frame_width / currentPlanes[id][1];
+    textureHeight[id] = m_frame_height / currentPlanes[id][1];
+    glTexImage2D(GL_TEXTURE_2D, 0, currentPlanes[id][2], textureWidth[id], textureHeight[id],
+                 0, currentPlanes[id][3], GL_UNSIGNED_BYTE, nullptr);
     glUniform1i(m_texture_uniform[id], id);
 }
 
@@ -228,7 +203,7 @@ void GLVideoRenderer::checkAndInitialize(int width, int height,
                            height);
 #endif
 
-        initialize();
+        initialize(frame);
         m_is_initialized = true;
 
 #ifndef _WIN32
@@ -259,15 +234,15 @@ void GLVideoRenderer::checkAndUpdateScale(int width, int height,
         glEnableVertexAttribArray(positionLocation);
         glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
 
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < currentFrameTypePlanesNum; i++) {
             if (m_texture_id[i]) {
                 glDeleteTextures(1, &m_texture_id[i]);
             }
         }
 
-        glGenTextures(3, m_texture_id);
+        glGenTextures(currentFrameTypePlanesNum, m_texture_id);
 
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < currentFrameTypePlanesNum; i++) {
             bindTexture(i);
         }
 
@@ -311,13 +286,14 @@ void GLVideoRenderer::draw(NVGcontext* vg, int width, int height,
     glClearColor(1, 1, 0, 1);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < currentFrameTypePlanesNum; i++) {
         uint8_t* image = frame->data[i];
         glActiveTexture(GL_TEXTURE0 + i);
+		int real_width = frame->linesize[i] / currentPlanes[i][0];
         glBindTexture(GL_TEXTURE_2D, m_texture_id[i]);
-        glPixelStorei(GL_UNPACK_ROW_LENGTH, frame->linesize[i]);
+        glPixelStorei(GL_UNPACK_ROW_LENGTH, real_width);
         glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, textureWidth[i],
-                        textureHeight[i], GL_RED, GL_UNSIGNED_BYTE, image);
+                        textureHeight[i], currentPlanes[i][3], GL_UNSIGNED_BYTE, image);
         glActiveTexture(GL_TEXTURE0);
     }
 

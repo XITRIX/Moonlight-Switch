@@ -15,6 +15,8 @@ extern "C"
 #endif
 #pragma once
 
+#define PLANES_NUM_MAX 3
+
 class GLVideoRenderer : public IVideoRenderer {
   public:
     GLVideoRenderer(){};
@@ -26,13 +28,13 @@ class GLVideoRenderer : public IVideoRenderer {
 
   private:
     void bindTexture(int id);
-    void initialize();
+    void initialize(AVFrame* frame);
     void checkAndInitialize(int width, int height, AVFrame* frame);
     void checkAndUpdateScale(int width, int height, AVFrame* frame);
 
     bool m_is_initialized = false;
-    GLuint m_texture_id[3] = {0, 0, 0};
-    GLint m_texture_uniform[3];
+    GLuint m_texture_id[PLANES_NUM_MAX] = {0, 0, 0};
+    GLint m_texture_uniform[PLANES_NUM_MAX];
     GLuint m_shader_program;
     GLuint m_vbo, m_vao;
     int m_frame_width = 0;
@@ -42,8 +44,11 @@ class GLVideoRenderer : public IVideoRenderer {
     int m_yuvmat_location;
     int m_offset_location;
     int m_uv_data_location;
-    int textureWidth[3];
-    int textureHeight[3];
-    float borderColor[3] = {0.0f, 0.5f, 0.5f};
+    int textureWidth[PLANES_NUM_MAX];
+    int textureHeight[PLANES_NUM_MAX];
+    float borderColor[PLANES_NUM_MAX] = {0.0f, 0.5f, 0.5f};
     VideoRenderStats m_video_render_stats = {};
+
+    int currentFrameTypePlanesNum = 0;
+    const int (*currentPlanes)[4];
 };

@@ -22,7 +22,7 @@ void ffmpegLog(void* ptr, int level, const char* fmt, va_list vargs) {
     message.resize(len + 1);  // need space for NUL
     vsnprintf(&message[0], len + 1,fmt, vargs);
     message.resize(len);  // remove the NUL
-//    brls::Logger::debug("FFmpeg [LOG]: {}", message.c_str());
+    brls::Logger::debug("FFmpeg [LOG]: {}", message.c_str());
 }
 
 int FFmpegVideoDecoder::setup(int video_format, int width, int height,
@@ -34,8 +34,8 @@ int FFmpegVideoDecoder::setup(int video_format, int width, int height,
         video_format == VIDEO_FORMAT_H264 ? "H264" : "HEVC", width, height,
         redraw_rate);
 
-    av_log_set_level(AV_LOG_DEBUG);
-    av_log_set_callback(&ffmpegLog);
+    av_log_set_level(AV_LOG_WARNING);
+    // av_log_set_callback(&ffmpegLog);
 #if LIBAVCODEC_VERSION_INT < AV_VERSION_INT(58, 10, 100)
     avcodec_register_all();
 #endif
@@ -72,6 +72,8 @@ int FFmpegVideoDecoder::setup(int video_format, int width, int height,
         // Use low delay single threaded encoding
         m_decoder_context->flags |= AV_CODEC_FLAG_LOW_DELAY;
 
+    m_decoder_context->flags2 |= AV_CODEC_FLAG2_FAST;
+
     int decoder_threads = Settings::instance().decoder_threads();
 
     if (decoder_threads == 0) {
@@ -87,7 +89,7 @@ int FFmpegVideoDecoder::setup(int video_format, int width, int height,
 #ifdef BOREALIS_USE_DEKO3D
    m_decoder_context->pix_fmt = AV_PIX_FMT_TX1;
 #else
-   m_decoder_context->pix_fmt = AV_PIX_FMT_YUV420P;
+   m_decoder_context->pix_fmt = AV_PIX_FMT_NV12;
 #endif
 #else
     m_decoder_context->pix_fmt = AV_PIX_FMT_YUV420P;
@@ -107,8 +109,7 @@ int FFmpegVideoDecoder::setup(int video_format, int width, int height,
 
     tmp_frame = av_frame_alloc();
     for (int i = 0; i < m_frames_count; i++) {
-        m_extra_frames[i] = av_frame_alloc();
-        m_frames[i] = m_extra_frames[i];
+        m_frames[i] = av_frame_alloc();
         if (m_frames[i] == NULL) {
             brls::Logger::error("FFmpeg: Couldn't allocate frame");
             return -1;
@@ -116,22 +117,29 @@ int FFmpegVideoDecoder::setup(int video_format, int width, int height,
 
 #ifdef __SWITCH__
 #ifndef BOREALIS_USE_DEKO3D
-       m_frames[i]->format = AV_PIX_FMT_YUV420P;
+        m_frames[i]->format = AV_PIX_FMT_NV12;
 #endif
 #else
 //        m_frames[i]->format = AV_PIX_FMT_VIDEOTOOLBOX;
-       m_frames[i]->format = AV_PIX_FMT_YUV420P;
+        m_frames[i]->format = AV_PIX_FMT_YUV420P;
 #endif
-       m_frames[i]->width  = width;
-       m_frames[i]->height = height;
+        m_frames[i]->width  = width;
+        m_frames[i]->height = height;
 
 #ifndef BOREALIS_USE_DEKO3D
-//        int err = av_frame_get_buffer(m_frames[i], 256);
-//        if (err < 0) {
-//            char errs[64]; 
-//            brls::Logger::error("FFmpeg: Couldn't allocate frame buffer: {}", av_make_error_string(errs, 64, err));
-//            return -1;
-//        }
+       int err = av_frame_get_buffer(m_frames[i], 256);
+       if (err < 0) {
+           char errs[64]; 
+           brls::Logger::error("FFmpeg: Couldn't allocate frame buffer: {}", av_make_error_string(errs, 64, err));
+           return -1;
+       }
+
+    //    for (int j = 0; j < 2; j++) {
+    //         uintptr_t ptr = (uintptr_t)m_frames[i]->data[j];
+    //         uintptr_t dst = (((ptr)+(256)-1)&~((256)-1));
+    //         uintptr_t gap = dst - ptr;
+    //         m_frames[i]->data[j] += gap;
+    //     }
 #endif
    }
 
@@ -182,7 +190,7 @@ void FFmpegVideoDecoder::cleanup() {
 //    if (m_frames) {
        for (int i = 0; i < m_frames_count; i++) {
         //    if (m_extra_frames[i])
-               av_frame_free(&m_extra_frames[i]);
+               av_frame_free(&m_frames[i]);
        }
 
 //        free(m_frames);
@@ -291,13 +299,15 @@ AVFrame* FFmpegVideoDecoder::get_frame(bool native_frame) {
         return tmp_frame;
 #else
         if ((err = av_hwframe_transfer_data(m_frames[m_next_frame], tmp_frame, 0)) < 0) {
-            brls::Logger::error("FFmpeg: Error transferring the data to system memory with error {}", err);
+            char a[AV_ERROR_MAX_STRING_SIZE] = { 0 };
+            brls::Logger::error("FFmpeg: Error transferring the data to system memory with error {}",  av_make_error_string(a, AV_ERROR_MAX_STRING_SIZE, err));
             return NULL;
         }
+        
         av_frame_copy_props(m_frames[m_next_frame], tmp_frame);
 #endif
     } else {
-        m_frames[m_next_frame] = tmp_frame;
+        return tmp_frame;
     }
 
     if (err == 0) {
