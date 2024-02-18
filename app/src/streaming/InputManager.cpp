@@ -146,14 +146,16 @@ GamepadState MoonlightInputManager::getControllerState(int controllerNum,
         &rawController, controllerNum);
     controller = mapController(rawController);
 
+    // Use axis or button if axis is not available (equals 0)
+    float lzAxis = controller.axes[LEFT_Z] > 0 ? controller.axes[LEFT_Z] : (controller.buttons[brls::BUTTON_LT] ? 1.f : 0.f);
+    float rzAxis = controller.axes[RIGHT_Z] > 0 ? controller.axes[RIGHT_Z] : (controller.buttons[brls::BUTTON_RT] ? 1.f : 0.f);
+
     GamepadState gamepadState{
         .buttonFlags = 0,
         .leftTrigger = static_cast<unsigned char>(
-            0xFFFF *
-            (!specialKey && controller.buttons[brls::BUTTON_LT] ? 1 : 0)),
+            0xFFFF * (!specialKey ? lzAxis : 0)),
         .rightTrigger = static_cast<unsigned char>(
-            0xFFFF *
-            (!specialKey && controller.buttons[brls::BUTTON_RT] ? 1 : 0)),
+            0xFFFF * (!specialKey ? rzAxis : 0)),
         .leftStickX = static_cast<short>(
             0x7FFF * (!specialKey ? controller.axes[brls::LEFT_X] : 0)),
         .leftStickY = static_cast<short>(
