@@ -35,7 +35,7 @@ int FFmpegVideoDecoder::setup(int video_format, int width, int height,
         redraw_rate);
 
     av_log_set_level(AV_LOG_WARNING);
-    // av_log_set_callback(&ffmpegLog);
+    // av_log_set_callback(&ffmpegLog); // Uncomment to see FFMpeg logs
 #if LIBAVCODEC_VERSION_INT < AV_VERSION_INT(58, 10, 100)
     avcodec_register_all();
 #endif
@@ -92,7 +92,7 @@ int FFmpegVideoDecoder::setup(int video_format, int width, int height,
    m_decoder_context->pix_fmt = AV_PIX_FMT_NV12;
 #endif
 #else
-    m_decoder_context->pix_fmt = AV_PIX_FMT_YUV420P;
+    m_decoder_context->pix_fmt = AV_PIX_FMT_NV12;
 #endif
 
     int err = avcodec_open2(m_decoder_context, m_decoder, NULL);
@@ -120,19 +120,18 @@ int FFmpegVideoDecoder::setup(int video_format, int width, int height,
         m_frames[i]->format = AV_PIX_FMT_NV12;
 #endif
 #else
-//        m_frames[i]->format = AV_PIX_FMT_VIDEOTOOLBOX;
-        m_frames[i]->format = AV_PIX_FMT_YUV420P;
+        m_frames[i]->format = AV_PIX_FMT_NV12;
 #endif
         m_frames[i]->width  = width;
         m_frames[i]->height = height;
 
 #ifndef BOREALIS_USE_DEKO3D
-       int err = av_frame_get_buffer(m_frames[i], 256);
-       if (err < 0) {
-           char errs[64]; 
-           brls::Logger::error("FFmpeg: Couldn't allocate frame buffer: {}", av_make_error_string(errs, 64, err));
-           return -1;
-       }
+//       int err = av_frame_get_buffer(m_frames[i], 256);
+//       if (err < 0) {
+//           char errs[64]; 
+//           brls::Logger::error("FFmpeg: Couldn't allocate frame buffer: {}", av_make_error_string(errs, 64, err));
+//           return -1;
+//       }
 
     //    for (int j = 0; j < 2; j++) {
     //         uintptr_t ptr = (uintptr_t)m_frames[i]->data[j];

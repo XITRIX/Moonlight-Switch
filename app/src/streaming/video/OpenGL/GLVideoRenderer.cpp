@@ -141,7 +141,7 @@ void GLVideoRenderer::initialize(AVFrame* frame) {
 
             glShaderSource(frag, 1,
                    use_gl_core ? &fragment_yuv420_shader_string_core
-                               : &fragment_shader_string, nullptr);
+                               : &fragment_yuv420_shader_string, nullptr);
             break;
         case AV_PIX_FMT_NV12:
             currentFrameTypePlanesNum = 2;
@@ -149,7 +149,7 @@ void GLVideoRenderer::initialize(AVFrame* frame) {
 
             glShaderSource(frag, 1,
                    use_gl_core ? &fragment_nv12_shader_string_core
-                               : &fragment_shader_string, nullptr);
+                               : &fragment_nv12_shader_string, nullptr);
             break;
         default: break;
     }

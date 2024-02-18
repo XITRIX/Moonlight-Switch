@@ -53,7 +53,23 @@ void main() {
 }
 )glsl";
 
-static const char* fragment_shader_string = R"glsl(#version 300 es
+static const char* fragment_nv12_shader_string = R"glsl(#version 300 es
+uniform sampler2D plane0;
+uniform sampler2D plane1;
+uniform highp mat3 yuvmat;
+uniform highp vec3 offset;
+uniform highp vec4 uv_data;
+in highp vec2 tex_position;
+out mediump vec4 fragmentColor;
+
+void main() {
+    highp vec2 uv = (tex_position - uv_data.xy) * uv_data.zw;
+    highp vec3 YCbCr = vec3(texture(plane0, uv).r, texture(plane1, uv).r, texture(plane1, uv).g) - offset;
+    fragmentColor = vec4(clamp(yuvmat * YCbCr, 0.0, 1.0), 1.0);
+}
+)glsl";
+
+static const char* fragment_yuv420_shader_string = R"glsl(#version 300 es
 uniform sampler2D plane0;
 uniform sampler2D plane1;
 uniform sampler2D plane2;
