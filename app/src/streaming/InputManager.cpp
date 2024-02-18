@@ -442,8 +442,8 @@ int MoonlightInputManager::glfwKeyToVKKey(BrlsKeyboardScancode key) {
         return 0xBD;
     case BRLS_KBD_KEY_PERIOD:
         return 0xBE;
-    // case FIND_PROPER_NAME: // OEM_102 (> <)
-    //     return 0xE2;
+    case BRLS_KBD_KEY_WORLD_1: // OEM_102 (> <)
+        return 0xE2;
     case BRLS_KBD_KEY_SLASH:
         return 0xBF;
     case BRLS_KBD_KEY_GRAVE_ACCENT:
