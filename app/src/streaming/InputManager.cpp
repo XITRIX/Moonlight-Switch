@@ -373,7 +373,7 @@ void MoonlightInputManager::handleInput() {
                     break;
             }
 
-            if (LiSendTouchEvent(eventType, touch.fingerId, touch.position.x / (float) Application::windowWidth, touch.position.y / (float) Application::windowHeight, 0, 0, 0, LI_ROT_UNKNOWN) == LI_ERR_UNSUPPORTED && i == 0) {
+            if (LiSendTouchEvent(eventType, touch.fingerId, touch.position.x / (float) Application::contentWidth, touch.position.y / (float) Application::contentHeight, 0, 0, 0, LI_ROT_UNKNOWN) == LI_ERR_UNSUPPORTED && i == 0) {
                 LiSendMousePositionEvent(touch.position.x, touch.position.y, Application::windowWidth, Application::windowHeight);
             }
         }
