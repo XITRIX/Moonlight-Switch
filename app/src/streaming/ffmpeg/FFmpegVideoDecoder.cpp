@@ -101,12 +101,6 @@ int FFmpegVideoDecoder::setup(int video_format, int width, int height,
         return err;
     }
 
-//    m_frames = (AVFrame**)malloc(m_frames_count * sizeof(AVFrame*));
-//    if (m_frames == NULL) {
-//        brls::Logger::error("FFmpeg: Couldn't allocate frames");
-//        return -1;
-//    }
-
     tmp_frame = av_frame_alloc();
     for (int i = 0; i < m_frames_count; i++) {
         m_frames[i] = av_frame_alloc();
@@ -115,32 +109,31 @@ int FFmpegVideoDecoder::setup(int video_format, int width, int height,
             return -1;
         }
 
-#ifdef __SWITCH__
-#ifndef BOREALIS_USE_DEKO3D
-        m_frames[i]->format = AV_PIX_FMT_NV12;
-#endif
+#if defined(__SWITCH__) && defined(BOREALIS_USE_DEKO3D)
+        m_frames[i]->format = AV_PIX_FMT_TX1;
 #else
         m_frames[i]->format = AV_PIX_FMT_NV12;
 #endif
         m_frames[i]->width  = width;
         m_frames[i]->height = height;
 
-#ifndef BOREALIS_USE_DEKO3D
-//       int err = av_frame_get_buffer(m_frames[i], 256);
-//       if (err < 0) {
-//           char errs[64]; 
-//           brls::Logger::error("FFmpeg: Couldn't allocate frame buffer: {}", av_make_error_string(errs, 64, err));
-//           return -1;
-//       }
+// Need to allign Switch frame to 256, need to de reviewed
+#if defined(__SWITCH__) && !defined(BOREALIS_USE_DEKO3D)
+        int err = av_frame_get_buffer(m_frames[i], 256);
+        if (err < 0) {
+            char errs[64]; 
+            brls::Logger::error("FFmpeg: Couldn't allocate frame buffer: {}", av_make_error_string(errs, 64, err));
+            return -1;
+        }
 
-    //    for (int j = 0; j < 2; j++) {
-    //         uintptr_t ptr = (uintptr_t)m_frames[i]->data[j];
-    //         uintptr_t dst = (((ptr)+(256)-1)&~((256)-1));
-    //         uintptr_t gap = dst - ptr;
-    //         m_frames[i]->data[j] += gap;
-    //     }
+        for (int j = 0; j < 2; j++) {
+            uintptr_t ptr = (uintptr_t)m_frames[i]->data[j];
+            uintptr_t dst = (((ptr)+(256)-1)&~((256)-1));
+            uintptr_t gap = dst - ptr;
+            m_frames[i]->data[j] += gap;
+        }
 #endif
-   }
+    }
 
     m_ffmpeg_buffer =
         (char*)malloc(DECODER_BUFFER_SIZE + AV_INPUT_BUFFER_PADDING_SIZE);
