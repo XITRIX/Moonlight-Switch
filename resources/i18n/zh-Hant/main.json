@@ -50,15 +50,15 @@
         "no_host": "沒有找到主機"
     },
     "settings": {
-        "quality": "串流質量 (Higher settings requires CPU overclock)",
+        "quality": "串流質量 (更高的質量需要CPU超頻)",
         "fps": "FPS",
         "resolution": "解析度",
         "video_codec": "影片解碼器",
         "decoder_threads": "解碼器執行緒",
         "video_bitrate": "影片位元率",
-        "use_hw_decoding": "Enable hardware acceleration",
+        "use_hw_decoding": "啟用硬體加速",
         "stream_settings": "串流設定",
-        "audio_backend": "Audio driver",
+        "audio_backend": "音頻驅動",
         "usops": "使用串流最佳化設定",
         "paop": "串流時在主機上也同時播放音訊",
         "debug": "除錯",
@@ -75,13 +75,15 @@
         "keys_mapping_title": "按鍵映射佈局",
         "keys_mapping_create_new": "按+建立新佈局",
         "keys_mapping_new_title": "新佈局",
-        "single_joycon": "Single Joycon",
-        "swap_stick_to_dpad": "Use Stick as D-Pad",
+	"rumble_force": "震動力度",
+        "single_joycon": "單個Joycon",
+        "swap_stick_to_dpad": "使用搖桿作為D-Pad",
         "keyboard": "鍵盤",
         "keyboard_type": "鍵盤類型",
         "keyboard_compact": "精簡",
         "keyboard_fullsized": "完整",
         "mouse": "滑鼠",
+        "touchscreen_mouse_mode": "觸摸屏模式",
         "swap_mouse_keys": "對調滑鼠的和按鍵",
         "swap_mouse_scroll": "反轉滑鼠垂直滾動方向",
         "overlay": "遊戲中疊加層",
@@ -158,5 +160,6 @@
         "back": "返回",
         "on": "打開",
         "off": "關閉"
+        "submit": "完成"
     }
 }
