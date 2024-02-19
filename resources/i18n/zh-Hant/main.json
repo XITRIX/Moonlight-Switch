@@ -75,7 +75,7 @@
         "keys_mapping_title": "按鍵映射佈局",
         "keys_mapping_create_new": "按+建立新佈局",
         "keys_mapping_new_title": "新佈局",
-		"rumble_force": "震動力度",
+	"rumble_force": "震動力度",
         "single_joycon": "單個Joycon",
         "swap_stick_to_dpad": "使用搖桿作為D-Pad",
         "keyboard": "鍵盤",
