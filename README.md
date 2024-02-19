@@ -139,12 +139,12 @@ Also, please note that the `resources` folder must be available in the working d
 ./extern/vcpkg/bootstrap-vcpkg.sh
 
 # install packages
-./extern/vcpkg/vcpkg --triplet arm64-ios mbedtls
-./extern/vcpkg/vcpkg --triplet arm64-ios jansson
-./extern/vcpkg/vcpkg --triplet arm64-ios ffmpeg
-./extern/vcpkg/vcpkg --triplet arm64-ios "curl[mbedtls]"
-./extern/vcpkg/vcpkg --triplet arm64-ios libpng
-./extern/vcpkg/vcpkg --triplet arm64-ios opus
+./extern/vcpkg/vcpkg install --triplet arm64-ios mbedtls
+./extern/vcpkg/vcpkg install --triplet arm64-ios jansson
+./extern/vcpkg/vcpkg install --triplet arm64-ios ffmpeg
+./extern/vcpkg/vcpkg install --triplet arm64-ios "curl[mbedtls]"
+./extern/vcpkg/vcpkg install --triplet arm64-ios libpng
+./extern/vcpkg/vcpkg install --triplet arm64-ios opus
 ```
 
 ### 1. Build for arm64 iphoneOS
