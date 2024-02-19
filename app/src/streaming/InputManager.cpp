@@ -133,9 +133,10 @@ void MoonlightInputManager::dropInput() {
                    gamepadState.leftStickX, gamepadState.leftStickY,
                    gamepadState.rightStickX, gamepadState.rightStickY) == 0;
     }
-    for (int i = 0; i < 10; i++) {
-        LiSendTouchEvent(LI_TOUCH_EVENT_CANCEL, i, 0, 0, 0, 0, 0, LI_ROT_UNKNOWN);
+    for (auto id: activeTouchIDs) {
+        LiSendTouchEvent(LI_TOUCH_EVENT_CANCEL, id.first, 0, 0, 0, 0, 0, LI_ROT_UNKNOWN);
     }
+    activeTouchIDs.clear();
     inputDropped = res;
 }
 
@@ -371,6 +372,12 @@ void MoonlightInputManager::handleInput() {
                 case TouchPhase::NONE:
                     eventType = LI_TOUCH_EVENT_CANCEL;
                     break;
+            }
+
+            if (touch.phase != TouchPhase::NONE) {
+                activeTouchIDs.insert(std::pair(touch.fingerId, true));
+            } else {
+                activeTouchIDs.erase(touch.fingerId);
             }
 
             if (LiSendTouchEvent(eventType, touch.fingerId, touch.position.x / (float) Application::contentWidth, touch.position.y / (float) Application::contentHeight, 0, 0, 0, LI_ROT_UNKNOWN) == LI_ERR_UNSUPPORTED && i == 0) {

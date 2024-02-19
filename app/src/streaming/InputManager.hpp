@@ -64,6 +64,7 @@ class MoonlightInputManager : public Singleton<MoonlightInputManager> {
     GamepadState lastGamepadStates[GAMEPADS_MAX];
     brls::ControllerButton mappingButtons[brls::_BUTTON_MAX];
     std::optional<brls::PanGestureStatus> panStatus;
+    std::map<uint32_t, bool> activeTouchIDs;
     bool inputDropped = false;
 
     brls::ControllerState mapController(brls::ControllerState controller);
