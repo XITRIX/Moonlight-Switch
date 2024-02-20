@@ -10,3 +10,6 @@
 [submodule "extern/vcpkg"]
 	path = extern/vcpkg
 	url = https://github.com/xitrix/vcpkg.git
+[submodule "extern/mdns"]
+	path = extern/mdns
+	url = https://github.com/mjansson/mdns.git

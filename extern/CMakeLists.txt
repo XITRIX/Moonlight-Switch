@@ -11,6 +11,9 @@ endif ()
 
 add_subdirectory(moonlight-common-c)
 
+
+add_subdirectory(mdns)
+
 #include(FindPkgConfig)
 #find_package(PkgConfig REQUIRED)
 #pkg_check_modules(LIBAV REQUIRED

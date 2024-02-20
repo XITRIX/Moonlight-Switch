@@ -24,7 +24,7 @@ AddHostTab::AddHostTab() {
         return true;
     });
 
-    if (GameStreamClient::instance().can_find_host())
+    if (GameStreamClient::can_find_host())
         findHost();
     else {
         searchHeader->setTitle("add_host/search_error"_i18n);
@@ -39,7 +39,7 @@ AddHostTab::AddHostTab() {
                        findHost();
                        return true;
                    });
-    setActionAvailable(BUTTON_X, GameStreamClient::instance().can_find_host());
+    setActionAvailable(BUTTON_X, GameStreamClient::can_find_host());
 }
 
 void AddHostTab::fillSearchBox(const GSResult<std::vector<Host>>& hostsRes) {
@@ -89,15 +89,16 @@ void AddHostTab::findHost() {
             [this](auto result) { fillSearchBox(result); });
 #else
     ASYNC_RETAIN
-    GameStreamClient::instance().find_hosts(
-        [ASYNC_TOKEN](GSResult<std::vector<Host>> result) {
+    GameStreamClient::find_hosts(
+        [ASYNC_TOKEN](const GSResult<std::vector<Host>>& result) {
             ASYNC_RELEASE
 
             if (result.isSuccess()) {
                 std::vector<Host> hosts = result.value();
 
-                for (Host host : hosts) {
-                    brls::DetailCell* hostButton = new brls::DetailCell();
+                searchBox->clearViews();
+                for (const Host& host : hosts) {
+                    auto hostButton = new brls::DetailCell();
                     hostButton->setText(host.hostname);
                     hostButton->setDetailText(host.address);
                     hostButton->setDetailTextColor(

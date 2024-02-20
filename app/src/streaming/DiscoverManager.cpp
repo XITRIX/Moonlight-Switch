@@ -26,7 +26,7 @@ void DiscoverManager::reset() {
 void DiscoverManager::start() {
     if (addresses.empty()) {
         this->addresses =
-            GameStreamClient::instance().host_addresses_for_find();
+            GameStreamClient::host_addresses_for_find();
         if (addresses.empty()) {
             hosts = hosts.failure("discovery_manager/no_ip"_i18n);
             return;

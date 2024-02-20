@@ -1,5 +1,6 @@
 #include "Data.hpp"
 #include "Singleton.hpp"
+#include "Settings.hpp"
 #include "client.h"
 #include "errors.h"
 #include <functional>
@@ -17,14 +18,14 @@ template <typename T> struct GSResult {
         return result(T(), error, false);
     }
 
-    bool isSuccess() const { return _isSuccess; }
+    [[nodiscard]] bool isSuccess() const { return _isSuccess; }
 
     T value() const { return _value; }
 
-    std::string error() const { return _error; }
+    [[nodiscard]] std::string error() const { return _error; }
 
   private:
-    static GSResult result(T value, std::string error, bool isSuccess) {
+    static GSResult result(T value, const std::string& error, bool isSuccess) {
         GSResult result;
         result._value = value;
         result._error = error;
@@ -33,14 +34,14 @@ template <typename T> struct GSResult {
     }
 
     T _value;
-    std::string _error = "";
+    std::string _error;
     bool _isSuccess = false;
 };
 
 template <class T>
 using ServerCallback = const std::function<void(GSResult<T>)>;
 
-struct Host;
+//struct Host;
 
 struct AppInfo {
     std::string name;
@@ -60,26 +61,25 @@ class GameStreamClient : public Singleton<GameStreamClient> {
     void start();
     void stop();
 
-    std::vector<std::string> host_addresses_for_find();
+    static std::vector<std::string> host_addresses_for_find();
 
-    bool can_find_host();
-    void find_hosts(ServerCallback<std::vector<Host>> callback);
-    void find_host(ServerCallback<Host> callback);
+    static bool can_find_host();
+    static void find_hosts(ServerCallback<std::vector<Host>>& callback);
 
-    bool can_wake_up_host(const Host& host);
-    void wake_up_host(const Host& host, ServerCallback<bool> callback);
+    static bool can_wake_up_host(const Host& host);
+    static void wake_up_host(const Host& host, ServerCallback<bool>& callback);
 
     void connect(const std::string& address,
-                 ServerCallback<SERVER_DATA> callback);
+                 ServerCallback<SERVER_DATA>& callback);
     void pair(const std::string& address, const std::string& pin,
-              ServerCallback<bool> callback);
+              ServerCallback<bool>& callback);
     void applist(const std::string& address,
-                 ServerCallback<AppInfoList> callback);
+                 ServerCallback<AppInfoList>& callback);
     void app_boxart(const std::string& address, int app_id,
-                    ServerCallback<Data> callback);
+                    ServerCallback<Data>& callback);
     void start(const std::string& address, STREAM_CONFIGURATION config,
-               int app_id, ServerCallback<STREAM_CONFIGURATION> callback);
-    void quit(const std::string& address, ServerCallback<bool> callback);
+               int app_id, ServerCallback<STREAM_CONFIGURATION>& callback);
+    void quit(const std::string& address, ServerCallback<bool>& callback);
 
   private:
     std::map<std::string, SERVER_DATA> m_server_data;

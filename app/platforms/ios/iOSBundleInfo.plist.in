@@ -53,5 +53,9 @@
     <string>MyApp would like to remain connected to nearby bluetooth Game Controllers and Game Pads even when you're not using the app.</string>
     <key>CADisableMinimumFrameDurationOnPhone</key>
     <true/>
+    <key>NSBonjourServices</key>
+    <array>
+        <string>_nvstream._tcp</string>
+    </array>
 </dict>
 </plist>
