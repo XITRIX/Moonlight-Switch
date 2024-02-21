@@ -84,7 +84,21 @@ StreamingView::StreamingView(const Host& host, const AppInfo& app) : host(host),
 
     addGestureRecognizer(new PanGestureRecognizer(
         [this](PanGestureStatus status, Sound* sound) {
-            if (status.state == brls::GestureState::START) { removeKeyboard(); }
+            static bool overlayTriggered = false;
+
+            // Close keyboard by swiping outside of it
+            if (status.state == brls::GestureState::START) {
+                removeKeyboard();
+                overlayTriggered = false;
+            }
+
+            // Open overlay by swipe from left screen corner
+            if (!overlayTriggered && status.state == brls::GestureState::STAY && status.startPosition.x < 10 && status.position.x > 100) {
+                overlayTriggered = true;
+                auto overlay = new IngameOverlay(this);
+                Application::pushActivity(new Activity(overlay));
+            }
+
             if (Settings::instance().touchscreen_mouse_mode()) return;
 
             if (status.state == brls::GestureState::UNSURE && lMouseKeyGate) {
