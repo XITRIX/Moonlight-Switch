@@ -15,14 +15,17 @@ MoonlightInputManager::MoonlightInputManager() {
     brls::Application::getPlatform()
         ->getInputManager()
         ->getMouseCusorOffsetChanged()
-        ->subscribe([](brls::Point offset) {
+        ->subscribe([this](brls::Point offset) {
             if (offset.x != 0 || offset.y != 0) {
                 float multiplier =
                     Settings::instance().get_mouse_speed_multiplier() / 100.f *
                         1.5f +
                     0.5f;
-                LiSendMouseMoveEvent(offset.x * multiplier,
-                                     offset.y * multiplier);
+
+                if (!this->inputDropped) {
+                    LiSendMouseMoveEvent(offset.x * multiplier,
+                                         offset.y * multiplier);
+                }
             }
         });
 
@@ -43,8 +46,8 @@ MoonlightInputManager::MoonlightInputManager() {
     brls::Application::getPlatform()
         ->getInputManager()
         ->getKeyboardKeyStateChanged()
-        ->subscribe([this](brls::KeyState state) {
-            int vkKey = this->glfwKeyToVKKey(state.key);
+        ->subscribe([](brls::KeyState state) {
+            int vkKey = MoonlightInputManager::glfwKeyToVKKey(state.key);
             char modifiers = state.mods;
             LiSendKeyboardEvent(vkKey,
                                 state.pressed ? KEY_ACTION_DOWN : KEY_ACTION_UP,
@@ -404,7 +407,7 @@ short MoonlightInputManager::controllersToMap() {
 
 brls::ControllerState
 MoonlightInputManager::mapController(brls::ControllerState controller) {
-    brls::ControllerState result;
+    brls::ControllerState result{};
 
     std::fill(result.buttons, result.buttons + sizeof(result.buttons), false);
 
@@ -428,7 +431,7 @@ void MoonlightInputManager::rightMouseClick() {
     LiSendMouseButtonEvent(BUTTON_ACTION_RELEASE, BUTTON_MOUSE_RIGHT);
 }
 
-int MoonlightInputManager::glfwKeyToVKKey(BrlsKeyboardScancode key) {
+short MoonlightInputManager::glfwKeyToVKKey(BrlsKeyboardScancode key) {
     if (BRLS_KBD_KEY_F1 <= key && key <= BRLS_KBD_KEY_F12)
         return key - BRLS_KBD_KEY_F1 + 0x70;
 

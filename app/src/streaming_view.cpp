@@ -97,8 +97,14 @@ StreamingView::StreamingView(const Host& host, const AppInfo& app) : host(host),
                                            BUTTON_MOUSE_LEFT);
                 }
             } else if (status.state == brls::GestureState::STAY) {
-                MoonlightInputManager::instance().updateTouchScreenPanDelta(
-                    status);
+                brls::RawMouseState mouseState;
+                Application::getPlatform()->getInputManager()->updateMouseStates(&mouseState);
+                // Dirty hack to not update pan if mouse left button is pressed, because pan gesture recognizer will append its speed with raw mouse value
+                // Need to improve gesture recognizers to determine the input source and ignore it for mouse
+                if (!mouseState.leftButton) {
+                    MoonlightInputManager::instance().updateTouchScreenPanDelta(
+                            status);
+                }
             } else if (lMouseKeyUsed) {
 //                Logger::debug("Release key at {}", status.state);
                 LiSendMouseButtonEvent(BUTTON_ACTION_RELEASE,
