@@ -9,7 +9,7 @@
 	url = https://github.com/XITRIX/CImg.git
 [submodule "extern/vcpkg"]
 	path = extern/vcpkg
-	url = https://github.com/xitrix/vcpkg.git
+	url = https://github.com/microsoft/vcpkg.git
 [submodule "extern/mdns"]
 	path = extern/mdns
 	url = https://github.com/mjansson/mdns.git
