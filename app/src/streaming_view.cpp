@@ -18,7 +18,7 @@
 
 using namespace brls;
 
-StreamingView::StreamingView(Host host, AppInfo app) : host(host), app(app) {
+StreamingView::StreamingView(const Host& host, const AppInfo& app) : host(host), app(app) {
     Application::getPlatform()->disableScreenDimming(true);
 
     setFocusable(true);
@@ -61,7 +61,9 @@ StreamingView::StreamingView(Host host, AppInfo app) : host(host), app(app) {
         new FingersGestureRecognizer(3, [this] { addKeyboard(); }));
 
     addGestureRecognizer(
-        new ClickGestureRecognizer(1, [this](TapGestureStatus status) {
+        new ClickGestureRecognizer(1, [](TapGestureStatus status) {
+            if (Settings::instance().touchscreen_mouse_mode()) return;
+
             if (status.state == brls::GestureState::END) {
                 Logger::debug("Left mouse click");
                 MoonlightInputManager::instance().leftMouseClick();
@@ -71,7 +73,9 @@ StreamingView::StreamingView(Host host, AppInfo app) : host(host), app(app) {
         }));
 
     addGestureRecognizer(
-        new ClickGestureRecognizer(2, [this](TapGestureStatus status) {
+        new ClickGestureRecognizer(2, [](TapGestureStatus status) {
+            if (Settings::instance().touchscreen_mouse_mode()) return;
+
             if (status.state == brls::GestureState::END) {
                 Logger::debug("Right mouse click");
                 MoonlightInputManager::instance().rightMouseClick();
@@ -80,11 +84,13 @@ StreamingView::StreamingView(Host host, AppInfo app) : host(host), app(app) {
 
     addGestureRecognizer(new PanGestureRecognizer(
         [this](PanGestureStatus status, Sound* sound) {
+            if (status.state == brls::GestureState::START) { removeKeyboard(); }
+            if (Settings::instance().touchscreen_mouse_mode()) return;
+
             if (status.state == brls::GestureState::UNSURE && lMouseKeyGate) {
                 lMouseKeyGate = false;
                 lMouseKeyUsed = true;
             } else if (status.state == brls::GestureState::START) {
-                removeKeyboard();
                 if (lMouseKeyUsed) {
 //                    Logger::debug("Pressed key at {}", status.state);
                     LiSendMouseButtonEvent(BUTTON_ACTION_PRESS,
@@ -104,6 +110,8 @@ StreamingView::StreamingView(Host host, AppInfo app) : host(host), app(app) {
 
     addGestureRecognizer(new TwoFingerScrollGestureRecognizer(
         [this](TwoFingerScrollState state) {
+            if (Settings::instance().touchscreen_mouse_mode()) return;
+
             if (state.state == brls::GestureState::START)
                 this->touchScrollCounter = 0;
 
@@ -144,7 +152,7 @@ StreamingView::StreamingView(Host host, AppInfo app) : host(host), app(app) {
                     } else if (buttonState && duration.count() >= 2 && !used) {
                         used = true;
 
-                        IngameOverlay* overlay = new IngameOverlay(this);
+                        auto overlay = new IngameOverlay(this);
                         Application::pushActivity(new Activity(overlay));
                     }
                 }
@@ -200,12 +208,12 @@ void StreamingView::draw(NVGcontext* vg, float x, float y, float width,
         nvgFontBlur(vg, 3);
         nvgFillColor(vg, nvgRGBA(0, 0, 0, 255));
         nvgFontFaceId(vg, Application::getFont(FONT_REGULAR));
-        nvgText(vg, 50, height - 28, "\uE140 Bad connection...", NULL);
+        nvgText(vg, 50, height - 28, "\uE140 Bad connection...", nullptr);
 
         nvgFontBlur(vg, 0);
         nvgFillColor(vg, nvgRGBA(255, 255, 255, 255));
         nvgFontFaceId(vg, Application::getFont(FONT_REGULAR));
-        nvgText(vg, 50, height - 28, "\uE140 Bad connection...", NULL);
+        nvgText(vg, 50, height - 28, "\uE140 Bad connection...", nullptr);
     }
 
     if (draw_stats) {
@@ -344,7 +352,7 @@ void StreamingView::handleOverlayCombo() {
     } else if (buttonState && duration.count() >= options.holdTime && !used) {
         used = true;
 
-        IngameOverlay* overlay = new IngameOverlay(this);
+        auto overlay = new IngameOverlay(this);
         Application::pushActivity(new Activity(overlay));
     }
 }
@@ -382,7 +390,7 @@ void StreamingView::handleMouseInputCombo() {
     } else if (buttonState && duration.count() >= options.holdTime && !used) {
         used = true;
 
-        StreamingInputOverlay* overlay = new StreamingInputOverlay(this);
+        auto overlay = new StreamingInputOverlay(this);
         Application::pushActivity(new Activity(overlay));
     }
 }

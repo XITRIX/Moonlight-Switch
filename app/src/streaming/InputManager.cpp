@@ -123,7 +123,7 @@ void MoonlightInputManager::dropInput() {
 
     bool res = true;
     GamepadState gamepadState;
-    for (int i = 0; i < brls::Application::getPlatform()
+    for (short i = 0; i < brls::Application::getPlatform()
                             ->getInputManager()
                             ->getControllersConnectedCount();
          i++) {
@@ -282,20 +282,18 @@ void MoonlightInputManager::handleInput() {
     MouseStateS mouseState;
     if (!Settings::instance().touchscreen_mouse_mode()) {
         mouseState = {
-            .scroll_y = stickScrolling, // + mouse.scroll.y,
-            .l_pressed = (specialKey && controller.buttons[brls::BUTTON_RT]) ||
-            mouse.leftButton,
-                .m_pressed = mouse.middleButton,
-                .r_pressed = (specialKey && controller.buttons[brls::BUTTON_LT]) ||
-            mouse.rightButton};
+            .scroll_y = stickScrolling,
+            .l_pressed = (specialKey && controller.buttons[brls::BUTTON_RT]) || mouse.leftButton,
+            .m_pressed = mouse.middleButton,
+            .r_pressed = (specialKey && controller.buttons[brls::BUTTON_LT]) || mouse.rightButton
+        };
     } else {
         mouseState = {
-            .scroll_y = stickScrolling, // + mouse.scroll.y,
-            .l_pressed = false ||
-            mouse.leftButton,
-                .m_pressed = mouse.middleButton,
-                .r_pressed = (specialKey && controller.buttons[brls::BUTTON_LT]) ||
-            mouse.rightButton};
+            .scroll_y = 0,
+            .l_pressed = mouse.leftButton,
+            .m_pressed = mouse.middleButton,
+            .r_pressed = mouse.rightButton
+        };
     }
 
     if (Settings::instance().swap_mouse_scroll())

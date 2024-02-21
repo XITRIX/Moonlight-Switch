@@ -18,7 +18,7 @@
 
 class StreamingView : public brls::Box {
   public:
-    StreamingView(Host host, AppInfo app);
+    StreamingView(const Host& host, const AppInfo& app);
     ~StreamingView();
 
     void draw(NVGcontext* vg, float x, float y, float width, float height,
