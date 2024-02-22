@@ -11,8 +11,9 @@ endif ()
 
 add_subdirectory(moonlight-common-c)
 
-
-add_subdirectory(mdns)
+if (NOT MULTICAST_DISABLED)
+    add_subdirectory(mdns)
+endif ()
 
 #include(FindPkgConfig)
 #find_package(PkgConfig REQUIRED)

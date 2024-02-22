@@ -24,9 +24,11 @@ struct ipv6_mreq {
 };
 #endif
 
+#ifndef MULTICAST_DISABLED
 extern "C" {
 #include <mdns.h>
 }
+#endif
 
 using namespace brls;
 

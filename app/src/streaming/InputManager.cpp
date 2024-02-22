@@ -125,6 +125,7 @@ void MoonlightInputManager::dropInput() {
         return;
 
     bool res = true;
+    // Drop gamepad state
     GamepadState gamepadState;
     for (short i = 0; i < brls::Application::getPlatform()
                             ->getInputManager()
@@ -136,6 +137,11 @@ void MoonlightInputManager::dropInput() {
                    gamepadState.leftStickX, gamepadState.leftStickY,
                    gamepadState.rightStickX, gamepadState.rightStickY) == 0;
     }
+
+    // Drop touchscreen mouse state
+    LiSendMouseButtonEvent(BUTTON_ACTION_RELEASE,BUTTON_MOUSE_LEFT);
+
+    // Drop touchscreen state
     for (auto id: activeTouchIDs) {
         LiSendTouchEvent(LI_TOUCH_EVENT_CANCEL, id.first, 0, 0, 0, 0, 0, LI_ROT_UNKNOWN);
     }
@@ -382,7 +388,16 @@ void MoonlightInputManager::handleInput() {
             }
 
             if (LiSendTouchEvent(eventType, touch.fingerId, touch.position.x / (float) Application::contentWidth, touch.position.y / (float) Application::contentHeight, 0, 0, 0, LI_ROT_UNKNOWN) == LI_ERR_UNSUPPORTED && i == 0) {
-                LiSendMousePositionEvent(touch.position.x, touch.position.y, Application::windowWidth, Application::windowHeight);
+                // Fallback to move cursor and click if touch unsupported
+                if (touch.phase != TouchPhase::NONE) {
+                    LiSendMousePositionEvent(touch.position.x, touch.position.y, Application::contentWidth, Application::contentHeight);
+                }
+                if (touch.phase == TouchPhase::START) {
+                    LiSendMouseButtonEvent(BUTTON_ACTION_PRESS,BUTTON_MOUSE_LEFT);
+                }
+                if (touch.phase == TouchPhase::END) {
+                    LiSendMouseButtonEvent(BUTTON_ACTION_RELEASE,BUTTON_MOUSE_LEFT);
+                }
             }
         }
     }

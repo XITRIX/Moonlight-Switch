@@ -45,7 +45,6 @@ set(PROJECT_RESOURCES ${CMAKE_CURRENT_SOURCE_DIR}/resources)
 
 add_definitions(
         -DAPP_VERSION="${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_ALTER}"
-#        -DMULTICAST_DISABLED
         -Dcimg_display=0
         -Dcimg_use_png
         -Dcimg_no_system_calls
@@ -53,10 +52,12 @@ add_definitions(
 
 if (PLATFORM_PSV)
     set(USE_OPENSSL_CRYPTO ON)
-    add_definitions(-DUSE_OPENSSL_CRYPTO)
 else ()
     set(USE_MBEDTLS_CRYPTO ON)
-    add_compile_definitions(USE_MBEDTLS_CRYPTO)
+endif ()
+
+if (PLATFORM_IOS)
+    set(MULTICAST_DISABLED ON)
 endif ()
 
 if (USE_LIBROMFS)
@@ -65,8 +66,10 @@ endif ()
 
 if (USE_MBEDTLS_CRYPTO)
     find_package(MbedTLS REQUIRED)
-else ()
+    add_compile_definitions(USE_MBEDTLS_CRYPTO)
+elseif (USE_OPENSSL_CRYPTO)
     find_package(OpenSSL REQUIRED)
+    add_definitions(-DUSE_OPENSSL_CRYPTO)
 endif ()
 
 set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
@@ -221,7 +224,6 @@ else()
 endif ()
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
-        mdns
         borealis
         moonlight-common-c
         Jansson::Jansson
@@ -234,6 +236,12 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
         PNG::PNG
         SDL2::SDL2
         ${APP_PLATFORM_LIB})
+
+if (MULTICAST_DISABLED)
+    add_definitions(-DMULTICAST_DISABLED)
+else ()
+    target_link_libraries(${PROJECT_NAME} PRIVATE mdns)
+endif ()
 
 if (USE_MBEDTLS_CRYPTO)
     target_link_libraries(${PROJECT_NAME} PRIVATE
