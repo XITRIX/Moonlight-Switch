@@ -93,7 +93,7 @@ StreamingView::StreamingView(const Host& host, const AppInfo& app) : host(host),
             }
 
             // Open overlay by swipe from left screen corner
-            if (!overlayTriggered && status.state == brls::GestureState::STAY && status.startPosition.x < 10 && status.position.x > 100) {
+            if (!overlayTriggered && status.state == brls::GestureState::STAY && status.startPosition.x < 100 && status.position.x > 200) {
                 overlayTriggered = true;
                 auto overlay = new IngameOverlay(this);
                 Application::pushActivity(new Activity(overlay));
