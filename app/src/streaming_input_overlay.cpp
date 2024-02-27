@@ -85,15 +85,15 @@ void StreamingInputOverlay::draw(NVGcontext* vg, float x, float y, float width,
             ->updateUnifiedControllerState(&controller);
 
         // Add setting with range 10 - 30
-        int mouseSpeed = 15;
+        float mouseSpeed = 15;
 
         if (controller.buttons[BUTTON_RB])
             mouseSpeed += 10;
         if (controller.buttons[BUTTON_LB])
             mouseSpeed -= 10;
 
-        short x = controller.axes[LEFT_X] * mouseSpeed;
-        short y = controller.axes[LEFT_Y] * mouseSpeed;
+        float x = controller.axes[LEFT_X] * mouseSpeed;
+        float y = controller.axes[LEFT_Y] * mouseSpeed;
 
         // Dead zone prevents from mouse drifting
         if (x < 2 && x > -2)
