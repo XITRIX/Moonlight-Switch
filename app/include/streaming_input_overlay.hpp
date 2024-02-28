@@ -27,8 +27,14 @@ class StreamingInputOverlay : public brls::Box {
     StreamingView* streamView;
     KeyboardView* keyboard = nullptr;
     bool isKeyboardOpen = false;
+    bool hideHints = false;
 
     void toggleKeyboard();
+    void refreshKeyboard();
+    void toggleHintsVisibility();
+
+    void populateHintWithDefaultItems();
+    void populateHintWithKeyboardItems();
 
     BRLS_BIND(brls::Box, inner, "inner");
     BRLS_BIND(brls::Box, hintBar, "hint_bar");

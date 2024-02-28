@@ -135,9 +135,12 @@
     },
     "mouse_input": {
         "title": "Mouse input mode",
+        "hide": "Hide hints",
         "mouse": "Mouse",
         "scroll": "Scroll",
-        "keyboard": "Keyboard"
+        "keyboard": "Keyboard",
+        "space": "Space",
+        "delete": "Del"
     },
     "about": {
         "title": "About",
