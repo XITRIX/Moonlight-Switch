@@ -52,11 +52,15 @@ add_definitions(
 
 if (PLATFORM_PSV)
     set(USE_OPENSSL_CRYPTO ON)
+#elseif (PLATFORM_ANDROID)
+#    set(USE_OPENSSL_CRYPTO ON)
 else ()
     set(USE_MBEDTLS_CRYPTO ON)
 endif ()
 
 if (PLATFORM_IOS)
+    set(MULTICAST_DISABLED ON)
+elseif (PLATFORM_ANDROID)
     set(MULTICAST_DISABLED ON)
 endif ()
 
@@ -99,6 +103,7 @@ elseif (PLATFORM_SWITCH)
             )
 elseif (PLATFORM_PSV)
     add_definitions(-D__psp2__ -D__PSV__)
+elseif (PLATFORM_ANDROID)
 endif ()
 
 
@@ -161,6 +166,8 @@ elseif (PLATFORM_SWITCH)
         COMMAND ${NX_ELF2NRO_EXE} ${PROJECT_NAME}.elf ${PROJECT_NAME}.nro --icon=${PROJECT_ICON} --nacp=${PROJECT_NAME}.nacp --romfsdir=${CMAKE_BINARY_DIR}/resources
     )
     list(APPEND APP_PLATFORM_LIB swresample dav1d z)
+elseif (PLATFORM_ANDROID)
+    list(APPEND APP_PLATFORM_LIB android)
 elseif (PLATFORM_IOS)
     ios_bundle(
             "${CMAKE_CURRENT_SOURCE_DIR}/app/platforms/ios/tvos/Splash.storyboard"
@@ -196,7 +203,9 @@ target_compile_options(${PROJECT_NAME} PRIVATE -ffunction-sections -fdata-sectio
 
 find_package(CURL REQUIRED)
 #find_package(MbedTLS REQUIRED)
-find_package(SDL2 REQUIRED)
+if(NOT PLATFORM_ANDROID)
+    find_package(SDL2 REQUIRED)
+endif()
 find_package(Jansson REQUIRED)
 find_package(EXPAT REQUIRED)
 find_package(PNG REQUIRED)

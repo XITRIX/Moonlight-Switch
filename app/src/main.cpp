@@ -10,8 +10,7 @@
 #include <switch.h>
 #endif
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdlib>
 
 #include <borealis.hpp>
 #include <string>
@@ -27,8 +26,6 @@
 #include "MoonlightSession.hpp"
 #include "SwitchMoonlightSessionDecoderAndRenderProvider.hpp"
 
-#include "backward.hpp"
-#include "streaming_view.hpp"
 
 #ifdef _WIN32
 #include <SDL.h>
@@ -63,18 +60,14 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
-#ifdef __SWITCH__
-    Settings::instance().set_working_dir("sdmc:/switch/Moonlight-Switch");
-#else
-    std::string home(getenv("HOME"));
-    Settings::instance().set_working_dir(home + "/Documents/moonlight-nx");
-    brls::Logger::info("Working dir, {}", home + "/Documents/moonlight-nx");
-#endif
-
     MoonlightSession::set_provider(
-        new SwitchMoonlightSessionDecoderAndRenderProvider());
+            new SwitchMoonlightSessionDecoderAndRenderProvider());
 
     brls::Application::createWindow("title"_i18n);
+
+    auto home = Application::getPlatform()->getHomeDirectory("Moonlight-Switch");
+    Settings::instance().set_working_dir(home);
+    brls::Logger::info("Working dir, {}", home);
 
     // Have the application register an action on every activity that will quit
     // when you press BUTTON_START

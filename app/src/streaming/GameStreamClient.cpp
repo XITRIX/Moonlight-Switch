@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <vector>
 
+#include <curl/curl.h>
 #include <libretro-common/retro_timers.h>
 #include <cstring>
 
@@ -251,6 +252,10 @@ void GameStreamClient::applist(const std::string& address,
         PAPP_LIST list;
 
         int status = gs_applist(&m_server_data[address], &list);
+        if (status != CURLE_OK) {
+            callback(GSResult<AppInfoList>::failure(gs_error()));
+            return;
+        }
 
         AppInfoList app_list;
 
