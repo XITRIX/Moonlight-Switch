@@ -12,6 +12,7 @@ endif ()
 add_subdirectory(moonlight-common-c)
 
 if (NOT MULTICAST_DISABLED)
+    set(MDNS_BUILD_EXAMPLE OFF)
     add_subdirectory(mdns)
 endif ()
 
