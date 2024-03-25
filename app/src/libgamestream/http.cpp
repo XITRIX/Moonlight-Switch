@@ -70,20 +70,16 @@ int http_init(const std::string key_directory) {
     if (!curl)
         return GS_FAILED;
 
-    char certificateFilePath[4096];
-    snprintf(certificateFilePath, sizeof(certificateFilePath), "%s/%s", key_directory.c_str(),
-            CERTIFICATE_FILE_NAME);
-
-    char keyFilePath[4096];
-    snprintf(keyFilePath, sizeof(keyFilePath), "%s/%s", key_directory.c_str(), KEY_FILE_NAME);
+    std::string certificateFilePath = key_directory + "/" + CERTIFICATE_FILE_NAME;
+    std::string keyFilePath = key_directory + "/" + KEY_FILE_NAME;
 
     curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
     curl_easy_setopt(curl, CURLOPT_SSLENGINE_DEFAULT, 1L);
     curl_easy_setopt(curl, CURLOPT_SSLCERTTYPE, "PEM");
-    curl_easy_setopt(curl, CURLOPT_SSLCERT, certificateFilePath);
+    curl_easy_setopt(curl, CURLOPT_SSLCERT, certificateFilePath.c_str());
     curl_easy_setopt(curl, CURLOPT_SSLKEYTYPE, "PEM");
-    curl_easy_setopt(curl, CURLOPT_SSLKEY, keyFilePath);
+    curl_easy_setopt(curl, CURLOPT_SSLKEY, keyFilePath.c_str());
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, _write_curl);
     curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1L);

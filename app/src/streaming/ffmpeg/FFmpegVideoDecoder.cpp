@@ -111,6 +111,8 @@ int FFmpegVideoDecoder::setup(int video_format, int width, int height,
 
 #if defined(__SWITCH__) && defined(BOREALIS_USE_DEKO3D)
         m_frames[i]->format = AV_PIX_FMT_TX1;
+#elif defined(PLATFORM_ANDROID)
+        m_frames[i]->format = AV_PIX_FMT_MEDIACODEC;
 #else
         m_frames[i]->format = AV_PIX_FMT_NV12;
 #endif
@@ -144,9 +146,15 @@ int FFmpegVideoDecoder::setup(int video_format, int width, int height,
     }
 
     if (Settings::instance().use_hw_decoding()) {
-#ifdef __SWITCH__
+#if defined(__SWITCH__)
         if ((err = av_hwdevice_ctx_create(&hw_device_ctx, AV_HWDEVICE_TYPE_TX1, NULL, NULL, 0)) < 0) {
             brls::Logger::error("FFmpeg: Error initializing hardware decoder - {}", err);
+            return -1;
+        }
+        m_decoder_context->hw_device_ctx = av_buffer_ref(hw_device_ctx);
+#elif defined(PLATFORM_ANDROID)
+        if ((err = av_hwdevice_ctx_create(&hw_device_ctx, AV_HWDEVICE_TYPE_MEDIACODEC, NULL, NULL, 0)) < 0) {
+            brls::Logger::error("FFmpeg: Error initializing hardware decoder - {}",  av_err2str(err));
             return -1;
         }
         m_decoder_context->hw_device_ctx = av_buffer_ref(hw_device_ctx);
@@ -288,6 +296,8 @@ AVFrame* FFmpegVideoDecoder::get_frame(bool native_frame) {
 
     if (hw_device_ctx) {
 #ifdef BOREALIS_USE_DEKO3D
+        return tmp_frame;
+#elif defined(PLATFORM_ANDROID)
         return tmp_frame;
 #else
         if ((err = av_hwframe_transfer_data(m_frames[m_next_frame], tmp_frame, 0)) < 0) {

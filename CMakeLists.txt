@@ -50,17 +50,13 @@ add_definitions(
         -Dcimg_no_system_calls
         -DBRLS_I18N_PREFIX=\"main/\")
 
-if (PLATFORM_PSV)
+if (PLATFORM_PSV OR PLATFORM_ANDROID)
     set(USE_OPENSSL_CRYPTO ON)
-#elseif (PLATFORM_ANDROID)
-#    set(USE_OPENSSL_CRYPTO ON)
 else ()
     set(USE_MBEDTLS_CRYPTO ON)
 endif ()
 
-if (PLATFORM_IOS)
-    set(MULTICAST_DISABLED ON)
-elseif (PLATFORM_ANDROID)
+if (PLATFORM_IOS OR PLATFORM_ANDROID)
     set(MULTICAST_DISABLED ON)
 endif ()
 

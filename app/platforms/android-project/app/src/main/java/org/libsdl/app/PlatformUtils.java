@@ -1,5 +1,7 @@
 package org.libsdl.app;
 
+import android.app.Activity;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -11,6 +13,10 @@ import android.net.Uri;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.BatteryManager;
+import android.os.Message;
+import android.provider.Settings;
+import android.view.Window;
+import android.view.WindowManager;
 
 public class PlatformUtils {
     public static boolean isBatterySupported() {
@@ -92,5 +98,28 @@ public class PlatformUtils {
         if (intent.resolveActivity(context.getPackageManager()) != null) {
             context.startActivity(intent);
         }
+    }
+
+    public static float getSystemScreenBrightness(Context context) {
+        ContentResolver contentResolver = context.getContentResolver();
+        return Settings.System.getInt(contentResolver,
+                Settings.System.SCREEN_BRIGHTNESS, 125) * 1.0f / 255.0f;
+    }
+
+    public static BorealisHandler borealisHandler = null;
+
+    public static void setAppScreenBrightness(Activity activity, float value) {
+        Message message = Message.obtain();
+        message.obj = activity;
+        message.arg1 = (int)(value * 255);
+        message.what = 0;
+        if(borealisHandler != null) borealisHandler.sendMessage(message);
+    }
+
+    public static float getAppScreenBrightness(Activity activity) {
+        Window window = activity.getWindow();
+        WindowManager.LayoutParams lp = window.getAttributes();
+        if (lp.screenBrightness < 0) return getSystemScreenBrightness(activity);
+        return lp.screenBrightness;
     }
 }
