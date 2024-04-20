@@ -12,8 +12,9 @@
 using namespace brls;
 
 MoonlightInputManager::MoonlightInputManager() {
-    brls::Application::getPlatform()
-        ->getInputManager()
+    auto inputManager = brls::Application::getPlatform()->getInputManager();
+
+    inputManager
         ->getMouseCusorOffsetChanged()
         ->subscribe([this](brls::Point offset) {
             if (offset.x != 0 || offset.y != 0) {
@@ -29,8 +30,7 @@ MoonlightInputManager::MoonlightInputManager() {
             }
         });
 
-    brls::Application::getPlatform()
-        ->getInputManager()
+    inputManager
         ->getMouseScrollOffsetChanged()
         ->subscribe([](brls::Point scroll) {
             if (scroll.x != 0) {
@@ -43,8 +43,7 @@ MoonlightInputManager::MoonlightInputManager() {
             }
         });
 
-    brls::Application::getPlatform()
-        ->getInputManager()
+    inputManager
         ->getKeyboardKeyStateChanged()
         ->subscribe([](brls::KeyState state) {
             int vkKey = MoonlightInputManager::glfwKeyToVKKey(state.key);
@@ -54,8 +53,7 @@ MoonlightInputManager::MoonlightInputManager() {
                                 modifiers);
         });
 
-    brls::Application::getPlatform()
-        ->getInputManager()
+    inputManager
         ->getControllerSensorStateChanged()
         ->subscribe([this](brls::SensorEvent event) {
             switch (event.type) {
@@ -63,7 +61,11 @@ MoonlightInputManager::MoonlightInputManager() {
                     LiSendControllerMotionEvent((uint8_t)event.controllerIndex, LI_MOTION_TYPE_ACCEL, event.data[0], event.data[1], event.data[2]);
                     break;
                 case brls::SensorEventType::GYRO:
-                    LiSendControllerMotionEvent((uint8_t)event.controllerIndex, LI_MOTION_TYPE_GYRO, event.data[0], event.data[1], event.data[2]);
+                    // Convert rad/s to deg/s
+                    LiSendControllerMotionEvent((uint8_t)event.controllerIndex, LI_MOTION_TYPE_GYRO, 
+                        event.data[0] * 57.2957795f, 
+                        event.data[1] * 57.2957795f, 
+                        event.data[2] * 57.2957795f);
                     break;
             }
         });
@@ -127,10 +129,11 @@ void MoonlightInputManager::dropInput() {
     bool res = true;
     // Drop gamepad state
     GamepadState gamepadState;
-    for (short i = 0; i < brls::Application::getPlatform()
+    auto controllersCount = brls::Application::getPlatform()
                             ->getInputManager()
                             ->getControllersConnectedCount();
-         i++) {
+
+    for (short i = 0; i < controllersCount; i++) {
         res &= LiSendMultiControllerEvent(
                    i, controllersToMap(), gamepadState.buttonFlags,
                    gamepadState.leftTrigger, gamepadState.rightTrigger,
@@ -242,18 +245,24 @@ GamepadState MoonlightInputManager::getControllerState(int controllerNum,
 }
 
 void MoonlightInputManager::handleControllers(bool specialKey) {
-    for (int i = 0; i < brls::Application::getPlatform()
+    static int lastControllerCount = 0;
+
+    auto controllersCount = brls::Application::getPlatform()
                             ->getInputManager()
                             ->getControllersConnectedCount();
-         i++) {
-        GamepadState gamepadState = getControllerState(i, specialKey);
 
-        short controllersCount = controllersToMap();
+    short mappedControllersCount = controllersToMap();
+
+    for (int i = 0; i < controllersCount; i++) {
+        GamepadState gamepadState = getControllerState(i, specialKey);
 
         if (!gamepadState.is_equal(lastGamepadStates[i])) {
             lastGamepadStates[i] = gamepadState;
+
+            LiSendControllerArrivalEvent(i, mappedControllersCount, LI_CTYPE_UNKNOWN, 0, LI_CCAP_RUMBLE | LI_CCAP_ACCEL | LI_CCAP_GYRO);
+
             if (LiSendMultiControllerEvent(
-                    i, controllersCount, gamepadState.buttonFlags,
+                    i, mappedControllersCount, gamepadState.buttonFlags,
                     gamepadState.leftTrigger, gamepadState.rightTrigger,
                     gamepadState.leftStickX, gamepadState.leftStickY,
                     gamepadState.rightStickX, gamepadState.rightStickY) != 0)
