@@ -23,6 +23,7 @@ class MoonlightSession {
     void draw(NVGcontext* vg, int width, int height);
 
     bool is_active() const { return m_is_active; }
+    bool is_terminated() const { return m_is_terminated; }
 
     bool connection_status_is_poor() const {
         return m_connection_status_is_poor;
@@ -69,7 +70,8 @@ class MoonlightSession {
     IVideoRenderer* m_video_renderer = nullptr;
     IAudioRenderer* m_audio_renderer = nullptr;
 
-    bool m_is_active = true;
+    bool m_is_active = false;
+    bool m_is_terminated = false;
     bool m_connection_status_is_poor = false;
 
     SessionStats m_session_stats = {};

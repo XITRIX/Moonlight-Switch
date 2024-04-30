@@ -209,14 +209,14 @@ void StreamingView::onFocusLost() {
 
 void StreamingView::draw(NVGcontext* vg, float x, float y, float width,
                          float height, Style style, FrameContext* ctx) {
-    if (!session->is_active()) {
+    if (session->is_terminated()) {
         terminate(false);
         return;
     }
 
     session->draw(vg, width, height);
 
-    if (!tempInputLock)
+    if (!tempInputLock && session->is_active())
         handleInput();
     handleOverlayCombo();
     handleMouseInputCombo();

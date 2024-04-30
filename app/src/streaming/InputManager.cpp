@@ -253,13 +253,20 @@ void MoonlightInputManager::handleControllers(bool specialKey) {
 
     short mappedControllersCount = controllersToMap();
 
+    if (lastControllerCount != controllersCount) {
+        lastControllerCount = controllersCount;
+        
+        for (int i = 0; i < controllersCount; i++) {
+            Logger::debug("StreamingView: send features message for controller #{}", i);
+            LiSendControllerArrivalEvent(i, mappedControllersCount, LI_CTYPE_UNKNOWN, 0, LI_CCAP_RUMBLE | LI_CCAP_ACCEL | LI_CCAP_GYRO);
+        }
+    }
+
     for (int i = 0; i < controllersCount; i++) {
         GamepadState gamepadState = getControllerState(i, specialKey);
 
         if (!gamepadState.is_equal(lastGamepadStates[i])) {
             lastGamepadStates[i] = gamepadState;
-
-            LiSendControllerArrivalEvent(i, mappedControllersCount, LI_CTYPE_UNKNOWN, 0, LI_CCAP_RUMBLE | LI_CCAP_ACCEL | LI_CCAP_GYRO);
 
             if (LiSendMultiControllerEvent(
                     i, mappedControllersCount, gamepadState.buttonFlags,

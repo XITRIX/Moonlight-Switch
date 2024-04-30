@@ -72,6 +72,7 @@ void MoonlightSession::connection_stage_failed(int stage, int error_code) {
 
 void MoonlightSession::connection_started() {
     brls::Logger::info("MoonlightSession: Connection started");
+        m_active_session->m_is_active = true;
 }
 
 void MoonlightSession::connection_terminated(int error_code) {
@@ -79,6 +80,7 @@ void MoonlightSession::connection_terminated(int error_code) {
 
     if (m_active_session) {
         m_active_session->m_is_active = false;
+        m_active_session->m_is_terminated = true;
     }
 }
 
