@@ -40,38 +40,44 @@ SettingsTab::SettingsTab() {
     // Inflate the tab from the XML file
     this->inflateFromXMLRes("xml/tabs/settings.xml");
 
-    std::vector<std::string> resolutions = {"720p", "1080p", "Native"};
+    std::vector<std::string> resolutions = {"360p", "480p", "720p", "1080p", "Native"};
     resolution->setText("settings/resolution"_i18n);
     resolution->setData(resolutions);
     switch (Settings::instance().resolution()) {
-        GET_SETTINGS(resolution, 720, 0);
-        GET_SETTINGS(resolution, 1080, 1);
-        GET_SETTINGS(resolution, -1, 2);
+        GET_SETTINGS(resolution, 360, 0);
+        GET_SETTINGS(resolution, 480, 1);
+        GET_SETTINGS(resolution, 720, 2);
+        GET_SETTINGS(resolution, 1080, 3);
+        GET_SETTINGS(resolution, -1, 4);
         DEFAULT;
     }
     resolution->getEvent()->subscribe([](int selected) {
         switch (selected) {
-            SET_SETTING(0, set_resolution(720));
-            SET_SETTING(1, set_resolution(1080));
-            SET_SETTING(2, set_resolution(-1));
+            SET_SETTING(0, set_resolution(360));
+            SET_SETTING(1, set_resolution(480));
+            SET_SETTING(2, set_resolution(720));
+            SET_SETTING(3, set_resolution(1080));
+            SET_SETTING(4, set_resolution(-1));
             DEFAULT;
         }
     });
 
-    std::vector<std::string> fpss = {"30", "60", "120"};
+    std::vector<std::string> fpss = {"30", "45", "60", "120"};
     fps->setText("settings/fps"_i18n);
     fps->setData(fpss);
     switch (Settings::instance().fps()) {
         GET_SETTINGS(fps, 30, 0);
-        GET_SETTINGS(fps, 60, 1);
-        GET_SETTINGS(fps, 120, 2);
+        GET_SETTINGS(fps, 45, 1);
+        GET_SETTINGS(fps, 60, 2);
+        GET_SETTINGS(fps, 120, 3);
         DEFAULT;
     }
     fps->getEvent()->subscribe([](int selected) {
         switch (selected) {
             SET_SETTING(0, set_fps(30));
-            SET_SETTING(1, set_fps(60));
-            SET_SETTING(2, set_fps(120));
+            SET_SETTING(1, set_fps(45));
+            SET_SETTING(2, set_fps(60));
+            SET_SETTING(3, set_fps(120));
             DEFAULT;
         }
     });

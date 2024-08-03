@@ -205,6 +205,12 @@ void MoonlightSession::start(ServerCallback<bool> callback) {
         h = Application::windowHeight;
         w = Application::windowWidth;
     }
+
+    // 480p cannot fit into 16/9 aspect ratio without manual adjustments
+    if (h == 480) {
+        h = 480;
+        w = 854;
+    }
     m_config.width = w;
     m_config.height = h;
     m_config.fps = Settings::instance().fps();
