@@ -293,7 +293,9 @@ void MoonlightInputManager::handleInput() {
 
     std::vector<brls::RawTouchState> states;
     brls::Application::getPlatform()->getInputManager()->updateTouchStates(&states);
-    bool specialKey = states.size() == 1;
+
+    //Do not use gamepad for mouse controll assist if touchscreen mode enabled
+    bool specialKey = Settings::instance().touchscreen_mouse_mode() ? false : states.size() == 1;
 
     handleControllers(specialKey);
 
