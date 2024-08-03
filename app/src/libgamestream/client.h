@@ -35,7 +35,6 @@ typedef struct _SERVER_DATA {
     std::string gpuType;
     bool paired;
     bool supports4K;
-    bool unsupported;
     int currentGame;
     int serverMajorVersion;
     std::string gsVersion;

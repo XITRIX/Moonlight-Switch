@@ -131,7 +131,7 @@ static int load_server_status(PSERVER_DATA server, bool skip_https) {
         i++;
     } while (ret != GS_OK && i < 2);
 
-    if (ret == GS_OK && !server->unsupported) {
+    if (ret == GS_OK) {
         if (server->serverMajorVersion > MAX_SUPPORTED_GFE_VERSION) {
             gs_set_error(
                 "Ensure you're running the latest version of Moonlight "
@@ -432,13 +432,6 @@ int gs_start_app(PSERVER_DATA server, STREAM_CONFIGURATION* config, int appId,
     int ret = GS_OK;
     std::string result;
 
-    if (server->unsupported) {
-        gs_set_error(std::string("Mode ") + std::to_string(config->width) +
-                     "x" + std::to_string(config->height) + "x" +
-                     std::to_string(config->fps) + " not supported");
-        return GS_NOT_SUPPORTED_MODE;
-    }
-
     if (config->height >= 2160 && !server->supports4K) {
         gs_set_error("4K not supported");
         return GS_NOT_SUPPORTED_4K;
@@ -539,7 +532,6 @@ int gs_init(PSERVER_DATA server, const std::string address, bool skip_https) {
     LiInitializeServerInformation(&server->serverInfo);
     server->address = address;
     server->serverInfo.address = server->address.c_str();
-    server->unsupported = Settings::instance().ignore_unsupported_resolutions();
 
     int result = load_server_status(server, skip_https);
     server->serverInfo.serverInfoAppVersion =
