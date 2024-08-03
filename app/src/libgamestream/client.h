@@ -40,7 +40,6 @@ typedef struct _SERVER_DATA {
     int serverMajorVersion;
     std::string gsVersion;
     std::string hostname;
-    PDISPLAY_MODE modes;
     SERVER_INFORMATION serverInfo;
 } SERVER_DATA, *PSERVER_DATA;
 
