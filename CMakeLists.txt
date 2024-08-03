@@ -33,7 +33,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${EXTERN_PATH}/cmake")
 # project info
 project(Moonlight)
 set(VERSION_MAJOR "1")
-set(VERSION_MINOR "1")
+set(VERSION_MINOR "2")
 set(VERSION_ALTER "0")
 set(VERSION_BUILD "1")
 set(PACKAGE_NAME "com.xitrix.moonlight")

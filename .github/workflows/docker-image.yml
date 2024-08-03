@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     
     container:
-      image: docker://devkitpro/devkita64:20240120
+      image: docker://devkitpro/devkita64:20240604
 
     steps:
     - name: Check out repository
