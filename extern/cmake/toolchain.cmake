@@ -34,6 +34,24 @@ elseif (PLATFORM_IOS)
     set(USE_LIBROMFS ON)
     set(CMAKE_XCODE_ATTRIBUTE_TARGETED_DEVICE_FAMILY "1,2") # iphone, ipad
     check_libromfs_generator()
+elseif (PLATFORM_TVOS)
+    add_definitions(-DPLATFORM_TVOS)
+    message(STATUS "building for tvOS")
+    set(ENABLE_STRICT_TRY_COMPILE ON)
+    if (NOT DEFINED BOREALIS_LIBRARY)
+        message(FATAL_ERROR BOREALIS_LIBRARY is not defined)
+    endif ()
+    set(PLATFORM TVOS)
+    set(DEPLOYMENT_TARGET 13.0)
+    set(VCPKG_INSTALL_OPTIONS "--allow-unsupported")
+    set(CMAKE_TOOLCHAIN_FILE ${EXTERN_PATH}/vcpkg/scripts/buildsystems/vcpkg.cmake CACHE PATH "vcpkg toolchain file")
+    set(VCPKG_CHAINLOAD_TOOLCHAIN_FILE ${BOREALIS_LIBRARY}/cmake/ios.toolchain.cmake CACHE PATH "ios toolchain file")
+    set(USE_SDL2 ON)
+    set(USE_GLFW OFF)
+    set(USE_GLES3 ON)
+    set(USE_LIBROMFS ON)
+    set(CMAKE_XCODE_ATTRIBUTE_TARGETED_DEVICE_FAMILY "3") # tvos
+    check_libromfs_generator()
 elseif(PLATFORM_ANDROID)
     add_definitions(-DPLATFORM_ANDROID)
     message(STATUS "building for Android")
@@ -136,27 +154,25 @@ function(program_target target source)
     endif ()
 endfunction()
 
-function(ios_bundle tvosStoryBoard iosStoryBoard assets plist name version)
+function(ios_bundle iosStoryBoard assets plist name version)
     set(IOS_CODE_SIGN_IDENTITY "" CACHE STRING "The code sign identity to use when building the IPA.")
     set(IOS_GUI_IDENTIFIER "" CACHE STRING "The package name")
-#    if(IOS_CODE_SIGN_IDENTITY STREQUAL "")
-#        set(IOS_CODE_SIGNING_ENABLED NO)
-#    else()
+    if(IOS_CODE_SIGN_IDENTITY STREQUAL "")
+        set(IOS_CODE_SIGNING_ENABLED NO)
+    else()
         set(IOS_CODE_SIGNING_ENABLED YES)
-#    endif()
+    endif()
     if (IOS_GUI_IDENTIFIER STREQUAL "")
         set(IOS_GUI_IDENTIFIER "${PACKAGE_NAME}")
         message(WARNING "Using default package name: ${PACKAGE_NAME}")
     endif ()
-    if (TVOS)
-        set(IOS_SPLASH_STORYBOARD "${tvosStoryBoard}")
-    else ()
-        set(IOS_SPLASH_STORYBOARD "${iosStoryBoard}")
-    endif ()
+
+    set(IOS_SPLASH_STORYBOARD "${iosStoryBoard}")
+
     set(IOS_ASSETS ${assets})
     set_target_properties(${PROJECT_NAME} PROPERTIES
             XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY "${IOS_CODE_SIGN_IDENTITY}"
-            XCODE_ATTRIBUTE_CODE_SIGNING_ALLOWED "${IOS_CODE_SIGNING_ENABLED}"
+            XCODE_ATTRIBUTE_CODE_SIGNING_ALLOWED YES
             XCODE_ATTRIBUTE_CODE_SIGNING_REQUIRED "${IOS_CODE_SIGNING_ENABLED}"
             BUNDLE TRUE
             MACOSX_BUNDLE_INFO_PLIST ${plist}
@@ -168,8 +184,6 @@ function(ios_bundle tvosStoryBoard iosStoryBoard assets plist name version)
             XCODE_ATTRIBUTE_ENABLE_BITCODE NO
             XCODE_ATTRIBUTE_SKIP_INSTALL NO
             XCODE_ATTRIBUTE_ASSETCATALOG_COMPILER_APPICON_NAME "AppIcon"
-            XCODE_ATTRIBUTE_LD_RUNPATH_SEARCH_PATHS "@executable_path/Frameworks"
-            XCODE_ATTRIBUTE_FRAMEWORK_SEARCH_PATHS "$(SRCROOT)/extern/borealis/library/lib/extern/angle"
             )
     set_property(
             SOURCE ${IOS_ASSETS}

@@ -19,7 +19,7 @@ if (APPLE AND PLATFORM_DESKTOP)
     message(STATUS "CMAKE_OSX_ARCHITECTURES: ${CMAKE_OSX_ARCHITECTURES}")
 endif ()
 
-if (PLATFORM_IOS)
+if (PLATFORM_IOS OR PLATFORM_TVOS)
     set(ENABLE_ARC OFF)
 endif ()
 
@@ -56,7 +56,7 @@ else ()
     set(USE_MBEDTLS_CRYPTO ON)
 endif ()
 
-if (PLATFORM_IOS OR PLATFORM_ANDROID)
+if (PLATFORM_IOS OR PLATFORM_TVOS OR PLATFORM_ANDROID)
     set(MULTICAST_DISABLED ON)
 endif ()
 
@@ -166,13 +166,22 @@ elseif (PLATFORM_ANDROID)
     list(APPEND APP_PLATFORM_LIB android)
 elseif (PLATFORM_IOS)
     ios_bundle(
-            "${CMAKE_CURRENT_SOURCE_DIR}/app/platforms/ios/tvos/Splash.storyboard"
             "${CMAKE_CURRENT_SOURCE_DIR}/app/platforms/ios/iphoneos/Splash.storyboard"
             "${CMAKE_CURRENT_SOURCE_DIR}/app/platforms/ios/Images.xcassets"
             "${CMAKE_CURRENT_SOURCE_DIR}/app/platforms/ios/iOSBundleInfo.plist.in"
             ${PROJECT_NAME}
             "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_ALTER}")
-    list(APPEND IOS_FRAMEWORKS ${CMAKE_CURRENT_SOURCE_DIR}/extern/borealis/library/lib/extern/angle/MetalANGLE.framework)
+    list(APPEND IOS_FRAMEWORKS ${CMAKE_CURRENT_SOURCE_DIR}/extern/borealis/library/lib/extern/angle/ios/MetalANGLE.framework)
+    set_target_properties(${PROJECT_NAME} PROPERTIES 
+        XCODE_EMBED_FRAMEWORKS_CODE_SIGN_ON_COPY ON)
+elseif (PLATFORM_TVOS)
+    ios_bundle(
+            "${CMAKE_CURRENT_SOURCE_DIR}/app/platforms/ios/tvos/Splash.storyboard"
+            "${CMAKE_CURRENT_SOURCE_DIR}/app/platforms/ios/Images.xcassets"
+            "${CMAKE_CURRENT_SOURCE_DIR}/app/platforms/ios/iOSBundleInfo.plist.in"
+            ${PROJECT_NAME}
+            "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_ALTER}")
+    list(APPEND IOS_FRAMEWORKS ${CMAKE_CURRENT_SOURCE_DIR}/extern/borealis/library/lib/extern/angle/tvos/MetalANGLE.framework)
     set_target_properties(${PROJECT_NAME} PROPERTIES 
         XCODE_EMBED_FRAMEWORKS_CODE_SIGN_ON_COPY ON)
 endif ()
@@ -259,7 +268,7 @@ else ()
             OpenSSL::Crypto)
 endif ()
 
-if (PLATFORM_IOS)
+if (PLATFORM_IOS OR PLATFORM_TVOS)
     set_target_properties(${PROJECT_NAME} PROPERTIES
         XCODE_EMBED_FRAMEWORKS "${IOS_FRAMEWORKS}")
 endif()
