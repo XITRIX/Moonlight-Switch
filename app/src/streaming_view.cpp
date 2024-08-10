@@ -308,6 +308,10 @@ void StreamingView::terminate(bool terminateApp) {
 
     session->stop(terminateApp);
 
+    int controllersCount = Application::getPlatform()->getInputManager()->getControllersConnectedCount();
+    for (int i = 0; i < controllersCount; i++)
+        Application::getPlatform()->getInputManager()->sendRumble(i, 0, 0);
+
     bool hasOverlays =
         Application::getActivitiesStack().back() != this->getParentActivity();
     this->dismiss([this, hasOverlays] {
