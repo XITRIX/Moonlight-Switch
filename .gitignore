@@ -4,3 +4,4 @@ build_switch
 libromfs-generator
 build-ios
 build
+vcpkg_installed

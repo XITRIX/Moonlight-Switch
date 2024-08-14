@@ -36,7 +36,7 @@ set(VERSION_MAJOR "1")
 set(VERSION_MINOR "2")
 set(VERSION_ALTER "1")
 set(VERSION_BUILD "1")
-set(PACKAGE_NAME "com.xitrix.moonlight")
+set(PACKAGE_NAME "ru.xitrix.Moonlight")
 set(PSN_TITLE_ID  "MNTL00000")
 set(PSN_VERSION  "01.00")
 set(PROJECT_AUTHOR "XITRIX")
@@ -173,7 +173,12 @@ elseif (PLATFORM_IOS)
             "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_ALTER}")
     list(APPEND IOS_FRAMEWORKS ${CMAKE_CURRENT_SOURCE_DIR}/extern/borealis/library/lib/extern/angle/ios/MetalANGLE.framework)
     set_target_properties(${PROJECT_NAME} PROPERTIES 
-        XCODE_EMBED_FRAMEWORKS_CODE_SIGN_ON_COPY ON)
+        INSTALL_RPATH @executable_path/Frameworks
+        XCODE_EMBED_FRAMEWORKS_CODE_SIGN_ON_COPY ON
+        XCODE_ATTRIBUTE_INFOPLIST_KEY_LSApplicationCategoryType "public.app-category.games"
+        XCODE_ATTRIBUTE_LD_RUNPATH_SEARCH_PATHS "@executable_path/Frameworks"
+        XCODE_ATTRIBUTE_FRAMEWORK_SEARCH_PATHS "${CMAKE_CURRENT_SOURCE_DIR}/extern/borealis/library/lib/extern/angle/ios/"
+        XCODE_ATTRIBUTE_INSTALL_PATH $(LOCAL_APPS_DIR))
 elseif (PLATFORM_TVOS)
     ios_bundle(
             "${CMAKE_CURRENT_SOURCE_DIR}/app/platforms/ios/tvos/Splash.storyboard"
@@ -183,7 +188,13 @@ elseif (PLATFORM_TVOS)
             "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_ALTER}")
     list(APPEND IOS_FRAMEWORKS ${CMAKE_CURRENT_SOURCE_DIR}/extern/borealis/library/lib/extern/angle/tvos/MetalANGLE.framework)
     set_target_properties(${PROJECT_NAME} PROPERTIES 
-        XCODE_EMBED_FRAMEWORKS_CODE_SIGN_ON_COPY ON)
+        INSTALL_RPATH @executable_path/Frameworks
+        XCODE_EMBED_FRAMEWORKS_CODE_SIGN_ON_COPY ON
+        XCODE_ATTRIBUTE_INFOPLIST_KEY_LSApplicationCategoryType "public.app-category.games"
+        XCODE_ATTRIBUTE_LD_RUNPATH_SEARCH_PATHS "@executable_path/Frameworks"
+        XCODE_ATTRIBUTE_FRAMEWORK_SEARCH_PATHS "${CMAKE_CURRENT_SOURCE_DIR}/extern/borealis/library/lib/extern/angle/tvos/"
+        XCODE_ATTRIBUTE_INSTALL_PATH $(LOCAL_APPS_DIR)
+        XCODE_ATTRIBUTE_ASSETCATALOG_COMPILER_APPICON_NAME "AppIconTvOS")
 endif ()
 
 target_include_directories(${PROJECT_NAME} PUBLIC
