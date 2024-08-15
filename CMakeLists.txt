@@ -56,7 +56,7 @@ else ()
     set(USE_MBEDTLS_CRYPTO ON)
 endif ()
 
-if (PLATFORM_IOS OR PLATFORM_TVOS OR PLATFORM_ANDROID)
+if (PLATFORM_IOS OR PLATFORM_TVOS OR PLATFORM_ANDROID OR PLATFORM_PSV)
     set(MULTICAST_DISABLED ON)
 endif ()
 
@@ -139,16 +139,16 @@ elseif (PLATFORM_PSV)
         vita_create_vpk(${PROJECT_NAME}.vpk ${PSN_TITLE_ID} ${PROJECT_NAME}.self
             VERSION ${PSN_VERSION}
             NAME ${PROJECT_NAME}
-            FILE ${CMAKE_SOURCE_DIR}/psv/sce_sys sce_sys
-            FILE ${CMAKE_SOURCE_DIR}/psv/module/ module
+            FILE ${CMAKE_SOURCE_DIR}/app/platforms/psv/sce_sys sce_sys
+            FILE ${CMAKE_SOURCE_DIR}/app/platforms/psv/module/ module
         )
     else()
         vita_create_vpk(${PROJECT_NAME}.vpk ${PSN_TITLE_ID} ${PROJECT_NAME}.self
             VERSION ${PSN_VERSION}
             NAME ${PROJECT_NAME}
             FILE ${CMAKE_SOURCE_DIR}/resources resources
-            FILE ${CMAKE_SOURCE_DIR}/psv/sce_sys sce_sys
-            FILE ${CMAKE_SOURCE_DIR}/psv/module/ module
+            FILE ${CMAKE_SOURCE_DIR}/app/platforms/psv/sce_sys sce_sys
+            FILE ${CMAKE_SOURCE_DIR}/app/platforms/psv/module/ module
         )
     endif()
 elseif (PLATFORM_SWITCH)

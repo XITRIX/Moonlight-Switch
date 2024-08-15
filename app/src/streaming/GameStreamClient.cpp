@@ -11,9 +11,12 @@
 #include <cstring>
 
 #include <arpa/inet.h>
+#include <sys/socket.h>
+
+#ifndef PLATFORM_PSV
 #include <net/if.h>
 #include <sys/ioctl.h>
-#include <sys/socket.h>
+#endif
 
 #if defined(__SWITCH__)
 #include <switch.h>

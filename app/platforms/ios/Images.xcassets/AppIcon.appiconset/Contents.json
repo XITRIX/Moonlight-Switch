@@ -1,34 +1,24 @@
 {
   "images" : [
     {
-      "filename" : "moonlight.png",
-      "idiom" : "universal",
-      "platform" : "ios",
-      "size" : "1024x1024"
-    },
-    {
-      "appearances" : [
-        {
-          "appearance" : "luminosity",
-          "value" : "dark"
-        }
-      ],
       "filename" : "moonlight 1.png",
       "idiom" : "universal",
       "platform" : "ios",
       "size" : "1024x1024"
     },
     {
-      "appearances" : [
-        {
-          "appearance" : "luminosity",
-          "value" : "tinted"
-        }
-      ],
       "filename" : "moonlight 2.png",
       "idiom" : "universal",
       "platform" : "ios",
-      "size" : "1024x1024"
+      "size" : "1024x1024",
+      "unassigned" : true
+    },
+    {
+      "filename" : "moonlight.png",
+      "idiom" : "universal",
+      "platform" : "ios",
+      "size" : "1024x1024",
+      "unassigned" : true
     }
   ],
   "info" : {
