@@ -12,10 +12,9 @@ cmake_dependent_option(USE_SYSTEM_FMT "" OFF "NOT USE_SHARED_LIB" ON)
 cmake_dependent_option(USE_SYSTEM_TINYXML2 "" OFF "NOT USE_SHARED_LIB" ON)
 
 if (APPLE AND PLATFORM_DESKTOP)
-    option(BUNDLE_MACOS_APP "Bundle a app for macOS" OFF)
+    option(BUNDLE_MACOS_APP "Bundle a app for macOS" ON)
     set(CMAKE_OSX_ARCHITECTURES "arm64" CACHE STRING "" FORCE)
-    set(CMAKE_OSX_DEPLOYMENT_TARGET "10.15" CACHE STRING "" FORCE)
-    set(CMAKE_XCODE_ATTRIBUTE_MACOSX_DEPLOYMENT_TARGET[arch=arm64] "11.0" CACHE STRING "" FORCE)
+    set(CMAKE_OSX_DEPLOYMENT_TARGET "12.0" CACHE STRING "" FORCE)
     message(STATUS "CMAKE_OSX_ARCHITECTURES: ${CMAKE_OSX_ARCHITECTURES}")
 endif ()
 
@@ -84,7 +83,7 @@ if (PLATFORM_DESKTOP)
         configure_file("${CMAKE_SOURCE_DIR}/app/resource.rc.in" "${CMAKE_BINARY_DIR}/resource.rc")
         list(APPEND MAIN_SRC ${CMAKE_BINARY_DIR}/resource.rc)
     elseif (BUNDLE_MACOS_APP)
-        list(APPEND MAIN_SRC ${CMAKE_SOURCE_DIR}/app/borealis.icns)
+        # list(APPEND MAIN_SRC ${CMAKE_SOURCE_DIR}/app/borealis.icns)
     endif ()
 elseif (PLATFORM_SWITCH)
     set(PLATFORM_LIBS
@@ -111,24 +110,65 @@ set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 17)
 # building release file
 if (PLATFORM_DESKTOP)
     if (BUNDLE_MACOS_APP)
+        set(IOS_ASSETS ${CMAKE_CURRENT_SOURCE_DIR}/app/platforms/mac/Images.xcassets)
         set_target_properties(${PROJECT_NAME} PROPERTIES
             MACOSX_BUNDLE TRUE
             MACOSX_BUNDLE_BUNDLE_NAME ${PROJECT_NAME}
-            MACOSX_BUNDLE_BUNDLE_VERSION "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_ALTER}"
-            MACOSX_BUNDLE_LONG_VERSION_STRING "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_ALTER}"
-            MACOSX_BUNDLE_SHORT_VERSION_STRING "${VERSION_MAJOR}.${VERSION_MINOR}"
-            MACOSX_BUNDLE_ICON_FILE "borealis.icns"
+            # MACOSX_BUNDLE_ICON_FILE "borealis.icns"
             MACOSX_BUNDLE_COPYRIGHT "Copyright 2023 ${PROJECT_AUTHOR}"
-            RESOURCE "${CMAKE_SOURCE_DIR}/app/borealis.icns"
+            # RESOURCE "${CMAKE_SOURCE_DIR}/app/borealis.icns"
+            XCODE_ATTRIBUTE_ASSETCATALOG_COMPILER_APPICON_NAME "AppIcon"
+            MACOSX_BUNDLE_GUI_IDENTIFIER "${PACKAGE_NAME}"
+            MACOSX_BUNDLE_BUNDLE_VERSION "${VERSION_BUILD}"
+            MACOSX_BUNDLE_SHORT_VERSION_STRING "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_ALTER}"
+            MACOSX_BUNDLE_LONG_VERSION_STRING "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_ALTER}"
+            XCODE_ATTRIBUTE_INFOPLIST_KEY_LSApplicationCategoryType "public.app-category.games" # Not work
+            XCODE_ATTRIBUTE_INSTALL_PATH $(LOCAL_APPS_DIR)
+            XCODE_EMBED_RESOURCES_CODE_SIGN_ON_COPY ON # Not work
+            XCODE_EMBED_FRAMEWORKS_CODE_SIGN_ON_COPY ON # Not work
         )
+
+        set_property(
+            SOURCE ${IOS_ASSETS}
+            PROPERTY MACOSX_PACKAGE_LOCATION "Resources"
+        )
+
+        target_sources(${PROJECT_NAME} PRIVATE
+            ${IOS_ASSETS}
+        )
+
         add_custom_target(${PROJECT_NAME}.data
                 COMMAND "${CMAKE_COMMAND}" -E copy_directory ${PROJECT_RESOURCES} ${PROJECT_NAME}.app/Contents/Resources/resources
         )
     else ()
-        add_custom_target(${PROJECT_NAME}.data
+        add_custom_target(${PRxOJECT_NAME}.data
                 COMMAND "${CMAKE_COMMAND}" -E copy_directory ${PROJECT_RESOURCES} ${CMAKE_CURRENT_BINARY_DIR}/resources
         )
     endif ()
+
+    list(APPEND google_angle_libs 
+        ${CMAKE_CURRENT_SOURCE_DIR}/extern/borealis/library/lib/extern/angle/mac/libEGL.dylib
+        ${CMAKE_CURRENT_SOURCE_DIR}/extern/borealis/library/lib/extern/angle/mac/libGLESv2.dylib
+    )
+
+    set_property(
+        SOURCE ${google_angle_libs}
+        PROPERTY MACOSX_PACKAGE_LOCATION "Frameworks"
+    )
+
+    target_sources(${PROJECT_NAME} PRIVATE
+        ${google_angle_libs}
+    )
+
+    set_target_properties(${PROJECT_NAME} PROPERTIES
+        INSTALL_RPATH "@executable_path/../Frameworks"
+        XCODE_ATTRIBUTE_LD_RUNPATH_SEARCH_PATHS "@executable_path/../Frameworks"
+    )
+
+    target_link_libraries(${PROJECT_NAME} PRIVATE 
+        ${google_angle_libs}
+    )
+
     if (NOT USE_LIBROMFS)
         add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}.data)
     endif ()
@@ -164,13 +204,21 @@ elseif (PLATFORM_SWITCH)
     list(APPEND APP_PLATFORM_LIB swresample dav1d z)
 elseif (PLATFORM_ANDROID)
     list(APPEND APP_PLATFORM_LIB android)
+    target_link_libraries(${PROJECT_NAME} PRIVATE 
+        # ${CMAKE_CURRENT_SOURCE_DIR}/extern/borealis/library/lib/extern/angle/android/arm64_v8a/libOSMesa.so
+        ${CMAKE_CURRENT_SOURCE_DIR}/extern/borealis/library/lib/extern/angle/android/libEGL_angle.so
+        # ${CMAKE_CURRENT_SOURCE_DIR}/extern/borealis/library/lib/extern/angle/android/libGLESv1_CM_angle.so
+        ${CMAKE_CURRENT_SOURCE_DIR}/extern/borealis/library/lib/extern/angle/android/libGLESv2_angle.so
+        # ${CMAKE_CURRENT_SOURCE_DIR}/extern/borealis/library/lib/extern/angle/android/libGLESv2_vulkan_secondaries_angle.so
+    )
 elseif (PLATFORM_IOS)
     ios_bundle(
             "${CMAKE_CURRENT_SOURCE_DIR}/app/platforms/ios/iphoneos/Splash.storyboard"
             "${CMAKE_CURRENT_SOURCE_DIR}/app/platforms/ios/Images.xcassets"
             "${CMAKE_CURRENT_SOURCE_DIR}/app/platforms/ios/iOSBundleInfo.plist.in"
             ${PROJECT_NAME}
-            "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_ALTER}")
+            "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_ALTER}"
+            "${VERSION_BUILD}")
     list(APPEND IOS_FRAMEWORKS ${CMAKE_CURRENT_SOURCE_DIR}/extern/borealis/library/lib/extern/angle/ios/MetalANGLE.framework)
     set_target_properties(${PROJECT_NAME} PROPERTIES 
         INSTALL_RPATH @executable_path/Frameworks
@@ -185,7 +233,8 @@ elseif (PLATFORM_TVOS)
             "${CMAKE_CURRENT_SOURCE_DIR}/app/platforms/ios/Images.xcassets"
             "${CMAKE_CURRENT_SOURCE_DIR}/app/platforms/ios/iOSBundleInfo.plist.in"
             ${PROJECT_NAME}
-            "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_ALTER}")
+            "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_ALTER}"
+            "${VERSION_BUILD}")
     list(APPEND IOS_FRAMEWORKS ${CMAKE_CURRENT_SOURCE_DIR}/extern/borealis/library/lib/extern/angle/tvos/MetalANGLE.framework)
     set_target_properties(${PROJECT_NAME} PROPERTIES 
         INSTALL_RPATH @executable_path/Frameworks
