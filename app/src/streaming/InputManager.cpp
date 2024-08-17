@@ -17,6 +17,8 @@ MoonlightInputManager::MoonlightInputManager() {
     inputManager
         ->getMouseCusorOffsetChanged()
         ->subscribe([this](brls::Point offset) {
+            if (!inputEnabled) return;
+
             if (offset.x != 0 || offset.y != 0) {
                 float multiplier =
                     Settings::instance().get_mouse_speed_multiplier() / 100.f *
@@ -32,7 +34,9 @@ MoonlightInputManager::MoonlightInputManager() {
 
     inputManager
         ->getMouseScrollOffsetChanged()
-        ->subscribe([](brls::Point scroll) {
+        ->subscribe([this](brls::Point scroll) {
+            if (!inputEnabled) return;
+
             if (scroll.x != 0) {
                 brls::Logger::info("Mouse scroll X sended: {}", scroll.x);
                 LiSendHighResHScrollEvent( short(scroll.x));
@@ -45,7 +49,9 @@ MoonlightInputManager::MoonlightInputManager() {
 
     inputManager
         ->getKeyboardKeyStateChanged()
-        ->subscribe([](brls::KeyState state) {
+        ->subscribe([this](brls::KeyState state) {
+            if (!inputEnabled) return;
+
             int vkKey = MoonlightInputManager::glfwKeyToVKKey(state.key);
             char modifiers = state.mods;
             LiSendKeyboardEvent(vkKey,
@@ -56,6 +62,8 @@ MoonlightInputManager::MoonlightInputManager() {
     inputManager
         ->getControllerSensorStateChanged()
         ->subscribe([this](brls::SensorEvent event) {
+            if (!inputEnabled) return;
+            
             switch (event.type) {
                 case brls::SensorEventType::ACCEL:
                     LiSendControllerMotionEvent((uint8_t)event.controllerIndex, LI_MOTION_TYPE_ACCEL, event.data[0], event.data[1], event.data[2]);
@@ -149,6 +157,13 @@ void MoonlightInputManager::dropInput() {
         LiSendTouchEvent(LI_TOUCH_EVENT_CANCEL, id.first, 0, 0, 0, 0, 0, LI_ROT_UNKNOWN);
     }
     activeTouchIDs.clear();
+
+    // Drop keyboard state
+    for (int i = BRLS_KBD_KEY_SPACE; i < BrlsKeyboardScancode::BRLS_KBD_KEY_LAST; i++)  {
+        int vkKey = MoonlightInputManager::glfwKeyToVKKey((BrlsKeyboardScancode)i);
+        LiSendKeyboardEvent(vkKey, KEY_ACTION_UP, 0);
+    }
+
     inputDropped = res;
 }
 

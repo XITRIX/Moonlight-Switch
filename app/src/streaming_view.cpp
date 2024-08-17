@@ -182,6 +182,9 @@ StreamingView::StreamingView(const Host& host, const AppInfo& app) : host(host),
 
 void StreamingView::onFocusGained() {
     View::onFocusGained();
+
+    MoonlightInputManager::instance().setInputEnabled(true);
+
     if (!blocked) {
         blocked = true;
         Application::blockInputs(true);
@@ -199,6 +202,10 @@ void StreamingView::onFocusGained() {
 
 void StreamingView::onFocusLost() {
     View::onFocusLost();
+
+    MoonlightInputManager::instance().setInputEnabled(false);
+    MoonlightInputManager::instance().dropInput();
+
     if (blocked) {
         blocked = false;
         Application::unblockInputs();

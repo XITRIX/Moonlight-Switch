@@ -56,6 +56,7 @@ class MoonlightInputManager : public Singleton<MoonlightInputManager> {
     void handleRumbleTriggers(unsigned short controller, unsigned short lowFreqMotor, unsigned short highFreqMotor);
     void updateTouchScreenPanDelta(brls::PanGestureStatus panStatus);
     void reloadButtonMappingLayout();
+    void setInputEnabled(bool enabled) { inputEnabled = enabled; }
     static void leftMouseClick();
     static void rightMouseClick();
 
@@ -66,6 +67,7 @@ class MoonlightInputManager : public Singleton<MoonlightInputManager> {
     std::optional<brls::PanGestureStatus> panStatus;
     std::map<uint32_t, bool> activeTouchIDs;
     bool inputDropped = false;
+    bool inputEnabled = true;
 
     brls::ControllerState mapController(brls::ControllerState controller);
     static short glfwKeyToVKKey(brls::BrlsKeyboardScancode key);
