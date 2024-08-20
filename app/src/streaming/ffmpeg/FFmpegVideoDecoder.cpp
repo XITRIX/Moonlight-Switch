@@ -44,13 +44,12 @@ int FFmpegVideoDecoder::setup(int video_format, int width, int height,
 
     int perf_lvl = LOW_LATENCY_DECODE;
 
-    switch (video_format) {
-    case VIDEO_FORMAT_H264:
+    if (video_format & VIDEO_FORMAT_MASK_H264) {
         m_decoder = avcodec_find_decoder_by_name("h264");
-        break;
-    case VIDEO_FORMAT_H265:
+    } else if (video_format & VIDEO_FORMAT_MASK_H265) {
         m_decoder = avcodec_find_decoder_by_name("hevc");
-        break;
+    } else {
+        // Unsupported decoder type
     }
 
     if (m_decoder == NULL) {
