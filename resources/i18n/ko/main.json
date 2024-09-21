@@ -75,6 +75,7 @@
         "keys_mapping_title": "키 매핑 레이아웃",
         "keys_mapping_create_new": "+ 새로운 레이아웃 생성",
         "keys_mapping_new_title": "새로운 레이아웃",
+        "rumble_force": "진동 강도",
         "single_joycon": "1인용 조이콘",
         "swap_stick_to_dpad": "스틱을 십자패드로 사용",
         "keyboard": "키보드",
@@ -134,9 +135,12 @@
     },
     "mouse_input": {
         "title": "마우스 입력 모드",
+        "hide": "힌트 숨기기",
         "mouse": "마우스",
         "scroll": "스크롤",
         "keyboard": "키보드"
+        "space": "스페이스",
+        "delete": "삭제"
     },
     "about": {
         "title": "정보",
