@@ -2,7 +2,7 @@
 
 Moonlight-Switch is a port of [Moonlight Game Streaming Project](https://github.com/moonlight-stream "Moonlight Game Streaming Project") for Nintendo Switch.
 
-# Screenshots
+## Screenshots
 <details>
   <summary>Preview</summary>
   <p float="left">
@@ -14,14 +14,8 @@ Moonlight-Switch is a port of [Moonlight Game Streaming Project](https://github.
   </p>
 </details>
 
-# How to reach higher bitrate
-To be able to use high bitrate setting especially with 1080p - resolution, you need to overclock CPU/GPU of your console.
-
-To learn more about that you can take a look at [Sys-Clk homebrew](https://github.com/retronx-team/sys-clk) or entire [Atmosphere build - 4IFIR](https://github.com/rashevskyv/4IFIR/blob/main/README_ENG.md) which includes everything you need to overclock your console
-
-I DO NOT RESPOSIBLE FOR ANY DAMAGE TO YOUR CONSOLE IF ANYTHING WILL GO WRONG! I am using 4IFIR by myself and not find any issue, but everything possible. So think by you own head and be responsible for what you do with your devices!
-
 # Installing
+### Switch
 1. Download latest Moonlight-Switch [release](https://github.com/XITRIX/Moonlight-Switch/releases).
 2. Put Moonlight.nro to sdcard:/switch/Moonlight-Switch;
 3. Launch hbmenu over *Title Redirection* (for FULL RAM access);
@@ -29,11 +23,24 @@ I DO NOT RESPOSIBLE FOR ANY DAMAGE TO YOUR CONSOLE IF ANYTHING WILL GO WRONG! I 
 
 Or download it from [HB App Store](https://apps.fortheusers.org/switch/Moonlight-Switch)
 
-# Discord
-Feel free to join [Moonlight discord server](https://discord.gg/fmtcVPzaG4), you will find me there in "switch-help" channel
+> [!TIP]
+> To be able to use high bitrate setting especially with 1080p - resolution, you need to overclock CPU/GPU of your console.
+>
+> To learn more about that you can take a look at [Sys-Clk homebrew](https://github.com/retronx-team/sys-clk) or entire [Atmosphere build - 4IFIR](https://github.com/rashevskyv/4IFIR/blob/main/README_ENG.md) which includes everything you need to overclock your console
 
-# Controls
-## Mouse
+> [!WARNING]
+> I DO NOT RESPOSIBLE FOR ANY DAMAGE TO YOUR CONSOLE IF SOMETHING WILL GO WRONG!
+>
+> I am using 4IFIR by myself and not find any issue, but everything is possible. So think by you own head and be responsible for what you do with your devices!
+
+### iOS, tvOS and macOS
+Accept [invite for TestFlight](https://testflight.apple.com/join/P9EX5vQ5) and download app from there
+
+## Discord
+Feel free to join [Moonlight discord server](https://discord.gg/fmtcVPzaG4), you will find me there in "switch-help" channel 
+
+## Controls
+### Mouse
 With touch screen you can move your coursor, tap to left click, scroll 2 fingers to scroll.
 
 While touching screen ZR and ZL buttons will work like left and right mouse buttons.
@@ -42,20 +49,20 @@ Also while touching screen L and R sticks will work like scrolling wheel.
 
 USB mouse working as well.
 
-## Keyboard
+### Keyboard
 You can use onscreen keyboard, tap 3 fingers on screen to show it.
 
 USB keyboard working as well.
 
-## Gamepad
+### Gamepad
 By default, Switch gamepad configured as X360 gamepad (A/B and X/Y swapped). Key mapping available in application settings.
 
 Up to 5 gamepads (includes handheld mode) supported. Half of joycons are also supported.
 
-## SixAxis
+### SixAxis
 You should configure your Sunshine server to recognise controller as DS4 one to be able to use Gyro and Accelerometer. Only works for player 1 controller.
 
-## Ingame overlay
+### Ingame overlay
 To open overlay, press - and + key simultaneously by default or Hold ESC on keyboard.
 
 Key combination and holding time are configurable in settings.
@@ -71,7 +78,7 @@ You'll need to add thees arguments to the forwarder:
 example:
 `--host=a2:34:de:ad:12:3b --appid=1233211234 --appname=Steam`
 
-# Localization
+## Localization
 - English (100%)
 - Russian (100%)
 - German (86%)
@@ -80,7 +87,7 @@ example:
 - Chinese (simplified) (86%)
 - Czech (70%) - unsupported yet, as HOS has no such system language
 
-## Contribution
+### Contribution
 If you'd like to improve existing language, or add a new one, follow the instruction:
 1. Ask a permission to modify language [here](https://poeditor.com/join/project?hash=9kiCIvN0dc)
 2. Notify me by [creating an issue](https://github.com/XITRIX/Moonlight-Switch/issues/new) with title "[Localization] - {Name of language}", in description write your nickname on POEditor
@@ -92,9 +99,10 @@ You have 2 options to add that translation:
 
 If you'd like to test your translation, you could follow build instructions, or ask me to create a build with your localization, I'll attach that build in issue.
 
-ATTENTION! Currently there is no way to select language inside of app, it takes from system settings, so it is impossible to add locatization, that HOS doesn't support (that happend with Czech language).
+> [!WARNING]
+> Currently there is no way to select language inside of app, it takes from system settings, so it is impossible to add locatization, that HOS doesn't support (that happend with Czech language).
 
-# Build Moonlight-Switch
+## Build Moonlight-Switch
 
 ```bash
 cd 'folder/to/store/the/sources'
@@ -104,7 +112,7 @@ git clone https://github.com/XITRIX/Moonlight-Switch.git --recursive
 cd Moonlight-Switch
 ```
 
-## Switch
+### Switch
 
 To build for Switch, a standard development environment must first be set up. In order to do so, [refer to the Getting Started guide](https://devkitpro.org/wiki/Getting_Started).
 
@@ -113,7 +121,7 @@ cmake -B build/switch -DPLATFORM_SWITCH=ON
 make -C build/switch Moonlight.nro -j$(nproc)
 ```
 
-## PC (Windows/Linux/MacOS)
+### PC (Windows/Linux/MacOS)
 
 To build for PC, the following components are required:
 
@@ -129,7 +137,7 @@ make -C build/pc -j$(nproc)
 
 Also, please note that the `resources` folder must be available in the working directory, otherwise the program will fail to find the shaders.
 
-## iOS:
+### iOS:
 
 ```shell
 # build libromfs generator
@@ -147,7 +155,7 @@ Also, please note that the `resources` folder must be available in the working d
 ./extern/vcpkg/vcpkg install --triplet arm64-ios opus
 ```
 
-### 1. Build for arm64 iphoneOS
+#### 1. Build for arm64 iphoneOS
 
 ```shell
 # 1. Generate a Xcode project
@@ -161,7 +169,7 @@ open build/ios/*.xcodeproj
 # 3. Set up Team and Bundle Identifiers in Xcode, then connect devices to run.
 ```
 
-# Credits
+## Credits
 Thanks a lot to [Rock88](https://github.com/rock88) and his [Moonlight-NX](https://github.com/rock88/moonlight-nx), lots of streaming code has been lend from it 👍.
 
 [Xfangfang](https://github.com/xfangfang) for maintaining [Borealis](https://github.com/xfangfang/borealis) library. iOS port would not be possible without it. 
