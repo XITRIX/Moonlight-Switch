@@ -27,6 +27,9 @@ jobs:
     - name: Remove enet
       run: dkp-pacman --noconfirm -R switch-enet
 
+    - name: Remove ffmpeg
+      run: dkp-pacman --noconfirm -R switch-libmpv switch-ffmpeg
+
     - name: Run cmake
       continue-on-error: true
       run: cmake -B build/switch -DPLATFORM_SWITCH=ON

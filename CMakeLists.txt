@@ -33,7 +33,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${EXTERN_PATH}/cmake")
 project(Moonlight)
 set(VERSION_MAJOR "1")
 set(VERSION_MINOR "2")
-set(VERSION_ALTER "1")
+set(VERSION_ALTER "2")
 set(VERSION_BUILD "1")
 set(PACKAGE_NAME "ru.xitrix.Moonlight")
 set(PSN_TITLE_ID  "MNTL00000")
@@ -201,7 +201,7 @@ elseif (PLATFORM_SWITCH)
         COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_BINARY_DIR}/resources/font
         COMMAND ${NX_ELF2NRO_EXE} ${PROJECT_NAME}.elf ${PROJECT_NAME}.nro --icon=${PROJECT_ICON} --nacp=${PROJECT_NAME}.nacp --romfsdir=${CMAKE_BINARY_DIR}/resources
     )
-    list(APPEND APP_PLATFORM_LIB swresample dav1d z)
+    list(APPEND APP_PLATFORM_LIB dav1d z)
 elseif (PLATFORM_ANDROID)
     list(APPEND APP_PLATFORM_LIB android)
     target_link_libraries(${PROJECT_NAME} PRIVATE 
@@ -284,17 +284,30 @@ find_package(PNG REQUIRED)
 find_library(OPUS_LIBRARY opus)
 message("opus: ${OPUS_LIBRARY}")
 
-find_library(AVCODEC_LIBRARY avcodec)
-message("avcodec: ${AVCODEC_LIBRARY}")
+if(PLATFORM_SWITCH)
+    target_link_libraries(${PROJECT_NAME} PRIVATE 
+        ${CMAKE_CURRENT_SOURCE_DIR}/lib/switch/libavcodec.a
+        ${CMAKE_CURRENT_SOURCE_DIR}/lib/switch/libavformat.a
+        ${CMAKE_CURRENT_SOURCE_DIR}/lib/switch/libavutil.a
+        ${CMAKE_CURRENT_SOURCE_DIR}/lib/switch/libswresample.a
+    )
 
-find_library(AVFORMAT_LIBRARY avformat)
-message("avformat: ${AVFORMAT_LIBRARY}")
+    target_include_directories(${PROJECT_NAME} PRIVATE 
+        ${CMAKE_CURRENT_SOURCE_DIR}/lib/switch/include
+    )
+else()
+    find_library(AVCODEC_LIBRARY avcodec)
+    message("avcodec: ${AVCODEC_LIBRARY}")
+    
+    find_library(AVFORMAT_LIBRARY avformat)
+    message("avformat: ${AVFORMAT_LIBRARY}")
 
-find_library(AVUTIL_LIBRARY avutil)
-message("avutil: ${AVUTIL_LIBRARY}")
+    find_library(AVUTIL_LIBRARY avutil)
+    message("avutil: ${AVUTIL_LIBRARY}")
 
-find_library(SWRESAMPLE_LIBRARY swresample)
-message("swresample: ${SWRESAMPLE_LIBRARY}")
+    find_library(SWRESAMPLE_LIBRARY swresample)
+    message("swresample: ${SWRESAMPLE_LIBRARY}")
+endif ()
 
 # Recompiled CURL with Mbedtls support for Switch
 if(PLATFORM_SWITCH)

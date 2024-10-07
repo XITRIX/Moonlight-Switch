@@ -29,6 +29,7 @@ int FFmpegVideoDecoder::setup(int video_format, int width, int height,
                               int redraw_rate, void* context, int dr_flags) {
     m_stream_fps = redraw_rate;
 
+    brls::Logger::debug("FFMpeg's AVCodec version: {}.{}.{}", AV_VERSION_MAJOR(avcodec_version()), AV_VERSION_MINOR(avcodec_version()), AV_VERSION_MICRO(avcodec_version()));
     brls::Logger::info(
         "FFmpeg: Setup with format: {}, width: {}, height: {}, fps: {}",
         video_format == VIDEO_FORMAT_H264 ? "H264" : "HEVC", width, height,
@@ -86,7 +87,7 @@ int FFmpegVideoDecoder::setup(int video_format, int width, int height,
     m_decoder_context->height = height;
 #ifdef __SWITCH__
 #ifdef BOREALIS_USE_DEKO3D
-   m_decoder_context->pix_fmt = AV_PIX_FMT_TX1;
+   m_decoder_context->pix_fmt = AV_PIX_FMT_NVTEGRA;
 #else
    m_decoder_context->pix_fmt = AV_PIX_FMT_NV12;
 #endif
@@ -109,7 +110,7 @@ int FFmpegVideoDecoder::setup(int video_format, int width, int height,
         }
 
 #if defined(__SWITCH__) && defined(BOREALIS_USE_DEKO3D)
-        m_frames[i]->format = AV_PIX_FMT_TX1;
+        m_frames[i]->format = AV_PIX_FMT_NVTEGRA;
 #elif defined(PLATFORM_ANDROID)
         m_frames[i]->format = AV_PIX_FMT_MEDIACODEC;
 #else
@@ -118,7 +119,7 @@ int FFmpegVideoDecoder::setup(int video_format, int width, int height,
         m_frames[i]->width  = width;
         m_frames[i]->height = height;
 
-// Need to allign Switch frame to 256, need to de reviewed
+// Need to align Switch frame to 256, need to de reviewed
 #if defined(__SWITCH__) && !defined(BOREALIS_USE_DEKO3D)
         int err = av_frame_get_buffer(m_frames[i], 256);
         if (err < 0) {
@@ -146,7 +147,7 @@ int FFmpegVideoDecoder::setup(int video_format, int width, int height,
 
     if (Settings::instance().use_hw_decoding()) {
 #if defined(__SWITCH__)
-        if ((err = av_hwdevice_ctx_create(&hw_device_ctx, AV_HWDEVICE_TYPE_TX1, NULL, NULL, 0)) < 0) {
+        if ((err = av_hwdevice_ctx_create(&hw_device_ctx, AV_HWDEVICE_TYPE_NVTEGRA, NULL, NULL, 0)) < 0) {
             brls::Logger::error("FFmpeg: Error initializing hardware decoder - {}", err);
             return -1;
         }

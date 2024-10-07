@@ -6,7 +6,7 @@
 #include <borealis/platforms/switch/switch_platform.hpp>
 
 #include <libavcodec/avcodec.h>
-#include <libavutil/hwcontext_tx1.h>
+#include <libavutil/hwcontext_nvtegra.h>
 #include <libavutil/imgutils.h>
 
 #include <array>
@@ -85,7 +85,7 @@ void DKVideoRenderer::checkAndInitialize(int width, int height, AVFrame* frame) 
     brls::Logger::debug("{}: Luma texture ID {}", __PRETTY_FUNCTION__, lumaTextureId);
     brls::Logger::debug("{}: Chroma texture ID {}", __PRETTY_FUNCTION__, chromaTextureId);
 
-    AVTX1Map *map = ff_tx1_frame_get_fbuf_map(frame);
+    AVNVTegraMap *map = av_nvtegra_frame_get_fbuf_map(frame);
     brls::Logger::info("{}: Map size: {} | {} | {} | {}", __PRETTY_FUNCTION__, map->map.handle, map->map.has_init, map->map.cpu_addr, map->map.size);
 
     dk::ImageLayoutMaker { dev }
@@ -102,9 +102,9 @@ void DKVideoRenderer::checkAndInitialize(int width, int height, AVFrame* frame) 
         .setFlags(DkImageFlags_UsageLoadStore | DkImageFlags_Usage2DEngine | DkImageFlags_UsageVideo)
         .initialize(chromaMappingLayout);
 
-    mappingMemblock = dk::MemBlockMaker { dev, ff_tx1_map_get_size(map) }
+    mappingMemblock = dk::MemBlockMaker { dev, av_nvtegra_map_get_size(map) }
         .setFlags(DkMemBlockFlags_CpuUncached | DkMemBlockFlags_GpuCached | DkMemBlockFlags_Image)
-        .setStorage(ff_tx1_map_get_addr(map))
+        .setStorage(av_nvtegra_map_get_addr(map))
         .create();
 
     luma.initialize(lumaMappingLayout, mappingMemblock, 0);
