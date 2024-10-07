@@ -121,19 +121,20 @@ int FFmpegVideoDecoder::setup(int video_format, int width, int height,
 
 // Need to align Switch frame to 256, need to de reviewed
 #if defined(__SWITCH__) && !defined(BOREALIS_USE_DEKO3D)
-        int err = av_frame_get_buffer(m_frames[i], 256);
+        // int err = av_frame_get_buffer(m_frames[i], 256);
+        int err = av_frame_get_buffer(m_frames[i], 0);
         if (err < 0) {
             char errs[64]; 
             brls::Logger::error("FFmpeg: Couldn't allocate frame buffer: {}", av_make_error_string(errs, 64, err));
             return -1;
         }
 
-        for (int j = 0; j < 2; j++) {
-            uintptr_t ptr = (uintptr_t)m_frames[i]->data[j];
-            uintptr_t dst = (((ptr)+(256)-1)&~((256)-1));
-            uintptr_t gap = dst - ptr;
-            m_frames[i]->data[j] += gap;
-        }
+        // for (int j = 0; j < 2; j++) {
+        //     uintptr_t ptr = (uintptr_t)m_frames[i]->data[j];
+        //     uintptr_t dst = (((ptr)+(256)-1)&~((256)-1));
+        //     uintptr_t gap = dst - ptr;
+        //     m_frames[i]->data[j] += gap;
+        // }
 #endif
     }
 

@@ -44,16 +44,16 @@ int SDLAudioRenderer::init(int audio_configuration,
     want.freq = opus_config->sampleRate;
     want.format = AUDIO_S16LSB;
     want.channels = opus_config->channelCount;
-    want.samples = std::max(480, opus_config->samplesPerFrame); //1024;
+    want.samples = 4096;// std::max(480, opus_config->samplesPerFrame); //1024;
 
     dev =
-        SDL_OpenAudioDevice(nullptr, 0, &want, &have, SDL_AUDIO_ALLOW_ANY_CHANGE);
+        SDL_OpenAudioDevice(nullptr, 0, &want, &have, 0);
     if (dev == 0) {
-        printf("Failed to open audio: %s\n", SDL_GetError());
+        brls::Logger::error("Failed to open audio: %s\n", SDL_GetError());
         return -1;
     } else {
         if (have.format != want.format) // we let this one thing change.
-            printf("We didn't get requested audio format.\n");
+            brls::Logger::error("We didn't get requested audio format.\n");
         SDL_PauseAudioDevice(dev, 0); // start audio playing.
     }
 
@@ -83,9 +83,9 @@ void SDLAudioRenderer::decode_and_play_sample(char* sample_data,
         i = (short) std::min(SHRT_MAX, std::max(SHRT_MIN, scale));
     }
 
-    if (SDL_GetQueuedAudioSize(dev) > 16000) {
+    if (SDL_GetQueuedAudioSize(dev) > 28000) {
         // clear audio queue to avoid big audio delay
-        // average values are close to 16000 bytes
+        // average values are close to 28000 bytes
         SDL_ClearQueuedAudio(this->dev);
     }
 
