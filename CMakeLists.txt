@@ -55,7 +55,7 @@ else ()
     set(USE_MBEDTLS_CRYPTO ON)
 endif ()
 
-if (PLATFORM_IOS OR PLATFORM_TVOS OR PLATFORM_ANDROID OR PLATFORM_PSV)
+if (PLATFORM_TVOS OR PLATFORM_ANDROID OR PLATFORM_PSV)
     set(MULTICAST_DISABLED ON)
 endif ()
 
@@ -99,6 +99,8 @@ elseif (PLATFORM_SWITCH)
 elseif (PLATFORM_PSV)
     add_definitions(-D__psp2__ -D__PSV__)
 elseif (PLATFORM_ANDROID)
+elseif (PLATFORM_IOS)
+    list(APPEND MAIN_SRC app/platforms/ios/ios_apple.mm)
 endif ()
 
 
@@ -219,6 +221,7 @@ elseif (PLATFORM_IOS)
             ${PROJECT_NAME}
             "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_ALTER}"
             "${VERSION_BUILD}")
+
     list(APPEND IOS_FRAMEWORKS ${CMAKE_CURRENT_SOURCE_DIR}/extern/borealis/library/lib/extern/angle/ios/MetalANGLE.framework)
     set_target_properties(${PROJECT_NAME} PROPERTIES 
         INSTALL_RPATH @executable_path/Frameworks

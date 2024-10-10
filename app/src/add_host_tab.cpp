@@ -10,6 +10,11 @@
 #include "helper.hpp"
 #include "main_tabs_view.hpp"
 
+#ifdef PLATFORM_IOS
+extern void darwin_mdns_start(ServerCallback<std::vector<Host>>& callback);
+extern void darwin_mdns_stop();
+#endif
+
 AddHostTab::AddHostTab() {
     // Inflate the tab from the XML file
     this->inflateFromXMLRes("xml/tabs/add_host.xml");
@@ -89,7 +94,11 @@ void AddHostTab::findHost() {
             [this](auto result) { fillSearchBox(result); });
 #else
     ASYNC_RETAIN
+#ifdef PLATFORM_IOS
+    darwin_mdns_start(
+#else
     GameStreamClient::find_hosts(
+#endif
         [ASYNC_TOKEN](const GSResult<std::vector<Host>>& result) {
             ASYNC_RELEASE
 
@@ -109,11 +118,17 @@ void AddHostTab::findHost() {
                     });
                     searchBox->addView(hostButton);
                 }
-                loader->setVisibility(brls::Visibility::GONE);
+//                loader->setVisibility(brls::Visibility::GONE);
             } else {
                 showError(result.error(), [] {});
             }
         });
+#endif
+}
+
+void AddHostTab::stopSearchHost() {
+#ifdef PLATFORM_IOS
+    
 #endif
 }
 
@@ -192,6 +207,8 @@ AddHostTab::~AddHostTab() {
     DiscoverManager::instance().pause();
     DiscoverManager::instance().getHostsUpdateEvent()->unsubscribe(
         searchSubscription);
+#elif defined(PLATFORM_IOS)
+    darwin_mdns_stop();
 #endif
 }
 

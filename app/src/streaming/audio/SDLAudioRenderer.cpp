@@ -44,7 +44,13 @@ int SDLAudioRenderer::init(int audio_configuration,
     want.freq = opus_config->sampleRate;
     want.format = AUDIO_S16LSB;
     want.channels = opus_config->channelCount;
-    want.samples = 4096;// std::max(480, opus_config->samplesPerFrame); //1024;
+
+    // Latest SDL2 Switch port broke audio for lower asmples
+#if defined(PLATFORM_SWITCH)
+    want.samples = 4096;
+#else
+    want.samples = std::max(480, opus_config->samplesPerFrame); //1024;
+#endif
 
     dev =
         SDL_OpenAudioDevice(nullptr, 0, &want, &have, 0);
@@ -76,19 +82,28 @@ void SDLAudioRenderer::decode_and_play_sample(char* sample_data,
     if (decodeLen <= 0) { 
         printf("Opus error from decode: %d\n", decodeLen);
         return;
-     }
+    }
+
+    if (LiGetPendingAudioDuration() > 30) {
+        return;
+    }
 
     for (short & i : pcmBuffer) {
         int scale = (int)((double)i * (Settings::instance().get_volume() / 100.0));
         i = (short) std::min(SHRT_MAX, std::max(SHRT_MIN, scale));
     }
 
-    if (SDL_GetQueuedAudioSize(dev) > 28000) {
+#if defined(PLATFORM_SWITCH)
+    int bufferOverflow = 24000;
+#else
+    int bufferOverflow = 16000;
+#endif
+
+    if (SDL_GetQueuedAudioSize(dev) > bufferOverflow) {
         // clear audio queue to avoid big audio delay
-        // average values are close to 28000 bytes
+        // average values are close to bufferOverflow bytes
         SDL_ClearQueuedAudio(this->dev);
     }
-
     SDL_QueueAudio(dev, pcmBuffer,
                     decodeLen * channelCount * sizeof(short));
 }

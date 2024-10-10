@@ -79,5 +79,9 @@
 	<string>public.app-category.games</string>
 	<key>GCSupportsGameMode</key>
 	<true/>
+	<key>NSLocalNetworkUsageDescription</key>
+  	<string>Network usage is required to find hosts in your local network</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 </dict>
 </plist>

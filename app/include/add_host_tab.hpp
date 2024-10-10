@@ -21,6 +21,7 @@ class AddHostTab : public brls::Box
 
   private:
     void findHost();
+    void stopSearchHost();
     void connectHost(const std::string& address);
     void fillSearchBox(const GSResult<std::vector<Host>>& hostsRes);
     static void pauseSearching();
