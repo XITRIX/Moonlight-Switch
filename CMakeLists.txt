@@ -358,7 +358,7 @@ endif()
 
 if (APPLE)
     set(XCODE_ATTRIBUTE_CLANG_ENABLE_OBJC_ARC OFF)
-    target_link_libraries(${PROJECT_NAME} PRIVATE "-framework CoreMedia" "-framework VideoToolbox")
+    target_link_libraries(${PROJECT_NAME} PRIVATE "-framework CoreMedia" "-framework VideoToolbox" "-framework AVKit")
 elseif (PLATFORM_PSV)
     target_link_libraries(${PROJECT_NAME} PRIVATE mp3lame libGLESv2_stub)
 endif ()

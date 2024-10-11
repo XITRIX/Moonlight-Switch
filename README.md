@@ -137,7 +137,7 @@ make -C build/pc -j$(nproc)
 
 Also, please note that the `resources` folder must be available in the working directory, otherwise the program will fail to find the shaders.
 
-### iOS:
+### iOS / tvOS:
 
 ```shell
 # build libromfs generator
@@ -145,26 +145,28 @@ Also, please note that the `resources` folder must be available in the working d
 
 # prepare vcpkg
 ./extern/vcpkg/bootstrap-vcpkg.sh
-
-# install packages
-./extern/vcpkg/vcpkg install --triplet arm64-ios mbedtls
-./extern/vcpkg/vcpkg install --triplet arm64-ios jansson
-./extern/vcpkg/vcpkg install --triplet arm64-ios ffmpeg
-./extern/vcpkg/vcpkg install --triplet arm64-ios "curl[mbedtls]"
-./extern/vcpkg/vcpkg install --triplet arm64-ios libpng
-./extern/vcpkg/vcpkg install --triplet arm64-ios opus
 ```
 
 #### 1. Build for arm64 iphoneOS
 
 ```shell
 # 1. Generate a Xcode project
-# IOS_CODE_SIGN_IDENTITY: code is not signed when IOS_CODE_SIGN_IDENTITY is empty
-# IOS_GUI_IDENTIFIER: optional, default is com.borealis.demo
 cmake -B build/ios -G Xcode -DPLATFORM_IOS=ON
 
 # 2. open project in Xcode
 open build/ios/*.xcodeproj
+
+# 3. Set up Team and Bundle Identifiers in Xcode, then connect devices to run.
+```
+
+#### 2. Build for arm64 tvOS
+
+```shell
+# 1. Generate a Xcode project
+cmake -B build/tvos -G Xcode -DPLATFORM_TVOS=ON
+
+# 2. open project in Xcode
+open build/tvos/*.xcodeproj
 
 # 3. Set up Team and Bundle Identifiers in Xcode, then connect devices to run.
 ```

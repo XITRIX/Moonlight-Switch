@@ -18,8 +18,16 @@
 
 using namespace brls;
 
+#ifdef PLATFORM_TVOS
+extern void updatePreferredDisplayMode(bool streamActive);
+#endif
+
 StreamingView::StreamingView(const Host& host, const AppInfo& app) : host(host), app(app) {
     Application::getPlatform()->disableScreenDimming(true);
+
+#ifdef PLATFORM_TVOS
+    updatePreferredDisplayMode(true);
+#endif
 
     setFocusable(true);
     setHideHighlight(true);
@@ -439,6 +447,10 @@ void StreamingView::onLayout() {
 }
 
 StreamingView::~StreamingView() {
+#ifdef PLATFORM_TVOS
+    updatePreferredDisplayMode(false);
+#endif
+    
     Application::getPlatform()->disableScreenDimming(false);
     Application::getPlatform()
         ->getInputManager()
