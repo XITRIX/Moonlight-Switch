@@ -10,7 +10,7 @@
 #include "helper.hpp"
 #include "main_tabs_view.hpp"
 
-#ifdef PLATFORM_IOS
+#if defined(PLATFORM_IOS) || defined(PLATFORM_TVOS)
 extern void darwin_mdns_start(ServerCallback<std::vector<Host>>& callback);
 extern void darwin_mdns_stop();
 #endif
@@ -94,7 +94,7 @@ void AddHostTab::findHost() {
             [this](auto result) { fillSearchBox(result); });
 #else
     ASYNC_RETAIN
-#ifdef PLATFORM_IOS
+#if defined(PLATFORM_IOS) || defined(PLATFORM_TVOS)
     darwin_mdns_start(
 #else
     GameStreamClient::find_hosts(
@@ -207,7 +207,7 @@ AddHostTab::~AddHostTab() {
     DiscoverManager::instance().pause();
     DiscoverManager::instance().getHostsUpdateEvent()->unsubscribe(
         searchSubscription);
-#elif defined(PLATFORM_IOS)
+#elif defined(PLATFORM_IOS) || defined(PLATFORM_TVOS)
     darwin_mdns_stop();
 #endif
 }

@@ -55,7 +55,7 @@ else ()
     set(USE_MBEDTLS_CRYPTO ON)
 endif ()
 
-if (PLATFORM_TVOS OR PLATFORM_ANDROID OR PLATFORM_PSV)
+if (PLATFORM_ANDROID OR PLATFORM_PSV)
     set(MULTICAST_DISABLED ON)
 endif ()
 
@@ -99,8 +99,9 @@ elseif (PLATFORM_SWITCH)
 elseif (PLATFORM_PSV)
     add_definitions(-D__psp2__ -D__PSV__)
 elseif (PLATFORM_ANDROID)
-elseif (PLATFORM_IOS)
-    list(APPEND MAIN_SRC app/platforms/ios/ios_apple.mm)
+elseif (PLATFORM_IOS OR PLATFORM_TVOS)
+    list(APPEND MAIN_SRC app/platforms/ios/apple_mdns.mm)
+    list(APPEND MAIN_SRC app/platforms/ios/apple_display.mm)
 endif ()
 
 
