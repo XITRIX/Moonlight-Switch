@@ -28,6 +28,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
+#include <sstream>
 
 #define CHANNEL_COUNT_STEREO 2
 #define CHANNEL_COUNT_51_SURROUND 6
@@ -37,99 +38,120 @@
 
 static std::string unique_id = "0123456789ABCDEF";
 
-static int load_server_status(PSERVER_DATA server, bool skip_https) {
-    int ret;
+static int load_serverinfo(PSERVER_DATA server, bool https) {
+    int ret = GS_INVALID;
     char url[4096];
-    int i = skip_https ? 1 : 0;
+    std::string pairedText;
+    std::string currentGameText;
+    std::string stateText;
+    std::string httpsPortText;
 
-    do {
-        std::string pairedText;
-        std::string currentGameText;
-        std::string stateText;
+    // Modern GFE versions don't allow serverinfo to be fetched over HTTPS
+    // if the client is not already paired. Since we can't pair without
+    // knowing the server version, we make another request over HTTP if the
+    // HTTPS request fails. We can't just use HTTP for everything because it
+    // doesn't accurately tell us if we're paired.
 
-        ret = GS_INVALID;
+    snprintf(url, sizeof(url), "%s://%s:%d/serverinfo?uniqueid=%s",
+             https ? "https" : "http", server->serverInfo.address,
+             https ? server->httpsPort : server->httpPort, unique_id.c_str());
 
-        // Modern GFE versions don't allow serverinfo to be fetched over HTTPS
-        // if the client is not already paired. Since we can't pair without
-        // knowing the server version, we make another request over HTTP if the
-        // HTTPS request fails. We can't just use HTTP for everything because it
-        // doesn't accurately tell us if we're paired.
+    Data data;
 
-        snprintf(url, sizeof(url), "%s://%s:%d/serverinfo?uniqueid=%s",
-                 i == 0 ? "https" : "http", server->serverInfo.address,
-                 i == 0 ? 47984 : 47989, unique_id.c_str());
+    if (http_request(url, &data, HTTPRequestTimeoutLow) != GS_OK) {
+        ret = GS_IO_ERROR;
+        goto cleanup;
+    }
 
-        Data data;
+    if (xml_status(data) == GS_ERROR) {
+        ret = GS_ERROR;
+        goto cleanup;
+    }
 
-        if (http_request(url, &data, HTTPRequestTimeoutLow) != GS_OK) {
-            ret = GS_IO_ERROR;
-            goto cleanup;
-        }
+    if (xml_search(data, "currentgame", &currentGameText) != GS_OK) {
+        goto cleanup;
+    }
 
-        if (xml_status(data) == GS_ERROR) {
-            ret = GS_ERROR;
-            goto cleanup;
-        }
+    if (xml_search(data, "PairStatus", &pairedText) != GS_OK)
+        goto cleanup;
 
-        if (xml_search(data, "currentgame", &currentGameText) != GS_OK) {
-            goto cleanup;
-        }
+    if (xml_search(data, "appversion", &server->serverInfoAppVersion) !=
+        GS_OK) {
+        goto cleanup;
+    }
 
-        if (xml_search(data, "PairStatus", &pairedText) != GS_OK)
-            goto cleanup;
+    if (xml_search(data, "state", &stateText) != GS_OK)
+        goto cleanup;
 
-        if (xml_search(data, "appversion", &server->serverInfoAppVersion) !=
-            GS_OK) {
-            goto cleanup;
-        }
+    if (xml_search(data, "ServerCodecModeSupport",
+                   &server->serverInfo.serverCodecModeSupport) != GS_OK)
+        goto cleanup;
 
-        if (xml_search(data, "state", &stateText) != GS_OK)
-            goto cleanup;
+    if (xml_search(data, "gputype", &server->gpuType) != GS_OK)
+        goto cleanup;
 
-        if (xml_search(data, "ServerCodecModeSupport",
-                       &server->serverInfo.serverCodecModeSupport) != GS_OK)
-            goto cleanup;
+    if (xml_search(data, "GsVersion", &server->gsVersion) != GS_OK)
+        goto cleanup;
 
-        if (xml_search(data, "gputype", &server->gpuType) != GS_OK)
-            goto cleanup;
+    if (xml_search(data, "hostname", &server->hostname) != GS_OK)
+        goto cleanup;
 
-        if (xml_search(data, "GsVersion", &server->gsVersion) != GS_OK)
-            goto cleanup;
+    if (xml_search(data, "GfeVersion", &server->serverInfoGfeVersion) != GS_OK)
+        goto cleanup;
 
-        if (xml_search(data, "hostname", &server->hostname) != GS_OK)
-            goto cleanup;
+    if (xml_search(data, "HttpsPort", &httpsPortText) != GS_OK)
+        goto cleanup;
 
-        if (xml_search(data, "GfeVersion", &server->serverInfoGfeVersion) !=
-            GS_OK)
-            goto cleanup;
+    if (xml_search(data, "mac", &server->mac) != GS_OK)
+        goto cleanup;
 
-        if (xml_search(data, "mac", &server->mac) != GS_OK)
-            goto cleanup;
+    // These fields are present on all version of GFE that this client
+    // supports
+    if (currentGameText.empty() || pairedText.empty() ||
+        server->serverInfoAppVersion.empty() || stateText.empty()) {
+        goto cleanup;
+    }
 
-        // These fields are present on all version of GFE that this client
-        // supports
-        if (currentGameText.empty() || pairedText.empty() ||
-            server->serverInfoAppVersion.empty() || stateText.empty()) {
-            goto cleanup;
-        }
+    server->paired = pairedText == "1";
+    server->currentGame =
+        currentGameText.empty() ? 0 : atoi(currentGameText.c_str());
+    server->supports4K = server->serverInfo.serverCodecModeSupport != 0;
+    server->serverMajorVersion = atoi(server->serverInfoAppVersion.c_str());
+    server->httpsPort = atoi(httpsPortText.c_str());
+    if (!server->httpsPort)
+        server->httpsPort = 47984;
 
-        server->paired = pairedText == "1";
-        server->currentGame =
-            currentGameText.empty() ? 0 : atoi(currentGameText.c_str());
-        server->supports4K = server->serverInfo.serverCodecModeSupport != 0;
-        server->serverMajorVersion = atoi(server->serverInfoAppVersion.c_str());
+    if (stateText == "_SERVER_BUSY") {
+        // After GFE 2.8, current game remains set even after streaming
+        // has ended. We emulate the old behavior by forcing it to zero
+        // if streaming is not active.
+        server->currentGame = 0;
+    }
+    ret = GS_OK;
 
-        if (stateText == "_SERVER_BUSY") {
-            // After GFE 2.8, current game remains set even after streaming
-            // has ended. We emulate the old behavior by forcing it to zero
-            // if streaming is not active.
-            server->currentGame = 0;
-        }
-        ret = GS_OK;
+cleanup:
+    return ret;
+}
 
-    cleanup:
-        i++;
-    } while (ret != GS_OK && i < 2);
+static int load_server_status(PSERVER_DATA server) {
+    int ret = GS_INVALID;
+    int i;
+
+    /* Fetch the HTTPS port if we don't have one yet */
+    if (!server->httpsPort) {
+        ret = load_serverinfo(server, false);
+        if (ret != GS_OK)
+            return ret;
+    }
+
+    // Modern GFE versions don't allow serverinfo to be fetched over HTTPS if the client
+    // is not already paired. Since we can't pair without knowing the server version, we
+    // make another request over HTTP if the HTTPS request fails. We can't just use HTTP
+    // for everything because it doesn't accurately tell us if we're paired.
+    ret = GS_INVALID;
+    for (i = 0; i < 2 && ret != GS_OK; i++) {
+        ret = load_serverinfo(server, i == 0);
+    }
 
     if (ret == GS_OK) {
         if (server->serverMajorVersion > MAX_SUPPORTED_GFE_VERSION) {
@@ -165,8 +187,10 @@ int gs_unpair(PSERVER_DATA server) {
 
     Data data;
 
-    snprintf(url, sizeof(url), "http://%s:47989/unpair?uniqueid=%s",
-             server->serverInfo.address, unique_id.c_str());
+    snprintf(url, sizeof(url), "http://%s:%u/unpair?uniqueid=%s",
+             server->serverInfo.address,
+             server->httpPort,
+             unique_id.c_str());
     ret = http_request(url, &data, HTTPRequestTimeoutLow);
     return ret;
 }
@@ -223,10 +247,12 @@ int gs_pair(PSERVER_DATA server, char* pin) {
 //    brls::Logger::info("Client: PIN: {}, salt {}", pin, salt.hex().bytes());
 
     snprintf(url, sizeof(url),
-             "http://%s:47989/"
+             "http://%s:%u/"
              "pair?uniqueid=%s&devicename=roth&updateState=1&phrase="
              "getservercert&salt=%s&clientcert=%s",
-             server->serverInfo.address, unique_id.c_str(), salt.hex().bytes(),
+             server->serverInfo.address, 
+             server->httpPort,
+             unique_id.c_str(), salt.hex().bytes(),
              CryptoManager::cert_data().hex().bytes());
 
     if ((ret = http_request(url, &data, HTTPRequestTimeoutLong)) != GS_OK) {
@@ -262,9 +288,11 @@ int gs_pair(PSERVER_DATA server, char* pin) {
 
     snprintf(
         url, sizeof(url),
-        "http://%s:47989/"
+        "http://%s:%u/"
         "pair?uniqueid=%s&devicename=roth&updateState=1&clientchallenge=%s",
-        server->serverInfo.address, unique_id.c_str(),
+        server->serverInfo.address, 
+        server->httpPort,
+        unique_id.c_str(),
         encryptedChallenge.hex().bytes());
 
     if ((ret = http_request(url, &data, HTTPRequestTimeoutLong)) != GS_OK) {
@@ -309,9 +337,11 @@ int gs_pair(PSERVER_DATA server, char* pin) {
 
     snprintf(
         url, sizeof(url),
-        "http://%s:47989/"
+        "http://%s:%u/"
         "pair?uniqueid=%s&devicename=roth&updateState=1&serverchallengeresp=%s",
-        server->serverInfo.address, unique_id.c_str(),
+        server->serverInfo.address,
+        server->httpPort,
+        unique_id.c_str(),
         challengeRespEncrypted.hex().bytes());
 
     if ((ret = http_request(url, &data, HTTPRequestTimeoutLong)) != GS_OK) {
@@ -360,9 +390,11 @@ int gs_pair(PSERVER_DATA server, char* pin) {
 
     snprintf(
         url, sizeof(url),
-        "http://%s:47989/"
+        "http://%s:%u/"
         "pair?uniqueid=%s&devicename=roth&updateState=1&clientpairingsecret=%s",
-        server->serverInfo.address, unique_id.c_str(),
+        server->serverInfo.address, 
+        server->httpPort,
+        unique_id.c_str(),
         clientPairingSecret.hex().bytes());
     if ((ret = http_request(url, &data, HTTPRequestTimeoutLong)) != GS_OK) {
         return gs_pair_cleanup(ret, server, &result);
@@ -517,7 +549,22 @@ exit:
     return ret;
 }
 
-int gs_init(PSERVER_DATA server, const std::string address, bool skip_https) {
+int gs_init(PSERVER_DATA server, const std::string address) {
+    std::stringstream addressStream(address);
+    std::string segment;
+    std::vector<std::string> seglist;
+    unsigned short httpPort = 47989; // Default HTTP port
+
+    while(std::getline(addressStream, segment, ':'))
+    {
+       seglist.push_back(segment);
+    }
+
+    // Override port if it presented
+    if (seglist.size() > 1) {
+        httpPort = atoi(seglist[1].c_str());
+    }
+    
     if (!CryptoManager::load_cert_key_pair()) {
         brls::Logger::info("Client: No certs, generate new...");
 
@@ -530,10 +577,12 @@ int gs_init(PSERVER_DATA server, const std::string address, bool skip_https) {
     http_init(Settings::instance().key_dir());
 
     LiInitializeServerInformation(&server->serverInfo);
-    server->address = address;
+    server->address = seglist[0];
     server->serverInfo.address = server->address.c_str();
+    server->httpPort = httpPort;
+    server->httpsPort = 0; /* Populated by load_server_status() */
 
-    int result = load_server_status(server, skip_https);
+    int result = load_server_status(server);
     server->serverInfo.serverInfoAppVersion =
         server->serverInfoAppVersion.c_str();
     server->serverInfo.serverInfoGfeVersion =

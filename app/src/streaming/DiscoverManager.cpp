@@ -49,7 +49,7 @@ void DiscoverManager::loop() {
         while (counter < addresses.size() && !paused) {
             SERVER_DATA server_data;
 
-            int status = gs_init(&server_data, addresses[counter], true);
+            int status = gs_init(&server_data, addresses[counter]);
             if (status == GS_OK) {
                 Host host;
                 host.address = addresses[counter];

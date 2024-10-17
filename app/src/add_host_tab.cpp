@@ -20,8 +20,8 @@ AddHostTab::AddHostTab() {
     this->inflateFromXMLRes("xml/tabs/add_host.xml");
 
     hostIP->init("add_host/host_ip"_i18n, "");
-    hostIP->setPlaceholder("192.168.1.109");
-    hostIP->setHint("192.168.1.109");
+    hostIP->setPlaceholder("192.168.1.109:47989");
+    hostIP->setHint("192.168.1.109:47989");
 
     connect->setText("add_host/connect"_i18n);
     connect->registerClickAction([this](View* view) {

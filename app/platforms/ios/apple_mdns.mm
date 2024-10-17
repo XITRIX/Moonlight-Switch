@@ -181,7 +181,7 @@ static NSString* NV_SERVICE_TYPE = @"_nvstream._tcp";
         }
 
         Host host;
-        NSString* tempIp;
+        NSString* hostAddress;
 
         // First, look for an IPv4 record for the local address
         for (NSData* addrData in addresses) {
@@ -190,33 +190,26 @@ static NSString* NV_SERVICE_TYPE = @"_nvstream._tcp";
                 continue;
             }
 
-            tempIp = [MDNSManager sockAddrToString:addrData];
+            hostAddress = [MDNSManager sockAddrToString:addrData];
 //            brls::Logger::info("Local address chosen: {} -> {}", [service hostName], host.localAddress);
             break;
         }
 
-        if (tempIp == nil) {
+        if (hostAddress == nil) {
             // If we didn't find an IPv4 record, look for a local IPv6 record
             for (NSData* addrData in addresses) {
                 if ([MDNSManager isLocalIpv6Address:addrData]) {
-                    tempIp = [MDNSManager sockAddrToString:addrData];
+                    hostAddress = [MDNSManager sockAddrToString:addrData];
 //                    brls::Logger::info("Local address chosen: {} -> {}", [service hostName], host.localAddress);
                     break;
                 }
             }
         }
 
-//        host.ipv6Address = [MDNSManager getBestIpv6Address:addresses];
-//        brls::Logger::info("IPv6 address chosen: {} -> {}", [service hostName], host.ipv6Address);
-
-//        host.activeAddress = host.localAddress;
-        auto hostAddress = [tempIp componentsSeparatedByString:@":"];
-        NSString* ipAddress = hostAddress[0];
-        NSString* port = hostAddress[1];
-
+        if (hostAddress == nil) return;
         auto hostName = [service.hostName stringByReplacingOccurrencesOfString:@".local." withString:@""];
 
-        host.address = std::string([ipAddress UTF8String]);
+        host.address = std::string([hostAddress UTF8String]);
         host.hostname = std::string([hostName UTF8String]);
         foundHosts.push_back(host);
 
