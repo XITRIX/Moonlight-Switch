@@ -9,6 +9,7 @@
 #include <vector>
 
 enum VideoCodec : int { H264, H265, AV1 };
+std::string getVideoCodecName(VideoCodec codec);
 
 enum AudioBackend : int {
     SDL,

@@ -40,7 +40,7 @@ SettingsTab::SettingsTab() {
     // Inflate the tab from the XML file
     this->inflateFromXMLRes("xml/tabs/settings.xml");
 
-    std::vector<std::string> resolutions = {"360p", "480p", "720p", "1080p", "Native"};
+    std::vector<std::string> resolutions = {"360p", "480p", "720p", "1080p", "1440p", "Native"};
     resolution->setText("settings/resolution"_i18n);
     resolution->setData(resolutions);
     switch (Settings::instance().resolution()) {
@@ -48,7 +48,8 @@ SettingsTab::SettingsTab() {
         GET_SETTINGS(resolution, 480, 1);
         GET_SETTINGS(resolution, 720, 2);
         GET_SETTINGS(resolution, 1080, 3);
-        GET_SETTINGS(resolution, -1, 4);
+        GET_SETTINGS(resolution, 1440, 4);
+        GET_SETTINGS(resolution, -1, 5);
         DEFAULT;
     }
     resolution->getEvent()->subscribe([](int selected) {
@@ -57,7 +58,8 @@ SettingsTab::SettingsTab() {
             SET_SETTING(1, set_resolution(480));
             SET_SETTING(2, set_resolution(720));
             SET_SETTING(3, set_resolution(1080));
-            SET_SETTING(4, set_resolution(-1));
+            SET_SETTING(4, set_resolution(1440));
+            SET_SETTING(5, set_resolution(-1));
             DEFAULT;
         }
     });
@@ -103,18 +105,35 @@ SettingsTab::SettingsTab() {
         }
     });
 
-    codec->init("settings/video_codec"_i18n,
-                {
-                    "settings/h264"_i18n,
-                    "settings/h265"_i18n,
-            //        "settings/av1"_i18n
-                },
-                Settings::instance().video_codec(), [](int selected) {
-                    Settings::instance().set_video_codec((VideoCodec)selected);
+    std::vector<VideoCodec> supportedCodecs = {
+#ifndef PLATFORM_ANDROID
+        H264,
+#endif
+        H265,
+    };
+
+    std::vector<std::string> supportedCodecNames;
+    for (int i = 0; i < supportedCodecs.size(); i++) {
+        supportedCodecNames.push_back(getVideoCodecName(supportedCodecs[i]));
+    }
+
+    auto it = find(supportedCodecs.begin(), supportedCodecs.end(), Settings::instance().video_codec());
+
+    int selected = 0;
+    if (it != supportedCodecs.end()) {
+        int index = it - supportedCodecs.begin();
+        selected = index;
+    }
+
+    codec->init("settings/video_codec"_i18n, supportedCodecNames,
+                selected, [supportedCodecs](int selected) {
+                    Settings::instance().set_video_codec(supportedCodecs[selected]);
                 });
 
     hwDecoding->init("settings/use_hw_decoding"_i18n, Settings::instance().use_hw_decoding(),
                      [](bool value) { Settings::instance().set_use_hw_decoding(value); });
+
+    hwDecoding->setEnabled(false);
 
 #if defined(PLATFORM_SWITCH)
     const float mbpsMaxLimit = 100000;

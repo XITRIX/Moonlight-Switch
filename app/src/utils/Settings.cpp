@@ -7,6 +7,7 @@
 #include <sys/stat.h>
 
 using namespace brls;
+using namespace brls::literals;
 
 #ifdef _WIN32
 static int mkdir(const char* dir, mode_t mode) {
@@ -17,6 +18,17 @@ static int mkdir(const char* dir, mode_t mode) {
 #ifndef PATH_MAX
 #define PATH_MAX 1024
 #endif
+
+std::string getVideoCodecName(VideoCodec codec) {
+    switch (codec) {
+        case H264:
+            return "settings/h264"_i18n;
+        case H265:
+            return "settings/h265"_i18n;
+        case AV1:
+            return "settings/av1"_i18n;
+    }
+}
 
 static int mkdirtree(const char* directory) {
     char buffer[PATH_MAX];

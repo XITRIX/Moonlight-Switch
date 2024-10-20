@@ -151,7 +151,10 @@ void GLVideoRenderer::initialize(AVFrame* frame) {
                    use_gl_core ? &fragment_nv12_shader_string_core
                                : &fragment_nv12_shader_string, nullptr);
             break;
-        default: break;
+        default:
+            brls::Logger::info("GL: Unknown frame format! - {}", frame->format);
+            m_is_initialized = false;
+            return;
     }
 
     glCompileShader(frag);
@@ -203,8 +206,8 @@ void GLVideoRenderer::checkAndInitialize(int width, int height,
                            height);
 #endif
 
-        initialize(frame);
         m_is_initialized = true;
+        initialize(frame);
 
 #ifndef _WIN32
         brls::Logger::info("GL: Init done");
@@ -269,7 +272,6 @@ void GLVideoRenderer::checkAndUpdateScale(int width, int height,
 
 void GLVideoRenderer::draw(NVGcontext* vg, int width, int height,
                            AVFrame* frame) {
-
     if (!m_video_render_stats.rendered_frames) {
         m_video_render_stats.measurement_start_timestamp = LiGetMillis();
     }

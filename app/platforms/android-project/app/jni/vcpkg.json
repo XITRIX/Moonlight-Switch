@@ -1,0 +1,29 @@
+{
+  "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
+  "name": "moonlight",
+  "builtin-baseline": "d89b9ba126a575ec4f8387188878fdd1b696288d",
+  "version": "1.0",
+  "dependencies": [
+    {
+      "name": "curl",
+      "default-features": true
+    },
+    "ffmpeg",
+    "jansson",
+    "libpng",
+    "opus",
+    "expat",
+    {
+        "name": "mbedtls",
+        "platform": "!android"
+    },
+    {
+      "name": "openssl",
+      "platform": "android"
+    }
+  ],
+  "overrides": [
+      { "name": "ffmpeg", "version": "7.0.2" },
+      { "name": "curl", "version": "8.7.1" }
+  ]
+}

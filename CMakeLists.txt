@@ -208,11 +208,8 @@ elseif (PLATFORM_SWITCH)
 elseif (PLATFORM_ANDROID)
     list(APPEND APP_PLATFORM_LIB android)
     target_link_libraries(${PROJECT_NAME} PRIVATE 
-        # ${CMAKE_CURRENT_SOURCE_DIR}/extern/borealis/library/lib/extern/angle/android/arm64_v8a/libOSMesa.so
-        ${CMAKE_CURRENT_SOURCE_DIR}/extern/borealis/library/lib/extern/angle/android/libEGL_angle.so
-        # ${CMAKE_CURRENT_SOURCE_DIR}/extern/borealis/library/lib/extern/angle/android/libGLESv1_CM_angle.so
-        ${CMAKE_CURRENT_SOURCE_DIR}/extern/borealis/library/lib/extern/angle/android/libGLESv2_angle.so
-        # ${CMAKE_CURRENT_SOURCE_DIR}/extern/borealis/library/lib/extern/angle/android/libGLESv2_vulkan_secondaries_angle.so
+    # ${CMAKE_CURRENT_SOURCE_DIR}/extern/borealis/library/lib/extern/angle/android/arm64-v8a/libEGL_angle.so
+    # ${CMAKE_CURRENT_SOURCE_DIR}/extern/borealis/library/lib/extern/angle/android/arm64-v8a/libGLESv2_angle.so
     )
 elseif (PLATFORM_IOS)
     ios_bundle(

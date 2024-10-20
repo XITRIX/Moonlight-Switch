@@ -5,7 +5,6 @@
 #include <thread>
 #include <unistd.h>
 #include <vector>
-#include <format>
 
 #include <curl/curl.h>
 #include <libretro-common/retro_timers.h>

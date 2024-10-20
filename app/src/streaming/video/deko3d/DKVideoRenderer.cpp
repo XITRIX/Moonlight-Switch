@@ -1,4 +1,4 @@
-#if defined(__SWITCH__) && defined(BOREALIS_USE_DEKO3D)
+#if defined(PLATFORM_SWITCH) && defined(BOREALIS_USE_DEKO3D)
 
 #define FF_API_AVPICTURE
 
