@@ -8,7 +8,7 @@ void main() {
 }
 )glsl";
 
-static const char* fragment_nv12_shader_string_core = R"glsl(
+static const char* fragment_two_planes_shader_string_core = R"glsl(
 #version 140
 uniform lowp sampler2D plane0;
 uniform lowp sampler2D plane1;
@@ -25,7 +25,7 @@ void main() {
 }
 )glsl";
 
-static const char* fragment_yuv420_shader_string_core = R"glsl(
+static const char* fragment_three_planes_shader_string_core = R"glsl(
 #version 140
 uniform lowp sampler2D plane0;
 uniform lowp sampler2D plane1;
@@ -53,7 +53,7 @@ void main() {
 }
 )glsl";
 
-static const char* fragment_nv12_shader_string = R"glsl(#version 300 es
+static const char* fragment_two_planes_shader_string = R"glsl(#version 300 es
 uniform sampler2D plane0;
 uniform sampler2D plane1;
 uniform highp mat3 yuvmat;
@@ -69,7 +69,7 @@ void main() {
 }
 )glsl";
 
-static const char* fragment_yuv420_shader_string = R"glsl(#version 300 es
+static const char* fragment_three_planes_shader_string = R"glsl(#version 300 es
 uniform sampler2D plane0;
 uniform sampler2D plane1;
 uniform sampler2D plane2;

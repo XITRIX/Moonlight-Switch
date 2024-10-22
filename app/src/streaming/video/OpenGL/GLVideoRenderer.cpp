@@ -15,15 +15,15 @@ static const int nv12Planes[][4] = {
 };
 
 static const int yuv420Planes[][4] = {
-    {1, 1, GL_R8, GL_RED}, // Y
-    {1, 2, GL_R8, GL_RED}, // U
-    {1, 2, GL_R8, GL_RED}, // V
+    {1, 1, GL_R8, GL_RED},  // Y
+    {1, 2, GL_R8, GL_RED},  // U
+    {1, 2, GL_R8, GL_RED},  // V
 };
 
 static const int p010Planes[][4] = {
     {1, 1, GL_R16, GL_RED},  // Y
-    {2, 2, GL_RG16, GL_RG},   // UV
-    {0, 0, 0, 0},              // NOT EXISTS
+    {2, 2, GL_RG16, GL_RG},  // UV
+    {0, 0, 0, 0},            // NOT EXISTS
 };
 
 static const float vertices[] = {-1.0f, -1.0f, 1.0f, -1.0f,
@@ -147,8 +147,8 @@ void GLVideoRenderer::initialize(AVFrame* frame) {
             currentFormat = GL_UNSIGNED_BYTE;
 
             glShaderSource(frag, 1,
-                   use_gl_core ? &fragment_yuv420_shader_string_core
-                               : &fragment_yuv420_shader_string, nullptr);
+                   use_gl_core ? &fragment_three_planes_shader_string_core
+                               : &fragment_three_planes_shader_string, nullptr);
             break;
         case AV_PIX_FMT_NV12:
             currentFrameTypePlanesNum = 2;
@@ -156,8 +156,8 @@ void GLVideoRenderer::initialize(AVFrame* frame) {
             currentFormat = GL_UNSIGNED_BYTE;
 
             glShaderSource(frag, 1,
-                   use_gl_core ? &fragment_nv12_shader_string_core
-                               : &fragment_nv12_shader_string, nullptr);
+                   use_gl_core ? &fragment_two_planes_shader_string_core
+                               : &fragment_two_planes_shader_string, nullptr);
             break;
         case AV_PIX_FMT_P010:
             currentFrameTypePlanesNum = 2;
@@ -165,8 +165,8 @@ void GLVideoRenderer::initialize(AVFrame* frame) {
             currentFormat = GL_UNSIGNED_SHORT;
 
             glShaderSource(frag, 1,
-                   use_gl_core ? &fragment_nv12_shader_string_core
-                               : &fragment_nv12_shader_string, nullptr);
+                   use_gl_core ? &fragment_two_planes_shader_string_core
+                               : &fragment_two_planes_shader_string, nullptr);
             break;
         default:
             brls::Logger::info("GL: Unknown frame format! - {}", frame->format);

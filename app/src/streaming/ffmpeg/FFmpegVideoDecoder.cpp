@@ -3,12 +3,21 @@
 #include "Settings.hpp"
 #include "borealis.hpp"
 
+extern "C" {
+#include <libavutil/opt.h>
+#include <libavcodec/videotoolbox.h>
+}
+
 // Disables the deblocking filter at the cost of image quality
 #define DISABLE_LOOP_FILTER 0x1
 // Uses the low latency decode flag (disables multithreading)
 #define LOW_LATENCY_DECODE 0x2
 
+#if defined(PLATFORM_TVOS)
+#define DECODER_BUFFER_SIZE 92 * 1024 * 4
+#else
 #define DECODER_BUFFER_SIZE 92 * 1024 * 2
+#endif
 
 #if defined(PLATFORM_ANDROID)
 #include <jni.h>
@@ -75,10 +84,8 @@ int FFmpegVideoDecoder::setup(int video_format, int width, int height,
 #else
     if (video_format & VIDEO_FORMAT_MASK_H264) {
         m_decoder = avcodec_find_decoder(AV_CODEC_ID_H264);
-//        m_decoder = avcodec_find_decoder_by_name("h264");
     } else if (video_format & VIDEO_FORMAT_MASK_H265) {
         m_decoder = avcodec_find_decoder(AV_CODEC_ID_HEVC);
-//        m_decoder = avcodec_find_decoder_by_name("hevc");
     } else {
         // Unsupported decoder type
     }
@@ -126,7 +133,7 @@ int FFmpegVideoDecoder::setup(int video_format, int width, int height,
    m_decoder_context->pix_fmt = AV_PIX_FMT_NV12;
 #endif
 #else
-    m_decoder_context->pix_fmt = AV_PIX_FMT_NV12;
+//    m_decoder_context->pix_fmt = AV_PIX_FMT_NV12;
 #endif
 
     int err = avcodec_open2(m_decoder_context, m_decoder, NULL);
@@ -150,7 +157,7 @@ int FFmpegVideoDecoder::setup(int video_format, int width, int height,
 #elif defined(PLATFORM_ANDROID)
         m_frames[i]->format = AV_PIX_FMT_MEDIACODEC;
 #else
-        m_frames[i]->format = AV_PIX_FMT_NV12;
+        m_frames[i]->format = AV_PIX_FMT_P010;
 #endif
         m_frames[i]->width  = width;
         m_frames[i]->height = height;

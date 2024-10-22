@@ -252,7 +252,11 @@ void Settings::load() {
                     m_bitrate = (int)json_integer_value(bitrate);
                 }
             }
-            
+
+//            if (json_t* enable_hdr = json_object_get(settings, "enable_hdr")) {
+//                m_enable_hdr = json_typeof(enable_hdr) == JSON_TRUE;
+//            }
+
             if (json_t* click_by_tap = json_object_get(settings, "click_by_tap")) {
                 m_click_by_tap = json_typeof(click_by_tap) == JSON_TRUE;
             }
@@ -461,6 +465,7 @@ void Settings::save() {
             json_object_set_new(settings, "audio_backend", json_integer(m_audio_backend));
             json_object_set_new(settings, "bitrate", json_integer(m_bitrate));
             json_object_set_new(settings, "decoder_threads", json_integer(m_decoder_threads));
+            json_object_set_new(settings, "enable_hdr", m_enable_hdr ? json_true() : json_false());
             json_object_set_new(settings, "click_by_tap", m_click_by_tap ? json_true() : json_false());
             json_object_set_new(settings, "use_hw_decoding", m_use_hw_decoding ? json_true() : json_false());
             json_object_set_new(settings, "sops", m_sops ? json_true() : json_false());

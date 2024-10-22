@@ -227,6 +227,8 @@ void MoonlightSession::start(ServerCallback<bool> callback) {
         break;
     case H265:
         m_config.supportedVideoFormats = VIDEO_FORMAT_H265;
+        if (Settings::instance().enableHdr())
+            m_config.supportedVideoFormats |= VIDEO_FORMAT_H265_MAIN10;
         break;
     case AV1:
         m_config.supportedVideoFormats = VIDEO_FORMAT_AV1_MAIN8;
