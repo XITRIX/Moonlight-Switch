@@ -51,4 +51,5 @@ class GLVideoRenderer : public IVideoRenderer {
 
     int currentFrameTypePlanesNum = 0;
     const int (*currentPlanes)[4];
+    int currentFormat;
 };
