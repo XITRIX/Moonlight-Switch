@@ -83,10 +83,7 @@ class Settings : public Singleton<Settings> {
     [[nodiscard]] bool click_by_tap() const { return m_click_by_tap; }
     void set_click_by_tap(bool click_by_tap) { m_click_by_tap = click_by_tap; }
 
-    void set_decoder_threads(int decoder_threads) {
-        m_decoder_threads = decoder_threads;
-    }
-
+    void set_decoder_threads(int decoder_threads) { m_decoder_threads = decoder_threads; }
     [[nodiscard]] int decoder_threads() const { return m_decoder_threads; }
 
     void set_sops(bool sops) { m_sops = sops; }
@@ -104,91 +101,52 @@ class Settings : public Singleton<Settings> {
     void set_swap_joycon_stick_to_dpad(bool value) { m_swap_joycon_stick_to_dpad = value; }
     [[nodiscard]] bool swap_joycon_stick_to_dpad() const { return m_swap_joycon_stick_to_dpad; }
 
-    void set_swap_game_keys(bool swap_game_keys) {
-        m_swap_game_keys = swap_game_keys;
-    }
-
-    [[nodiscard]] bool swap_game_keys() const { return m_swap_game_keys; }
-
-    void set_swap_mouse_keys(bool swap_mouse_keys) {
-        m_swap_mouse_keys = swap_mouse_keys;
-    }
-
+    void set_swap_mouse_keys(bool swap_mouse_keys) { m_swap_mouse_keys = swap_mouse_keys; }
     [[nodiscard]] bool touchscreen_mouse_mode() const { return m_touchscreen_mouse_mode; }
 
-    void set_touchscreen_mouse_mode(bool touchscreen_mouse_mode) {
-        m_touchscreen_mouse_mode = touchscreen_mouse_mode;
-    }
-
+    void set_touchscreen_mouse_mode(bool touchscreen_mouse_mode) { m_touchscreen_mouse_mode = touchscreen_mouse_mode; }
     [[nodiscard]] bool swap_mouse_keys() const { return m_swap_mouse_keys; }
 
-    void set_swap_mouse_scroll(bool swap_mouse_scroll) {
-        m_swap_mouse_scroll = swap_mouse_scroll;
-    }
-
+    void set_swap_mouse_scroll(bool swap_mouse_scroll) { m_swap_mouse_scroll = swap_mouse_scroll; }
     [[nodiscard]] bool swap_mouse_scroll() const { return m_swap_mouse_scroll; }
 
-    void set_guide_key_options(KeyComboOptions options) {
-        m_guide_key_options = std::move(options);
-    }
-
+    void set_guide_key_options(KeyComboOptions options) { m_guide_key_options = std::move(options); }
     [[nodiscard]] KeyComboOptions guide_key_options() const { return m_guide_key_options; }
 
-    void set_overlay_options(KeyComboOptions options) {
-        m_overlay_options = std::move(options);
-    }
-
+    void set_overlay_options(KeyComboOptions options) { m_overlay_options = std::move(options); }
     [[nodiscard]] KeyComboOptions overlay_options() const { return m_overlay_options; }
 
-    void set_mouse_input_options(KeyComboOptions options) {
-        m_mouse_input_options = std::move(options);
-    }
+    void set_mouse_input_options(KeyComboOptions options) { m_mouse_input_options = std::move(options); }
+    [[nodiscard]] KeyComboOptions mouse_input_options() const { return m_mouse_input_options; }
 
-    [[nodiscard]] KeyComboOptions mouse_input_options() const {
-        return m_mouse_input_options;
-    }
-
-    void set_volume_amplification(bool allow) {
-        m_volume_amplification = allow;
-    }
-
+    void set_volume_amplification(bool allow) { m_volume_amplification = allow; }
     [[nodiscard]] bool get_volume_amplification() const { return m_volume_amplification; }
 
     void set_volume(int volume) { m_volume = volume; }
-
     [[nodiscard]] int get_volume() const { return m_volume; }
 
     void set_use_hw_decoding(bool hw_decoding) { m_use_hw_decoding = hw_decoding; }
-
     [[nodiscard]] bool use_hw_decoding() const { return m_use_hw_decoding; }
 
     void set_keyboard_type(KeyboardType type) { m_keyboard_type = type; }
-
     [[nodiscard]] KeyboardType get_keyboard_type() const { return m_keyboard_type; }
 
-    void set_keyboard_locale(int locale) { m_keyboard_locale = locale; }
+    void set_keyboard_fingers(int fingers) { m_keyboard_fingers = fingers; }
+    [[nodiscard]] int get_keyboard_fingers() const { return m_keyboard_fingers; }
 
+    void set_keyboard_locale(int locale) { m_keyboard_locale = locale; }
     [[nodiscard]] int get_keyboard_locale() const { return m_keyboard_locale; }
 
     void set_rumble_force(float rumble_force) { m_rumble_force = int(rumble_force * 100); }
-
     [[nodiscard]] float get_rumble_force() const { return float(m_rumble_force) / 100.f; }
 
-    void set_mouse_speed_multiplier(int mouse_speed_multiplier) {
-        m_mouse_speed_multiplier = mouse_speed_multiplier;
-    }
-
+    void set_mouse_speed_multiplier(int mouse_speed_multiplier) { m_mouse_speed_multiplier = mouse_speed_multiplier; }
     [[nodiscard]] int get_mouse_speed_multiplier() const { return m_mouse_speed_multiplier; }
 
     int get_current_mapping_layout();
+    void set_current_mapping_layout(int layout) { m_current_mapping_layout = layout; }
 
-    void set_current_mapping_layout(int layout) {
-        m_current_mapping_layout = layout;
-    }
-
-    std::vector<KeyMappingLayout>* get_mapping_laouts() {
-        return &m_mapping_laouts;
-    }
+    std::vector<KeyMappingLayout>* get_mapping_laouts() { return &m_mapping_laouts; }
 
     void load();
     void save();
@@ -213,7 +171,6 @@ class Settings : public Singleton<Settings> {
     bool m_write_log = false;
     bool m_swap_ui_keys = false;
     bool m_swap_joycon_stick_to_dpad = false;
-    bool m_swap_game_keys = false;
     bool m_touchscreen_mouse_mode = false;
     bool m_swap_mouse_keys = false;
     bool m_swap_mouse_scroll = false;
@@ -221,6 +178,7 @@ class Settings : public Singleton<Settings> {
     int m_volume = 100;
     bool m_use_hw_decoding = true;
     KeyboardType m_keyboard_type = COMPACT;
+    int m_keyboard_fingers = 3;
     int m_keyboard_locale = 0;
     bool m_volume_amplification = false;
     int m_mouse_speed_multiplier = 34;

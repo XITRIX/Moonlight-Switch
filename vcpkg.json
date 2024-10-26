@@ -17,6 +17,7 @@
     "mbedtls"
   ],
   "overrides": [
-      { "name": "curl", "version": "8.7.1" }
+    { "name": "ffmpeg", "version": "7.0.2" },
+    { "name": "curl", "version": "8.7.1" }
   ]
 }

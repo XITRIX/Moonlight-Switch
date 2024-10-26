@@ -12,14 +12,14 @@
 typedef brls::Event<> FingersGestureEvent;
 class FingersGestureRecognizer : public brls::GestureRecognizer {
   public:
-    FingersGestureRecognizer(int fingers,
+    FingersGestureRecognizer(std::function<int(void)> getFingersNum,
                              FingersGestureEvent::Callback respond);
     brls::GestureState recognitionLoop(brls::TouchState touch,
                                        brls::MouseState mouse, brls::View* view,
                                        brls::Sound* soundToPlay) override;
 
   private:
-    int fingers;
+    std::function<int(void)> getFingersNum;
     int fingersCounter = 0;
     FingersGestureEvent event;
 };

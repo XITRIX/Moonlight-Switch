@@ -370,6 +370,27 @@ SettingsTab::SettingsTab() {
         }
     });
 
+    std::vector<std::string> keyboardFingersOptions = {
+        "3", "4", "5", "Disabled"};
+    keyboardFingers->setText("settings/keyboard_fingers"_i18n);
+    keyboardFingers->setData(keyboardFingersOptions);
+    switch (Settings::instance().get_keyboard_fingers()) {
+        GET_SETTINGS(keyboardFingers, 3, 0);
+        GET_SETTINGS(keyboardFingers, 4, 1);
+        GET_SETTINGS(keyboardFingers, 5, 2);
+        GET_SETTINGS(keyboardFingers, -1, 3);
+        DEFAULT;
+    }
+    keyboardFingers->getEvent()->subscribe([](int selected) {
+        switch (selected) {
+            SET_SETTING(0, set_keyboard_fingers(3));
+            SET_SETTING(1, set_keyboard_fingers(4));
+            SET_SETTING(2, set_keyboard_fingers(5));
+            SET_SETTING(3, set_keyboard_fingers(-1));
+            DEFAULT;
+        }
+    });
+
     volumeAmplification->init(
         "settings/volume_amplification"_i18n,
         Settings::instance().get_volume_amplification(), [this](auto value) {

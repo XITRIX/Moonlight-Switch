@@ -321,8 +321,8 @@ void GLVideoRenderer::draw(NVGcontext* vg, int width, int height,
     m_video_render_stats.total_render_time += LiGetMillis() - before_render;
     m_video_render_stats.rendered_frames++;
 
-    auto code = glGetError();
-    brls::Logger::error("OpenGL error: {}\n", code);
+//    auto code = glGetError();
+//    brls::Logger::error("OpenGL error: {}\n", code);
 }
 
 VideoRenderStats* GLVideoRenderer::video_render_stats() {

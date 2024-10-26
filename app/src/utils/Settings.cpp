@@ -287,10 +287,6 @@ void Settings::load() {
                 m_swap_joycon_stick_to_dpad = json_typeof(swap_joycon_stick_to_dpad) == JSON_TRUE;
             }
 
-            if (json_t* swap_game_keys = json_object_get(settings, "swap_game_keys")) {
-                m_swap_game_keys = json_typeof(swap_game_keys) == JSON_TRUE;
-            }
-
             if (json_t* touchscreen_mouse_mode = json_object_get(settings, "touchscreen_mouse_mode")) {
                 m_touchscreen_mouse_mode = json_typeof(touchscreen_mouse_mode) == JSON_TRUE;
             }
@@ -348,7 +344,13 @@ void Settings::load() {
                     m_keyboard_type = (KeyboardType)json_integer_value(keyboard_type);
                 }
             }
-            
+
+            if (json_t* keyboard_fingers = json_object_get(settings, "keyboard_fingers")) {
+                if (json_typeof(keyboard_fingers) == JSON_INTEGER) {
+                    m_keyboard_fingers = json_integer_value(keyboard_fingers);
+                }
+            }
+
             if (json_t* buttons = json_object_get(settings, "overlay_buttons")) {
                 m_overlay_options.buttons.clear();
                 size_t size = json_array_size(buttons);
@@ -466,7 +468,6 @@ void Settings::save() {
             json_object_set_new(settings, "write_log", m_write_log ? json_true() : json_false());
             json_object_set_new(settings, "swap_ui_keys", m_swap_ui_keys ? json_true() : json_false());
             json_object_set_new(settings, "swap_joycon_stick_to_dpad", m_swap_joycon_stick_to_dpad ? json_true() : json_false());
-            json_object_set_new(settings, "swap_game_keys", m_swap_game_keys ? json_true() : json_false());
             json_object_set_new(settings, "touchscreen_mouse_mode", m_touchscreen_mouse_mode ? json_true() : json_false());
             json_object_set_new(settings, "swap_mouse_keys", m_swap_mouse_keys ? json_true() : json_false());
             json_object_set_new(settings, "swap_mouse_scroll", m_swap_mouse_scroll ? json_true() : json_false());
@@ -478,7 +479,8 @@ void Settings::save() {
             json_object_set_new(settings, "rumble_force", json_integer(m_rumble_force));
             json_object_set_new(settings, "current_mapping_layout", json_integer(m_current_mapping_layout));
             json_object_set_new(settings, "keyboard_type", json_integer(m_keyboard_type));
-            
+            json_object_set_new(settings, "keyboard_fingers", json_integer(m_keyboard_fingers));
+
             if (json_t* overlayButtons = json_array()) {
                 for (auto button: m_overlay_options.buttons) {
                     json_array_append_new(overlayButtons, json_integer(button));

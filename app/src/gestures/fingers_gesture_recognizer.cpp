@@ -10,8 +10,8 @@
 using namespace brls;
 
 FingersGestureRecognizer::FingersGestureRecognizer(
-    int fingers, FingersGestureEvent::Callback respond)
-    : fingers(fingers) {
+    std::function<int(void)> getFingersNum, FingersGestureEvent::Callback respond)
+    : getFingersNum(getFingersNum) {
     event.subscribe(respond);
 }
 
@@ -21,7 +21,8 @@ GestureState FingersGestureRecognizer::recognitionLoop(TouchState touch,
                                                        Sound* soundToPlay) {
     if (touch.phase == brls::TouchPhase::START) {
         fingersCounter++;
-        if (fingersCounter == fingers) {
+        auto num = getFingersNum();
+        if (num != -1 && fingersCounter >= num) {
             event.fire();
             return brls::GestureState::END;
         }

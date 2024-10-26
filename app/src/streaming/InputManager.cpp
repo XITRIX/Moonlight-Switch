@@ -197,22 +197,10 @@ GamepadState MoonlightInputManager::getControllerState(int controllerNum,
             -0x7FFF * (!specialKey ? controller.axes[brls::RIGHT_Y] : 0)),
     };
 
-    brls::ControllerButton a;
-    brls::ControllerButton b;
-    brls::ControllerButton x;
-    brls::ControllerButton y;
-
-    if (Settings::instance().swap_game_keys()) {
-        a = brls::BUTTON_B;
-        b = brls::BUTTON_A;
-        x = brls::BUTTON_Y;
-        y = brls::BUTTON_X;
-    } else {
-        a = brls::BUTTON_A;
-        b = brls::BUTTON_B;
-        x = brls::BUTTON_X;
-        y = brls::BUTTON_Y;
-    }
+    brls::ControllerButton a = brls::BUTTON_A;
+    brls::ControllerButton b = brls::BUTTON_B;
+    brls::ControllerButton x = brls::BUTTON_X;
+    brls::ControllerButton y = brls::BUTTON_Y;
 
 #define SET_GAME_PAD_STATE(LIMELIGHT_KEY, GAMEPAD_BUTTON)                      \
     controller.buttons[GAMEPAD_BUTTON]                                         \

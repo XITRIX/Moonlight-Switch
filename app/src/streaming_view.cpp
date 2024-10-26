@@ -65,8 +65,9 @@ StreamingView::StreamingView(const Host& host, const AppInfo& app) : host(host),
 
     static bool lMouseKeyGate = false;
     static bool lMouseKeyUsed = false;
-    addGestureRecognizer(
-        new FingersGestureRecognizer(3, [this] { addKeyboard(); }));
+    addGestureRecognizer(new FingersGestureRecognizer([](){
+                             return Settings::instance().get_keyboard_fingers();
+                         }, [this] { addKeyboard(); }));
 
     addGestureRecognizer(
         new ClickGestureRecognizer(1, [](TapGestureStatus status) {
