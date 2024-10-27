@@ -32,6 +32,16 @@ StreamingInputOverlay::StreamingInputOverlay(StreamingView* streamView)
         [this](TapGestureStatus status, Sound* sound) {}));
 
     populateHintWithDefaultItems();
+
+    inner->registerAction("hints/back"_i18n, ControllerButton::BUTTON_B,
+                          [this](View* view) {
+                              if (this->isKeyboardOpen) {
+                                  this->toggleKeyboard();
+                                  return true;
+                              }
+                              dismiss();
+                              return true;
+                          });
 }
 
 void StreamingInputOverlay::onFocusGained() {
@@ -211,11 +221,6 @@ void StreamingInputOverlay::populateHintWithDefaultItems() {
                                                this->toggleKeyboard();
                                                return true;
                                            }));
-
-    actionsToFree.push_back(registerAction("hints/back"_i18n, ControllerButton::BUTTON_B,
-                                          [this](View* view) {
-                                              return false;
-                                          }));
 }
 
 void sendClick(char key) {
@@ -253,13 +258,6 @@ void StreamingInputOverlay::populateHintWithKeyboardItems() {
                                                 sendClick(0x08);
                                                 return true; 
                                             }, false, true));
-
-    actionsToFree.push_back(registerAction("hints/back"_i18n, ControllerButton::BUTTON_B,
-                                          [this](View* view) {
-                                              if (this->isKeyboardOpen)
-                                                  this->toggleKeyboard();
-                                              return true;
-                                          }));
 }
 
 brls::AppletFrame* StreamingInputOverlay::getAppletFrame() { return applet; }
