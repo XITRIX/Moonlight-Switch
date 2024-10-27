@@ -47,6 +47,7 @@ class StreamingView : public brls::Box {
     bool tempInputLock = false;
     brls::Event<brls::KeyState>::Subscription keysSubscription;
     int touchScrollCounter = 0;
+    size_t bottombarDelayTask = -1;
 
     void handleInput();
     void handleOverlayCombo();

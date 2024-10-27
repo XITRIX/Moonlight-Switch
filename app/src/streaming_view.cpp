@@ -16,11 +16,21 @@
 #include <chrono>
 #include <nanovg.h>
 
+#if defined(__SDL2__)
+#include <SDL2/SDL.h>
+#endif
+
 using namespace brls;
 
 #ifdef PLATFORM_TVOS
 extern void updatePreferredDisplayMode(bool streamActive);
 #endif
+
+void setBottomBarStatus(const char *value) {
+#if defined(__SDL2__)
+    SDL_SetHint(SDL_HINT_IOS_HIDE_HOME_INDICATOR, value);
+#endif
+}
 
 StreamingView::StreamingView(const Host& host, const AppInfo& app) : host(host), app(app) {
     Application::getPlatform()->disableScreenDimming(true);
@@ -207,6 +217,8 @@ void StreamingView::onFocusGained() {
     });
 
     Application::getPlatform()->getInputManager()->setPointerLock(true);
+
+    setBottomBarStatus("1");
 }
 
 void StreamingView::onFocusLost() {
@@ -222,6 +234,11 @@ void StreamingView::onFocusLost() {
 
     removeKeyboard();
     Application::getPlatform()->getInputManager()->setPointerLock(false);
+
+    setBottomBarStatus("2");
+
+    if (bottombarDelayTask != -1)
+        cancelDelay(bottombarDelayTask);
 }
 
 void StreamingView::draw(NVGcontext* vg, float x, float y, float width,
@@ -359,6 +376,20 @@ void StreamingView::handleInput() {
         MoonlightInputManager::instance().dropInput();
     } else {
         MoonlightInputManager::instance().handleInput();
+    }
+
+    if (Application::currentTouchState.size() > 0) {
+        setBottomBarStatus("2");
+
+        if (bottombarDelayTask != -1)
+            cancelDelay(bottombarDelayTask);
+
+        ASYNC_RETAIN
+        bottombarDelayTask = delay(3000, [ASYNC_TOKEN]() {
+            ASYNC_RELEASE
+            setBottomBarStatus("1");
+            bottombarDelayTask = -1;
+        });
     }
 }
 
