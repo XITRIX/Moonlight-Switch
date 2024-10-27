@@ -126,7 +126,7 @@ class Settings : public Singleton<Settings> {
     [[nodiscard]] int get_volume() const { return m_volume; }
 
     void set_use_hw_decoding(bool hw_decoding) { m_use_hw_decoding = hw_decoding; }
-    [[nodiscard]] bool use_hw_decoding() const { return m_use_hw_decoding; }
+    [[nodiscard]] bool use_hw_decoding() const { return true; } //m_use_hw_decoding; }
 
     void set_keyboard_type(KeyboardType type) { m_keyboard_type = type; }
     [[nodiscard]] KeyboardType get_keyboard_type() const { return m_keyboard_type; }

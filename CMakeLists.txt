@@ -19,7 +19,7 @@ if (APPLE AND PLATFORM_DESKTOP)
 endif ()
 
 if (PLATFORM_IOS OR PLATFORM_TVOS)
-    set(ENABLE_ARC OFF)
+    # set(ENABLE_ARC OFF)
 endif ()
 
 # toolchain
