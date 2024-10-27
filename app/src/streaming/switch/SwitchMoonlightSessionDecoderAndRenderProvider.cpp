@@ -9,6 +9,8 @@
 
 #ifdef BOREALIS_USE_DEKO3D
 #include "DKVideoRenderer.hpp"
+#elif defined(PLATFORM_IOS)
+#include "MetalVideoRenderer.hpp"
 #else
 #include "GLVideoRenderer.hpp"
 #endif
@@ -22,6 +24,8 @@ IVideoRenderer*
 SwitchMoonlightSessionDecoderAndRenderProvider::video_renderer() {
 #ifdef BOREALIS_USE_DEKO3D
     return new DKVideoRenderer();
+#elif defined(PLATFORM_IOS)
+    return new MetalVideoRenderer();
 #else
     return new GLVideoRenderer();
 #endif

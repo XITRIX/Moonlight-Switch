@@ -102,6 +102,7 @@ elseif (PLATFORM_ANDROID)
 elseif (PLATFORM_IOS OR PLATFORM_TVOS)
     list(APPEND MAIN_SRC app/platforms/ios/apple_mdns.mm)
     list(APPEND MAIN_SRC app/platforms/ios/apple_display.mm)
+    list(APPEND MAIN_SRC app/src/streaming/video/Metal/MetalVideoRenderer.mm)
 endif ()
 
 
@@ -267,6 +268,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
         app/src/streaming/video
         app/src/streaming/video/deko3d
         app/src/streaming/video/OpenGL
+        app/src/streaming/video/Metal
         app/src/utils
         extern/CImg
         ${MBEDTLS_INCLUDE_DIRS}

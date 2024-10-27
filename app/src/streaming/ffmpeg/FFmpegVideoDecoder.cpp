@@ -366,10 +366,8 @@ AVFrame* FFmpegVideoDecoder::get_frame(bool native_frame) {
     }
 
     if (hw_device_ctx) {
-#ifdef BOREALIS_USE_DEKO3D
+#if defined(BOREALIS_USE_DEKO3D) || defined(PLATFORM_ANDROID) || defined(PLATFORM_IOS)
         // DEKO decoder will work with hardware frame
-        resultFrame = decodeFrame;
-#elif defined(PLATFORM_ANDROID)
         // Android already produce software Frame
         resultFrame = decodeFrame;
 #else
