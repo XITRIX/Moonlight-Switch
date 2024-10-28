@@ -62,6 +62,7 @@ bool startFromArgs(int argc, char** argv) {
         AppInfo info { args[2], stoi(args[1]) };
 
         auto* frame = new AppletFrame(new StreamingView(host, info));
+        frame->setBackground(ViewBackground::NONE);
         frame->setHeaderVisibility(brls::Visibility::GONE);
         frame->setFooterVisibility(brls::Visibility::GONE);
         Application::pushActivity(new Activity(frame));

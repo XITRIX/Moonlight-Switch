@@ -23,6 +23,7 @@ extern "C" {
 
 #define MAX_VIDEO_PLANES 3
 
+UIView* m_MetalView;
 CAMetalLayer* m_MetalLayer;
 CVMetalTextureCacheRef m_TextureCache;
 id<MTLBuffer> m_CscParamsBuffer;
@@ -292,6 +293,8 @@ MetalVideoRenderer::~MetalVideoRenderer()
         CFRelease(m_TextureCache);
     }
 
+    [m_MetalView removeFromSuperview];
+
 //    if (m_MetalView != nullptr) {
 //        SDL_Metal_DestroyView(m_MetalView);
 //    }
@@ -308,14 +311,14 @@ void MetalVideoRenderer::waitToRender()
 
 //        if (m_MetalLayer.displaySyncEnabled) {
         // Pace ourselves by waiting if too many frames are pending presentation
-        SDL_LockMutex(m_PresentationMutex);
-        if (m_PendingPresentationCount > 2) {
-            if (SDL_CondWaitTimeout(m_PresentationCond, m_PresentationMutex, 100) == SDL_MUTEX_TIMEDOUT) {
-                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                            "Presentation wait timed out after 100 ms");
-            }
-        }
-        SDL_UnlockMutex(m_PresentationMutex);
+//        SDL_LockMutex(m_PresentationMutex);
+//        if (m_PendingPresentationCount > 2) {
+//            if (SDL_CondWaitTimeout(m_PresentationCond, m_PresentationMutex, 100) == SDL_MUTEX_TIMEDOUT) {
+//                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+//                            "Presentation wait timed out after 100 ms");
+//            }
+//        }
+//        SDL_UnlockMutex(m_PresentationMutex);
 //        }
     }
 }}
@@ -329,18 +332,18 @@ void MetalVideoRenderer::draw(NVGcontext* vg, int width, int height, AVFrame* fr
     // Handle changes to the frame's colorspace from last time we rendered
     if (!updateColorSpaceForFrame(frame)) {
         // Trigger the main thread to recreate the decoder
-        SDL_Event event;
-        event.type = SDL_RENDER_DEVICE_RESET;
-        SDL_PushEvent(&event);
+//        SDL_Event event;
+//        event.type = SDL_RENDER_DEVICE_RESET;
+//        SDL_PushEvent(&event);
         return;
     }
 
     // Handle changes to the video size or drawable size
     if (!updateVideoRegionSizeForFrame(frame)) {
         // Trigger the main thread to recreate the decoder
-        SDL_Event event;
-        event.type = SDL_RENDER_DEVICE_RESET;
-        SDL_PushEvent(&event);
+//        SDL_Event event;
+//        event.type = SDL_RENDER_DEVICE_RESET;
+//        SDL_PushEvent(&event);
         return;
     }
 
@@ -426,15 +429,15 @@ void MetalVideoRenderer::draw(NVGcontext* vg, int width, int height, AVFrame* fr
 
 //    if (m_MetalLayer.displaySyncEnabled) {
     // Queue a completion callback on the drawable to pace our rendering
-    SDL_LockMutex(m_PresentationMutex);
-    m_PendingPresentationCount++;
-    SDL_UnlockMutex(m_PresentationMutex);
-    [m_NextDrawable addPresentedHandler:^(id<MTLDrawable>) {
-        SDL_LockMutex(m_PresentationMutex);
-        m_PendingPresentationCount--;
-        SDL_CondSignal(m_PresentationCond);
-        SDL_UnlockMutex(m_PresentationMutex);
-    }];
+//    SDL_LockMutex(m_PresentationMutex);
+//    m_PendingPresentationCount++;
+//    SDL_UnlockMutex(m_PresentationMutex);
+//    [m_NextDrawable addPresentedHandler:^(id<MTLDrawable>) {
+//        SDL_LockMutex(m_PresentationMutex);
+//        m_PendingPresentationCount--;
+//        SDL_CondSignal(m_PresentationCond);
+//        SDL_UnlockMutex(m_PresentationMutex);
+//    }];
 //    }
 
     // Flip to the newly rendered buffer
@@ -519,13 +522,19 @@ bool MetalVideoRenderer::initialize(int imageFormat)
         return false;
     }
 
-    m_MetalLayer = (CAMetalLayer*) view.layer.sublayers[0];
+    m_MetalView = [[MTKView alloc] init];
+    m_MetalLayer = (CAMetalLayer*) [m_MetalView layer];
+    [view.superview insertSubview:m_MetalView atIndex:0];
+    view.layer.sublayers[0].opaque = false;
+    m_MetalView.frame = view.bounds;
 
     // Choose a device
     m_MetalLayer.device = device;
 
     // Allow EDR content if we're streaming in a 10-bit format
-    m_MetalLayer.wantsExtendedDynamicRangeContent = imageFormat & VIDEO_FORMAT_MASK_10BIT;
+    if (@available(iOS 16.0, *)) {
+        m_MetalLayer.wantsExtendedDynamicRangeContent = imageFormat & VIDEO_FORMAT_MASK_10BIT;
+    }
 
     // Ideally, we don't actually want triple buffering due to increased
     // display latency, since our render time is very short. However, we

@@ -27,6 +27,7 @@ AppCell::AppCell(Host host, AppInfo app, int currentApp) {
     this->addGestureRecognizer(new TapGestureRecognizer(this));
     this->registerClickAction([host, app](View* view) {
         AppletFrame* frame = new AppletFrame(new StreamingView(host, app));
+        frame->setBackground(ViewBackground::NONE);
         frame->setHeaderVisibility(brls::Visibility::GONE);
         frame->setFooterVisibility(brls::Visibility::GONE);
         Application::pushActivity(new Activity(frame));
