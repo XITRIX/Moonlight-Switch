@@ -1,5 +1,5 @@
 #pragma once
-#if defined(PLATFORM_IOS)
+#if defined(PLATFORM_APPLE)
 
 #include "IVideoRenderer.hpp"
 #include <SDL2/SDL.h>

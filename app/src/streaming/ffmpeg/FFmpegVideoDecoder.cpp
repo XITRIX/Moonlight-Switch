@@ -203,7 +203,9 @@ int FFmpegVideoDecoder::setup(int video_format, int width, int height,
 
     if (Settings::instance().use_hw_decoding() && hwType != AV_HWDEVICE_TYPE_NONE) {
         if ((err = av_hwdevice_ctx_create(&hw_device_ctx, hwType, NULL, NULL, 0)) < 0) {
-            brls::Logger::error("FFmpeg: Error initializing hardware decoder - {}", err);
+            char error[512];
+            av_strerror(err, error, sizeof(error));
+            brls::Logger::error("FFmpeg: Error initializing hardware decoder - {}", error);
             return -1;
         }
         m_decoder_context->hw_device_ctx = av_buffer_ref(hw_device_ctx);
@@ -366,7 +368,7 @@ AVFrame* FFmpegVideoDecoder::get_frame(bool native_frame) {
     }
 
     if (hw_device_ctx) {
-#if defined(BOREALIS_USE_DEKO3D) || defined(PLATFORM_ANDROID) || defined(PLATFORM_IOS)
+#if defined(BOREALIS_USE_DEKO3D) || defined(PLATFORM_ANDROID) || defined(PLATFORM_APPLE)
         // DEKO decoder will work with hardware frame
         // Android already produce software Frame
         resultFrame = decodeFrame;

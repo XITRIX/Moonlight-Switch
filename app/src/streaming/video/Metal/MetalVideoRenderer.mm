@@ -1,4 +1,4 @@
-#if defined(PLATFORM_IOS)
+#if defined(PLATFORM_APPLE)
 
 #define AVMediaType AVMediaType_FFmpeg
 //#include <libavutil/pixdesc.h>
@@ -532,9 +532,11 @@ bool MetalVideoRenderer::initialize(int imageFormat)
     m_MetalLayer.device = device;
 
     // Allow EDR content if we're streaming in a 10-bit format
+#if defined(PLATFORM_IOS)
     if (@available(iOS 16.0, *)) {
         m_MetalLayer.wantsExtendedDynamicRangeContent = imageFormat & VIDEO_FORMAT_MASK_10BIT;
     }
+#endif
 
     // Ideally, we don't actually want triple buffering due to increased
     // display latency, since our render time is very short. However, we

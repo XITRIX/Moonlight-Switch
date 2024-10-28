@@ -35,10 +35,6 @@ void setBottomBarStatus(const char *value) {
 StreamingView::StreamingView(const Host& host, const AppInfo& app) : host(host), app(app) {
     Application::getPlatform()->disableScreenDimming(true);
 
-#ifdef PLATFORM_TVOS
-    updatePreferredDisplayMode(true);
-#endif
-
     setFocusable(true);
     setHideHighlight(true);
     loader = new LoadingOverlay(this);
@@ -67,6 +63,10 @@ StreamingView::StreamingView(const Host& host, const AppInfo& app) : host(host),
                 loader->setHidden(true);
                 if (!result.isSuccess()) {
                     showError(result.error(), [this]() { terminate(false); });
+                } else {
+                #ifdef PLATFORM_TVOS
+                    updatePreferredDisplayMode(true);
+                #endif
                 }
             });
         });
