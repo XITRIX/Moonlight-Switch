@@ -8,6 +8,7 @@
 
 using namespace brls;
 
+int m_video_format;
 static MoonlightSession* m_active_session = nullptr;
 static MoonlightSessionDecoderAndRenderProvider* m_provider = nullptr;
 
@@ -122,6 +123,7 @@ void MoonlightSession::connection_status_update(int connection_status) {
 int MoonlightSession::video_decoder_setup(int video_format, int width,
                                           int height, int redraw_rate,
                                           void* context, int dr_flags) {
+    m_video_format = video_format;
     if (m_active_session && m_active_session->m_video_decoder) {
         return m_active_session->m_video_decoder->setup(
             video_format, width, height, redraw_rate, context, dr_flags);
@@ -306,7 +308,7 @@ void MoonlightSession::draw(NVGcontext* vg, int width, int height) {
     if (m_video_decoder && m_video_renderer) {
         AVFrameHolder::instance().get(
             [this, vg, width, height](AVFrame* frame) {
-                m_video_renderer->draw(vg, width, height, frame);
+                m_video_renderer->draw(vg, width, height, frame, m_video_format);
             });
 
         m_session_stats.video_decode_stats =

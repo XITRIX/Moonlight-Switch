@@ -122,7 +122,7 @@ void DKVideoRenderer::checkAndInitialize(int width, int height, AVFrame* frame) 
     m_is_initialized = true;
 }
 
-void DKVideoRenderer::draw(NVGcontext* vg, int width, int height, AVFrame* frame) {
+void DKVideoRenderer::draw(NVGcontext* vg, int width, int height, AVFrame* frame, int imageFormat) {
     checkAndInitialize(width, height, frame);
 
     if (!m_video_render_stats.rendered_frames) {

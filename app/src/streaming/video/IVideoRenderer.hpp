@@ -19,7 +19,7 @@ class IVideoRenderer {
   public:
     virtual ~IVideoRenderer(){};
     virtual void draw(NVGcontext* vg, int width, int height,
-                      AVFrame* frame) = 0;
+                      AVFrame* frame, int imageFormat) = 0;
     virtual VideoRenderStats* video_render_stats() = 0;
 
     // Default implementations

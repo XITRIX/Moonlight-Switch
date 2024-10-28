@@ -284,9 +284,7 @@ bool MetalVideoRenderer::updateVideoRegionSizeForFrame(AVFrame* frame) {
     return true;
 }
 
-MetalVideoRenderer::MetalVideoRenderer() {
-    initialize();
-}
+MetalVideoRenderer::MetalVideoRenderer() {}
 
 MetalVideoRenderer::~MetalVideoRenderer()
 {@autoreleasepool {
@@ -322,7 +320,8 @@ void MetalVideoRenderer::waitToRender()
     }
 }}
 
-void MetalVideoRenderer::draw(NVGcontext* vg, int width, int height, AVFrame* frame) {
+void MetalVideoRenderer::draw(NVGcontext* vg, int width, int height, AVFrame* frame, int imageFormat) {
+    initialize(imageFormat);
     waitToRender();
 
     if (frame->format != AV_PIX_FMT_VIDEOTOOLBOX) { return; }
@@ -470,8 +469,11 @@ id<MTLDevice> getMetalDevice() {
     return MTLCreateSystemDefaultDevice();
 }
 
-bool MetalVideoRenderer::initialize()
+bool MetalVideoRenderer::initialize(int imageFormat)
 { @autoreleasepool {
+    if (initialized) return;
+    initialized = true;
+
     int err;
 
     auto videoContext = (brls::SDLVideoContext*) brls::Application::getPlatform()->getVideoContext();
@@ -507,9 +509,6 @@ bool MetalVideoRenderer::initialize()
     if (SDL_GetWindowWMInfo(m_Window, &info)) {
         if (info.subsystem == SDL_SYSWM_UIKIT) {
             view = info.info.uikit.window.rootViewController.view;
-//            if (view.tag == SDL_METALVIEW_TAG) {
-//                m_MetalView = view;
-//            }
         }
     }
 
@@ -526,7 +525,7 @@ bool MetalVideoRenderer::initialize()
     m_MetalLayer.device = device;
 
     // Allow EDR content if we're streaming in a 10-bit format
-    m_MetalLayer.wantsExtendedDynamicRangeContent = true;// !!(params->videoFormat & VIDEO_FORMAT_MASK_10BIT);
+    m_MetalLayer.wantsExtendedDynamicRangeContent = imageFormat & VIDEO_FORMAT_MASK_10BIT;
 
     // Ideally, we don't actually want triple buffering due to increased
     // display latency, since our render time is very short. However, we

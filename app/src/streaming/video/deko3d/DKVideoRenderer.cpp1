@@ -254,7 +254,7 @@ void DKVideoRenderer::checkAndInitialize(int width, int height, AVFrame* frame) 
     m_is_initialized = true;
 }
 
-void DKVideoRenderer::draw(NVGcontext* vg, int width, int height, AVFrame* frame) {
+void DKVideoRenderer::draw(NVGcontext* vg, int width, int height, AVFrame* frame, int imageFormat) {
     this->checkAndInitialize(width, height, frame);
 
     this->cmdbuf.addMemory(this->memblk, cmdbuf_size * this->cmdbuf_slice, cmdbuf_size);
