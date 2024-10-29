@@ -35,10 +35,6 @@ void setBottomBarStatus(const char *value) {
 StreamingView::StreamingView(const Host& host, const AppInfo& app) : host(host), app(app) {
     Application::getPlatform()->disableScreenDimming(true);
 
-    #ifdef PLATFORM_TVOS
-        updatePreferredDisplayMode(true);
-    #endif
-
     setFocusable(true);
     setHideHighlight(true);
     loader = new LoadingOverlay(this);
@@ -268,6 +264,14 @@ void StreamingView::draw(NVGcontext* vg, float x, float y, float width,
         nvgFillColor(vg, nvgRGBA(255, 255, 255, 255));
         nvgFontFaceId(vg, Application::getFont(FONT_REGULAR));
         nvgText(vg, 50, height - 28, "\uE140 Bad connection...", nullptr);
+    }
+
+    if (session->use_hdr() != m_use_hdr) {
+        m_use_hdr = session->use_hdr();
+
+#ifdef PLATFORM_TVOS
+        updatePreferredDisplayMode(true);
+#endif
     }
 
     if (draw_stats) {

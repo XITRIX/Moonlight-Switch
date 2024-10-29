@@ -130,6 +130,13 @@ SettingsTab::SettingsTab() {
                     Settings::instance().set_video_codec(supportedCodecs[selected]);
                 });
 
+    requestHdr->init("settings/request_hdr"_i18n, Settings::instance().request_hdr(),
+                     [](bool value) { Settings::instance().set_request_hdr(value); });
+
+ #ifndef SUPPORT_HDR
+    requestHdr->removeFromSuperView(true);
+ #endif
+
     hwDecoding->init("settings/use_hw_decoding"_i18n, Settings::instance().use_hw_decoding(),
                      [](bool value) { Settings::instance().set_use_hw_decoding(value); });
 

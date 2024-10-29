@@ -1,3 +1,5 @@
+#ifdef USE_GL_RENDERER
+
 #include "GLVideoRenderer.hpp"
 
 // TODO: rework logging with callbacks
@@ -333,3 +335,5 @@ VideoRenderStats* GLVideoRenderer::video_render_stats() {
          1000);
     return (VideoRenderStats*)&m_video_render_stats;
 }
+
+#endif // USE_GL_RENDERER

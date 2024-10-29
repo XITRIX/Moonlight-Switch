@@ -118,6 +118,12 @@ void MoonlightSession::connection_status_update(int connection_status) {
     }
 }
 
+void MoonlightSession::connection_set_hdr_mode(bool use_hdr) {
+    if (m_active_session) {
+        m_active_session->m_use_hdr = use_hdr;
+    }
+}
+
 // MARK: Video decoder callbacks
 
 int MoonlightSession::video_decoder_setup(int video_format, int width,
@@ -227,11 +233,13 @@ void MoonlightSession::start(ServerCallback<bool> callback) {
         break;
     case H265:
         m_config.supportedVideoFormats = VIDEO_FORMAT_H265;
-        if (Settings::instance().enableHdr())
-            m_config.supportedVideoFormats |= VIDEO_FORMAT_H265_MAIN10;
+            if (Settings::instance().request_hdr())
+                m_config.supportedVideoFormats |= VIDEO_FORMAT_H265_MAIN10;
         break;
     case AV1:
         m_config.supportedVideoFormats = VIDEO_FORMAT_AV1_MAIN8;
+            if (Settings::instance().request_hdr())
+                m_config.supportedVideoFormats |= VIDEO_FORMAT_AV1_MAIN10;
         break;
     default:
         break;
@@ -247,6 +255,7 @@ void MoonlightSession::start(ServerCallback<bool> callback) {
     m_connection_callbacks.rumble = connection_rumble;
     m_connection_callbacks.rumbleTriggers = connection_rumble_triggers;
     m_connection_callbacks.connectionStatusUpdate = connection_status_update;
+    m_connection_callbacks.setHdrMode = connection_set_hdr_mode;
 
     LiInitializeVideoCallbacks(&m_video_callbacks);
     m_video_callbacks.setup = video_decoder_setup;

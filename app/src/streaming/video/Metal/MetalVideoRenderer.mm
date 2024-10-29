@@ -1,4 +1,4 @@
-#if defined(PLATFORM_APPLE)
+#if defined(USE_METAL_RENDERER)
 
 #define AVMediaType AVMediaType_FFmpeg
 //#include <libavutil/pixdesc.h>
@@ -589,4 +589,4 @@ VideoRenderStats* MetalVideoRenderer::video_render_stats() {
     return (VideoRenderStats*)&m_video_render_stats;
 }
 
-#endif
+#endif // USE_METAL_RENDERER

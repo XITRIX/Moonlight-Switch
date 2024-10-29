@@ -1,3 +1,4 @@
+#if defined(USE_METAL_RENDERER)
 #include "streamutils.hpp"
 
 #if defined(PLATFORM_APPLE) && defined(PLATFORM_PC)
@@ -407,3 +408,5 @@ void StreamUtils::screenSpaceToNormalizedDeviceCoords(SDL_Rect* src, SDL_FRect* 
 //
 //    return -1;
 //}
+
+#endif // USE_METAL_RENDERER

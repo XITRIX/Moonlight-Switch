@@ -30,6 +30,9 @@
                 
             <brls:SelectorCell
                 id="codec"/>
+
+            <brls:BooleanCell
+                id="request_hdr"/>
                 
             <brls:SelectorCell
                 id="decoder"/>

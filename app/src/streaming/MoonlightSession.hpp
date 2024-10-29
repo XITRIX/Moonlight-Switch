@@ -29,6 +29,10 @@ class MoonlightSession {
         return m_connection_status_is_poor;
     }
 
+    bool use_hdr() const {
+        return m_use_hdr;
+    }
+
     SessionStats* session_stats() const {
         return (SessionStats*)&m_session_stats;
     }
@@ -45,6 +49,7 @@ class MoonlightSession {
     static void connection_rumble_triggers(uint16_t controllerNumber, 
                                            uint16_t leftTriggerMotor, uint16_t rightTriggerMotor);
     static void connection_status_update(int);
+    static void connection_set_hdr_mode(bool);
 
     static int video_decoder_setup(int, int, int, int, void*, int);
     static void video_decoder_start();
@@ -73,6 +78,7 @@ class MoonlightSession {
     bool m_is_active = false;
     bool m_is_terminated = false;
     bool m_connection_status_is_poor = false;
+    bool m_use_hdr = false;
 
     SessionStats m_session_stats = {};
 };

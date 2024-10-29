@@ -253,9 +253,9 @@ void Settings::load() {
                 }
             }
 
-//            if (json_t* enable_hdr = json_object_get(settings, "enable_hdr")) {
-//                m_enable_hdr = json_typeof(enable_hdr) == JSON_TRUE;
-//            }
+            if (json_t* enable_hdr = json_object_get(settings, "enable_hdr")) {
+                m_enable_hdr = json_typeof(enable_hdr) == JSON_TRUE;
+            }
 
             if (json_t* click_by_tap = json_object_get(settings, "click_by_tap")) {
                 m_click_by_tap = json_typeof(click_by_tap) == JSON_TRUE;

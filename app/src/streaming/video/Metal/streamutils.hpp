@@ -1,4 +1,5 @@
 #pragma once
+#if defined(USE_METAL_RENDERER)
 
 #include <SDL2/SDL.h>
 
@@ -43,3 +44,5 @@ public:
 //    static
 //    int getDrmFd(bool preferRenderNode);
 };
+
+#endif // USE_METAL_RENDERER

@@ -98,7 +98,8 @@
         "keyboard_compact": "Компактная",
         "keyboard_fullsized": "Полноразмерная",
         "touchscreen_mouse_mode": "Touchscreen режим",
-        "keyboard_fingers": "Нажатий для открытия клавиатуры"
+        "keyboard_fingers": "Нажатий для открытия клавиатуры",
+        "request_hdr": "Запрашивать HDR Видео"
     },
     "app_list": {
         "reload_app_list": "Перезагрузить",

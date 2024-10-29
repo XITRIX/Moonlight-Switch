@@ -13,11 +13,12 @@ extern "C" {
 // Uses the low latency decode flag (disables multithreading)
 #define LOW_LATENCY_DECODE 0x2
 
-#if defined(PLATFORM_TVOS)
-#define DECODER_BUFFER_SIZE 92 * 1024 * 4
-#else
-#define DECODER_BUFFER_SIZE 92 * 1024 * 2
-#endif
+//#if defined(PLATFORM_TVOS)
+//#define DECODER_BUFFER_SIZE 92 * 1024 * 4
+//#else
+//#define DECODER_BUFFER_SIZE 92 * 1024 * 2
+//#endif
+#define DECODER_BUFFER_SIZE 1024 * 1024
 
 #if defined(PLATFORM_ANDROID)
 #include <jni.h>
@@ -157,7 +158,10 @@ int FFmpegVideoDecoder::setup(int video_format, int width, int height,
 #elif defined(PLATFORM_ANDROID)
         m_frames[i]->format = AV_PIX_FMT_MEDIACODEC;
 #else
-        m_frames[i]->format = AV_PIX_FMT_P010;
+        if (video_format & VIDEO_FORMAT_MASK_10BIT)
+            m_frames[i]->format = AV_PIX_FMT_P010;
+        else
+            m_frames[i]->format = AV_PIX_FMT_NV12;
 #endif
         m_frames[i]->width  = width;
         m_frames[i]->height = height;
@@ -375,7 +379,7 @@ AVFrame* FFmpegVideoDecoder::get_frame(bool native_frame) {
     }
 
     if (hw_device_ctx) {
-#if defined(BOREALIS_USE_DEKO3D) || defined(PLATFORM_ANDROID) || defined(PLATFORM_APPLE)
+#if defined(BOREALIS_USE_DEKO3D) || defined(PLATFORM_ANDROID) || defined(USE_METAL_RENDERER)
         // DEKO decoder will work with hardware frame
         // Android already produce software Frame
         resultFrame = decodeFrame;

@@ -22,6 +22,13 @@ if (PLATFORM_IOS OR PLATFORM_TVOS)
     # set(ENABLE_ARC OFF)
 endif ()
 
+# Renderers
+if (PLATFORM_IOS OR PLATFORM_TVOS)
+    set(USE_METAL_RENDERER ON)
+else()
+    set(USE_GL_RENDERER ON)
+endif ()
+
 # toolchain
 include(${EXTERN_PATH}/cmake/toolchain.cmake)
 
@@ -348,6 +355,17 @@ else ()
     target_link_libraries(${PROJECT_NAME} PRIVATE
             OpenSSL::SSL
             OpenSSL::Crypto)
+endif ()
+
+if (USE_GL_RENDERER)
+    add_definitions(-DUSE_GL_RENDERER)
+elseif (USE_METAL_RENDERER)
+    set(SUPPORT_HDR ON)
+    add_definitions(-DUSE_METAL_RENDERER)
+endif ()
+
+if (SUPPORT_HDR)
+    add_definitions(-DSUPPORT_HDR)
 endif ()
 
 if (PLATFORM_IOS OR PLATFORM_TVOS)

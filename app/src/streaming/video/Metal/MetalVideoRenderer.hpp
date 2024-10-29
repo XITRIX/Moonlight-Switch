@@ -1,5 +1,5 @@
 #pragma once
-#if defined(PLATFORM_APPLE)
+#if defined(USE_METAL_RENDERER)
 
 #include "IVideoRenderer.hpp"
 #include <SDL2/SDL.h>
@@ -31,4 +31,4 @@ private:
     int m_LastDrawableHeight = -1;
 };
 
-#endif
+#endif // USE_METAL_RENDERER

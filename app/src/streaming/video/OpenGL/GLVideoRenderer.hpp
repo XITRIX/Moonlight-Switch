@@ -1,3 +1,5 @@
+#ifdef USE_GL_RENDERER
+
 #include "IVideoRenderer.hpp"
 #if defined(__LIBRETRO__)
 #include "glsym.h"
@@ -53,3 +55,5 @@ class GLVideoRenderer : public IVideoRenderer {
     const int (*currentPlanes)[4];
     int currentFormat;
 };
+
+#endif // USE_GL_RENDERER

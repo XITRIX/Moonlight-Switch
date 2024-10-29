@@ -7,7 +7,8 @@
         width="100%"
         height="auto"
         headerHidden="true"
-        footerHidden="true">
+        footerHidden="true"
+        backgroundColor="@theme/brls/clear">
         <brls:Box
             id="inner"
             width="auto"
