@@ -10,12 +10,12 @@ function(check_libromfs_generator)
     endif()
 endfunction()
 
-if (APPLE)
-    add_definitions(-DPLATFORM_APPLE)
-endif ()
-
 if (PLATFORM_DESKTOP)
     add_definitions(-DPLATFORM_DESKTOP)
+    if (APPLE)
+        set(PLATFORM_MACOS ON)
+        add_definitions(-DPLATFORM_MACOS)
+    endif ()
     message(STATUS "building for Desktop")
     set(CMAKE_TOOLCHAIN_FILE ${EXTERN_PATH}/vcpkg/scripts/buildsystems/vcpkg.cmake CACHE PATH "vcpkg toolchain file")
     set(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -O0 -g2 -ggdb -Wall")
@@ -103,6 +103,11 @@ elseif (PLATFORM_SWITCH)
 else()
     message(FATAL_ERROR "Please set build target. Example: -DPLATFORM_DESKTOP=ON or -DPLATFORM_SWITCH=ON")
 endif ()
+
+if (PLATFORM_IOS OR PLATFROM_TVOS OR PLATFORM_MACOS)
+    set(PLATFORM_APPLE ON)
+    add_definitions(-DPLATFORM_APPLE)
+endif()
 
 # OpenGL driver
 if (USE_DEKO3D)

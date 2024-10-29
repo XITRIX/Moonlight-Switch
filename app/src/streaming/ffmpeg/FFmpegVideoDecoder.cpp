@@ -3,10 +3,11 @@
 #include "Settings.hpp"
 #include "borealis.hpp"
 
+#ifdef PLATFORM_APPLE
 extern "C" {
-#include <libavutil/opt.h>
 #include <libavcodec/videotoolbox.h>
 }
+#endif
 
 // Disables the deblocking filter at the cost of image quality
 #define DISABLE_LOOP_FILTER 0x1

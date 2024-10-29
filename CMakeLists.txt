@@ -22,15 +22,15 @@ if (PLATFORM_IOS OR PLATFORM_TVOS)
     # set(ENABLE_ARC OFF)
 endif ()
 
+# toolchain
+include(${EXTERN_PATH}/cmake/toolchain.cmake)
+
 # Renderers
 if (PLATFORM_IOS OR PLATFORM_TVOS)
     set(USE_METAL_RENDERER ON)
 else()
     set(USE_GL_RENDERER ON)
 endif ()
-
-# toolchain
-include(${EXTERN_PATH}/cmake/toolchain.cmake)
 
 set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "${EXTERN_PATH}/cmake")
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${EXTERN_PATH}/cmake")
