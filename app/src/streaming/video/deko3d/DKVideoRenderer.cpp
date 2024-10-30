@@ -11,6 +11,43 @@
 
 #include <array>
 
+static const glm::vec3 gl_color_offset(bool color_full) {
+    static const glm::vec3 limitedOffsets = {16.0f / 255.0f, 128.0f / 255.0f,
+                                           128.0f / 255.0f};
+    static const glm::vec3 fullOffsets = {0.0f, 128.0f / 255.0f, 128.0f / 255.0f};
+    return color_full ? fullOffsets : limitedOffsets;
+}
+
+static const glm::mat3 gl_color_matrix(enum AVColorSpace color_space,
+                                    bool color_full) {
+    static const glm::mat3 bt601Lim = {1.1644f, 1.1644f, 1.1644f,  0.0f, -0.3917f,
+                                     2.0172f, 1.5960f, -0.8129f, 0.0f};
+    static const glm::mat3 bt601Full = {
+        1.0f, 1.0f, 1.0f, 0.0f, -0.3441f, 1.7720f, 1.4020f, -0.7141f, 0.0f};
+    static const glm::mat3 bt709Lim = {1.1644f, 1.1644f, 1.1644f,  0.0f, -0.2132f,
+                                     2.1124f, 1.7927f, -0.5329f, 0.0f};
+    static const glm::mat3 bt709Full = {
+        1.0f, 1.0f, 1.0f, 0.0f, -0.1873f, 1.8556f, 1.5748f, -0.4681f, 0.0f};
+    static const glm::mat3 bt2020Lim = {1.1644f, 1.1644f,  1.1644f,
+                                      0.0f,    -0.1874f, 2.1418f,
+                                      1.6781f, -0.6505f, 0.0f};
+    static const glm::mat3 bt2020Full = {
+        1.0f, 1.0f, 1.0f, 0.0f, -0.1646f, 1.8814f, 1.4746f, -0.5714f, 0.0f};
+
+    switch (color_space) {
+    case AVCOL_SPC_SMPTE170M:
+    case AVCOL_SPC_BT470BG:
+        return color_full ? bt601Full : bt601Lim;
+    case AVCOL_SPC_BT709:
+        return color_full ? bt709Full : bt709Lim;
+    case AVCOL_SPC_BT2020_NCL:
+    case AVCOL_SPC_BT2020_CL:
+        return color_full ? bt2020Full : bt2020Lim;
+    default:
+        return bt601Lim;
+    }
+}
+
 namespace
 {
     static constexpr unsigned StaticCmdSize = 0x10000;
@@ -46,12 +83,24 @@ DKVideoRenderer::DKVideoRenderer() {}
 DKVideoRenderer::~DKVideoRenderer() {
     // Destroy the vertex buffer (not strictly needed in this case)
     vertexBuffer.destroy();
+    transformUniformBuffer.destroy();
     dkMemBlockDestroy(mappingMemblock);
 }
 
 void DKVideoRenderer::checkAndInitialize(int width, int height, AVFrame* frame) {
-    if (m_is_initialized) return;
+    // if (m_is_initialized) return;
+
+    if ((m_frame_width == frame->width) && (m_frame_height == frame->height) &&
+        (m_screen_width == width) && (m_screen_height == height)) 
+        return;
+
     brls::Logger::info("{}: {} / {}", __PRETTY_FUNCTION__, width, height);
+
+    m_frame_width = frame->width;
+    m_frame_height = frame->height;
+
+    m_screen_width = width;
+    m_screen_height = height;
 
     auto *vctx = (brls::SwitchVideoContext *)brls::Application::getPlatform()->getVideoContext();
     this->dev = vctx->getDeko3dDevice();
@@ -116,6 +165,31 @@ void DKVideoRenderer::checkAndInitialize(int width, int height, AVFrame* frame) 
     imageDescriptorSet->update(cmdbuf, lumaTextureId, lumaDesc);
     imageDescriptorSet->update(cmdbuf, chromaTextureId, chromaDesc);
 
+// Load the transform buffer
+    transformUniformBuffer = pool_data->allocate(sizeof(transformState), DK_UNIFORM_BUF_ALIGNMENT);
+
+    bool colorFull = frame->color_range == AVCOL_RANGE_JPEG;
+
+    transformState.offset = gl_color_offset(colorFull);
+    transformState.yuvmat = gl_color_matrix(frame->colorspace, colorFull);
+
+    float frameAspect = ((float)m_frame_height / (float)m_frame_width);
+    float screenAspect = ((float)m_screen_height / (float)m_screen_width);
+
+    if (frameAspect > screenAspect) {
+        float multiplier = frameAspect / screenAspect;
+        transformState.uv_data = { 0.5f - 0.5f * (1.0f / multiplier),
+                    0.0f, multiplier, 1.0f };
+    } else {
+        float multiplier = screenAspect / frameAspect;
+        transformState.uv_data = { 0.0f,
+                    0.5f - 0.5f * (1.0f / multiplier), 1.0f, multiplier };
+    }
+
+    cmdbuf.pushConstants(
+            transformUniformBuffer.getGpuAddr(), transformUniformBuffer.getSize(),
+            0, sizeof(transformState), &transformState);
+
     queue.submitCommands(cmdbuf.finishList());
     queue.waitIdle();
 
@@ -143,6 +217,7 @@ void DKVideoRenderer::draw(NVGcontext* vg, int width, int height, AVFrame* frame
     cmdbuf.bindShaders(DkStageFlag_GraphicsMask, { vertexShader, fragmentShader });
     cmdbuf.bindTextures(DkStage_Fragment, 0, dkMakeTextureHandle(lumaTextureId, 0));
     cmdbuf.bindTextures(DkStage_Fragment, 1, dkMakeTextureHandle(chromaTextureId, 0));
+    cmdbuf.bindUniformBuffer(DkStage_Vertex, 0, transformUniformBuffer.getGpuAddr(), transformUniformBuffer.getSize());
     cmdbuf.bindRasterizerState(rasterizerState);
     cmdbuf.bindColorState(colorState);
     cmdbuf.bindColorWriteState(colorWriteState);
@@ -155,7 +230,7 @@ void DKVideoRenderer::draw(NVGcontext* vg, int width, int height, AVFrame* frame
 
     // Finish off this command list
     queue.submitCommands(cmdbuf.finishList());
-    queue.waitIdle();
+    // queue.waitIdle();
 
     m_video_render_stats.total_render_time += LiGetMillis() - before_render;
     m_video_render_stats.rendered_frames++;

@@ -4,11 +4,20 @@
 #include "IVideoRenderer.hpp"
 #include <deko3d.hpp>
 
+#include <glm/mat4x4.hpp>
+
 #include <borealis.hpp>
 #include <nanovg/framework/CShader.h>
 #include <nanovg/framework/CExternalImage.h>
 #include <nanovg/framework/CDescriptorSet.h>
 #include <optional>
+
+struct Transformation
+{
+    glm::mat3 yuvmat;
+    glm::vec3 offset;
+    glm::vec4 uv_data;
+};
 
 class DKVideoRenderer : public IVideoRenderer {
   public:
@@ -23,6 +32,14 @@ class DKVideoRenderer : public IVideoRenderer {
     void checkAndInitialize(int width, int height, AVFrame* frame);
 
     bool m_is_initialized = false;
+    
+    int m_frame_width = 0;
+    int m_frame_height = 0;
+    int m_screen_width = 0;
+    int m_screen_height = 0;
+
+    Transformation transformState;
+    CMemPool::Handle transformUniformBuffer;
 
     dk::Device dev;
     dk::Queue queue;

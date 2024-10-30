@@ -3,20 +3,19 @@
 layout (location = 0) in vec2 vTextureCoord;
 layout (location = 0) out vec4 outColor;
 
-layout (binding = 0) uniform sampler2D sTextureY;
-layout (binding = 1) uniform sampler2D sTextureUV;
+layout (binding = 0) uniform sampler2D plane0;
+layout (binding = 1) uniform sampler2D plane1;
+
+layout (std140, binding = 2) uniform Transformation
+{
+    mat3 yuvmat;
+    vec3 offset;
+    vec4 uv_data;
+} u;
 
 void main()
 {
-    float r, g, b, y, u, v;
-    
-    y = texture2D(sTextureY, vTextureCoord).r;
-    u = texture2D(sTextureUV, vTextureCoord).r - 0.5;
-    v = texture2D(sTextureUV, vTextureCoord).g - 0.5;
-
-    r = y + 1.13983*v;
-    g = y - 0.39465*u - 0.58060*v;
-    b = y + 2.03211*u;
-
-    outColor = vec4(r, g, b, 1.0);
+    vec2 uv = (vTextureCoord - u.uv_data.xy) * u.uv_data.zw;
+    vec3 YCbCr = vec3(texture(plane0, uv).r, texture(plane1, uv).r, texture(plane2, uv).r) - u.offset;
+    outColor = vec4(clamp(u.yuvmat * YCbCr, 0.0, 1.0), 1.0);
 }
