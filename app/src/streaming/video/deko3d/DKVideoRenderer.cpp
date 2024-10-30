@@ -88,11 +88,7 @@ DKVideoRenderer::~DKVideoRenderer() {
 }
 
 void DKVideoRenderer::checkAndInitialize(int width, int height, AVFrame* frame) {
-    // if (m_is_initialized) return;
-
-    if ((m_frame_width == frame->width) && (m_frame_height == frame->height) &&
-        (m_screen_width == width) && (m_screen_height == height)) 
-        return;
+    if (m_is_initialized) return;
 
     brls::Logger::info("{}: {} / {}", __PRETTY_FUNCTION__, width, height);
 
@@ -140,14 +136,14 @@ void DKVideoRenderer::checkAndInitialize(int width, int height, AVFrame* frame) 
     dk::ImageLayoutMaker { dev }
         .setType(DkImageType_2D)
         .setFormat(DkImageFormat_R8_Unorm)
-        .setDimensions(width, height, 1)
+        .setDimensions(m_frame_width, m_frame_height, 1)
         .setFlags(DkImageFlags_UsageLoadStore | DkImageFlags_Usage2DEngine | DkImageFlags_UsageVideo)
         .initialize(lumaMappingLayout);
 
     dk::ImageLayoutMaker { dev }
         .setType(DkImageType_2D)
         .setFormat(DkImageFormat_RG8_Unorm)
-        .setDimensions(width / 2, height / 2, 1)
+        .setDimensions(m_frame_width / 2, m_frame_height / 2, 1)
         .setFlags(DkImageFlags_UsageLoadStore | DkImageFlags_Usage2DEngine | DkImageFlags_UsageVideo)
         .initialize(chromaMappingLayout);
 
@@ -196,14 +192,17 @@ void DKVideoRenderer::checkAndInitialize(int width, int height, AVFrame* frame) 
     m_is_initialized = true;
 }
 
+int frames = 0;
+uint64_t timeCount = 0;
+
 void DKVideoRenderer::draw(NVGcontext* vg, int width, int height, AVFrame* frame, int imageFormat) {
     checkAndInitialize(width, height, frame);
 
-    if (!m_video_render_stats.rendered_frames) {
-        m_video_render_stats.measurement_start_timestamp = LiGetMillis();
-    }
-
     uint64_t before_render = LiGetMillis();
+
+    if (!m_video_render_stats.rendered_frames) {
+        m_video_render_stats.measurement_start_timestamp = before_render;
+    }
 
     dk::RasterizerState rasterizerState;
     dk::ColorState colorState;
@@ -212,6 +211,8 @@ void DKVideoRenderer::draw(NVGcontext* vg, int width, int height, AVFrame* frame
     // Clear the color buffer
     cmdbuf.clear();
     cmdbuf.clearColor(0, DkColorMask_RGBA, 0.0f, 0.0f, 0.0f, 0.0f);
+
+    // brls::Logger::debug("TIME LOG 1: {}", float(LiGetMillis() - before_render));
 
     // Bind state required for drawing the triangle
     cmdbuf.bindShaders(DkStageFlag_GraphicsMask, { vertexShader, fragmentShader });
@@ -225,12 +226,27 @@ void DKVideoRenderer::draw(NVGcontext* vg, int width, int height, AVFrame* frame
     cmdbuf.bindVtxAttribState(VertexAttribState);
     cmdbuf.bindVtxBufferState(VertexBufferState);
 
+    // brls::Logger::debug("TIME LOG 2: {}", float(LiGetMillis() - before_render));
+
     // Draw the triangle
     cmdbuf.draw(DkPrimitive_Quads, QuadVertexData.size(), 1, 0, 0);
 
+    // brls::Logger::debug("TIME LOG 3: {}", float(LiGetMillis() - before_render));
+
     // Finish off this command list
     queue.submitCommands(cmdbuf.finishList());
-    // queue.waitIdle();
+    queue.waitIdle();
+
+    // brls::Logger::debug("TIME LOG 4: {}", float(LiGetMillis() - before_render));
+
+    frames++;
+    timeCount += LiGetMillis() - before_render;
+
+    if (timeCount >= 5000) {
+        brls::Logger::debug("FPS: {}", frames / 5.0f);
+        frames = 0;
+        timeCount -= 5000;
+    }
 
     m_video_render_stats.total_render_time += LiGetMillis() - before_render;
     m_video_render_stats.rendered_frames++;
