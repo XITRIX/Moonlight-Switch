@@ -109,9 +109,11 @@ elseif (PLATFORM_ANDROID)
 elseif (PLATFORM_IOS OR PLATFORM_TVOS)
     list(APPEND MAIN_SRC app/platforms/ios/apple_mdns.mm)
     list(APPEND MAIN_SRC app/platforms/ios/apple_display.mm)
-    list(APPEND MAIN_SRC app/src/streaming/video/Metal/MetalVideoRenderer.mm)
 endif ()
 
+if (USE_METAL_RENDERER)
+    list(APPEND MAIN_SRC app/src/streaming/video/Metal/MetalVideoRenderer.mm)
+endif ()
 
 # building target
 program_target(${PROJECT_NAME} "${MAIN_SRC}")
