@@ -93,7 +93,7 @@ void MoonlightSession::connection_log_message(const char* format, ...) {
     vsnprintf(buffer, size, format, arglist);
     va_end(arglist);
 
-    brls::Logger::info(std::string(buffer));
+    brls::Logger::info(fmt::runtime(std::string(buffer)));
 }
 
 void MoonlightSession::connection_rumble(unsigned short controller,

@@ -20,7 +20,7 @@ AboutTab::AboutTab() {
     std::string themePart =
         variant == brls::ThemeVariant::DARK ? "_dark" : "_light";
 
-    std::string subtitle = fmt::format("about/version"_i18n, APP_VERSION);
+    std::string subtitle = fmt::format(fmt::runtime("about/version"_i18n), APP_VERSION);
     versionLabel->setSubtitle(subtitle);
 
     std::string githubLink = "https://github.com/XITRIX/Moonlight-Switch";

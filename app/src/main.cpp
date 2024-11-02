@@ -8,6 +8,7 @@
 // Switch include only necessary for demo videos recording
 #ifdef __SWITCH__
 #include <switch.h>
+#include <borealis/platforms/switch/switch_input.hpp>
 #endif
 
 #include <cstdlib>
@@ -43,11 +44,18 @@ int main(int argc, char* argv[]) {
     appletInitializeGamePlayRecording();
     appletSetWirelessPriorityMode(AppletWirelessPriorityMode_OptimizedForWlan);
 
-    extern u32 __nx_applet_type;
-    auto saved_applet_type = std::exchange(__nx_applet_type, AppletType_LibraryApplet);
+    // Keep the main thread above others so that the program stays responsive
+    // when doing software decoding
+    svcSetThreadPriority(CUR_THREAD_HANDLE, 0x20);
 
-    nvInitialize();
-    __nx_applet_type = saved_applet_type;
+    // auto at = appletGetAppletType();
+    // g_application_mode = at == AppletType_Application || at == AppletType_SystemApplication;
+
+    // // To get access to /dev/nvhost-nvjpg, we need nvdrv:{a,s,t}
+    // // However, nvdrv:{a,s} have limited address space for gpu mappings
+    // extern u32 __nx_nv_service_type, __nx_nv_transfermem_size;
+    // __nx_nv_service_type     = NvServiceType_Factory;
+    // __nx_nv_transfermem_size = (g_application_mode ? 16 : 3) * 0x100000;
 #endif
 
     // Set log level
@@ -68,6 +76,10 @@ int main(int argc, char* argv[]) {
     auto home = Application::getPlatform()->getHomeDirectory("Moonlight-Switch");
     Settings::instance().set_working_dir(home);
     brls::Logger::info("Working dir, {}", home);
+
+#ifdef PLATFORM_SWITCH
+    ((SwitchInputManager*) brls::Application::getPlatform()->getInputManager())->setReplaceScreenshotWithGuideButton(Settings::instance().replace_screenshot_with_guide_button());
+#endif
 
     // Have the application register an action on every activity that will quit
     // when you press BUTTON_START

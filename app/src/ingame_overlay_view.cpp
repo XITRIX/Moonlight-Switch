@@ -5,8 +5,13 @@
 //  Created by Даниил Виноградов on 29.05.2021.
 //
 
+#ifdef PLATFORM_SWITCH
+#include <borealis/platforms/switch/switch_input.hpp>
+#endif
+
 #include "ingame_overlay_view.hpp"
 #include "streaming_input_overlay.hpp"
+#include "button_selecting_dialog.hpp"
 #include <libretro-common/retro_timers.h>
 
 #include <iomanip>
@@ -78,6 +83,32 @@ LogoutTab::LogoutTab(StreamingView* streamView) : streamView(streamView) {
 // MARK: - Options Tab
 OptionsTab::OptionsTab(StreamingView* streamView) : streamView(streamView) {
     this->inflateFromXMLRes("xml/views/ingame_overlay/options_tab.xml");
+
+    guideKeyButtons->setText("settings/guide_key_buttons"_i18n);
+    setupButtonsSelectorCell(guideKeyButtons,
+                             Settings::instance().guide_key_options().buttons);
+    guideKeyButtons->registerClickAction([this](View* view) {
+        ButtonSelectingDialog* dialog = ButtonSelectingDialog::create(
+            "settings/guide_key_setup_message"_i18n, [this](auto buttons) {
+                auto options = Settings::instance().guide_key_options();
+                options.buttons = buttons;
+                Settings::instance().set_guide_key_options(options);
+                setupButtonsSelectorCell(guideKeyButtons, buttons);
+            });
+
+        dialog->open();
+        return true;
+    });
+
+#ifndef PLATFORM_SWITCH
+    guideByScreenshot->removeFromSuperView();
+#else
+    guideByScreenshot->init("settings/guide_by_screenshot"_i18n, Settings::instance().replace_screenshot_with_guide_button(),
+                            [](bool value) { 
+                                Settings::instance().set_replace_screenshot_with_guide_button(value); 
+                                ((SwitchInputManager*) brls::Application::getPlatform()->getInputManager())->setReplaceScreenshotWithGuideButton(Settings::instance().replace_screenshot_with_guide_button());
+                            });
+#endif
 
     volumeHeader->setSubtitle(
         std::to_string(Settings::instance().get_volume()) + "%");
@@ -181,3 +212,30 @@ OptionsTab::OptionsTab(StreamingView* streamView) : streamView(streamView) {
 }
 
 OptionsTab::~OptionsTab() { Settings::instance().save(); }
+
+std::string
+OptionsTab::getTextFromButtons(std::vector<ControllerButton> buttons) {
+    std::string buttonsText = "";
+    if (buttons.size() > 0) {
+        for (int i = 0; i < buttons.size(); i++) {
+            buttonsText += brls::Hint::getKeyIcon(buttons[i], true);
+            if (i < buttons.size() - 1)
+                buttonsText += " + ";
+        }
+    } else {
+        buttonsText = "hints/off"_i18n;
+    }
+    return buttonsText;
+}
+
+NVGcolor
+OptionsTab::getColorFromButtons(std::vector<brls::ControllerButton> buttons) {
+    Theme theme = Application::getTheme();
+    return buttons.empty() ? theme["brls/text_disabled"]
+                           : theme["brls/list/listItem_value_color"];
+}
+
+void OptionsTab::setupButtonsSelectorCell(brls::DetailCell* cell, std::vector<ControllerButton> buttons) {
+    cell->setDetailText(getTextFromButtons(buttons));
+    cell->setDetailTextColor(getColorFromButtons(buttons));
+}

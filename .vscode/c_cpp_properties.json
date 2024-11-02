@@ -26,8 +26,7 @@
             ],
             "defines": [
                 "__SWITCH__",
-                "PLATFORM_SWITCH",
-                "BOREALIS_USE_DEKO3D"
+                "PLATFORM_SWITCH"
             ],
             "macFrameworkPath": [
                 "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks"

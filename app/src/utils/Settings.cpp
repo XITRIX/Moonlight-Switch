@@ -383,6 +383,10 @@ void Settings::load() {
                 }
             }
             
+            if (json_t* replace_screenshot_with_guide_button = json_object_get(settings, "replace_screenshot_with_guide_button")) {
+                m_replace_screenshot_with_guide_button = json_typeof(replace_screenshot_with_guide_button) == JSON_TRUE;
+            }
+            
             if (json_t* buttons = json_object_get(settings, "guide_key_buttons")) {
                 m_guide_key_options.buttons.clear();
                 size_t size = json_array_size(buttons);
@@ -485,6 +489,7 @@ void Settings::save() {
             json_object_set_new(settings, "current_mapping_layout", json_integer(m_current_mapping_layout));
             json_object_set_new(settings, "keyboard_type", json_integer(m_keyboard_type));
             json_object_set_new(settings, "keyboard_fingers", json_integer(m_keyboard_fingers));
+            json_object_set_new(settings, "replace_screenshot_with_guide_button", m_replace_screenshot_with_guide_button ? json_true() : json_false());
 
             if (json_t* overlayButtons = json_array()) {
                 for (auto button: m_overlay_options.buttons) {

@@ -47,10 +47,16 @@ class OptionsTab : public brls::Box {
   private:
     StreamingView* streamView;
 
+    std::string getTextFromButtons(std::vector<brls::ControllerButton> buttons);
+    NVGcolor getColorFromButtons(std::vector<brls::ControllerButton> buttons);
+    void setupButtonsSelectorCell(brls::DetailCell* cell, std::vector<brls::ControllerButton> buttons);
+
     BRLS_BIND(brls::DetailCell, inputOverlayButton, "input_overlay");
     BRLS_BIND(brls::SelectorCell, keyboardType, "keyboard_type");
     BRLS_BIND(brls::SelectorCell, keyboardFingers, "keyboard_fingers");
     BRLS_BIND(brls::BooleanCell, touchscreenMouseMode, "touchscreen_mouse_mode");
+    BRLS_BIND(brls::DetailCell, guideKeyButtons, "guide_key_buttons");
+    BRLS_BIND(brls::BooleanCell, guideByScreenshot, "guide_by_screenshot");
     BRLS_BIND(brls::Header, volumeHeader, "volume_header");
     BRLS_BIND(brls::Slider, volumeSlider, "volume_slider");
     BRLS_BIND(brls::Header, rumbleForceHeader, "rumble_slider_header");

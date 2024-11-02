@@ -119,6 +119,9 @@ class Settings : public Singleton<Settings> {
     void set_swap_mouse_scroll(bool swap_mouse_scroll) { m_swap_mouse_scroll = swap_mouse_scroll; }
     [[nodiscard]] bool swap_mouse_scroll() const { return m_swap_mouse_scroll; }
 
+    void set_replace_screenshot_with_guide_button(bool value) { m_replace_screenshot_with_guide_button = value; }
+    [[nodiscard]] bool replace_screenshot_with_guide_button() const { return m_replace_screenshot_with_guide_button; }
+
     void set_guide_key_options(KeyComboOptions options) { m_guide_key_options = std::move(options); }
     [[nodiscard]] KeyComboOptions guide_key_options() const { return m_guide_key_options; }
 
@@ -194,6 +197,7 @@ class Settings : public Singleton<Settings> {
     int m_mouse_speed_multiplier = 34;
     int m_current_mapping_layout = 0;
     std::vector<KeyMappingLayout> m_mapping_laouts;
+    bool m_replace_screenshot_with_guide_button = false;
     KeyComboOptions m_guide_key_options{
         .holdTime = 0,
         .buttons = {},

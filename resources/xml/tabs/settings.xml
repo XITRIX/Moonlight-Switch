@@ -106,6 +106,9 @@
             <brls:DetailCell
                 id="guide_key_buttons"/>
                 
+            <brls:BooleanCell
+                id="guide_by_screenshot"/>
+                
             <brls:Header
                 title="@i18n/settings/overlay"
                 paddingTop="60"/>

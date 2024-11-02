@@ -241,7 +241,9 @@ GamepadState MoonlightInputManager::getControllerState(int controllerNum,
     if (guideCombo ||
         lastGamepadStates[controllerNum].buttonFlags & SPECIAL_FLAG)
         gamepadState.buttonFlags = 0;
-    guideCombo ? (gamepadState.buttonFlags |= SPECIAL_FLAG)
+
+    bool guidePressed = guideCombo || controller.buttons[brls::BUTTON_GUIDE];
+    guidePressed ? (gamepadState.buttonFlags |= SPECIAL_FLAG)
                : (gamepadState.buttonFlags &= ~SPECIAL_FLAG);
 
     return gamepadState;

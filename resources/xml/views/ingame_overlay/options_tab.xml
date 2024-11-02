@@ -33,6 +33,16 @@
 
             <brls:BooleanCell
                 id="touchscreen_mouse_mode"/>
+
+            <brls:Header
+                title="@i18n/settings/guide_key"
+                paddingTop="60"/>
+            
+            <brls:DetailCell
+                id="guide_key_buttons"/>
+                
+            <brls:BooleanCell
+                id="guide_by_screenshot"/>
             
             <brls:Header
                 id="volume_header"

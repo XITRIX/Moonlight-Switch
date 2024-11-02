@@ -5,6 +5,10 @@
 //  Created by XITRIX on 26.05.2021.
 //
 
+#ifdef PLATFORM_SWITCH
+#include <borealis/platforms/switch/switch_input.hpp>
+#endif
+
 #include "settings_tab.hpp"
 #include "Settings.hpp"
 #include "button_selecting_dialog.hpp"
@@ -306,6 +310,16 @@ SettingsTab::SettingsTab() {
         dialog->open();
         return true;
     });
+
+#ifndef PLATFORM_SWITCH
+    guideByScreenshot->removeFromSuperView();
+#else
+    guideByScreenshot->init("settings/guide_by_screenshot"_i18n, Settings::instance().replace_screenshot_with_guide_button(),
+                            [](bool value) { 
+                                Settings::instance().set_replace_screenshot_with_guide_button(value); 
+                                ((SwitchInputManager*) brls::Application::getPlatform()->getInputManager())->setReplaceScreenshotWithGuideButton(Settings::instance().replace_screenshot_with_guide_button());
+                            });
+#endif
 
     overlayTime->init(
         "settings/overlay_time"_i18n,
