@@ -9,23 +9,23 @@
 
 #include "GLShaders.hpp"
 
-// tex width | frame width | from color space | to color space
-static const int nv12Planes[][4] = {
-    {1, 1, GL_R8, GL_RED},  // Y
-    {2, 2, GL_RG8, GL_RG},  // UV
-    {0, 0, 0, 0},           // NOT EXISTS
+// tex width | frame width | frame height | from color space | to color space
+static const int nv12Planes[][5] = {
+    {1, 1, 1, GL_R8, GL_RED},  // Y
+    {2, 2, 2, GL_RG8, GL_RG},  // UV
+    {0, 0, 0, 0, 0},           // NOT EXISTS
 };
 
-static const int yuv420Planes[][4] = {
-    {1, 1, GL_R8, GL_RED},  // Y
-    {1, 2, GL_R8, GL_RED},  // U
-    {1, 2, GL_R8, GL_RED},  // V
+static const int yuv420Planes[][5] = {
+    {1, 1, 1, GL_R8, GL_RED},  // Y
+    {1, 2, 2, GL_R8, GL_RED},  // U
+    {1, 2, 2, GL_R8, GL_RED},  // V
 };
 
-static const int p010Planes[][4] = {
-    {1, 1, GL_R16, GL_RED},  // Y
-    {2, 2, GL_RG16, GL_RG},  // UV
-    {0, 0, 0, 0},            // NOT EXISTS
+static const int p010Planes[][5] = {
+    {1, 1, 2, GL_R16, GL_RED},  // Y
+    {2, 2, 4, GL_RG16, GL_RG},  // UV
+    {0, 0, 0, 0, 0},            // NOT EXISTS
 };
 
 static const float vertices[] = {-1.0f, -1.0f, 1.0f, -1.0f,
@@ -209,9 +209,9 @@ void GLVideoRenderer::bindTexture(int id) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColorInternal);
     textureWidth[id] = m_frame_width / currentPlanes[id][1];
-    textureHeight[id] = m_frame_height / currentPlanes[id][1];
-    glTexImage2D(GL_TEXTURE_2D, 0, currentPlanes[id][2], textureWidth[id], textureHeight[id],
-                 0, currentPlanes[id][3], currentFormat, nullptr);
+    textureHeight[id] = m_frame_height / currentPlanes[id][2];
+    glTexImage2D(GL_TEXTURE_2D, 0, currentPlanes[id][3], textureWidth[id], textureHeight[id],
+                 0, currentPlanes[id][4], currentFormat, nullptr);
     glUniform1i(m_texture_uniform[id], id);
 }
 
@@ -314,7 +314,7 @@ void GLVideoRenderer::draw(NVGcontext* vg, int width, int height,
         glBindTexture(GL_TEXTURE_2D, m_texture_id[i]);
         glPixelStorei(GL_UNPACK_ROW_LENGTH, real_width);
         glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, textureWidth[i],
-                        textureHeight[i], currentPlanes[i][3], currentFormat, image);
+                        textureHeight[i], currentPlanes[i][4], currentFormat, image);
         glActiveTexture(GL_TEXTURE0);
     }
 

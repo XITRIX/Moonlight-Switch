@@ -52,7 +52,7 @@ class GLVideoRenderer : public IVideoRenderer {
     VideoRenderStats m_video_render_stats = {};
 
     int currentFrameTypePlanesNum = 0;
-    const int (*currentPlanes)[4];
+    const int (*currentPlanes)[5];
     int currentFormat;
 };
 
