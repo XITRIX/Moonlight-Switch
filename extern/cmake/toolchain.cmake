@@ -10,6 +10,12 @@ function(check_libromfs_generator)
     endif()
 endfunction()
 
+# For unknown reason PLATFORM_SWITCH reports APPLE flag as TRUE
+if (APPLE AND NOT PLATFORM_SWITCH)
+    set(PLATFORM_APPLE ON)
+    add_definitions(-DPLATFORM_APPLE)
+endif ()
+
 if (PLATFORM_DESKTOP)
     add_definitions(-DPLATFORM_DESKTOP)
     if (APPLE)
@@ -103,11 +109,6 @@ elseif (PLATFORM_SWITCH)
 else()
     message(FATAL_ERROR "Please set build target. Example: -DPLATFORM_DESKTOP=ON or -DPLATFORM_SWITCH=ON")
 endif ()
-
-if (PLATFORM_IOS OR PLATFROM_TVOS OR PLATFORM_MACOS)
-    set(PLATFORM_APPLE ON)
-    add_definitions(-DPLATFORM_APPLE)
-endif()
 
 # OpenGL driver
 if (USE_DEKO3D)
