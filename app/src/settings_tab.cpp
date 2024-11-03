@@ -11,6 +11,7 @@
 
 #include "settings_tab.hpp"
 #include "Settings.hpp"
+#include "helper.hpp"
 #include "button_selecting_dialog.hpp"
 #include "mapping_layout_editor.hpp"
 #include <iomanip>
@@ -312,13 +313,52 @@ SettingsTab::SettingsTab() {
     });
 
 #ifndef PLATFORM_SWITCH
-    guideByScreenshot->removeFromSuperView();
+    guideBySystemButton->removeFromSuperView();
+    overlayBySystemButton->removeFromSuperView();
 #else
-    guideByScreenshot->init("settings/guide_by_screenshot"_i18n, Settings::instance().replace_screenshot_with_guide_button(),
-                            [](bool value) { 
-                                Settings::instance().set_replace_screenshot_with_guide_button(value); 
-                                ((SwitchInputManager*) brls::Application::getPlatform()->getInputManager())->setReplaceScreenshotWithGuideButton(Settings::instance().replace_screenshot_with_guide_button());
-                            });
+    guideBySystemButton->init(
+        "settings/use_system_button"_i18n,
+        {"hints/off"_i18n, "settings/buttons/screenshot"_i18n, "settings/buttons/home"_i18n},
+        (int) Settings::instance().get_guide_system_button(), [this](int value) {
+            if (value != 0 && Settings::instance().get_overlay_system_button() == (ButtonOverrideType) value) {
+                brls::sync([this, value](){
+                    showError("settings/system_button_duplication_error"_i18n, [](){});
+                });
+                guideBySystemButton->setSelection((int) Settings::instance().get_guide_system_button(), true);
+                return;
+            }
+
+            Settings::instance().set_guide_system_button((ButtonOverrideType) value);
+
+            auto color = Settings::instance().get_guide_system_button() == ButtonOverrideType::NONE ?
+                Application::getTheme()["brls/text_disabled"] : Application::getTheme()["brls/accent"];
+            guideBySystemButton->setDetailTextColor(color);
+        });
+    auto color = Settings::instance().get_guide_system_button() == ButtonOverrideType::NONE ?
+         Application::getTheme()["brls/text_disabled"] : Application::getTheme()["brls/accent"];
+    guideBySystemButton->setDetailTextColor(color);
+
+    overlayBySystemButton->init(
+        "settings/use_system_button"_i18n,
+        {"hints/off"_i18n, "settings/buttons/screenshot"_i18n, "settings/buttons/home"_i18n},
+        (int) Settings::instance().get_overlay_system_button(), [this](int value) {
+            if (value != 0 && Settings::instance().get_guide_system_button() == (ButtonOverrideType) value) {
+                brls::sync([this, value](){
+                    showError("settings/system_button_duplication_error"_i18n, [](){});
+                });
+                overlayBySystemButton->setSelection((int) Settings::instance().get_overlay_system_button(), true);
+                return;
+            }
+
+            Settings::instance().set_overlay_system_button((ButtonOverrideType) value);
+
+            auto color = Settings::instance().get_overlay_system_button() == ButtonOverrideType::NONE ?
+                Application::getTheme()["brls/text_disabled"] : Application::getTheme()["brls/accent"];
+            overlayBySystemButton->setDetailTextColor(color);
+        });
+    color = Settings::instance().get_overlay_system_button() == ButtonOverrideType::NONE ?
+         Application::getTheme()["brls/text_disabled"] : Application::getTheme()["brls/accent"];
+    overlayBySystemButton->setDetailTextColor(color);
 #endif
 
     overlayTime->init(

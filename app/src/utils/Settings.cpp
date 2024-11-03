@@ -355,6 +355,18 @@ void Settings::load() {
                 }
             }
 
+            if (json_t* overlay_system_button = json_object_get(settings, "overlay_system_button")) {
+                if (json_typeof(overlay_system_button) == JSON_INTEGER) {
+                    m_overlay_system_button = (ButtonOverrideType) json_integer_value(overlay_system_button);
+                }
+            }
+
+            if (json_t* guide_system_button = json_object_get(settings, "guide_system_button")) {
+                if (json_typeof(guide_system_button) == JSON_INTEGER) {
+                    m_guide_system_button = (ButtonOverrideType) json_integer_value(guide_system_button);
+                }
+            }
+
             if (json_t* buttons = json_object_get(settings, "overlay_buttons")) {
                 m_overlay_options.buttons.clear();
                 size_t size = json_array_size(buttons);
@@ -381,10 +393,6 @@ void Settings::load() {
                         }
                     }
                 }
-            }
-            
-            if (json_t* replace_screenshot_with_guide_button = json_object_get(settings, "replace_screenshot_with_guide_button")) {
-                m_replace_screenshot_with_guide_button = json_typeof(replace_screenshot_with_guide_button) == JSON_TRUE;
             }
             
             if (json_t* buttons = json_object_get(settings, "guide_key_buttons")) {
@@ -489,7 +497,8 @@ void Settings::save() {
             json_object_set_new(settings, "current_mapping_layout", json_integer(m_current_mapping_layout));
             json_object_set_new(settings, "keyboard_type", json_integer(m_keyboard_type));
             json_object_set_new(settings, "keyboard_fingers", json_integer(m_keyboard_fingers));
-            json_object_set_new(settings, "replace_screenshot_with_guide_button", m_replace_screenshot_with_guide_button ? json_true() : json_false());
+            json_object_set_new(settings, "overlay_system_button", json_integer((int)m_overlay_system_button));
+            json_object_set_new(settings, "guide_system_button", json_integer((int)m_guide_system_button));
 
             if (json_t* overlayButtons = json_array()) {
                 for (auto button: m_overlay_options.buttons) {

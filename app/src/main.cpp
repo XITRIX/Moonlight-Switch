@@ -8,7 +8,6 @@
 // Switch include only necessary for demo videos recording
 #ifdef __SWITCH__
 #include <switch.h>
-#include <borealis/platforms/switch/switch_input.hpp>
 #endif
 
 #include <cstdlib>
@@ -76,10 +75,6 @@ int main(int argc, char* argv[]) {
     auto home = Application::getPlatform()->getHomeDirectory("Moonlight-Switch");
     Settings::instance().set_working_dir(home);
     brls::Logger::info("Working dir, {}", home);
-
-#ifdef PLATFORM_SWITCH
-    ((SwitchInputManager*) brls::Application::getPlatform()->getInputManager())->setReplaceScreenshotWithGuideButton(Settings::instance().replace_screenshot_with_guide_button());
-#endif
 
     // Have the application register an action on every activity that will quit
     // when you press BUTTON_START

@@ -78,7 +78,7 @@ namespace
     };
 }
 
-DKVideoRenderer::DKVideoRenderer() {}
+DKVideoRenderer::DKVideoRenderer() {} 
 
 DKVideoRenderer::~DKVideoRenderer() {
     // Destroy the vertex buffer (not strictly needed in this case)

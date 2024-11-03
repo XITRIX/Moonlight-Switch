@@ -5,6 +5,10 @@
 //  Created by Даниил Виноградов on 27.05.2021.
 //
 
+#ifdef __SWITCH__
+#include <borealis/platforms/switch/switch_input.hpp>
+#endif
+
 #include "streaming_view.hpp"
 #include "InputManager.hpp"
 #include "click_gesture_recognizer.hpp"
@@ -29,6 +33,34 @@ extern void updatePreferredDisplayMode(bool streamActive);
 void setBottomBarStatus(const char *value) {
 #if defined(__SDL2__)
     SDL_SetHint(SDL_HINT_IOS_HIDE_HOME_INDICATOR, value);
+#endif
+}
+
+void overrideButtonsIfNeeded(bool value) {
+#ifdef PLATFORM_SWITCH
+    ((SwitchInputManager*) brls::Application::getPlatform()->getInputManager())->setScreenshotButtonOverrideMode(ButtonOverrideMode::NONE);
+    ((SwitchInputManager*) brls::Application::getPlatform()->getInputManager())->setHomeButtonOverrideMode(ButtonOverrideMode::NONE);
+    if (!value) return;
+
+    switch (Settings::instance().get_overlay_system_button()) {
+        case ButtonOverrideType::NONE: break;
+        case ButtonOverrideType::HOME:
+            ((SwitchInputManager*) brls::Application::getPlatform()->getInputManager())->setHomeButtonOverrideMode(ButtonOverrideMode::CUSTOM_EVENT);
+            break;  
+        case ButtonOverrideType::SCREENSHOT:
+            ((SwitchInputManager*) brls::Application::getPlatform()->getInputManager())->setScreenshotButtonOverrideMode(ButtonOverrideMode::CUSTOM_EVENT);
+            break;
+    }
+
+    switch (Settings::instance().get_guide_system_button()) {
+        case ButtonOverrideType::NONE: break;
+        case ButtonOverrideType::HOME:
+            ((SwitchInputManager*) brls::Application::getPlatform()->getInputManager())->setHomeButtonOverrideMode(ButtonOverrideMode::GUIDE_BUTTON);
+            break;  
+        case ButtonOverrideType::SCREENSHOT:
+            ((SwitchInputManager*) brls::Application::getPlatform()->getInputManager())->setScreenshotButtonOverrideMode(ButtonOverrideMode::GUIDE_BUTTON);
+            break;
+    }
 #endif
 }
 
@@ -214,6 +246,7 @@ void StreamingView::onFocusGained() {
 
     Application::getPlatform()->getInputManager()->setPointerLock(true);
 
+    overrideButtonsIfNeeded(true);
     setBottomBarStatus("1");
 }
 
@@ -231,6 +264,7 @@ void StreamingView::onFocusLost() {
     removeKeyboard();
     Application::getPlatform()->getInputManager()->setPointerLock(false);
 
+    overrideButtonsIfNeeded(false);
     setBottomBarStatus("2");
 
     if (bottombarDelayTask != -1)
@@ -431,6 +465,24 @@ void StreamingView::handleOverlayCombo() {
         auto overlay = new IngameOverlay(this);
         Application::pushActivity(new Activity(overlay));
     }
+
+#ifdef PLATFORM_SWITCH
+    static bool oldSystemButtonOverlayPressed = false;
+    bool systemButtonOverlayPressed = false;
+    if (Settings::instance().get_overlay_system_button() == ButtonOverrideType::HOME)
+        systemButtonOverlayPressed |= ((SwitchInputManager*) Application::getPlatform()->getInputManager())->isHomeButtonPressed();
+
+    if (Settings::instance().get_overlay_system_button() == ButtonOverrideType::SCREENSHOT)
+        systemButtonOverlayPressed |= ((SwitchInputManager*) Application::getPlatform()->getInputManager())->isScreenshotButtonPressed();
+
+    if (oldSystemButtonOverlayPressed != systemButtonOverlayPressed) {
+        oldSystemButtonOverlayPressed = systemButtonOverlayPressed;
+        if (systemButtonOverlayPressed) {
+            auto overlay = new IngameOverlay(this);
+            Application::pushActivity(new Activity(overlay));
+        }
+    }
+#endif
 }
 
 void StreamingView::handleMouseInputCombo() {

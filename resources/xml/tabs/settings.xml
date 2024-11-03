@@ -106,8 +106,8 @@
             <brls:DetailCell
                 id="guide_key_buttons"/>
                 
-            <brls:BooleanCell
-                id="guide_by_screenshot"/>
+            <brls:SelectorCell
+                id="guide_by_system_button"/>
                 
             <brls:Header
                 title="@i18n/settings/overlay"
@@ -118,6 +118,9 @@
             
             <brls:DetailCell
                 id="overlay_buttons"/>
+                
+            <brls:SelectorCell
+                id="overlay_by_system_button"/>
                 
             <brls:Header
                 title="@i18n/settings/mouse_input"

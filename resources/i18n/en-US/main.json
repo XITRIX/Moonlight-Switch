@@ -96,11 +96,14 @@
     "settings": {
         "audio_backend": "Audio driver",
         "av1": "AV1 (Experimental)",
+        "buttons": {
+            "home": "Home",
+            "screenshot": "Screenshot"
+        },
         "debug": "Debug",
         "debugging_view": "Show debugging view",
         "decoder_threads": "Decoder Threads",
         "fps": "FPS",
-        "guide_by_screenshot": "Use Screenshot button",
         "guide_key": "Guide key (clicks immediately)",
         "guide_key_buttons": "Buttons combination",
         "guide_key_setup_message": "Press keys you'd like to use to press Guide button:\n\n",
@@ -138,8 +141,10 @@
         "swap_mouse_scroll": "Swap mouse vertical scrolling direction",
         "swap_stick_to_dpad": "Use Stick as D-Pad",
         "swap_ui": "Swap / and / for UI",
+        "system_button_duplication_error": "Another action already use this system button.",
         "touchscreen_mouse_mode": "Touchscreen mode",
         "use_hw_decoding": "Enable hardware acceleration",
+        "use_system_button": "Use system button",
         "usops": "Use Streaming Optimal Playable Settings",
         "video_bitrate": "Video bitrate",
         "video_codec": "Video codec",

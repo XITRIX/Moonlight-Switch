@@ -31,9 +31,10 @@ class SettingsTab : public brls::Box {
     BRLS_BIND(brls::Slider, rumbleForceSlider, "rumble_slider");
     BRLS_BIND(brls::BooleanCell, swapStickToDpad, "swap_stick_to_dpad");
     BRLS_BIND(brls::DetailCell, guideKeyButtons, "guide_key_buttons");
-    BRLS_BIND(brls::BooleanCell, guideByScreenshot, "guide_by_screenshot");
+    BRLS_BIND(brls::SelectorCell, guideBySystemButton, "guide_by_system_button");
     BRLS_BIND(brls::SelectorCell, overlayTime, "overlay_time");
     BRLS_BIND(brls::DetailCell, overlayButtons, "overlay_buttons");
+    BRLS_BIND(brls::SelectorCell, overlayBySystemButton, "overlay_by_system_button");
     BRLS_BIND(brls::SelectorCell, mouseInputTime, "mouse_input_time");
     BRLS_BIND(brls::DetailCell, mouseInputButtons, "mouse_input_buttons");
     BRLS_BIND(brls::SelectorCell, keyboardType, "keyboard_type");
