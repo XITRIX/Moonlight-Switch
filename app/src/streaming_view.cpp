@@ -79,6 +79,10 @@ StreamingView::StreamingView(const Host& host, const AppInfo& app) : host(host),
 
     session = new MoonlightSession(host.address, app.app_id);
 
+#ifdef PLATFORM_TVOS
+        updatePreferredDisplayMode(true);
+#endif
+
     ASYNC_RETAIN
     GameStreamClient::instance().connect(
         host.address, [ASYNC_TOKEN](GSResult<SERVER_DATA> result) {
