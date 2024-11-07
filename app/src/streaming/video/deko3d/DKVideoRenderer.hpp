@@ -7,17 +7,11 @@
 #include <glm/mat4x4.hpp>
 
 #include <borealis.hpp>
+#include <borealis/platforms/switch/switch_video.hpp>
 #include <nanovg/framework/CShader.h>
 #include <nanovg/framework/CExternalImage.h>
 #include <nanovg/framework/CDescriptorSet.h>
 #include <optional>
-
-struct Transformation
-{
-    glm::mat3 yuvmat;
-    glm::vec3 offset;
-    glm::vec4 uv_data;
-};
 
 class DKVideoRenderer : public IVideoRenderer {
   public:
@@ -38,9 +32,7 @@ class DKVideoRenderer : public IVideoRenderer {
     int m_screen_width = 0;
     int m_screen_height = 0;
 
-    Transformation transformState;
-    CMemPool::Handle transformUniformBuffer;
-
+    brls::SwitchVideoContext *vctx = nullptr;
     dk::Device dev;
     dk::Queue queue;
 
@@ -49,6 +41,7 @@ class DKVideoRenderer : public IVideoRenderer {
     std::optional<CMemPool> pool_data;
 
     dk::UniqueCmdBuf cmdbuf;
+    DkCmdList cmdlist;
 
     CDescriptorSet<4096U> *imageDescriptorSet;
     // CDescriptorSet<1> samplerDescriptorSet;
@@ -57,6 +50,7 @@ class DKVideoRenderer : public IVideoRenderer {
     CShader fragmentShader;
 
     CMemPool::Handle vertexBuffer;
+    CMemPool::Handle transformUniformBuffer;
 
     dk::ImageLayout lumaMappingLayout; 
     dk::ImageLayout chromaMappingLayout; 

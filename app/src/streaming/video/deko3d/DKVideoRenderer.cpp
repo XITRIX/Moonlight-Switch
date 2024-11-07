@@ -52,6 +52,13 @@ namespace
 {
     static constexpr unsigned StaticCmdSize = 0x10000;
 
+    struct Transformation
+    {
+        glm::mat3 yuvmat;
+        glm::vec3 offset;
+        glm::vec4 uv_data;
+    };
+
     struct Vertex
     {
         float position[3];
@@ -98,7 +105,7 @@ void DKVideoRenderer::checkAndInitialize(int width, int height, AVFrame* frame) 
     m_screen_width = width;
     m_screen_height = height;
 
-    auto *vctx = (brls::SwitchVideoContext *)brls::Application::getPlatform()->getVideoContext();
+    vctx = (brls::SwitchVideoContext *)brls::Application::getPlatform()->getVideoContext();
     this->dev = vctx->getDeko3dDevice();
     this->queue = vctx->getQueue();
 
@@ -122,6 +129,35 @@ void DKVideoRenderer::checkAndInitialize(int width, int height, AVFrame* frame) 
 // Load the vertex buffer
     vertexBuffer = pool_data->allocate(sizeof(QuadVertexData), alignof(Vertex));
     memcpy(vertexBuffer.getCpuAddr(), QuadVertexData.data(), vertexBuffer.getSize());
+
+
+// Load the transform buffer
+    transformUniformBuffer = pool_data->allocate(sizeof(Transformation), DK_UNIFORM_BUF_ALIGNMENT);
+    auto transformState = reinterpret_cast<Transformation *>(transformUniformBuffer.getCpuAddr());
+
+    bool colorFull = frame->color_range == AVCOL_RANGE_JPEG;
+
+    transformState->offset = gl_color_offset(colorFull);
+    transformState->yuvmat = gl_color_matrix(frame->colorspace, colorFull);
+
+    float frameAspect = ((float)m_frame_height / (float)m_frame_width);
+    float screenAspect = ((float)m_screen_height / (float)m_screen_width);
+
+    if (frameAspect > screenAspect) {
+        float multiplier = frameAspect / screenAspect;
+        transformState->uv_data = { 0.5f - 0.5f * (1.0f / multiplier),
+                    0.0f, multiplier, 1.0f };
+    } else {
+        float multiplier = screenAspect / frameAspect;
+        transformState->uv_data = { 0.0f,
+                    0.5f - 0.5f * (1.0f / multiplier), 1.0f, multiplier };
+    }
+
+
+    // cmdbuf.pushConstants(
+    //         transformUniformBuffer.getGpuAddr(), transformUniformBuffer.getSize(),
+    //         0, sizeof(transformState), &transformState);
+
 
 // Allocate image indexes for planes
     lumaTextureId = vctx->allocateImageIndex();
@@ -161,33 +197,34 @@ void DKVideoRenderer::checkAndInitialize(int width, int height, AVFrame* frame) 
     imageDescriptorSet->update(cmdbuf, lumaTextureId, lumaDesc);
     imageDescriptorSet->update(cmdbuf, chromaTextureId, chromaDesc);
 
-// Load the transform buffer
-    transformUniformBuffer = pool_data->allocate(sizeof(transformState), DK_UNIFORM_BUF_ALIGNMENT);
-
-    bool colorFull = frame->color_range == AVCOL_RANGE_JPEG;
-
-    transformState.offset = gl_color_offset(colorFull);
-    transformState.yuvmat = gl_color_matrix(frame->colorspace, colorFull);
-
-    float frameAspect = ((float)m_frame_height / (float)m_frame_width);
-    float screenAspect = ((float)m_screen_height / (float)m_screen_width);
-
-    if (frameAspect > screenAspect) {
-        float multiplier = frameAspect / screenAspect;
-        transformState.uv_data = { 0.5f - 0.5f * (1.0f / multiplier),
-                    0.0f, multiplier, 1.0f };
-    } else {
-        float multiplier = screenAspect / frameAspect;
-        transformState.uv_data = { 0.0f,
-                    0.5f - 0.5f * (1.0f / multiplier), 1.0f, multiplier };
-    }
-
-    cmdbuf.pushConstants(
-            transformUniformBuffer.getGpuAddr(), transformUniformBuffer.getSize(),
-            0, sizeof(transformState), &transformState);
-
     queue.submitCommands(cmdbuf.finishList());
     queue.waitIdle();
+
+
+
+    dk::RasterizerState rasterizerState;
+    dk::ColorState colorState;
+    dk::ColorWriteState colorWriteState;
+
+    // Clear the color buffer
+    cmdbuf.clear();
+    cmdbuf.clearColor(0, DkColorMask_RGBA, 0.0f, 0.0f, 0.0f, 0.0f);
+
+    // Bind state required for drawing the triangle
+    cmdbuf.bindShaders(DkStageFlag_GraphicsMask, { vertexShader, fragmentShader });
+    cmdbuf.bindTextures(DkStage_Fragment, 0, dkMakeTextureHandle(lumaTextureId, 0));
+    cmdbuf.bindTextures(DkStage_Fragment, 1, dkMakeTextureHandle(chromaTextureId, 0));
+    cmdbuf.bindUniformBuffer(DkStage_Fragment, 2, transformUniformBuffer.getGpuAddr(), transformUniformBuffer.getSize());
+    cmdbuf.bindRasterizerState(rasterizerState);
+    cmdbuf.bindColorState(colorState);
+    cmdbuf.bindColorWriteState(colorWriteState);
+    cmdbuf.bindVtxBuffer(0, vertexBuffer.getGpuAddr(), vertexBuffer.getSize());
+    cmdbuf.bindVtxAttribState(VertexAttribState);
+    cmdbuf.bindVtxBufferState(VertexBufferState);
+
+    // Draw the triangle
+    cmdbuf.draw(DkPrimitive_Quads, QuadVertexData.size(), 1, 0, 0);
+    cmdlist = cmdbuf.finishList();
 
     m_is_initialized = true;
 }
@@ -204,40 +241,10 @@ void DKVideoRenderer::draw(NVGcontext* vg, int width, int height, AVFrame* frame
         m_video_render_stats.measurement_start_timestamp = before_render;
     }
 
-    dk::RasterizerState rasterizerState;
-    dk::ColorState colorState;
-    dk::ColorWriteState colorWriteState;
-
-    // Clear the color buffer
-    cmdbuf.clear();
-    cmdbuf.clearColor(0, DkColorMask_RGBA, 0.0f, 0.0f, 0.0f, 0.0f);
-
-    // brls::Logger::debug("TIME LOG 1: {}", float(LiGetMillis() - before_render));
-
-    // Bind state required for drawing the triangle
-    cmdbuf.bindShaders(DkStageFlag_GraphicsMask, { vertexShader, fragmentShader });
-    cmdbuf.bindTextures(DkStage_Fragment, 0, dkMakeTextureHandle(lumaTextureId, 0));
-    cmdbuf.bindTextures(DkStage_Fragment, 1, dkMakeTextureHandle(chromaTextureId, 0));
-    cmdbuf.bindUniformBuffer(DkStage_Vertex, 0, transformUniformBuffer.getGpuAddr(), transformUniformBuffer.getSize());
-    cmdbuf.bindRasterizerState(rasterizerState);
-    cmdbuf.bindColorState(colorState);
-    cmdbuf.bindColorWriteState(colorWriteState);
-    cmdbuf.bindVtxBuffer(0, vertexBuffer.getGpuAddr(), vertexBuffer.getSize());
-    cmdbuf.bindVtxAttribState(VertexAttribState);
-    cmdbuf.bindVtxBufferState(VertexBufferState);
-
-    // brls::Logger::debug("TIME LOG 2: {}", float(LiGetMillis() - before_render));
-
-    // Draw the triangle
-    cmdbuf.draw(DkPrimitive_Quads, QuadVertexData.size(), 1, 0, 0);
-
-    // brls::Logger::debug("TIME LOG 3: {}", float(LiGetMillis() - before_render));
-
     // Finish off this command list
-    queue.submitCommands(cmdbuf.finishList());
+    queue = vctx->getQueue();
+    queue.submitCommands(cmdlist);
     queue.waitIdle();
-
-    // brls::Logger::debug("TIME LOG 4: {}", float(LiGetMillis() - before_render));
 
     frames++;
     timeCount += LiGetMillis() - before_render;
