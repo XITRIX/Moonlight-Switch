@@ -69,12 +69,12 @@ SettingsTab::SettingsTab() {
         }
     });
 
-    std::vector<std::string> fpss = {"30", "45", "60", "120"};
+    std::vector<std::string> fpss = {"30", "40", "60", "120"};
     fps->setText("settings/fps"_i18n);
     fps->setData(fpss);
     switch (Settings::instance().fps()) {
         GET_SETTINGS(fps, 30, 0);
-        GET_SETTINGS(fps, 45, 1);
+        GET_SETTINGS(fps, 40, 1);
         GET_SETTINGS(fps, 60, 2);
         GET_SETTINGS(fps, 120, 3);
         DEFAULT;
@@ -82,7 +82,7 @@ SettingsTab::SettingsTab() {
     fps->getEvent()->subscribe([](int selected) {
         switch (selected) {
             SET_SETTING(0, set_fps(30));
-            SET_SETTING(1, set_fps(45));
+            SET_SETTING(1, set_fps(40));
             SET_SETTING(2, set_fps(60));
             SET_SETTING(3, set_fps(120));
             DEFAULT;
