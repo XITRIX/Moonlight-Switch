@@ -96,6 +96,10 @@
     "settings": {
         "audio_backend": "오디오 드라이버",
         "av1": "AV1 (실험용)",
+        "buttons": {
+            "home": "홈",
+            "screenshot": "스크린샷"
+        },
         "debug": "디버그",
         "debugging_view": "디버깅 보기 표시",
         "decoder_threads": "디코더 스레드",
@@ -128,6 +132,7 @@
         "overlay_zero_time": "0 (즉시)",
         "paop": "PC에서 오디오 재생",
         "quality": "품질 (설정이 높을수록 CPU 오버클럭 필요)",
+        "request_hdr": "HDR 비디오 요청",
         "resolution": "해상도",
         "rumble_force": "진동 강도",
         "single_joycon": "1인용 조이콘",
@@ -136,9 +141,11 @@
         "swap_mouse_scroll": "마우스 세로 스크롤 방향 바꾸기",
         "swap_stick_to_dpad": "스틱을 십자패드로 사용",
         "swap_ui": "교체 / 및 / UI 용",
+        "system_button_duplication_error": "다른 작업이 이미 이 시스템 버튼을 사용하고 있습니다.",
         "touchscreen_mouse_mode": "터치스크린 모드",
         "use_hw_decoding": "하드웨어 가속 활성화",
         "usops": "스트리밍 최적의 재생 가능 설정 사용",
+        "usops": "스트리밍 최적 재생 설정 사용",
         "video_bitrate": "동영상 전송율",
         "video_codec": "동영상 코덱",
         "volume_amplification": "볼륨 증폭 허용",
