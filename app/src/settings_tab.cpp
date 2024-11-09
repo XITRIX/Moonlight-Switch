@@ -45,33 +45,46 @@ SettingsTab::SettingsTab() {
     // Inflate the tab from the XML file
     this->inflateFromXMLRes("xml/tabs/settings.xml");
 
-    std::vector<std::string> resolutions = {"360p", "480p", "720p", "1080p", "1440p", "Native"};
+    std::vector<std::string> resolutions = {
+        "Native", "360p", "480p", "720p", "1080p", 
+#if !defined(PLATFORM_SWITCH)
+        "1440p"
+#endif
+    };
     resolution->setText("settings/resolution"_i18n);
     resolution->setData(resolutions);
     switch (Settings::instance().resolution()) {
-        GET_SETTINGS(resolution, 360, 0);
-        GET_SETTINGS(resolution, 480, 1);
-        GET_SETTINGS(resolution, 720, 2);
-        GET_SETTINGS(resolution, 1080, 3);
-        GET_SETTINGS(resolution, 1440, 4);
-        GET_SETTINGS(resolution, -1, 5);
+        GET_SETTINGS(resolution, -1, 0);
+        GET_SETTINGS(resolution, 360, 1);
+        GET_SETTINGS(resolution, 480, 2);
+        GET_SETTINGS(resolution, 720, 3);
+        GET_SETTINGS(resolution, 1080, 4);
+        GET_SETTINGS(resolution, 1440, 5);
         DEFAULT;
     }
     resolution->getEvent()->subscribe([](int selected) {
         switch (selected) {
-            SET_SETTING(0, set_resolution(360));
-            SET_SETTING(1, set_resolution(480));
-            SET_SETTING(2, set_resolution(720));
-            SET_SETTING(3, set_resolution(1080));
-            SET_SETTING(4, set_resolution(1440));
-            SET_SETTING(5, set_resolution(-1));
+            SET_SETTING(0, set_resolution(-1));
+            SET_SETTING(1, set_resolution(360));
+            SET_SETTING(2, set_resolution(480));
+            SET_SETTING(3, set_resolution(720));
+            SET_SETTING(4, set_resolution(1080));
+            SET_SETTING(5, set_resolution(1440));
             DEFAULT;
         }
     });
 
-    std::vector<std::string> fpss = {"30", "40", "60", "120"};
+    std::vector<std::string> fpss = {
+        "30", 
+        "40", 
+        "60", 
+#if !defined(PLATFORM_SWITCH)
+        "120",
+#endif
+        };
     fps->setText("settings/fps"_i18n);
     fps->setData(fpss);
+    int i = 0;
     switch (Settings::instance().fps()) {
         GET_SETTINGS(fps, 30, 0);
         GET_SETTINGS(fps, 40, 1);
