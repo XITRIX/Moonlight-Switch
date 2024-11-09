@@ -110,7 +110,7 @@ void DKVideoRenderer::checkAndInitialize(int width, int height, AVFrame* frame) 
     this->queue = vctx->getQueue();
 
 // Create the memory pools
-    pool_images.emplace(dev, DkMemBlockFlags_GpuCached | DkMemBlockFlags_Image, 16*1024*1024);
+    // pool_images.emplace(dev, DkMemBlockFlags_GpuCached | DkMemBlockFlags_Image, 16*1024*1024);
     pool_code.emplace(dev, DkMemBlockFlags_CpuUncached | DkMemBlockFlags_GpuCached | DkMemBlockFlags_Code, 128*1024);
     pool_data.emplace(dev, DkMemBlockFlags_CpuUncached | DkMemBlockFlags_GpuCached, 1*1024*1024);
 
@@ -132,31 +132,26 @@ void DKVideoRenderer::checkAndInitialize(int width, int height, AVFrame* frame) 
 
 
 // Load the transform buffer
-    transformUniformBuffer = pool_data->allocate(sizeof(Transformation), DK_UNIFORM_BUF_ALIGNMENT);
-    auto transformState = reinterpret_cast<Transformation *>(transformUniformBuffer.getCpuAddr());
+    transformUniformBuffer = pool_code->allocate(sizeof(Transformation), DK_UNIFORM_BUF_ALIGNMENT);
 
     bool colorFull = frame->color_range == AVCOL_RANGE_JPEG;
 
-    transformState->offset = gl_color_offset(colorFull);
-    transformState->yuvmat = gl_color_matrix(frame->colorspace, colorFull);
+    Transformation transformState;
+    transformState.offset = {0,0.5f,0.5f};// gl_color_offset(colorFull);
+    transformState.yuvmat = gl_color_matrix(frame->colorspace, colorFull);
 
     float frameAspect = ((float)m_frame_height / (float)m_frame_width);
     float screenAspect = ((float)m_screen_height / (float)m_screen_width);
 
     if (frameAspect > screenAspect) {
         float multiplier = frameAspect / screenAspect;
-        transformState->uv_data = { 0.5f - 0.5f * (1.0f / multiplier),
+        transformState.uv_data = { 0.5f - 0.5f * (1.0f / multiplier),
                     0.0f, multiplier, 1.0f };
     } else {
         float multiplier = screenAspect / frameAspect;
-        transformState->uv_data = { 0.0f,
+        transformState.uv_data = { 0.0f,
                     0.5f - 0.5f * (1.0f / multiplier), 1.0f, multiplier };
     }
-
-
-    // cmdbuf.pushConstants(
-    //         transformUniformBuffer.getGpuAddr(), transformUniformBuffer.getSize(),
-    //         0, sizeof(transformState), &transformState);
 
 
 // Allocate image indexes for planes
@@ -214,7 +209,10 @@ void DKVideoRenderer::checkAndInitialize(int width, int height, AVFrame* frame) 
     cmdbuf.bindShaders(DkStageFlag_GraphicsMask, { vertexShader, fragmentShader });
     cmdbuf.bindTextures(DkStage_Fragment, 0, dkMakeTextureHandle(lumaTextureId, 0));
     cmdbuf.bindTextures(DkStage_Fragment, 1, dkMakeTextureHandle(chromaTextureId, 0));
-    cmdbuf.bindUniformBuffer(DkStage_Fragment, 2, transformUniformBuffer.getGpuAddr(), transformUniformBuffer.getSize());
+    cmdbuf.bindUniformBuffer(DkStage_Fragment, 0, transformUniformBuffer.getGpuAddr(), transformUniformBuffer.getSize());
+    cmdbuf.pushConstants(
+            transformUniformBuffer.getGpuAddr(), transformUniformBuffer.getSize(),
+            0, sizeof(transformState), &transformState);
     cmdbuf.bindRasterizerState(rasterizerState);
     cmdbuf.bindColorState(colorState);
     cmdbuf.bindColorWriteState(colorWriteState);
@@ -242,7 +240,7 @@ void DKVideoRenderer::draw(NVGcontext* vg, int width, int height, AVFrame* frame
     }
 
     // Finish off this command list
-    queue = vctx->getQueue();
+    // queue = vctx->getQueue();
     queue.submitCommands(cmdlist);
     queue.waitIdle();
 

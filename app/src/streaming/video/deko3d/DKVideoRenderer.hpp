@@ -36,7 +36,7 @@ class DKVideoRenderer : public IVideoRenderer {
     dk::Device dev;
     dk::Queue queue;
 
-    std::optional<CMemPool> pool_images;
+    // std::optional<CMemPool> pool_images;
     std::optional<CMemPool> pool_code;
     std::optional<CMemPool> pool_data;
 
