@@ -139,10 +139,10 @@ void AddHostTab::connectHost(const std::string& address) {
     loaderView->open();
 
     GameStreamClient::instance().connect(
-        address, [this, loaderView](const GSResult<SERVER_DATA>& result) {
-                loaderView->close([this, result] {
+        address, [this, loaderView, address](const GSResult<SERVER_DATA>& result) {
+                loaderView->close([this, result, address] {
                 if (result.isSuccess()) {
-                    Host host{.address = result.value().address,
+                    Host host{.address = address,
                               .hostname = result.value().hostname,
                               .mac = result.value().mac};
 
@@ -167,7 +167,7 @@ void AddHostTab::connectHost(const std::string& address) {
 
                     ASYNC_RETAIN
                     GameStreamClient::instance().pair(
-                        result.value().address, pin,
+                        address, pin,
                         [ASYNC_TOKEN, host, dialog](const GSResult<bool>& result) {
                             ASYNC_RELEASE
                             dialog->dismiss([result, host] {
