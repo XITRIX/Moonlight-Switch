@@ -204,15 +204,17 @@ void GameStreamClient::wake_up_host(const Host& host,
 
 void GameStreamClient::connect(const std::string& address,
                                ServerCallback<SERVER_DATA>& callback) {
-    brls::async([this, address, callback] {
-        SERVER_DATA server_data;
-        int status = gs_init(&server_data, address);
+    m_server_data[address] = SERVER_DATA();
 
-        brls::sync([this, address, callback, status, server_data] {
+    brls::async([this, address, callback] {
+        int status = gs_init(&m_server_data[address], address);
+
+        brls::sync([this, address, callback, status] {
             if (status == GS_OK) {
-                m_server_data[address] = server_data;
-                callback(GSResult<SERVER_DATA>::success(server_data));
+                callback(
+                    GSResult<SERVER_DATA>::success(m_server_data[address]));
             } else {
+                m_server_data.erase(address);
                 callback(GSResult<SERVER_DATA>::failure(gs_error()));
             }
         });
