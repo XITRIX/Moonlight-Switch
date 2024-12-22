@@ -57,6 +57,7 @@ void FavoriteTab::updateAppList() {
                     makeForwarder(host, app);
                     auto dialog = new Dialog("Forwarder was generated");
                     dialog->open();
+                    dialog->addButton("common/cancel"_i18n, [](){});
                     return true;
             });
             cell->registerAction(
