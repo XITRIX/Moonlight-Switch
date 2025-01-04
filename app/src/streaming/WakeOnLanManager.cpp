@@ -100,7 +100,7 @@ GSResult<bool> send_packet_unix(const Host& host, const Data& payload) {
 
     // Set server end point (the broadcast addres)
     udpServer.sin_family = AF_INET;
-	udpServer.sin_addr.s_addr = inet_addr(host.address.c_str());
+    udpServer.sin_addr.s_addr = inet_addr(host.address.c_str());
     udpServer.sin_port = htons(9);
 
     brls::Logger::info("WakeOnLanManager: Sending magic packet to: '{}'",
