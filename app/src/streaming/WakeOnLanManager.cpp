@@ -100,14 +100,7 @@ GSResult<bool> send_packet_unix(const Host& host, const Data& payload) {
 
     // Set server end point (the broadcast addres)
     udpServer.sin_family = AF_INET;
-#if defined(__SWITCH__)
-    uint32_t ip, subnet_mask;
-    // Get the current IP address and subnet mask to calculate subnet broadcast address
-    nifmGetCurrentIpConfigInfo(&ip, &subnet_mask, nullptr, nullptr, nullptr);
-    udpServer.sin_addr.s_addr = ip | ~subnet_mask;
-#else
-    udpServer.sin_addr.s_addr = inet_addr(host.address.c_str());
-#endif
+	udpServer.sin_addr.s_addr = inet_addr(host.address.c_str());
     udpServer.sin_port = htons(9);
 
     brls::Logger::info("WakeOnLanManager: Sending magic packet to: '{}'",
