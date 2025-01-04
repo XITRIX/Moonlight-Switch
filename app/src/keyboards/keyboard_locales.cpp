@@ -37,5 +37,23 @@ void KeyboardView::createLocales() {
         }
     });
 
+    locales.push_back(KeyboardLocale{
+        .name = "French",
+        .localization = {
+            {"Remove", "Remove"}, {"Esc", "Esc"}, {"à", "0"}, {"&", "1"}, {"é", "2"}, {"\"", "3"}, {"'", "4"}, {"(", "5"}, {"-", "6"},
+            {"è", "7"}, {"_", "8"}, {"ç", "9"}, {"a", "A"}, {"b", "B"}, {"c", "C"}, {"d", "D"}, {"e", "E"}, {"f", "F"}, {"g", "G"},
+            {"h", "H"}, {"i", "I"}, {"j", "J"}, {"k", "K"}, {"l", "L"}, {"m", "M"}, {"n", "N"}, {"o", "O"}, {"p", "P"}, {"q", "Q"},
+            {"r", "R"}, {"s", "S"}, {"t", "T"}, {"u", "U"}, {"v", "V"}, {"w", "W"}, {"x", "X"}, {"y", "Y"}, {"z", "Z"}, {"Return", "Return"}, {"Space", "Space"},
+            {"Ctrl", "Ctrl"}, {"Alt", "Alt"}, {"Shift", "Shift"}, {"Win", "Win"}, {",", "?"}, {";", "."}, {"F1", "F1"}, {"F2", "F2"}, {"F3", "F3"}, {"F4", "F4"},
+            {"F5", "F5"}, {"F6", "F6"}, {"F7", "F7"}, {"F8", "F8"}, {"F9", "F9"}, {"F10", "F10"}, {"F11", "F11"}, {"F12", "F12"}, {"Tab", "Tab"}, {"Delete", "Delete"},
+            {"!", "§"}, {":", "/"}, {"<", ">"}, {"ù", "%"}, {"*", "μ"}, {"=", "+"}, {")", "°"}, {"^", "¨"}, {"$", "£"}, {"\u2193", "\u2193"},
+            {"\u2190", "\u2190"}, {"\u2192", "\u2192"}, {"\u2191", "\u2191"}, {"CapsLock", "CapsLock"},
+        },
+        .keyMapper = {{VK_OEM_MINUS, VK_OEM_7}, {VK_OEM_PLUS, VK_OEM_6}, 
+                      {VK_KEY_Q, VK_KEY_A}, {VK_KEY_W, VK_KEY_Z}, {VK_OEM_4, VK_OEM_MINUS}, {VK_OEM_6, VK_OEM_PLUS}, 
+                      {VK_KEY_A, VK_KEY_Q}, {VK_OEM_1, VK_KEY_M}, {VK_OEM_7, VK_OEM_4}, 
+                      {VK_KEY_Z, VK_KEY_W}, {VK_KEY_M, VK_OEM_PERIOD}, {VK_OEM_PERIOD, VK_OEM_2}, {VK_OEM_2, VK_OEM_1}}
+    });
+
     // TODO: - Add more languages
 }

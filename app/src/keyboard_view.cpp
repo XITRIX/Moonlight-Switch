@@ -135,11 +135,7 @@ void ButtonView::onFocusLost() {
     }
 }
 
-void ButtonView::applyTitle() {
-    if (dummy)
-        return;
-
-    bool shifted = keysState[VK_RSHIFT];
+KeyboardLocale ButtonView::getCurrentLocale() {
     int selectedLang = keyboardView->keyboardLangLock != -1
                            ? keyboardView->keyboardLangLock
                            : Settings::instance().get_keyboard_locale();
@@ -147,16 +143,31 @@ void ButtonView::applyTitle() {
         Settings::instance().set_keyboard_locale(0);
         selectedLang = 0;
     }
-    charLabel->setText(
-        KeyboardView::getLocales()[selectedLang].localization[key][shifted]);
+
+    return KeyboardView::getLocales()[selectedLang];
+}
+
+void ButtonView::applyTitle() {
+    if (dummy)
+        return;
+
+    bool shifted = keysState[VK_RSHIFT];
+    auto selectedLang = getCurrentLocale();
+    charLabel->setText(selectedLang.localization[key][shifted]);
 }
 
 void ButtonView::setKey(KeyboardKeys key) {
+    auto selectedLang = getCurrentLocale();
+    KeyboardKeys mappedKey = key;
+    if (selectedLang.keyMapper.contains(key)) {
+        mappedKey = selectedLang.keyMapper[key];
+    }
+
     this->dummy = false;
-    this->key = key;
+    this->key = mappedKey;
     this->applyTitle();
 
-    if (keysState[key])
+    if (keysState[mappedKey])
         this->playClickAnimation(false, false, true);
 }
 
