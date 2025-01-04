@@ -77,5 +77,6 @@
         "text_encoding": "cpp",
         "cfenv": "cpp",
         "typeindex": "cpp"
-    }
+    },
+    "cmake.configureSettings": { "PLATFORM_SWITCH": "ON" }
 }

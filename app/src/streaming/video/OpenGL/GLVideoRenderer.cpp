@@ -291,8 +291,8 @@ void GLVideoRenderer::checkAndUpdateScale(int width, int height,
 
 void GLVideoRenderer::draw(NVGcontext* vg, int width, int height,
                            AVFrame* frame, int imageFormat) {
-    if (!m_video_render_stats.rendered_frames) {
-        m_video_render_stats.measurement_start_timestamp = LiGetMillis();
+    if (!m_video_render_stats_progress.rendered_frames) {
+        m_video_render_stats_progress.measurement_start_timestamp = LiGetMillis();
     }
 
     uint64_t before_render = LiGetMillis();
@@ -320,20 +320,33 @@ void GLVideoRenderer::draw(NVGcontext* vg, int width, int height,
 
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
-    m_video_render_stats.total_render_time += LiGetMillis() - before_render;
-    m_video_render_stats.rendered_frames++;
+    auto render_time = LiGetMillis() - before_render;
+    timeCount += render_time;
+
+    m_video_render_stats_progress.total_render_time += render_time;
+    m_video_render_stats_progress.rendered_frames++;
+
+    const int time_interval = 200;
+    if (timeCount >= time_interval) {
+        // brls::Logger::debug("FPS: {}", frames / 5.0f);
+        m_video_render_stats_cache = m_video_render_stats_progress;
+        m_video_render_stats_progress = {};
+
+        m_video_render_stats_cache.rendered_fps =
+            (float)m_video_render_stats_cache.rendered_frames /
+            ((float)(LiGetMillis() -
+                    m_video_render_stats_cache.measurement_start_timestamp) /
+            1000);
+
+        timeCount -= time_interval;
+    }
 
 //    auto code = glGetError();
 //    brls::Logger::error("OpenGL error: {}\n", code);
 }
 
 VideoRenderStats* GLVideoRenderer::video_render_stats() {
-    m_video_render_stats.rendered_fps =
-        (float)m_video_render_stats.rendered_frames /
-        ((float)(LiGetMillis() -
-                 m_video_render_stats.measurement_start_timestamp) /
-         1000);
-    return (VideoRenderStats*)&m_video_render_stats;
+    return (VideoRenderStats*)&m_video_render_stats_cache;
 }
 
 #endif // USE_GL_RENDERER

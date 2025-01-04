@@ -329,12 +329,12 @@ void StreamingView::draw(NVGcontext* vg, float x, float y, float width,
 
         offset += sprintf(
             &output[offset],
-            "Frames dropped by your network connection: %.2f%% (Total: %u)\n"
+            "Frames dropped by your network connection: %u\n"
             "Average receive time: %.2f ms\n"
             "Average decoding time: %.2f ms\n"
             "Average rendering time: %.2f ms\n",
-            (float)stats->video_decode_stats.network_dropped_frames /
-                stats->video_decode_stats.total_frames * 100,
+            // (float)stats->video_decode_stats.network_dropped_frames / // removed % of dropped frames
+            //     stats->video_decode_stats.total_frames * 100,
             stats->video_decode_stats.network_dropped_frames,
             (float)stats->video_decode_stats.total_reassembly_time /
                 stats->video_decode_stats.received_frames,

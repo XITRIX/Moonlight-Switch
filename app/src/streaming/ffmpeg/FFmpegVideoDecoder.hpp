@@ -33,7 +33,9 @@ class FFmpegVideoDecoder : public IFFmpegVideoDecoder {
     int m_current_frame = 0, m_next_frame = 0;
     uint32_t m_last_frame = 0;
 
-    VideoDecodeStats m_video_decode_stats = {};
+    VideoDecodeStats m_video_decode_stats_progress = {};
+    VideoDecodeStats m_video_decode_stats_cache = {};
+    uint64_t timeCount = 0;
 
     char* m_ffmpeg_buffer = nullptr;
     AVFrame* m_frame = nullptr;

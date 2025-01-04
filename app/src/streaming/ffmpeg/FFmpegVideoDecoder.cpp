@@ -262,21 +262,24 @@ int FFmpegVideoDecoder::submit_decode_unit(PDECODE_UNIT decode_unit) {
     if (decode_unit->fullLength < DECODER_BUFFER_SIZE) {
         PLENTRY entry = decode_unit->bufferList;
 
+        if (m_video_decode_stats_progress.measurement_start_timestamp == 0) {
+            m_video_decode_stats_progress.measurement_start_timestamp = LiGetMillis();
+        }
+
         if (!m_last_frame) {
-            m_video_decode_stats.measurement_start_timestamp = LiGetMillis();
             m_last_frame = decode_unit->frameNumber;
         } else {
             // Any frame number greater than m_LastFrameNumber + 1 represents a
             // dropped frame
-            m_video_decode_stats.network_dropped_frames +=
+            m_video_decode_stats_progress.network_dropped_frames +=
                 decode_unit->frameNumber - (m_last_frame + 1);
-            m_video_decode_stats.total_frames +=
+            m_video_decode_stats_progress.total_frames +=
                 decode_unit->frameNumber - (m_last_frame + 1);
             m_last_frame = decode_unit->frameNumber;
         }
 
-        m_video_decode_stats.received_frames++;
-        m_video_decode_stats.total_frames++;
+        m_video_decode_stats_progress.received_frames++;
+        m_video_decode_stats_progress.total_frames++;
 
         int length = 0;
         while (entry != NULL) {
@@ -289,7 +292,7 @@ int FFmpegVideoDecoder::submit_decode_unit(PDECODE_UNIT decode_unit) {
             entry = entry->next;
         }
 
-        m_video_decode_stats.total_reassembly_time +=
+        m_video_decode_stats_progress.total_reassembly_time +=
             LiGetMillis() - decode_unit->receiveTimeMs;
 
         m_frames_in++;
@@ -302,14 +305,42 @@ int FFmpegVideoDecoder::submit_decode_unit(PDECODE_UNIT decode_unit) {
 
         if (decode(m_ffmpeg_buffer, length) == 0) {
             m_frames_out++;
-            m_video_decode_stats.total_decode_time +=
-                LiGetMillis() - before_decode;
+
+            auto decodeTime = LiGetMillis() - before_decode;
+            m_video_decode_stats_progress.total_decode_time += decodeTime;
 
             // Also count the frame-to-frame delay if the decoder is delaying
             // frames until a subsequent frame is submitted.
-            m_video_decode_stats.total_decode_time +=
+            m_video_decode_stats_progress.total_decode_time +=
                 (m_frames_in - m_frames_out) * (1000 / m_stream_fps);
-            m_video_decode_stats.decoded_frames++;
+            m_video_decode_stats_progress.decoded_frames++;
+
+            const int time_interval = 200;
+            timeCount += decodeTime;
+            if (timeCount >= time_interval) {
+                // brls::Logger::debug("FPS: {}", frames / 5.0f);
+                m_video_decode_stats_cache = m_video_decode_stats_progress;
+                m_video_decode_stats_progress = {};
+
+                // Preserve dropped frames count
+                m_video_decode_stats_progress.network_dropped_frames = m_video_decode_stats_cache.network_dropped_frames;
+
+                uint64_t now = LiGetMillis();
+                m_video_decode_stats_cache.total_fps =
+                    (float)m_video_decode_stats_cache.total_frames /
+                    ((float)(now - m_video_decode_stats_cache.measurement_start_timestamp) /
+                    1000);
+                m_video_decode_stats_cache.received_fps =
+                    (float)m_video_decode_stats_cache.received_frames /
+                    ((float)(now - m_video_decode_stats_cache.measurement_start_timestamp) /
+                    1000);
+                m_video_decode_stats_cache.decoded_fps =
+                    (float)m_video_decode_stats_cache.decoded_frames /
+                    ((float)(now - m_video_decode_stats_cache.measurement_start_timestamp) /
+                    1000);
+
+                timeCount -= time_interval;
+            }
 
             m_frame = get_frame(true);
             if (m_frame != NULL)
@@ -410,18 +441,5 @@ AVFrame* FFmpegVideoDecoder::get_frame(bool native_frame) {
 }
 
 VideoDecodeStats* FFmpegVideoDecoder::video_decode_stats() {
-    uint64_t now = LiGetMillis();
-    m_video_decode_stats.total_fps =
-        (float)m_video_decode_stats.total_frames /
-        ((float)(now - m_video_decode_stats.measurement_start_timestamp) /
-         1000);
-    m_video_decode_stats.received_fps =
-        (float)m_video_decode_stats.received_frames /
-        ((float)(now - m_video_decode_stats.measurement_start_timestamp) /
-         1000);
-    m_video_decode_stats.decoded_fps =
-        (float)m_video_decode_stats.decoded_frames /
-        ((float)(now - m_video_decode_stats.measurement_start_timestamp) /
-         1000);
-    return (VideoDecodeStats*)&m_video_decode_stats;
+    return (VideoDecodeStats*)&m_video_decode_stats_cache;
 }
