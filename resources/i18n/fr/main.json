@@ -40,7 +40,7 @@
     },
     "common": {
         "cancel": "Annuler",
-        "close": "Close",
+        "close": "Fermer",
         "confirm": "Confirmer",
         "edit": "Éditer",
         "remove": "Supprimer"
@@ -50,7 +50,7 @@
         "no_ip": "Impossible de récupérer l'adresse IP"
     },
     "error": {
-        "applet_not_supported": "Applet Mode is unsupported\n\nPlease, launch this app using Title Redirection (By default it's hold  and start any game)",
+        "applet_not_supported": "Le mode Applet n'est pas pris en charge. \n\nVeuillez lancer cette application à l'aide de la redirection de titre (par défaut, maintenez la touche  enfoncée et démarrez n'importe quel jeu).",
         "dialog_header": "Erreur",
         "host_not_found": "Machine hôte non trouvée",
         "ip_not_obtained": "Impossible de récupérer l'adresse IP",
@@ -62,7 +62,7 @@
         "off": "Non",
         "ok": "OK",
         "on": "Oui",
-        "submit": "Done"
+        "submit": "Terminé"
     },
     "host": {
         "connect": "Se connecter",
@@ -85,17 +85,21 @@
         "title": "Éditeur de configurations"
     },
     "mouse_input": {
-        "delete": "Del",
-        "hide": "Hide hints",
+        "delete": "Sup",
+        "hide": "Masquer les indices",
         "keyboard": "Clavier",
         "mouse": "Souris",
         "scroll": "Défilement",
-        "space": "Space",
+        "space": "Espace",
         "title": "Mode souris"
     },
     "settings": {
-        "audio_backend": "Audio driver",
+        "audio_backend": "Driver audio",
         "av1": "AV1 (Expérimental)",
+        "buttons": {
+            "home": "Home",
+            "screenshot": "Capture d'écran"
+        },
         "debug": "Debug",
         "debugging_view": "Afficher la vue Debug",
         "decoder_threads": "Threads de décodage",
@@ -105,11 +109,11 @@
         "guide_key_setup_message": "Appuyez sur les boutons à utiliser pour le bouton Guide :\n\n",
         "h264": "H.264",
         "h265": "HEVC (H.265)",
-        "keyboard": "Keyboard",
+        "keyboard": "Clavier",
         "keyboard_compact": "Compact",
-        "keyboard_fingers": "Clicks to open keyboard",
-        "keyboard_fullsized": "Full-sized",
-        "keyboard_type": "Keyboard type",
+        "keyboard_fingers": "Taps pour ouvrir le clavier",
+        "keyboard_fullsized": "Pleine largeur",
+        "keyboard_type": "Type de clavier",
         "keys": "Touches de la manette",
         "keys_mapping": "Configuration des boutons",
         "keys_mapping_create_new": "+ Créer une nouvelle configuration",
@@ -127,17 +131,20 @@
         "overlay_time": "Temps d'appui avant ouverture (sec)",
         "overlay_zero_time": "0 (immédiatement)",
         "paop": "Jouer l'audio sur la machine hôte",
-        "quality": "Qualité (Higher settings requires CPU overclock)",
+        "quality": "Qualité (Des paramètres plus élevés nécessitent un overclock CPU)",
+        "request_hdr": "Demander une vidéo HDR",
         "resolution": "Résolution",
-        "rumble_force": "Rumble force",
+        "rumble_force": "Force de vibration",
         "single_joycon": "Single Joycon",
         "stream_settings": "Paramètres de diffusion",
         "swap_mouse_keys": "Inverser les boutons  et  de la souris",
         "swap_mouse_scroll": "Inverser le sens de défilement vertical de la souris",
-        "swap_stick_to_dpad": "Use Stick as D-Pad",
+        "swap_stick_to_dpad": "Utiliser le stick comme D-Pad",
         "swap_ui": "Inverser / et / dans l'interface",
-        "touchscreen_mouse_mode": "Touchscreen mode",
-        "use_hw_decoding": "Enable hardware acceleration",
+        "system_button_duplication_error": "Une autre action utilise déjà ce bouton système.",
+        "touchscreen_mouse_mode": "Mode écran tactile",
+        "use_hw_decoding": "Activer l'accélération matérielle",
+        "use_system_button": "Utiliser un bouton système",
         "usops": "Utiliser les paramètres optimaux pour le jeu",
         "video_bitrate": "Débit vidéo",
         "video_codec": "Codec vidéo",
