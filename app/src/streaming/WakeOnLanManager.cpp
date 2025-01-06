@@ -99,14 +99,19 @@ GSResult<bool> send_packet_unix(const Host& host, const Data& payload) {
     }
 
     // Send to local broadcast address
-    udpServer.sin_family = AF_INET;
+#if defined(__SWITCH__)
     uint32_t ip, subnet_mask;
     nifmGetCurrentIpConfigInfo(&ip, &subnet_mask, nullptr, nullptr, nullptr);
+    udpServer.sin_family = AF_INET;
     udpServer.sin_addr.s_addr = ip | ~subnet_mask; // Local broadcast address
-    udpServer.sin_port = htons(9);
-
     brls::Logger::info("WakeOnLanManager: Sending magic packet to local broadcast address: '{}'",
                     inet_ntoa(udpServer.sin_addr));
+#else
+    udpServer.sin_family = AF_INET;
+    udpServer.sin_addr.s_addr = htonl(INADDR_BROADCAST); // Default broadcast address for other platforms
+    brls::Logger::info("WakeOnLanManager: Sending magic packet to default broadcast address");
+#endif
+    udpServer.sin_port = htons(9);
 
     // Send the WoL packet to the local broadcast address
     ssize_t result = sendto(udpSocket, payload.bytes(), sizeof(unsigned char) * 102, 0,
@@ -164,9 +169,7 @@ GSResult<bool> send_packet_win32(const Host& host, const Data& payload) {
 
     // Send to local broadcast address
     udpServer.sin_family = AF_INET;
-    uint32_t ip, subnet_mask;
-    nifmGetCurrentIpConfigInfo(&ip, &subnet_mask, nullptr, nullptr, nullptr);
-    udpServer.sin_addr.s_addr = ip | ~subnet_mask; // Local broadcast address
+    udpServer.sin_addr.s_addr = htonl(INADDR_BROADCAST); // Default broadcast address
     udpServer.sin_port = htons(9);
 
     brls::Logger::info("WakeOnLanManager: Sending magic packet to local broadcast address: '{}'",
