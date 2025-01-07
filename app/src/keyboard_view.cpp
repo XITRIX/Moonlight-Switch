@@ -151,23 +151,24 @@ void ButtonView::applyTitle() {
     if (dummy)
         return;
 
-    bool shifted = keysState[VK_RSHIFT];
-    auto selectedLang = getCurrentLocale();
-    charLabel->setText(selectedLang.localization[key][shifted]);
-}
-
-void ButtonView::setKey(KeyboardKeys key) {
-    auto selectedLang = getCurrentLocale();
+    // We need to map only key title, virtual keys are constant (which could be a bug in Sunshine)
     KeyboardKeys mappedKey = key;
+    auto selectedLang = getCurrentLocale();
     if (selectedLang.keyMapper.contains(key)) {
         mappedKey = selectedLang.keyMapper[key];
     }
 
+    bool shifted = keysState[VK_RSHIFT];
+    charLabel->setText(selectedLang.localization[mappedKey][shifted]);
+}
+
+void ButtonView::setKey(KeyboardKeys key) {
+
     this->dummy = false;
-    this->key = mappedKey;
+    this->key = key;
     this->applyTitle();
 
-    if (keysState[mappedKey])
+    if (keysState[key])
         this->playClickAnimation(false, false, true);
 }
 
