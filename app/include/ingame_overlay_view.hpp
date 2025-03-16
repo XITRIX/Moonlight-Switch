@@ -14,7 +14,7 @@
 class IngameOverlay : public brls::Box {
   public:
     explicit IngameOverlay(StreamingView* streamView);
-    ~IngameOverlay() override;
+    ~IngameOverlay() override = default;
 
     brls::AppletFrame* getAppletFrame() override;
     bool isTranslucent() override { return true; }
@@ -47,9 +47,9 @@ class OptionsTab : public brls::Box {
   private:
     StreamingView* streamView;
 
-    std::string getTextFromButtons(std::vector<brls::ControllerButton> buttons);
-    NVGcolor getColorFromButtons(std::vector<brls::ControllerButton> buttons);
-    void setupButtonsSelectorCell(brls::DetailCell* cell, std::vector<brls::ControllerButton> buttons);
+    static std::string getTextFromButtons(std::vector<brls::ControllerButton> buttons);
+    static NVGcolor getColorFromButtons(const std::vector<brls::ControllerButton>& buttons);
+    void setupButtonsSelectorCell(brls::DetailCell* cell, const std::vector<brls::ControllerButton>& buttons);
 
     BRLS_BIND(brls::DetailCell, inputOverlayButton, "input_overlay");
     BRLS_BIND(brls::SelectorCell, keyboardType, "keyboard_type");

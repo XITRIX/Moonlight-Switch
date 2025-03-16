@@ -20,7 +20,7 @@ using namespace brls;
 
 class AppListView : public Box {
   public:
-    AppListView(Host host);
+    AppListView(const Host& host);
 
     void onLayout() override;
     void willAppear(bool resetState) override;
@@ -37,8 +37,8 @@ class AppListView : public Box {
     GridView* gridView;
     BRLS_BIND(Box, container, "container");
 
-    void setCurrentApp(AppInfo app);
+    void setCurrentApp(const AppInfo& app);
     void terninateApp();
     void updateAppList();
-    void updateFavoriteAction(AppCell* cell, Host host, AppInfo app);
+    void updateFavoriteAction(AppCell* cell, Host host, const AppInfo& app);
 };

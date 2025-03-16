@@ -16,7 +16,7 @@ using namespace brls;
 class MainTabs : public brls::TabFrame {
   public:
     MainTabs();
-    void refillTabs();
+    void refillTabs(bool keepFocus = true);
     static View* create();
 
     void willAppear(bool resetState) override;

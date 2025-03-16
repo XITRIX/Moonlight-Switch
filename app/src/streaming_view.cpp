@@ -117,7 +117,7 @@ StreamingView::StreamingView(const Host& host, const AppInfo& app) : host(host),
 
             if (status.state == brls::GestureState::END) {
                 Logger::debug("Left mouse click");
-                MoonlightInputManager::instance().leftMouseClick();
+                MoonlightInputManager::leftMouseClick();
                 lMouseKeyGate = true;
                 delay(200, [] { lMouseKeyGate = false; });
             }
@@ -129,7 +129,7 @@ StreamingView::StreamingView(const Host& host, const AppInfo& app) : host(host),
 
             if (status.state == brls::GestureState::END) {
                 Logger::debug("Right mouse click");
-                MoonlightInputManager::instance().rightMouseClick();
+                MoonlightInputManager::rightMouseClick();
             }
         }));
 
@@ -187,14 +187,14 @@ StreamingView::StreamingView(const Host& host, const AppInfo& app) : host(host),
             if (state.state == brls::GestureState::START)
                 this->touchScrollCounter = 0;
 
-            int threashhold = state.delta.y / 25;
-            if (threashhold != this->touchScrollCounter) {
+            int threshold = int(state.delta.y / 25);
+            if (threshold != this->touchScrollCounter) {
                 Logger::debug("Scroll on: {}",
-                              threashhold - this->touchScrollCounter);
+                              threshold - this->touchScrollCounter);
                 int invert = Settings::instance().swap_mouse_scroll() ? -1 : 1;
-                char scrollCount = threashhold - this->touchScrollCounter;
+                char scrollCount = threshold - this->touchScrollCounter;
                 LiSendScrollEvent(scrollCount * invert);
-                this->touchScrollCounter = threashhold;
+                this->touchScrollCounter = threshold;
             }
         }));
 
@@ -232,7 +232,7 @@ StreamingView::StreamingView(const Host& host, const AppInfo& app) : host(host),
 }
 
 void StreamingView::onFocusGained() {
-    View::onFocusGained();
+    Box::onFocusGained();
 
     MoonlightInputManager::instance().setInputEnabled(true);
 
@@ -255,7 +255,7 @@ void StreamingView::onFocusGained() {
 }
 
 void StreamingView::onFocusLost() {
-    View::onFocusLost();
+    Box::onFocusLost();
 
     MoonlightInputManager::instance().setInputEnabled(false);
     MoonlightInputManager::instance().dropInput();
@@ -282,7 +282,7 @@ void StreamingView::draw(NVGcontext* vg, float x, float y, float width,
         return;
     }
 
-    session->draw(vg, width, height);
+    session->draw(vg, (int) width, (int) height);
 
     if (!tempInputLock && session->is_active())
         handleInput();
@@ -349,11 +349,11 @@ void StreamingView::draw(NVGcontext* vg, float x, float y, float width,
 
         nvgFontBlur(vg, 1);
         nvgFillColor(vg, nvgRGBA(0, 0, 0, 255));
-        nvgTextBox(vg, 20, 30, width, output, NULL);
+        nvgTextBox(vg, 20, 30, width, output, nullptr);
 
         nvgFontBlur(vg, 0);
         nvgFillColor(vg, nvgRGBA(0, 255, 0, 255));
-        nvgTextBox(vg, 20, 30, width, output, NULL);
+        nvgTextBox(vg, 20, 30, width, output, nullptr);
     }
 
     Box::draw(vg, x, y, width, height, style, ctx);
@@ -420,7 +420,7 @@ void StreamingView::handleInput() {
         MoonlightInputManager::instance().handleInput();
     }
 
-    if (Application::currentTouchState.size() > 0) {
+    if (!Application::currentTouchState.empty()) {
         setBottomBarStatus("2");
 
         if (bottombarDelayTask != -1)

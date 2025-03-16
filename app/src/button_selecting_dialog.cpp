@@ -6,7 +6,6 @@
 //
 
 #include "button_selecting_dialog.hpp"
-#include "Settings.hpp"
 
 ButtonSelectingDialog::ButtonSelectingDialog(
     Box* box, std::function<void(std::vector<ControllerButton>)> callback,

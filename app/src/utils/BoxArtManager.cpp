@@ -2,7 +2,6 @@
 #include "Data.hpp"
 #include "Settings.hpp"
 #include "nanovg.h"
-#include <algorithm>
 #include <mutex>
 #include <CImg.h>
 

@@ -13,7 +13,7 @@
 
 using namespace brls::literals;
 
-HostTab::HostTab(Host host) : host(host) {
+HostTab::HostTab(const Host& host) : host(host) {
     // Inflate the tab from the XML file
     this->inflateFromXMLRes("xml/tabs/host.xml");
 
@@ -22,19 +22,33 @@ HostTab::HostTab(Host host) : host(host) {
 
     reloadHost();
 
+    registerAction("Rename"_i18n, ControllerButton::BUTTON_START,
+                   [this](View* view) {
+                       std::string title = this->host.hostname;
+                       Application::getPlatform()->getImeManager()->openForText(
+                               [this](const std::string& text) {
+                                   this->host.hostname = text;
+                                   Settings::instance().add_host(this->host);
+                                   MainTabs::getInstanse()->refillTabs();
+                               },
+                               "Rename Host"_i18n, "", 60, title, 0);
+
+                       return true;
+                   });
+
     connect->registerClickAction([this](View* view) {
         switch (state) {
         case AVAILABLE:
             this->present(new AppListView(this->host));
             break;
         case UNAVAILABLE:
-            if (GameStreamClient::instance().can_wake_up_host(this->host)) {
+            if (GameStreamClient::can_wake_up_host(this->host)) {
                 Dialog* loader =
                     createLoadingDialog("host/wake_up_message"_i18n);
                 loader->open();
 
-                GameStreamClient::instance().wake_up_host(
-                    this->host, [this, loader](GSResult<bool> result) {
+                GameStreamClient::wake_up_host(
+                    this->host, [this, loader](const GSResult<bool>& result) {
                         loader->close([this, result] {
                             if (result.isSuccess()) {
                                 reloadHost();
@@ -51,8 +65,8 @@ HostTab::HostTab(Host host) : host(host) {
         return true;
     });
 
-    remove->registerClickAction([this, host](View* view) {
-        Dialog* dialog = new Dialog("host/remove_message"_i18n);
+    remove->registerClickAction([host](View* view) {
+        auto* dialog = new Dialog("host/remove_message"_i18n);
         dialog->addButton("common/cancel"_i18n, [] {});
         dialog->addButton("common/remove"_i18n, [host] {
             Settings::instance().remove_host(host);
@@ -67,11 +81,12 @@ HostTab::HostTab(Host host) : host(host) {
 void HostTab::reloadHost() {
     state = FETCHING;
     header->setTitle("host/status"_i18n + ": " + "host/fetching"_i18n);
+    header->setSubtitle(host.address);
     connect->setText("host/wait"_i18n);
 
     ASYNC_RETAIN
     GameStreamClient::instance().connect(
-        host.address, [ASYNC_TOKEN](GSResult<SERVER_DATA> result) {
+        host.address, [ASYNC_TOKEN](const GSResult<SERVER_DATA>& result) {
             ASYNC_RELEASE
 
             if (result.isSuccess()) {

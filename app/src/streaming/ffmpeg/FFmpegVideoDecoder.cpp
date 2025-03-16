@@ -19,7 +19,7 @@ extern "C" {
 //#else
 //#define DECODER_BUFFER_SIZE 92 * 1024 * 2
 //#endif
-#define DECODER_BUFFER_SIZE 1024 * 1024
+#define DECODER_BUFFER_SIZE (1024 * 1024)
 
 #if defined(PLATFORM_ANDROID)
 #include <jni.h>
@@ -42,13 +42,13 @@ FFmpegVideoDecoder::FFmpegVideoDecoder() {
 //    av_hwdevice_ctx_init(deviceRef);
 }
 
-FFmpegVideoDecoder::~FFmpegVideoDecoder() {}
+FFmpegVideoDecoder::~FFmpegVideoDecoder() = default;
 
 void ffmpegLog(void* ptr, int level, const char* fmt, va_list vargs) {
     std::string message;
     va_list ap_copy;
     va_copy(ap_copy, vargs);
-    size_t len = vsnprintf(0, 0, fmt, ap_copy);
+    size_t len = vsnprintf(nullptr, 0, fmt, ap_copy);
     message.resize(len + 1);  // need space for NUL
     vsnprintf(&message[0], len + 1,fmt, vargs);
     message.resize(len);  // remove the NUL
@@ -93,13 +93,13 @@ int FFmpegVideoDecoder::setup(int video_format, int width, int height,
     }
 #endif
 
-    if (m_decoder == NULL) {
+    if (m_decoder == nullptr) {
         brls::Logger::error("FFmpeg: Couldn't find decoder");
         return -1;
     }
 
     m_decoder_context = avcodec_alloc_context3(m_decoder);
-    if (m_decoder_context == NULL) {
+    if (m_decoder_context == nullptr) {
         brls::Logger::error("FFmpeg: Couldn't allocate context");
         return -1;
     }
@@ -138,7 +138,7 @@ int FFmpegVideoDecoder::setup(int video_format, int width, int height,
 //    m_decoder_context->pix_fmt = AV_PIX_FMT_NV12;
 #endif
 
-    int err = avcodec_open2(m_decoder_context, m_decoder, NULL);
+    int err = avcodec_open2(m_decoder_context, m_decoder, nullptr);
     if (err < 0) {
         char error[512];
         av_strerror(err, error, sizeof(error));
@@ -147,9 +147,9 @@ int FFmpegVideoDecoder::setup(int video_format, int width, int height,
     }
 
     tmp_frame = av_frame_alloc();
-    for (int i = 0; i < m_frames_count; i++) {
-        m_frames[i] = av_frame_alloc();
-        if (m_frames[i] == NULL) {
+    for (auto & m_frame : m_frames) {
+        m_frame = av_frame_alloc();
+        if (m_frame == nullptr) {
             brls::Logger::error("FFmpeg: Couldn't allocate frame");
             return -1;
         }
@@ -160,16 +160,16 @@ int FFmpegVideoDecoder::setup(int video_format, int width, int height,
         m_frames[i]->format = AV_PIX_FMT_MEDIACODEC;
 #else
         if (video_format & VIDEO_FORMAT_MASK_10BIT)
-            m_frames[i]->format = AV_PIX_FMT_P010;
+            m_frame->format = AV_PIX_FMT_P010;
         else
-            m_frames[i]->format = AV_PIX_FMT_NV12;
+            m_frame->format = AV_PIX_FMT_NV12;
 #endif
-        m_frames[i]->width  = width;
-        m_frames[i]->height = height;
+        m_frame->width  = width;
+        m_frame->height = height;
 
 // Need to align Switch frame to 256, need to de reviewed
 #if defined(PLATFORM_SWITCH) && !defined(BOREALIS_USE_DEKO3D)
-        int err = av_frame_get_buffer(m_frames[i], 256);
+        int err = av_frame_get_buffer(m_frame, 256);
         if (err < 0) {
             char errs[64]; 
             brls::Logger::error("FFmpeg: Couldn't allocate frame buffer: {}", av_make_error_string(errs, 64, err));
@@ -177,17 +177,17 @@ int FFmpegVideoDecoder::setup(int video_format, int width, int height,
         }
 
         for (int j = 0; j < 2; j++) {
-            uintptr_t ptr = (uintptr_t)m_frames[i]->data[j];
+            uintptr_t ptr = (uintptr_t)m_frame->data[j];
             uintptr_t dst = (((ptr)+(256)-1)&~((256)-1));
             uintptr_t gap = dst - ptr;
-            m_frames[i]->data[j] += gap;
+            m_frame->data[j] += gap;
         }
 #endif
     }
 
     m_ffmpeg_buffer =
         (char*)malloc(DECODER_BUFFER_SIZE + AV_INPUT_BUFFER_PADDING_SIZE);
-    if (m_ffmpeg_buffer == NULL) {
+    if (m_ffmpeg_buffer == nullptr) {
         brls::Logger::error("FFmpeg: Not enough memory");
         cleanup();
         return -1;
@@ -204,7 +204,7 @@ int FFmpegVideoDecoder::setup(int video_format, int width, int height,
 #endif
 
     if (Settings::instance().use_hw_decoding() && hwType != AV_HWDEVICE_TYPE_NONE) {
-        if ((err = av_hwdevice_ctx_create(&hw_device_ctx, hwType, NULL, NULL, 0)) < 0) {
+        if ((err = av_hwdevice_ctx_create(&hw_device_ctx, hwType, nullptr, nullptr, 0)) < 0) {
             char error[512];
             av_strerror(err, error, sizeof(error));
             brls::Logger::error("FFmpeg: Error initializing hardware decoder - {}", error);
@@ -231,7 +231,7 @@ void FFmpegVideoDecoder::cleanup() {
     if (m_decoder_context) {
         avcodec_close(m_decoder_context);
         av_free(m_decoder_context);
-        m_decoder_context = NULL;
+        m_decoder_context = nullptr;
     }
 
 //    if (m_frames) {
@@ -282,7 +282,7 @@ int FFmpegVideoDecoder::submit_decode_unit(PDECODE_UNIT decode_unit) {
         m_video_decode_stats_progress.total_frames++;
 
         int length = 0;
-        while (entry != NULL) {
+        while (entry != nullptr) {
             if (length > DECODER_BUFFER_SIZE) {
                 brls::Logger::error("FFmpeg: Big buffer to decode... !");
             }
@@ -343,7 +343,7 @@ int FFmpegVideoDecoder::submit_decode_unit(PDECODE_UNIT decode_unit) {
             }
 
             m_frame = get_frame(true);
-            if (m_frame != NULL)
+            if (m_frame != nullptr)
                 AVFrameHolder::instance().push(m_frame);
         }
     } else {
@@ -397,7 +397,7 @@ AVFrame* FFmpegVideoDecoder::get_frame(bool native_frame) {
 
         char a[AV_ERROR_MAX_STRING_SIZE] = { 0 };
         brls::Logger::error("FFmpeg: Error receiving frame with error {}",  av_make_error_string(a, AV_ERROR_MAX_STRING_SIZE, err));
-        return NULL;
+        return nullptr;
     }
 
     if (hw_device_ctx) {
@@ -418,7 +418,7 @@ AVFrame* FFmpegVideoDecoder::get_frame(bool native_frame) {
         if ((err = av_hwframe_transfer_data(resultFrame, decodeFrame, 0)) < 0) {
             char a[AV_ERROR_MAX_STRING_SIZE] = { 0 };
             brls::Logger::error("FFmpeg: Error transferring the data to system memory with error {}",  av_make_error_string(a, AV_ERROR_MAX_STRING_SIZE, err));
-            return NULL;
+            return nullptr;
         }
         
         av_frame_copy_props(resultFrame, decodeFrame);
@@ -437,7 +437,7 @@ AVFrame* FFmpegVideoDecoder::get_frame(bool native_frame) {
         av_strerror(err, error, sizeof(error));
         brls::Logger::error("FFmpeg: Receive failed - %d/%s", err, error);
     }
-    return NULL;
+    return nullptr;
 }
 
 VideoDecodeStats* FFmpegVideoDecoder::video_decode_stats() {

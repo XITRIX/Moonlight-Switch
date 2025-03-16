@@ -8,10 +8,9 @@
 #include "app_cell.hpp"
 #include "BoxArtManager.hpp"
 #include "Settings.hpp"
-#include "main_tabs_view.hpp"
 #include "streaming_view.hpp"
 
-AppCell::AppCell(Host host, AppInfo app, int currentApp) {
+AppCell::AppCell(const Host& host, const AppInfo& app, int currentApp) {
     this->inflateFromXMLRes("xml/cells/app_cell.xml");
     this->setFavorite(false);
 
@@ -26,7 +25,7 @@ AppCell::AppCell(Host host, AppInfo app, int currentApp) {
 
     this->addGestureRecognizer(new TapGestureRecognizer(this));
     this->registerClickAction([host, app](View* view) {
-        AppletFrame* frame = new AppletFrame(new StreamingView(host, app));
+        auto* frame = new AppletFrame(new StreamingView(host, app));
         frame->setBackground(ViewBackground::NONE);
         frame->setHeaderVisibility(brls::Visibility::GONE);
         frame->setFooterVisibility(brls::Visibility::GONE);
@@ -37,7 +36,7 @@ AppCell::AppCell(Host host, AppInfo app, int currentApp) {
 
     if (BoxArtManager::instance().has_boxart(app.app_id))
         image->setImageFromFile(
-            BoxArtManager::instance().get_texture_path(app.app_id));
+            BoxArtManager::get_texture_path(app.app_id));
     else {
         ASYNC_RETAIN
         GameStreamClient::instance().app_boxart(
@@ -48,7 +47,7 @@ AppCell::AppCell(Host host, AppInfo app, int currentApp) {
                     BoxArtManager::instance().set_data(result.value(),
                                                        app.app_id);
                     image->setImageFromFile(
-                        BoxArtManager::instance().get_texture_path(app.app_id));
+                        BoxArtManager::get_texture_path(app.app_id));
                 }
             });
     }

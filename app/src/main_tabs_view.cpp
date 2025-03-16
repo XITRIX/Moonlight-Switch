@@ -29,11 +29,21 @@ void MainTabs::willAppear(bool resetState) {
 
 void MainTabs::updateFavoritesIfNeeded() {
     if (lastHasAnyFavorites != Settings::instance().has_any_favorite()) {
-        refillTabs();
+        refillTabs(false);
     }
 }
 
-void MainTabs::refillTabs() {
+void MainTabs::refillTabs(bool keepFocus) {
+    int newFocus = 0;
+
+    if (keepFocus) {
+        for (int i = 0; i < this->sidebar->getItemsSize(); i++) {
+            auto item = dynamic_cast<SidebarItem*>(this->sidebar->getItem(i));
+            if (item && item->isActive())
+                newFocus = i;
+        }
+    }
+
     clearTabs();
 
     bool hasAnyFavorite = Settings::instance().has_any_favorite();
@@ -44,18 +54,18 @@ void MainTabs::refillTabs() {
     lastHasAnyFavorites = hasAnyFavorite;
 
     auto hosts = Settings::instance().hosts();
-    for (Host host : hosts) {
+    for (const Host& host : hosts) {
         addTab(host.hostname, [host] { return new HostTab(host); });
     }
-    if (hosts.size() > 0)
+    if (!hosts.empty())
         addSeparator();
 
     addTab("tabs/add_host"_i18n, AddHostTab::create);
     addTab("tabs/settings"_i18n, SettingsTab::create);
     addSeparator();
     addTab("tabs/about"_i18n, AboutTab::create);
-    focusTab(0);
     sidebar->setContentOffsetY(-40, false);
+    focusTab(newFocus);
 }
 
 View* MainTabs::create() { return new MainTabs(); }

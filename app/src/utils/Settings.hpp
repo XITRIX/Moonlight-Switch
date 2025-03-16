@@ -47,7 +47,7 @@ struct Host {
 
 class Settings : public Singleton<Settings> {
   public:
-    void set_working_dir(std::string working_dir);
+    void set_working_dir(const std::string& working_dir);
 
     [[nodiscard]] std::string key_dir() const { return m_key_dir; }
 

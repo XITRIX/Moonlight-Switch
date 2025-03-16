@@ -21,13 +21,12 @@ MoonlightInputManager::MoonlightInputManager() {
 
             if (offset.x != 0 || offset.y != 0) {
                 float multiplier =
-                    Settings::instance().get_mouse_speed_multiplier() / 100.f *
-                        1.5f +
-                    0.5f;
+                        (float) Settings::instance().get_mouse_speed_multiplier() / 100.f *
+                        1.5f + 0.5f;
 
                 if (!this->inputDropped) {
-                    LiSendMouseMoveEvent(offset.x * multiplier,
-                                         offset.y * multiplier);
+                    LiSendMouseMoveEvent(short(offset.x * multiplier),
+                                         short(offset.y * multiplier));
                 }
             }
         });
@@ -160,7 +159,7 @@ void MoonlightInputManager::dropInput() {
 
     // Drop keyboard state
     for (int i = BRLS_KBD_KEY_SPACE; i < BrlsKeyboardScancode::BRLS_KBD_KEY_LAST; i++)  {
-        int vkKey = MoonlightInputManager::glfwKeyToVKKey((BrlsKeyboardScancode)i);
+        short vkKey = MoonlightInputManager::glfwKeyToVKKey((BrlsKeyboardScancode)i);
         LiSendKeyboardEvent(vkKey, KEY_ACTION_UP, 0);
     }
 
@@ -234,7 +233,7 @@ GamepadState MoonlightInputManager::getControllerState(int controllerNum,
     SET_GAME_PAD_STATE(RS_CLK_FLAG, brls::BUTTON_RSB);
 
     auto guideKeys = Settings::instance().guide_key_options().buttons;
-    bool guideCombo = guideKeys.size() > 0;
+    bool guideCombo = !guideKeys.empty();
     for (auto key : guideKeys)
         guideCombo &= controller.buttons[key];
 
@@ -300,7 +299,7 @@ void MoonlightInputManager::handleInput() {
     brls::Application::getPlatform()->getInputManager()->updateTouchStates(&states);
 
     //Do not use gamepad for mouse controll assist if touchscreen mode enabled
-    bool specialKey = Settings::instance().touchscreen_mouse_mode() ? false : states.size() == 1;
+    bool specialKey = !Settings::instance().touchscreen_mouse_mode() && states.size() == 1;
 
     handleControllers(specialKey);
 

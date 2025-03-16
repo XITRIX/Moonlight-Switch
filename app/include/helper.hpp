@@ -10,7 +10,7 @@
 #include <borealis.hpp>
 
 void showAlert(
-    std::string message, std::function<void(void)> cb = [] {});
+    std::string message, const std::function<void(void)>& cb = [] {});
 void showError(
-    std::string message, std::function<void(void)> cb = [] {});
-brls::Dialog* createLoadingDialog(std::string text);
+    const std::string& message, const std::function<void(void)>& cb = [] {});
+brls::Dialog* createLoadingDialog(const std::string& text);

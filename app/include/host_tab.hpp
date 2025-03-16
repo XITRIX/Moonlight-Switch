@@ -14,7 +14,7 @@ enum HostState { FETCHING, AVAILABLE, UNAVAILABLE };
 
 class HostTab : public brls::Box {
   public:
-    HostTab(Host host);
+    HostTab(const Host& host);
     void reloadHost();
 
     BRLS_BIND(brls::DetailCell, connect, "connect");

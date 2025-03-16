@@ -30,24 +30,24 @@ void FavoriteTab::refreshIfNeeded() {
 void FavoriteTab::updateAppList() {
     container->clearViews();
     std::vector<Host> hosts = Settings::instance().hosts();
-    for (Host host : hosts) {
+    for (const Host& host : hosts) {
         if (host.favorites.empty())
             continue;
 
-        Header* header = new Header();
+        auto* header = new Header();
         header->setTitle(host.hostname);
         header->setLineBottom(0);
 
-        if (container->getChildren().size() > 0)
+        if (!container->getChildren().empty())
             header->setMarginTop(40);
 
         container->addView(header);
 
-        GridView* gridView = new GridView(5);
+        auto* gridView = new GridView(5);
 
-        for (App app : host.favorites) {
+        for (const App& app : host.favorites) {
             AppInfo info{app.name, app.app_id};
-            AppCell* cell = new AppCell(host, info, 0);
+            auto* cell = new AppCell(host, info, 0);
             gridView->addView(cell);
 
             cell->registerAction(

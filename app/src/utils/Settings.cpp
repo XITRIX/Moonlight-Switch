@@ -1,9 +1,9 @@
 #include "Settings.hpp"
 #include <jansson.h>
 #include <algorithm>
-#include <string.h>
+#include <cstring>
 #include <iomanip>
-#include <limits.h>
+#include <climits>
 #include <sys/stat.h>
 
 using namespace brls;
@@ -58,7 +58,7 @@ static int mkdirtree(const char* directory) {
     return 0;
 }
 
-void Settings::set_working_dir(std::string working_dir) {
+void Settings::set_working_dir(const std::string& working_dir) {
     m_working_dir = working_dir;
     m_key_dir = working_dir + "/key";
     m_boxart_dir = working_dir + "/boxart";
@@ -153,17 +153,15 @@ bool Settings::is_favorite(const Host& host, int app_id) {
 }
 
 bool Settings::has_any_favorite() {
-    for (auto host : m_hosts) {
-        if (!host.favorites.empty())
-            return true;
-    }
-    return false;
+    return std::any_of(m_hosts.begin(), m_hosts.end(), [&](const auto &item) {
+        return !item.favorites.empty();
+    });
 }
 
 void Settings::load() {
     loadBaseLayouts();
 
-    json_t* root = json_load_file((m_working_dir + "/settings.json").c_str(), 0, NULL);
+    json_t* root = json_load_file((m_working_dir + "/settings.json").c_str(), 0, nullptr);
     
     if (root && json_typeof(root) == JSON_OBJECT) {
         if (json_t* hosts = json_object_get(root, "hosts")) {
@@ -449,7 +447,7 @@ void Settings::save() {
     
     if (root) {
         if (json_t* hosts = json_array()) {
-            for (auto host: m_hosts) {
+            for (const auto& host: m_hosts) {
                 if (json_t* json = json_object()) {
                     json_object_set_new(json, "address", json_string(host.address.c_str()));
                     json_object_set_new(json, "hostname", json_string(host.hostname.c_str()));
@@ -525,7 +523,7 @@ void Settings::save() {
         }
 
         if (json_t* hosts = json_array()) {
-            for (auto mappint_layout: m_mapping_laouts) {
+            for (const auto& mappint_layout: m_mapping_laouts) {
                 if (!mappint_layout.editable) continue;
                 
                 if (json_t* json = json_object()) {

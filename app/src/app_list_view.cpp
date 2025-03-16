@@ -8,12 +8,11 @@
 #include "app_list_view.hpp"
 #include "helper.hpp"
 #include "main_tabs_view.hpp"
-#include "streaming_view.hpp"
 
-AppListView::AppListView(Host host) : host(host) {
+AppListView::AppListView(const Host& host) : host(host) {
     this->inflateFromXMLRes("xml/views/app_list_view.xml");
 
-    Label* label = new brls::Label();
+    auto* label = new brls::Label();
     label->setText(brls::Hint::getKeyIcon(ControllerButton::BUTTON_BACK) +
                    "  " + "app_list/terminate_current_app"_i18n);
     label->setFontSize(24);
@@ -77,13 +76,13 @@ void AppListView::terninateApp() {
     if (loading)
         return;
 
-    Dialog* dialog =
+    auto* dialog =
         new Dialog("app_list/terminate_prefix"_i18n + currentApp->name +
                    "app_list/terminate_postfix"_i18n);
 
     dialog->addButton("common/cancel"_i18n, [] {});
 
-    dialog->addButton("app_list/terminate"_i18n, [dialog, this] {
+    dialog->addButton("app_list/terminate"_i18n, [this] {
         if (loading)
             return;
 
@@ -95,7 +94,7 @@ void AppListView::terninateApp() {
 
         ASYNC_RETAIN
         GameStreamClient::instance().quit(
-            host.address, [ASYNC_TOKEN](GSResult<bool> result) {
+            host.address, [ASYNC_TOKEN](const GSResult<bool>& result) {
                 ASYNC_RELEASE
 
                 loading = false;
@@ -129,7 +128,7 @@ void AppListView::updateAppList() {
 
     ASYNC_RETAIN
     GameStreamClient::instance().connect(
-        host.address, [ASYNC_TOKEN](GSResult<SERVER_DATA> result) {
+        host.address, [ASYNC_TOKEN](const GSResult<SERVER_DATA>& result) {
             ASYNC_RELEASE
 
             if (result.isSuccess()) {
@@ -138,7 +137,7 @@ void AppListView::updateAppList() {
                 ASYNC_RETAIN
                 GameStreamClient::instance().applist(
                     host.address,
-                    [ASYNC_TOKEN, currentGame](GSResult<AppInfoList> result) {
+                    [ASYNC_TOKEN, currentGame](const GSResult<AppInfoList>& result) {
                         ASYNC_RELEASE
 
                         loading = false;
@@ -149,7 +148,7 @@ void AppListView::updateAppList() {
                             AppInfoList sortedApps = result.value();
                             std::sort(
                                 sortedApps.begin(), sortedApps.end(),
-                                [this, currentGame](AppInfo l, AppInfo r) {
+                                [this, currentGame](const AppInfo& l, const AppInfo& r) {
                                     bool currentCondition =
                                         l.app_id == currentGame &&
                                         r.app_id != currentGame;
@@ -162,11 +161,11 @@ void AppListView::updateAppList() {
                                            favoriteCondition;
                                 });
 
-                            for (AppInfo app : sortedApps) {
+                            for (const AppInfo& app : sortedApps) {
                                 if (app.app_id == currentGame)
                                     setCurrentApp(app);
 
-                                AppCell* cell =
+                                auto* cell =
                                     new AppCell(host, app, currentGame);
                                 cell->setFavorite(
                                     Settings::instance().is_favorite(
@@ -187,7 +186,7 @@ void AppListView::updateAppList() {
         });
 }
 
-void AppListView::setCurrentApp(AppInfo app) {
+void AppListView::setCurrentApp(const AppInfo& app) {
     this->currentApp = app;
     hintView->setVisibility(Visibility::VISIBLE);
     getAppletFrameItem()->title =
@@ -207,7 +206,7 @@ void AppListView::onLayout() {
         loader->layout();
 }
 
-void AppListView::updateFavoriteAction(AppCell* cell, Host host, AppInfo app) {
+void AppListView::updateFavoriteAction(AppCell* cell, Host host, const AppInfo& app) {
     bool isFavorite = Settings::instance().is_favorite(host, app.app_id);
     cell->registerAction(
         isFavorite ? "app_list/unstar"_i18n : "app_list/star"_i18n, BUTTON_Y,

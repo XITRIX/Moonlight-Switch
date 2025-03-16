@@ -58,7 +58,7 @@ bool startFromArgs(int argc, char** argv) {
     if (auto it = std::find_if(hosts.begin(), hosts.end(), [args](const Host& host) {
         return host.mac == args[0];
     }); it != std::end(hosts)) {
-        Host host = *it;
+        const Host& host = *it;
         AppInfo info { args[2], stoi(args[1]) };
 
         auto* frame = new AppletFrame(new StreamingView(host, info));

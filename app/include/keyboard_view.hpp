@@ -31,20 +31,22 @@ struct KeyboardLocale {
 
 struct KeyboardState {
     bool keys[_VK_KEY_MAX];
+    KeyboardState() = default;
+    explicit KeyboardState(const bool keys[_VK_KEY_MAX]): keys(keys) {}
 };
 
 class KeyboardView;
 
 class ButtonView : public brls::Box {
   public:
-    ButtonView(KeyboardView* keyboardView);
-    ~ButtonView();
+    explicit ButtonView(KeyboardView* keyboardView);
+    ~ButtonView() override;
     brls::Label* charLabel;
     void setKey(KeyboardKeys key);
     void registerCallback();
     bool triggerType = false;
     KeyboardKeys key;
-    std::function<void(void)> event = NULL;
+    std::function<void(void)> event = nullptr;
 
     void draw(NVGcontext* vg, float x, float y, float width, float height,
               brls::Style style, brls::FrameContext* ctx) override;
@@ -67,8 +69,8 @@ class KeyboardView : public brls::Box {
     inline static brls::VoidEvent shiftUpdated;
     inline static std::vector<KeyboardLocale> getLocales() { return locales; }
 
-    KeyboardView(bool focusable);
-    ~KeyboardView();
+    explicit KeyboardView(bool focusable);
+    ~KeyboardView() override;
     KeyboardState getKeyboardState();
     short getKeyCode(KeyboardKeys key);
 
@@ -83,7 +85,7 @@ class KeyboardView : public brls::Box {
     void createEnglishLayout();
     void createNumpadLayout();
     void createFullLayout();
-    void changeLang(int lang);
+    static void changeLang(int lang);
     void createLocales();
     inline static std::vector<KeyboardLocale> locales;
 

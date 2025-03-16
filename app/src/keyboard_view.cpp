@@ -173,7 +173,7 @@ void ButtonView::setKey(KeyboardKeys key) {
 }
 
 void ButtonView::registerCallback() {
-    TapGestureRecognizer* tapRecognizer =
+    auto* tapRecognizer =
         new TapGestureRecognizer([this](TapGestureStatus status, Sound* sound) {
             if (!triggerType) {
                 this->playClickAnimation(
@@ -191,7 +191,7 @@ void ButtonView::registerCallback() {
                     if (!dummy)
                         keysState[key] = false;
 
-                    if (event != NULL)
+                    if (event != nullptr)
                         event();
                     break;
                 default:
@@ -212,7 +212,7 @@ void ButtonView::registerCallback() {
                     break;
                 case brls::GestureState::END:
                     keysState[key] = !keysState[key];
-                    if (event != NULL)
+                    if (event != nullptr)
                         event();
 
                     if (!keysState[key])
@@ -280,15 +280,12 @@ void KeyboardView::draw(NVGcontext* vg, float x, float y, float width,
 }
 
 KeyboardState KeyboardView::getKeyboardState() {
-    KeyboardState state;
-
-    for (int i = 0; i < _VK_KEY_MAX; i++)
-        state.keys[i] = keysState[i];
-
-    return state;
+    return KeyboardState(keysState);
 }
 
-short KeyboardView::getKeyCode(KeyboardKeys key) { return KeyboardCodes[key]; }
+short KeyboardView::getKeyCode(KeyboardKeys key) {
+    return KeyboardCodes[key];
+}
 
 View* KeyboardView::getParentNavigationDecision(View* from, View* newFocus,
                                                 FocusDirection direction) {

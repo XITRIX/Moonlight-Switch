@@ -14,7 +14,7 @@ using namespace brls;
 
 class AppCell : public Box {
   public:
-    AppCell(Host host, AppInfo app, int currentApp);
+    AppCell(const Host& host, const AppInfo& app, int currentApp);
 
     BRLS_BIND(Image, image, "image");
     BRLS_BIND(Label, title, "title");
