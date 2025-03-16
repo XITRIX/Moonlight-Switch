@@ -415,10 +415,11 @@ void StreamingView::handleInput() {
         }
 
         // Drop input if keyboard overlay presented
-        MoonlightInputManager::instance().dropInput();
-    } else {
-        MoonlightInputManager::instance().handleInput();
+//        MoonlightInputManager::instance().dropInput();
     }
+//    else {
+    MoonlightInputManager::instance().handleInput();
+//    }
 
     if (!Application::currentTouchState.empty()) {
         setBottomBarStatus("2");
