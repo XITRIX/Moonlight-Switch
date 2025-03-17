@@ -280,7 +280,12 @@ void KeyboardView::draw(NVGcontext* vg, float x, float y, float width,
 }
 
 KeyboardState KeyboardView::getKeyboardState() {
-    return KeyboardState(keysState);
+    KeyboardState state{};
+
+    for (int i = 0; i < _VK_KEY_MAX; i++)
+        state.keys[i] = keysState[i];
+
+    return state;
 }
 
 short KeyboardView::getKeyCode(KeyboardKeys key) {

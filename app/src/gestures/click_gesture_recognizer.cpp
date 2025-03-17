@@ -7,14 +7,16 @@
 
 #include "click_gesture_recognizer.hpp"
 
-#define ALLOWED_RANGE 5
+#include <utility>
+
+#define ALLOWED_RANGE 15
 
 using namespace brls;
 
 ClickGestureRecognizer::ClickGestureRecognizer(
     int fingersRequired, ClickGestureEvent::Callback respond)
     : fingers(fingersRequired) {
-    event.subscribe(respond);
+    event.subscribe(std::move(respond));
 }
 
 GestureState ClickGestureRecognizer::recognitionLoop(TouchState touch,
@@ -22,10 +24,15 @@ GestureState ClickGestureRecognizer::recognitionLoop(TouchState touch,
                                                      View* view,
                                                      Sound* soundToPlay) {
     if (touch.phase == brls::TouchPhase::START) {
-        if (fingersStartPoints.size() == 0) {
+        if (fingersStartPoints.empty()) {
             state = GestureState::UNSURE;
         }
+
         fingersStartPoints[touch.fingerId] = touch.position;
+
+        if (fingersStartPoints.size() > fingers) {
+            state = GestureState::FAILED;
+        }
     } else if (touch.phase == brls::TouchPhase::STAY) {
         Point position = touch.position;
         Point startPosition = fingersStartPoints[touch.fingerId];
@@ -43,8 +50,7 @@ GestureState ClickGestureRecognizer::recognitionLoop(TouchState touch,
             this->state = GestureState::END;
             this->event.fire({GestureState::END, touch.position});
         }
-        auto it = fingersStartPoints.find(touch.fingerId);
-        fingersStartPoints.erase(it);
+        fingersStartPoints.erase(touch.fingerId);
     }
 
     return this->state;

@@ -180,23 +180,24 @@ StreamingView::StreamingView(const Host& host, const AppInfo& app) : host(host),
         },
         PanAxis::ANY));
 
-    addGestureRecognizer(new TwoFingerScrollGestureRecognizer(
-        [this](TwoFingerScrollState state) {
-            if (Settings::instance().touchscreen_mouse_mode()) return;
+    scrollTouchRecognizer = new TwoFingerScrollGestureRecognizer(
+            [this](TwoFingerScrollState state) {
+                if (Settings::instance().touchscreen_mouse_mode()) return;
 
-            if (state.state == brls::GestureState::START)
-                this->touchScrollCounter = 0;
+                if (state.state == brls::GestureState::START)
+                    this->touchScrollCounter = 0;
 
-            int threshold = int(state.delta.y / 25);
-            if (threshold != this->touchScrollCounter) {
-                Logger::debug("Scroll on: {}",
-                              threshold - this->touchScrollCounter);
-                int invert = Settings::instance().swap_mouse_scroll() ? -1 : 1;
-                char scrollCount = threshold - this->touchScrollCounter;
-                LiSendScrollEvent(scrollCount * invert);
-                this->touchScrollCounter = threshold;
-            }
-        }));
+                int threshold = int(state.delta.y / 25);
+                if (threshold != this->touchScrollCounter) {
+                    Logger::debug("Scroll on: {}",
+                                  threshold - this->touchScrollCounter);
+                    int invert = Settings::instance().swap_mouse_scroll() ? -1 : 1;
+                    char scrollCount = threshold - this->touchScrollCounter;
+                    LiSendScrollEvent(scrollCount * invert);
+                    this->touchScrollCounter = threshold;
+                }
+            });
+    addGestureRecognizer(scrollTouchRecognizer);
 
     keysSubscription =
         Application::getPlatform()
@@ -252,6 +253,8 @@ void StreamingView::onFocusGained() {
 
     overrideButtonsIfNeeded(true);
     setBottomBarStatus("1");
+
+    scrollTouchRecognizer->forceReset();
 }
 
 void StreamingView::onFocusLost() {

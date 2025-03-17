@@ -22,6 +22,7 @@ class TwoFingerScrollGestureRecognizer : public brls::GestureRecognizer {
                                        brls::MouseState mouse, brls::View* view,
                                        brls::Sound* soundToPlay) override;
 
+    void forceReset();
   private:
     int fingers = 0;
     std::map<int, brls::Point> fingersStartPoints;

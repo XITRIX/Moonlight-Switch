@@ -15,6 +15,7 @@
 #include <optional>
 #include "GameStreamClient.hpp"
 #include "MoonlightSession.hpp"
+#include "two_finger_scroll_recognizer.hpp"
 
 class StreamingView : public brls::Box {
   public:
@@ -49,6 +50,7 @@ class StreamingView : public brls::Box {
     int touchScrollCounter = 0;
     size_t bottombarDelayTask = -1;
     bool m_use_hdr = false;
+    TwoFingerScrollGestureRecognizer* scrollTouchRecognizer = nullptr;
 
     void handleInput();
     void handleOverlayCombo();

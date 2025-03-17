@@ -365,7 +365,7 @@ void MoonlightInputManager::handleInput() {
                         timeNow - timeStamp)
                         .count();
     if (mouseState.scroll_y != 0 &&
-        duration > 550 - abs(mouseState.scroll_y) * 500) {
+            (float) duration > 550 - std::fabs(mouseState.scroll_y) * 500) {
         timeStamp = timeNow;
         brls::Logger::info("Scroll sended: {}", mouseState.scroll_y);
         lastMouseState.scroll_y = mouseState.scroll_y;
