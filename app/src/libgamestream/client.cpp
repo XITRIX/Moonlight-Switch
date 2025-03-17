@@ -408,9 +408,9 @@ int gs_pair(PSERVER_DATA server, char* pin) {
 
     snprintf(
         url, sizeof(url),
-        "https://%s:47984/"
+        "https://%s:%u/"
         "pair?uniqueid=%s&devicename=roth&updateState=1&phrase=pairchallenge",
-        server->serverInfo.address, unique_id.c_str());
+        server->serverInfo.address, server->httpsPort, unique_id.c_str());
     if ((ret = http_request(url, &data, HTTPRequestTimeoutLong)) != GS_OK) {
         return gs_pair_cleanup(ret, server, &result);
     }
@@ -429,8 +429,8 @@ int gs_applist(PSERVER_DATA server, PAPP_LIST* list) {
     char url[4096];
     Data data;
 
-    snprintf(url, sizeof(url), "https://%s:47984/applist?uniqueid=%s",
-             server->serverInfo.address, unique_id.c_str());
+    snprintf(url, sizeof(url), "https://%s:%u/applist?uniqueid=%s",
+             server->serverInfo.address, server->httpsPort, unique_id.c_str());
 
     if (http_request(url, &data, HTTPRequestTimeoutMedium) != GS_OK)
         ret = GS_IO_ERROR;
@@ -448,8 +448,8 @@ int gs_app_boxart(PSERVER_DATA server, int app_id, Data* out) {
 
     snprintf(
         url, sizeof(url),
-        "https://%s:47984/appasset?uniqueid=%s&appid=%d&AssetType=2&AssetIdx=0",
-        server->serverInfo.address, unique_id.c_str(), app_id);
+        "https://%s:%u/appasset?uniqueid=%s&appid=%d&AssetType=2&AssetIdx=0",
+        server->serverInfo.address, server->httpsPort, unique_id.c_str(), app_id);
 
     if (http_request(url, &data, HTTPRequestTimeoutMedium) != GS_OK) {
         ret = GS_IO_ERROR;
@@ -487,18 +487,18 @@ int gs_start_app(PSERVER_DATA server, STREAM_CONFIGURATION* config, int appId,
                        : CHANNEL_MASK_51_SURROUND;
         int fps = sops && config->fps > 60 ? 60 : config->fps;
         snprintf(url, sizeof(url),
-                 "https://%s:47984/"
+                 "https://%s:%u/"
                  "launch?uniqueid=%s&appid=%d&mode=%dx%dx%d&additionalStates=1&"
                  "sops=%d&rikey=%s&rikeyid=%d&localAudioPlayMode=%d&"
                  "surroundAudioInfo=%d&remoteControllersBitmap=%d&gcmap=%d",
-                 server->serverInfo.address, unique_id.c_str(), appId,
+                 server->serverInfo.address, server->httpsPort, unique_id.c_str(), appId,
                  config->width, config->height, fps, sops, rand.hex().bytes(),
                  rikeyid, localaudio, (mask << 16) + channelCounnt,
                  gamepad_mask, gamepad_mask);
     } else {
         snprintf(url, sizeof(url),
-                 "https://%s:47984/resume?uniqueid=%s&rikey=%s&rikeyid=%d",
-                 server->serverInfo.address, unique_id.c_str(),
+                 "https://%s:%u/resume?uniqueid=%s&rikey=%s&rikeyid=%d",
+                 server->serverInfo.address, server->httpsPort, unique_id.c_str(),
                  rand.hex().bytes(), rikeyid);
     }
 
@@ -519,6 +519,14 @@ int gs_start_app(PSERVER_DATA server, STREAM_CONFIGURATION* config, int appId,
         goto exit;
     }
 
+    if (xml_search(data, "sessionUrl0", &result) == GS_OK) {
+        const std::string::size_type size = result.size();
+        server->serverInfo.rtspSessionUrl = new char[size + 1];
+        memcpy((void *) server->serverInfo.rtspSessionUrl, result.c_str(), size + 1);
+    } else {
+        brls::Logger::error("sessionUrl0 not found");
+    }
+
 exit:
     return ret;
 }
@@ -529,8 +537,8 @@ int gs_quit_app(PSERVER_DATA server) {
     std::string result;
     Data data;
 
-    snprintf(url, sizeof(url), "https://%s:47984/cancel?uniqueid=%s",
-             server->serverInfo.address, unique_id.c_str());
+    snprintf(url, sizeof(url), "https://%s:%u/cancel?uniqueid=%s",
+             server->serverInfo.address, server->httpsPort, unique_id.c_str());
     if ((ret = http_request(url, &data, HTTPRequestTimeoutMedium)) != GS_OK)
         goto exit;
 

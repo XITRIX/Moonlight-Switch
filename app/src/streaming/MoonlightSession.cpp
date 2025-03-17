@@ -68,7 +68,7 @@ void MoonlightSession::connection_stage_complete(int stage) {
 }
 
 void MoonlightSession::connection_stage_failed(int stage, int error_code) {
-    brls::Logger::error("MoonlightSession: Failed: {}", stages[stage]);
+    brls::Logger::error("MoonlightSession: Failed: {} with error code: {}", stages[stage], error_code);
 }
 
 void MoonlightSession::connection_started() {

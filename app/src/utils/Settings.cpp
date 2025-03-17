@@ -74,12 +74,13 @@ void Settings::set_working_dir(const std::string& working_dir) {
 
 void Settings::add_host(const Host& host) {
     auto it = std::find_if(m_hosts.begin(), m_hosts.end(), [host](auto h){
-        return h.mac == host.mac;
+        return h.address == host.address;
     });
 
     if (it != m_hosts.end()) {
         it->address = host.address;
         it->hostname = host.hostname;
+        it->mac = host.mac;
     } else if (!host.address.empty() && !host.mac.empty()) {
         m_hosts.push_back(host);
     }
@@ -89,7 +90,7 @@ void Settings::add_host(const Host& host) {
 
 void Settings::remove_host(const Host& host) {
     auto it = std::find_if(m_hosts.begin(), m_hosts.end(), [host](auto h){
-        return h.mac == host.mac;
+        return h.address == host.address;
     });
     
     if (it != m_hosts.end()) {
@@ -100,7 +101,7 @@ void Settings::remove_host(const Host& host) {
 
 void Settings::add_favorite(const Host& host, const App& app) {
     auto it = std::find_if(m_hosts.begin(), m_hosts.end(), [host](auto h){
-        return h.mac == host.mac;
+        return h.address == host.address;
     });
 
     if (it != m_hosts.end()) {
@@ -119,7 +120,7 @@ void Settings::add_favorite(const Host& host, const App& app) {
 
 void Settings::remove_favorite(const Host& host, int app_id) {
     auto it = std::find_if(m_hosts.begin(), m_hosts.end(), [host](auto h){
-        return h.mac == host.mac;
+        return h.address == host.address;
     });
 
     if (it != m_hosts.end()) {
@@ -136,7 +137,7 @@ void Settings::remove_favorite(const Host& host, int app_id) {
 
 bool Settings::is_favorite(const Host& host, int app_id) {
     auto it = std::find_if(m_hosts.begin(), m_hosts.end(), [host](auto h){
-        return h.mac == host.mac;
+        return h.address == host.address;
     });
 
     if (it != m_hosts.end()) {
