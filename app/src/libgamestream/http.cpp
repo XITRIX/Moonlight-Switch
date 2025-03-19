@@ -24,11 +24,14 @@
 #include <borealis/core/logger.hpp>
 
 #include <curl/curl.h>
-#include <stdbool.h>
-#include <string.h>
-#include <stdio.h>
+#include <cstring>
 
-static CURL* curl;
+static bool curlGlobalInit = false;
+static std::string certificateFilePath;
+static std::string keyFilePath;
+
+CURL* makeCurl();
+void freeCurl(CURL* curl);
 
 struct HTTP_DATA {
     char* memory;
@@ -38,7 +41,7 @@ struct HTTP_DATA {
 static size_t _write_curl(void* contents, size_t size, size_t nmemb,
                           void* userp) {
     size_t realsize = size * nmemb;
-    HTTP_DATA* mem = (HTTP_DATA*)userp;
+    auto* mem = (HTTP_DATA*)userp;
 
     mem->memory = (char*)realloc(mem->memory, mem->size + realsize + 1);
     if (mem->memory == NULL)
@@ -50,8 +53,8 @@ static size_t _write_curl(void* contents, size_t size, size_t nmemb,
     return realsize;
 }
 
-int http_init(const std::string key_directory) {
-    if (!curl) {
+int http_init(const std::string& key_directory) {
+    if (!curlGlobalInit) {
 #if LIBCURL_VERSION_NUM >= 0x075600
 #ifdef USE_OPENSSL_CRYPTO
         curl_global_sslset(CURLSSLBACKEND_OPENSSL, NULL, NULL);
@@ -65,13 +68,18 @@ int http_init(const std::string key_directory) {
         return GS_OK;
     }
 
-    curl = curl_easy_init();
+    certificateFilePath = key_directory + "/" + CERTIFICATE_FILE_NAME;
+    keyFilePath = key_directory + "/" + KEY_FILE_NAME;
+
+    curlGlobalInit = true;
+    return GS_OK;
+}
+
+CURL* makeCurl() {
+    auto curl = curl_easy_init();
 
     if (!curl)
-        return GS_FAILED;
-
-    std::string certificateFilePath = key_directory + "/" + CERTIFICATE_FILE_NAME;
-    std::string keyFilePath = key_directory + "/" + KEY_FILE_NAME;
+        return nullptr;
 
     curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
@@ -85,16 +93,23 @@ int http_init(const std::string key_directory) {
     curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1L);
     curl_easy_setopt(curl, CURLOPT_SSL_SESSIONID_CACHE, 0L);
 
-    return GS_OK;
+    return curl;
 }
 
-int http_request(const std::string url, Data* data,
+void freeCurl(CURL* curl) {
+    curl_easy_cleanup(curl);
+}
+
+int http_request(const std::string& url, Data* data,
                  HTTPRequestTimeout timeout) {
     brls::Logger::info("Curl: Request:\n{}", url.c_str());
 
-    HTTP_DATA* http_data = (HTTP_DATA*)malloc(sizeof(HTTP_DATA));
+    auto* http_data = (HTTP_DATA*)malloc(sizeof(HTTP_DATA));
     http_data->memory = (char*)malloc(1);
     http_data->size = 0;
+
+    auto curl = makeCurl();
+    if (!curl) return GS_FAILED;
 
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, http_data);
     curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
@@ -108,7 +123,7 @@ int http_request(const std::string url, Data* data,
         free(http_data->memory);
         free(http_data);
         return GS_FAILED;
-    } else if (http_data->memory == NULL) {
+    } else if (http_data->memory == nullptr) {
         brls::Logger::error("Curl: memory = NULL");
         free(http_data->memory);
         free(http_data);
@@ -125,10 +140,11 @@ int http_request(const std::string url, Data* data,
 
     free(http_data->memory);
     free(http_data);
+    freeCurl(curl);
+
     return GS_OK;
 }
 
 void http_cleanup() {
-    curl_easy_cleanup(curl);
     curl_global_cleanup();
 }

@@ -17,8 +17,9 @@
  * along with Moonlight; if not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "Data.hpp"
 #pragma once
+
+#include "Data.hpp"
 
 enum HTTPRequestTimeout : long {
     HTTPRequestTimeoutLow = 1,
@@ -26,5 +27,6 @@ enum HTTPRequestTimeout : long {
     HTTPRequestTimeoutLong = 120
 };
 
-int http_init(const std::string key_directory);
-int http_request(const std::string url, Data* data, HTTPRequestTimeout timeout);
+int http_init(const std::string& key_directory);
+int http_request(const std::string& url, Data* data, HTTPRequestTimeout timeout);
+

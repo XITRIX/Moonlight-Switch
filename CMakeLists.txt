@@ -289,6 +289,12 @@ target_include_directories(${PROJECT_NAME} PUBLIC
         ${APP_PLATFORM_INCLUDE})
 target_compile_options(${PROJECT_NAME} PRIVATE -ffunction-sections -fdata-sections ${APP_PLATFORM_OPTION})
 
+if(PLATFORM_SWITCH)
+    target_include_directories(${PROJECT_NAME} PRIVATE
+            ${CMAKE_CURRENT_SOURCE_DIR}/lib/switch/include
+    )
+endif ()
+
 find_package(CURL REQUIRED)
 #find_package(MbedTLS REQUIRED)
 if(NOT PLATFORM_ANDROID)
@@ -302,20 +308,16 @@ find_library(OPUS_LIBRARY opus)
 message("opus: ${OPUS_LIBRARY}")
 
 if(PLATFORM_SWITCH)
-    target_link_libraries(${PROJECT_NAME} PRIVATE 
-        ${CMAKE_CURRENT_SOURCE_DIR}/lib/switch/libavcodec.a
-        ${CMAKE_CURRENT_SOURCE_DIR}/lib/switch/libavformat.a
-        ${CMAKE_CURRENT_SOURCE_DIR}/lib/switch/libavutil.a
-        ${CMAKE_CURRENT_SOURCE_DIR}/lib/switch/libswresample.a
-    )
-
-    target_include_directories(${PROJECT_NAME} PRIVATE 
-        ${CMAKE_CURRENT_SOURCE_DIR}/lib/switch/include
+    target_link_libraries(${PROJECT_NAME} PRIVATE
+            ${CMAKE_CURRENT_SOURCE_DIR}/lib/switch/libavcodec.a
+            ${CMAKE_CURRENT_SOURCE_DIR}/lib/switch/libavformat.a
+            ${CMAKE_CURRENT_SOURCE_DIR}/lib/switch/libavutil.a
+            ${CMAKE_CURRENT_SOURCE_DIR}/lib/switch/libswresample.a
     )
 else()
     find_library(AVCODEC_LIBRARY avcodec)
     message("avcodec: ${AVCODEC_LIBRARY}")
-    
+
     find_library(AVFORMAT_LIBRARY avformat)
     message("avformat: ${AVFORMAT_LIBRARY}")
 
@@ -325,6 +327,9 @@ else()
     find_library(SWRESAMPLE_LIBRARY swresample)
     message("swresample: ${SWRESAMPLE_LIBRARY}")
 endif ()
+
+find_library(ZSTD_LIBRARY zstd)
+message("zstd: ${ZSTD_LIBRARY}")
 
 # Recompiled CURL with Mbedtls support for Switch
 if(PLATFORM_SWITCH)
@@ -342,6 +347,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
         ${AVUTIL_LIBRARY}
         ${AVFORMAT_LIBRARY}
         ${SWRESAMPLE_LIBRARY}
+        ${ZSTD_LIBRARY}
         ${OPUS_LIBRARY}
         PNG::PNG
         SDL2::SDL2

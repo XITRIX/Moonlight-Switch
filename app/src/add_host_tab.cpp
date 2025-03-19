@@ -133,6 +133,8 @@ void AddHostTab::stopSearchHost() {
 }
 
 void AddHostTab::connectHost(const std::string& address) {
+//    if (address.empty()) return;
+
     pauseSearching();
 
     Dialog* loaderView = createLoadingDialog("add_host/try_connect"_i18n);
