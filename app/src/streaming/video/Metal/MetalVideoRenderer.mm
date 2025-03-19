@@ -580,11 +580,11 @@ bool MetalVideoRenderer::initialize(int imageFormat)
 }}
 
 VideoRenderStats* MetalVideoRenderer::video_render_stats() {
-    m_video_render_stats.rendered_fps =
-            (float)m_video_render_stats.rendered_frames /
-            ((float)(LiGetMillis() -
-                     m_video_render_stats.measurement_start_timestamp) /
-             1000);
+    m_video_render_stats.rendered_fps = (float)m_video_render_stats.rendered_frames /
+            ((float) (LiGetMillis() - m_video_render_stats.measurement_start_timestamp) / 1000);
+
+    m_video_render_stats.rendering_time = (float)m_video_render_stats.total_render_time /
+            (float) m_video_render_stats.rendered_frames;
 
     return (VideoRenderStats*)&m_video_render_stats;
 }

@@ -278,7 +278,7 @@ int FFmpegVideoDecoder::submit_decode_unit(PDECODE_UNIT decode_unit) {
             m_last_frame = decode_unit->frameNumber;
         }
 
-        m_video_decode_stats_progress.received_frames++;
+        m_video_decode_stats_progress.current_received_frames++;
         m_video_decode_stats_progress.total_frames++;
 
         int length = 0;
@@ -292,9 +292,7 @@ int FFmpegVideoDecoder::submit_decode_unit(PDECODE_UNIT decode_unit) {
             entry = entry->next;
         }
 
-        m_video_decode_stats_progress.total_reassembly_time +=
-            LiGetMillis() - decode_unit->receiveTimeMs;
-
+        m_video_decode_stats_progress.current_reassembly_time += LiGetMillis() - decode_unit->receiveTimeMs;
         m_frames_in++;
 
         uint64_t before_decode = LiGetMillis();
@@ -307,37 +305,53 @@ int FFmpegVideoDecoder::submit_decode_unit(PDECODE_UNIT decode_unit) {
             m_frames_out++;
 
             auto decodeTime = LiGetMillis() - before_decode;
-            m_video_decode_stats_progress.total_decode_time += decodeTime;
+            m_video_decode_stats_progress.current_decode_time += decodeTime;
 
             // Also count the frame-to-frame delay if the decoder is delaying
             // frames until a subsequent frame is submitted.
-            m_video_decode_stats_progress.total_decode_time +=
+            m_video_decode_stats_progress.current_decode_time +=
                 (m_frames_in - m_frames_out) * (1000 / m_stream_fps);
-            m_video_decode_stats_progress.decoded_frames++;
+            m_video_decode_stats_progress.current_decoded_frames++;
 
             const int time_interval = 200;
             timeCount += decodeTime;
             if (timeCount >= time_interval) {
                 // brls::Logger::debug("FPS: {}", frames / 5.0f);
+
                 m_video_decode_stats_cache = m_video_decode_stats_progress;
                 m_video_decode_stats_progress = {};
 
                 // Preserve dropped frames count
+                m_video_decode_stats_progress.total_received_frames = m_video_decode_stats_cache.total_received_frames + m_video_decode_stats_cache.current_received_frames;
+                m_video_decode_stats_progress.total_decoded_frames = m_video_decode_stats_cache.total_decoded_frames + m_video_decode_stats_cache.current_decoded_frames;
+                m_video_decode_stats_progress.total_reassembly_time = m_video_decode_stats_cache.total_reassembly_time + m_video_decode_stats_cache.current_reassembly_time;
+                m_video_decode_stats_progress.total_decode_time = m_video_decode_stats_cache.total_decode_time + m_video_decode_stats_cache.current_decode_time;
+
                 m_video_decode_stats_progress.network_dropped_frames = m_video_decode_stats_cache.network_dropped_frames;
 
                 uint64_t now = LiGetMillis();
-                m_video_decode_stats_cache.total_fps =
+                m_video_decode_stats_cache.current_host_fps =
                     (float)m_video_decode_stats_cache.total_frames /
                     ((float)(now - m_video_decode_stats_cache.measurement_start_timestamp) /
                     1000);
-                m_video_decode_stats_cache.received_fps =
-                    (float)m_video_decode_stats_cache.received_frames /
-                    ((float)(now - m_video_decode_stats_cache.measurement_start_timestamp) /
+                m_video_decode_stats_cache.current_received_fps =
+                        (float)m_video_decode_stats_cache.current_received_frames /
+                        ((float)(now - m_video_decode_stats_cache.measurement_start_timestamp) /
                     1000);
-                m_video_decode_stats_cache.decoded_fps =
-                    (float)m_video_decode_stats_cache.decoded_frames /
-                    ((float)(now - m_video_decode_stats_cache.measurement_start_timestamp) /
+                m_video_decode_stats_cache.current_decoded_fps =
+                        (float)m_video_decode_stats_cache.current_decoded_frames /
+                        ((float)(now - m_video_decode_stats_cache.measurement_start_timestamp) /
                     1000);
+
+                m_video_decode_stats_cache.current_receive_time = (float) m_video_decode_stats_cache.current_reassembly_time /
+                                                                  (float) m_video_decode_stats_cache.current_received_frames;
+                m_video_decode_stats_cache.current_decoding_time = (float) m_video_decode_stats_cache.current_decode_time /
+                                                                   (float) m_video_decode_stats_cache.current_decoded_frames;
+
+                m_video_decode_stats_cache.session_receive_time = (float) m_video_decode_stats_cache.total_reassembly_time /
+                                                                  (float) m_video_decode_stats_cache.total_received_frames;
+                m_video_decode_stats_cache.session_decoding_time = (float) m_video_decode_stats_cache.total_decode_time /
+                                                                   (float) m_video_decode_stats_cache.total_decoded_frames;
 
                 timeCount -= time_interval;
             }

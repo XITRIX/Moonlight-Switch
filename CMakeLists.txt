@@ -27,8 +27,8 @@ include(${EXTERN_PATH}/cmake/toolchain.cmake)
 
 # Renderers
 if (PLATFORM_IOS OR PLATFORM_TVOS)
-    # set(USE_METAL_RENDERER ON)
-    set(USE_GL_RENDERER ON)
+    set(USE_METAL_RENDERER ON)
+    # set(USE_GL_RENDERER ON)
 else()
     set(USE_GL_RENDERER ON)
 endif ()

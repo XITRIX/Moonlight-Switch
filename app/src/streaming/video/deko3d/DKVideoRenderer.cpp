@@ -259,11 +259,13 @@ void DKVideoRenderer::draw(NVGcontext* vg, int width, int height, AVFrame* frame
 
 VideoRenderStats* DKVideoRenderer::video_render_stats() {
     // brls::Logger::info("{}", __PRETTY_FUNCTION__);
-    m_video_render_stats.rendered_fps =
-        (float)m_video_render_stats.rendered_frames /
-        ((float)(LiGetMillis() -
-                 m_video_render_stats.measurement_start_timestamp) /
-         1000);
+    m_video_render_stats.rendered_fps = (float) m_video_render_stats.rendered_frames /
+        ((float) (LiGetMillis() - m_video_render_stats.measurement_start_timestamp) / 1000);
+
+
+    m_video_render_stats.rendering_time = (float)m_video_render_stats.total_render_time /
+            (float) m_video_render_stats.rendered_frames;
+
     return &m_video_render_stats;
 }
 

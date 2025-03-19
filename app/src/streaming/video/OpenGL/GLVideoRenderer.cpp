@@ -332,11 +332,12 @@ void GLVideoRenderer::draw(NVGcontext* vg, int width, int height,
         m_video_render_stats_cache = m_video_render_stats_progress;
         m_video_render_stats_progress = {};
 
-        m_video_render_stats_cache.rendered_fps =
-            (float)m_video_render_stats_cache.rendered_frames /
-            ((float)(LiGetMillis() -
-                    m_video_render_stats_cache.measurement_start_timestamp) /
-            1000);
+        uint64_t now = LiGetMillis();
+        m_video_render_stats_cache.rendered_fps = (float) m_video_render_stats_cache.rendered_frames /
+                ((float)(now - m_video_render_stats_cache.measurement_start_timestamp) / 1000);
+
+        m_video_render_stats_cache.rendering_time = (float)m_video_render_stats_cache.total_render_time /
+                (float) m_video_render_stats_cache.rendered_frames;
 
         timeCount -= time_interval;
     }

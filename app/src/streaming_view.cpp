@@ -316,35 +316,28 @@ void StreamingView::draw(NVGcontext* vg, float x, float y, float width,
     }
 
     if (draw_stats) {
-        static char output[1024];
-        int offset = 0;
         auto stats = session->session_stats();
 
-        offset += sprintf(&output[offset],
-                          "Estimated host PC frame rate: %.2f FPS\n"
-                          "Incoming frame rate from network: %.2f FPS\n"
-                          "Decoding frame rate: %.2f FPS\n"
-                          "Rendering frame rate: %.2f FPS\n",
-                          stats->video_decode_stats.total_fps,
-                          stats->video_decode_stats.received_fps,
-                          stats->video_decode_stats.decoded_fps,
-                          stats->video_render_stats.rendered_fps);
+        auto statistics = fmt::format(
+                    "Estimated host PC frame rate: {:.{}f} FPS\n"
+                        "Incoming frame rate from network: {:.{}f} FPS\n"
+                        "Decoding frame rate: {:.{}f} FPS\n"
+                        "Rendering frame rate: {:.{}f} FPS\n",
+                    stats->video_decode_stats.current_host_fps, 2,
+                    stats->video_decode_stats.current_received_fps, 2,
+                    stats->video_decode_stats.current_decoded_fps, 2,
+                    stats->video_render_stats.rendered_fps, 2);
 
-        offset += sprintf(
-            &output[offset],
-            "Frames dropped by your network connection: %u\n"
-            "Average receive time: %.2f ms\n"
-            "Average decoding time: %.2f ms\n"
-            "Average rendering time: %.2f ms\n",
-            // (float)stats->video_decode_stats.network_dropped_frames / // removed % of dropped frames
-            //     stats->video_decode_stats.total_frames * 100,
-            stats->video_decode_stats.network_dropped_frames,
-            (float)stats->video_decode_stats.total_reassembly_time /
-                stats->video_decode_stats.received_frames,
-            (float)stats->video_decode_stats.total_decode_time /
-                stats->video_decode_stats.decoded_frames,
-            (float)stats->video_render_stats.total_render_time /
-                stats->video_render_stats.rendered_frames);
+        statistics += fmt::format("Frames dropped by your network connection: {}\n"
+                                  "Average receive time: {:.{}f} | {:.{}f} ms\n"
+                                  "Average decoding time: {:.{}f} | {:.{}f} ms\n"
+                                  "Average rendering time: {:.{}f} ms\n",
+                                  stats->video_decode_stats.network_dropped_frames,
+                                  stats->video_decode_stats.current_receive_time, 2,
+                                  stats->video_decode_stats.session_receive_time, 2,
+                                  stats->video_decode_stats.current_decoding_time, 2,
+                                  stats->video_decode_stats.session_decoding_time, 2,
+                                  stats->video_render_stats.rendering_time, 2);
 
         nvgFontFaceId(vg, Application::getFont(FONT_REGULAR));
         nvgFontSize(vg, 20);
@@ -352,11 +345,11 @@ void StreamingView::draw(NVGcontext* vg, float x, float y, float width,
 
         nvgFontBlur(vg, 1);
         nvgFillColor(vg, nvgRGBA(0, 0, 0, 255));
-        nvgTextBox(vg, 20, 30, width, output, nullptr);
+        nvgTextBox(vg, 20, 30, width, statistics.c_str(), nullptr);
 
         nvgFontBlur(vg, 0);
         nvgFillColor(vg, nvgRGBA(0, 255, 0, 255));
-        nvgTextBox(vg, 20, 30, width, output, nullptr);
+        nvgTextBox(vg, 20, 30, width, statistics.c_str(), nullptr);
     }
 
     Box::draw(vg, x, y, width, height, style, ctx);

@@ -9,10 +9,14 @@ extern "C" {
 }
 
 struct VideoRenderStats {
+    // NOT TO USE, INTERMEDIATE VALUES
     uint32_t rendered_frames;
     uint64_t total_render_time;
+
     float rendered_fps;
-    double measurement_start_timestamp;
+    float rendering_time;
+
+    uint64_t measurement_start_timestamp;
 };
 
 class IVideoRenderer {
