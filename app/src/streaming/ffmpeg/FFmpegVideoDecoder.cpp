@@ -407,12 +407,14 @@ AVFrame* FFmpegVideoDecoder::get_frame(bool native_frame) {
         resultFrame = decodeFrame;
 #else
 
+#if defined(PLATFORM_SWITCH) && !defined(BOREALIS_USE_DEKO3D)
         for (int i = 0; i < 2; ++i) {
             if (((uintptr_t)resultFrame->data[i] & 0xff) || (resultFrame->linesize[i] & 0xff)) {
                 brls::Logger::error("Frame address/pitch not aligned to 256, falling back to cpu transfer");
                 break;
             }
         }
+#endif
 
         // Copy hardware frame into software frame
         if ((err = av_hwframe_transfer_data(resultFrame, decodeFrame, 0)) < 0) {
