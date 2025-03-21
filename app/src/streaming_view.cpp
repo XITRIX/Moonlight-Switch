@@ -414,7 +414,7 @@ void StreamingView::handleInput() {
 //        MoonlightInputManager::instance().dropInput();
     }
 //    else {
-    MoonlightInputManager::instance().handleInput();
+    MoonlightInputManager::instance().handleInput(keyboard != nullptr);
 //    }
 
     if (!Application::currentTouchState.empty()) {

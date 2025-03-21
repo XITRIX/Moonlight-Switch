@@ -7,6 +7,7 @@
 #include "Limelight.h"
 #include "Settings.hpp"
 #include <borealis.hpp>
+#include <streaming_view.hpp>
 #include <chrono>
 
 using namespace brls;
@@ -282,29 +283,29 @@ void MoonlightInputManager::handleControllers(bool specialKey) {
     }
 }
 
-void MoonlightInputManager::handleInput() {
+void MoonlightInputManager::handleInput(bool ignoreTouch) {
     inputDropped = false;
     static brls::ControllerState rawController;
     static brls::ControllerState controller;
     static brls::RawMouseState mouse;
 
     brls::Application::getPlatform()
-        ->getInputManager()
-        ->updateUnifiedControllerState(&rawController);
+            ->getInputManager()
+            ->updateUnifiedControllerState(&rawController);
     brls::Application::getPlatform()->getInputManager()->updateMouseStates(
-        &mouse);
+            &mouse);
     controller = mapController(rawController);
 
     std::vector<brls::RawTouchState> states;
     brls::Application::getPlatform()->getInputManager()->updateTouchStates(&states);
 
     //Do not use gamepad for mouse controll assist if touchscreen mode enabled
-    bool specialKey = !Settings::instance().touchscreen_mouse_mode() && states.size() == 1;
+    bool specialKey = !ignoreTouch && !Settings::instance().touchscreen_mouse_mode() && states.size() == 1;
 
     handleControllers(specialKey);
 
     float stickScrolling =
-        specialKey
+            specialKey
             ? (controller.axes[brls::LEFT_Y] + controller.axes[brls::RIGHT_Y])
             : 0;
 
@@ -313,17 +314,17 @@ void MoonlightInputManager::handleInput() {
     MouseStateS mouseState;
     if (!Settings::instance().touchscreen_mouse_mode()) {
         mouseState = {
-            .scroll_y = stickScrolling,
-            .l_pressed = (specialKey && controller.buttons[brls::BUTTON_RT]) || mouse.leftButton,
-            .m_pressed = mouse.middleButton,
-            .r_pressed = (specialKey && controller.buttons[brls::BUTTON_LT]) || mouse.rightButton
+                .scroll_y = stickScrolling,
+                .l_pressed = (specialKey && controller.buttons[brls::BUTTON_RT]) || mouse.leftButton,
+                .m_pressed = mouse.middleButton,
+                .r_pressed = (specialKey && controller.buttons[brls::BUTTON_LT]) || mouse.rightButton
         };
     } else {
         mouseState = {
-            .scroll_y = 0,
-            .l_pressed = mouse.leftButton,
-            .m_pressed = mouse.middleButton,
-            .r_pressed = mouse.rightButton
+                .scroll_y = 0,
+                .l_pressed = mouse.leftButton,
+                .m_pressed = mouse.middleButton,
+                .r_pressed = mouse.rightButton
         };
     }
 
@@ -358,14 +359,14 @@ void MoonlightInputManager::handleInput() {
     }
 
     std::chrono::high_resolution_clock::time_point timeNow =
-        std::chrono::high_resolution_clock::now();
+            std::chrono::high_resolution_clock::now();
     static std::chrono::high_resolution_clock::time_point timeStamp = timeNow;
 
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
-                        timeNow - timeStamp)
-                        .count();
+            timeNow - timeStamp)
+            .count();
     if (mouseState.scroll_y != 0 &&
-            (float) duration > 550 - std::fabs(mouseState.scroll_y) * 500) {
+        (float) duration > 550 - std::fabs(mouseState.scroll_y) * 500) {
         timeStamp = timeNow;
         brls::Logger::info("Scroll sended: {}", mouseState.scroll_y);
         lastMouseState.scroll_y = mouseState.scroll_y;
@@ -373,10 +374,13 @@ void MoonlightInputManager::handleInput() {
     }
 
     if (!Settings::instance().touchscreen_mouse_mode()) {
+        // Do not process touch events, useful if onscreen keyboard is presented
+        if (ignoreTouch) { return; }
+
         if (panStatus.has_value()) {
             float multiplier =
-            Settings::instance().get_mouse_speed_multiplier() / 100.f * 1.5f +
-            0.5f;
+                    Settings::instance().get_mouse_speed_multiplier() / 100.f * 1.5f +
+                    0.5f;
             LiSendMouseMoveEvent(-panStatus->delta.x * multiplier,
                                  -panStatus->delta.y * multiplier);
             panStatus.reset();
@@ -387,6 +391,7 @@ void MoonlightInputManager::handleInput() {
         auto touches = brls::Application::currentTouchState;
         for (int i = 0; i < touches.size(); i++) {
             auto touch = touches[i];
+            if (touch.view && touch.view->hasParent() && dynamic_cast<StreamingView*>(touch.view->getParent()) == nullptr) return;
 
             switch (touch.phase) {
                 case TouchPhase::START:
@@ -409,16 +414,19 @@ void MoonlightInputManager::handleInput() {
                 activeTouchIDs.erase(touch.fingerId);
             }
 
-            if (LiSendTouchEvent(eventType, touch.fingerId, touch.position.x / (float) Application::contentWidth, touch.position.y / (float) Application::contentHeight, 0, 0, 0, LI_ROT_UNKNOWN) == LI_ERR_UNSUPPORTED && i == 0) {
+            if (LiSendTouchEvent(eventType, touch.fingerId, touch.position.x / (float) Application::contentWidth,
+                                 touch.position.y / (float) Application::contentHeight, 0, 0, 0, LI_ROT_UNKNOWN) ==
+                LI_ERR_UNSUPPORTED && i == 0) {
                 // Fallback to move cursor and click if touch unsupported
                 if (touch.phase != TouchPhase::NONE) {
-                    LiSendMousePositionEvent(touch.position.x, touch.position.y, Application::contentWidth, Application::contentHeight);
+                    LiSendMousePositionEvent(touch.position.x, touch.position.y, Application::contentWidth,
+                                             Application::contentHeight);
                 }
                 if (touch.phase == TouchPhase::START) {
-                    LiSendMouseButtonEvent(BUTTON_ACTION_PRESS,BUTTON_MOUSE_LEFT);
+                    LiSendMouseButtonEvent(BUTTON_ACTION_PRESS, BUTTON_MOUSE_LEFT);
                 }
                 if (touch.phase == TouchPhase::END) {
-                    LiSendMouseButtonEvent(BUTTON_ACTION_RELEASE,BUTTON_MOUSE_LEFT);
+                    LiSendMouseButtonEvent(BUTTON_ACTION_RELEASE, BUTTON_MOUSE_LEFT);
                 }
             }
         }

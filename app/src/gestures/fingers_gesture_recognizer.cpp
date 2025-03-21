@@ -30,5 +30,7 @@ GestureState FingersGestureRecognizer::recognitionLoop(TouchState touch,
         fingersCounter--;
     }
 
+    if (fingersCounter < 0) fingersCounter = 0;
+
     return brls::GestureState::UNSURE;
 }
