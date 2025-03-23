@@ -2,12 +2,15 @@
 #include "AVFrameHolder.hpp"
 #include "Settings.hpp"
 #include "borealis.hpp"
+#include "borealis/platforms/sdl/sdl_video.hpp"
 
 #ifdef PLATFORM_APPLE
 extern "C" {
 #include <libavcodec/videotoolbox.h>
 }
 #endif
+
+#include <borealis.hpp>
 
 // Disables the deblocking filter at the cost of image quality
 #define DISABLE_LOOP_FILTER 0x1
@@ -40,9 +43,14 @@ FFmpegVideoDecoder::FFmpegVideoDecoder() {
 //    AVMediaCodecDeviceContext* hwctx = (AVMediaCodecDeviceContext*)ctx->hwctx;
 ////    hwctx->surface = ;
 //    av_hwdevice_ctx_init(deviceRef);
+
+    m_Pacer = new Pacer(nullptr);
 }
 
-FFmpegVideoDecoder::~FFmpegVideoDecoder() = default;
+FFmpegVideoDecoder::~FFmpegVideoDecoder() {
+    delete m_Pacer;
+    m_Pacer = nullptr;
+}
 
 void ffmpegLog(void* ptr, int level, const char* fmt, va_list vargs) {
     std::string message;
@@ -58,6 +66,14 @@ void ffmpegLog(void* ptr, int level, const char* fmt, va_list vargs) {
 int FFmpegVideoDecoder::setup(int video_format, int width, int height,
                               int redraw_rate, void* context, int dr_flags) {
     m_stream_fps = redraw_rate;
+
+    { // Pacer setup, SDL VIDEO CONTEXT ONLY!
+        auto videoContext = (brls::SDLVideoContext *) brls::Application::getPlatform()->getVideoContext();
+        auto m_Window = videoContext->getSDLWindow();
+        if (!m_Pacer->initialize(m_Window, redraw_rate, true)) {
+            return false;
+        }
+    }
 
     brls::Logger::debug("FFMpeg's AVCodec version: {}.{}.{}", AV_VERSION_MAJOR(avcodec_version()), AV_VERSION_MINOR(avcodec_version()), AV_VERSION_MICRO(avcodec_version()));
     brls::Logger::info(
@@ -458,4 +474,9 @@ AVFrame* FFmpegVideoDecoder::get_frame(bool native_frame) {
 
 VideoDecodeStats* FFmpegVideoDecoder::video_decode_stats() {
     return (VideoDecodeStats*)&m_video_decode_stats_cache;
+}
+
+void FFmpegVideoDecoder::renderFrameOnMainThread()
+{
+    m_Pacer->renderOnMainThread();
 }

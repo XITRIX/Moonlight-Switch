@@ -319,8 +319,8 @@ void MoonlightSession::stop(int terminate_app) {
 void MoonlightSession::draw(NVGcontext* vg, int width, int height) {
     if (m_video_decoder && m_video_renderer) {
         AVFrameHolder::instance().get(
-            [this, vg, width, height](AVFrame* frame) {
-                m_video_renderer->draw(vg, width, height, frame, m_video_format);
+            [this, width, height](AVFrame* frame) {
+                m_video_renderer->draw(width, height, frame, m_video_format);
             });
 
         m_session_stats.video_decode_stats =

@@ -289,7 +289,7 @@ void GLVideoRenderer::checkAndUpdateScale(int width, int height,
     }
 }
 
-void GLVideoRenderer::draw(NVGcontext* vg, int width, int height,
+void GLVideoRenderer::draw(int width, int height,
                            AVFrame* frame, int imageFormat) {
     if (!m_video_render_stats_progress.rendered_frames) {
         m_video_render_stats_progress.measurement_start_timestamp = LiGetMillis();

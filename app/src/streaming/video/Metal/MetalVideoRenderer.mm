@@ -323,7 +323,7 @@ void MetalVideoRenderer::waitToRender()
     }
 }}
 
-void MetalVideoRenderer::draw(NVGcontext* vg, int width, int height, AVFrame* frame, int imageFormat) {
+void MetalVideoRenderer::draw(int width, int height, AVFrame* frame, int imageFormat) {
     initialize(imageFormat);
     waitToRender();
 

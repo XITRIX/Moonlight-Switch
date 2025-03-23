@@ -1,6 +1,7 @@
 #include "IFFmpegVideoDecoder.hpp"
 #pragma once
 
+#include "pacer/Pacer.h"
 #define m_frames_count 2
 
 class FFmpegVideoDecoder : public IFFmpegVideoDecoder {
@@ -14,6 +15,8 @@ class FFmpegVideoDecoder : public IFFmpegVideoDecoder {
     int submit_decode_unit(PDECODE_UNIT decode_unit) override;
     int capabilities() const override;
     VideoDecodeStats* video_decode_stats() override;
+
+    void renderFrameOnMainThread();
 
   private:
     int decode(char* indata, int inlen);
@@ -39,4 +42,6 @@ class FFmpegVideoDecoder : public IFFmpegVideoDecoder {
 
     char* m_ffmpeg_buffer = nullptr;
     AVFrame* m_frame = nullptr;
+
+    Pacer* m_Pacer;
 };

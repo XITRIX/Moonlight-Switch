@@ -22,8 +22,7 @@ struct VideoRenderStats {
 class IVideoRenderer {
   public:
     virtual ~IVideoRenderer(){};
-    virtual void draw(NVGcontext* vg, int width, int height,
-                      AVFrame* frame, int imageFormat) = 0;
+    virtual void draw(int width, int height, AVFrame* frame, int imageFormat) = 0;
     virtual VideoRenderStats* video_render_stats() = 0;
 
     // Default implementations

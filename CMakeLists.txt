@@ -278,6 +278,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
         app/src/streaming
         app/src/streaming/audio
         app/src/streaming/ffmpeg
+        app/src/streaming/ffmpeg/pacer
         app/src/streaming/switch
         app/src/streaming/video
         app/src/streaming/video/deko3d

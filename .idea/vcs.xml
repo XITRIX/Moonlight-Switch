@@ -10,8 +10,6 @@
     <mapping directory="$PROJECT_DIR$/extern/borealis/android-project/app/jni/borealis" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/extern/borealis/library/lib/extern/SDL" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/extern/borealis/library/lib/extern/glfw" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/extern/hacBrewPack" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/extern/hacPack" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/extern/mdns" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/extern/moonlight-common-c" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/extern/moonlight-common-c/enet" vcs="Git" />
