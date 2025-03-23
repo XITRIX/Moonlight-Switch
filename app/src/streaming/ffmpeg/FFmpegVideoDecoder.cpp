@@ -313,7 +313,7 @@ int FFmpegVideoDecoder::submit_decode_unit(PDECODE_UNIT decode_unit) {
                 (m_frames_in - m_frames_out) * (1000 / m_stream_fps);
             m_video_decode_stats_progress.current_decoded_frames++;
 
-            const int time_interval = 200;
+            const int time_interval = 60;
             timeCount += decodeTime;
             if (timeCount >= time_interval) {
                 // brls::Logger::debug("FPS: {}", frames / 5.0f);

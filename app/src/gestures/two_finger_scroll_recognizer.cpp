@@ -67,6 +67,9 @@ GestureState TwoFingerScrollGestureRecognizer::recognitionLoop(
         if (fingers > 0)
             fingers--;
 
+        if (fingers < 0)
+            fingers = 0;
+
         fingersStartPoints.erase(touch.fingerId);
         fingersCurrentPoints.erase(touch.fingerId);
 
