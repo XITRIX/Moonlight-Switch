@@ -149,16 +149,16 @@ void AppListView::updateAppList() {
                             std::sort(
                                 sortedApps.begin(), sortedApps.end(),
                                 [this, currentGame](const AppInfo& l, const AppInfo& r) {
-                                    bool currentCondition =
-                                        l.app_id == currentGame &&
-                                        r.app_id != currentGame;
-                                    bool favoriteCondition =
-                                        Settings::instance().is_favorite(
-                                            this->host, l.app_id) &&
-                                        !Settings::instance().is_favorite(
-                                            this->host, r.app_id);
-                                    return currentCondition ||
-                                           favoriteCondition;
+                                    int lScore = 0;
+                                    int rScore = 0;
+
+                                    if (l.app_id == currentGame) lScore+=2;
+                                    if (Settings::instance().is_favorite(this->host, l.app_id)) lScore+=1;
+
+                                    if (r.app_id == currentGame) rScore+=2;
+                                    if (Settings::instance().is_favorite(this->host, r.app_id)) rScore+=1;
+
+                                    return lScore > rScore;
                                 });
 
                             for (const AppInfo& app : sortedApps) {
