@@ -33,11 +33,11 @@ bool startFromArgs(int argc, char** argv) {
 
     if (argc <= 1) return false;
 
-    std::string args_pref[3] = {"--host=", "--appid=", "--appname="};
-    std::string args[3];
+    std::string args_pref[4] = {"--host=", "--ip=", "--appid=", "--appname="};
+    std::string args[4];
 
     for (int i = 1; i < argc; i++) {
-        for (int j = 0; j < 3; j++) {
+        for (int j = 0; j < 4; j++) {
             auto arg = std::string(argv[i]);
 
             if (arg.rfind(args_pref[j], 0) == 0) {
@@ -48,18 +48,24 @@ bool startFromArgs(int argc, char** argv) {
 
     Application::enableDebuggingView(true);
 
-    Logger::debug("Host {}", args[0]);
-    Logger::debug("Id {}", args[1]);
-    Logger::debug("Name {}", args[2]);
+    std::string mac = args[0];
+    std::string ip = args[1];
+    std::string appId = args[2];
+    std::string appName = args[3];
 
-    if (args_pref[0].empty() || args_pref[1].empty()) { return false; }
+    Logger::debug("Host {}", mac);
+    Logger::debug("IP {}", ip);
+    Logger::debug("Id {}", appId);
+    Logger::debug("Name {}", appName);
+
+    if ((mac.empty() && ip.empty()) || appId.empty()) { return false; }
 
     auto hosts = Settings::instance().hosts();
-    if (auto it = std::find_if(hosts.begin(), hosts.end(), [args](const Host& host) {
-        return host.mac == args[0];
+    if (auto it = std::find_if(hosts.begin(), hosts.end(), [mac, ip](const Host& host) {
+        return host.mac == mac || host.address == ip;
     }); it != std::end(hosts)) {
         const Host& host = *it;
-        AppInfo info { args[2], stoi(args[1]) };
+        AppInfo info { appName, stoi(appId) };
 
         auto* frame = new AppletFrame(new StreamingView(host, info));
         frame->setBackground(ViewBackground::NONE);
