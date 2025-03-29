@@ -8,6 +8,7 @@
 #include "main_args.hpp"
 #include <borealis.hpp>
 #include "streaming_view.hpp"
+#include <regex>
 
 #ifdef __SWITCH__
 #include <switch.h>
@@ -52,6 +53,8 @@ bool startFromArgs(int argc, char** argv) {
     std::string ip = args[1];
     std::string appId = args[2];
     std::string appName = args[3];
+
+    appName = std::regex_replace( appName, std::regex( "&#160;" ), " " );
 
     Logger::debug("Host {}", mac);
     Logger::debug("IP {}", ip);
