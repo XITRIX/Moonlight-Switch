@@ -68,15 +68,16 @@ To open overlay, press - and + key simultaneously by default or Hold ESC on keyb
 Key combination and holding time are configurable in settings.
 
 ## NSP forwarder
-App supports NSP forwarders to start stream immediately with predefined configuration. Add app you want to launch in Favorites list first.
+App supports NSP forwarders to start stream immediately with predefined configuration. Add app you want to launch in Favorites list first. You can generate forwarder using [NSP Forwarder Generator](https://nsp-forwarder.vercel.app/moonlight)
 
-You'll need to add thees arguments to the forwarder:
-- `--host` - Mac address of your PC (you could find it in /switch/Moonlight-Switch/settings.json)
-- `--appid` - ID of the app to launch
+### Manually
+If you'd like to create it manually, without help of generator, you'll need to create forwarder which will pass thees arguments to the application:
+- `--ip` - IP address of your PC
+- `--appid` - ID of the app to launch, it has to be added into "Favorites list" (you could find it in /switch/Moonlight-Switch/settings.json)
 - `--appname` - The name of the app without any spacings
 
 example:
-`--host=a2:34:de:ad:12:3b --appid=1233211234 --appname=Steam`
+`--ip=192.168.1.101 --appid=1233211234 --appname=Steam`
 
 ## Localization
 - English (100%)
