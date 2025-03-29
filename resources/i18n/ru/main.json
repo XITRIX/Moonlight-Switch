@@ -100,6 +100,12 @@
             "home": "Домой",
             "screenshot": "Скриншот"
         },
+        "deadzone": {
+            "input_hint": "Значение мёртвой зоны в процентах",
+            "stick_left": "Левый стик",
+            "stick_right": "Правый стик",
+            "title": "Мёртвые зоны"
+        },
         "debug": "Отладка",
         "debugging_view": "Показать окно отладки",
         "decoder_threads": "Потоки декодера",

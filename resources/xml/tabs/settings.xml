@@ -80,6 +80,16 @@
                 id="swap_game"/>
 
             <brls:Header
+                    title="@i18n/settings/deadzone/title"
+                    paddingTop="60"/>
+
+            <brls:DetailCell
+                    id="dead_zone_stick_left"/>
+
+            <brls:DetailCell
+                    id="dead_zone_stick_right"/>
+
+            <brls:Header
                 id="rumble_slider_header"
                 title="@i18n/settings/rumble_force"
                 subtitle="100%"

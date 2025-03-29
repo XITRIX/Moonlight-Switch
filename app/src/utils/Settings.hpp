@@ -160,6 +160,12 @@ class Settings : public Singleton<Settings> {
     void set_mouse_speed_multiplier(int mouse_speed_multiplier) { m_mouse_speed_multiplier = mouse_speed_multiplier; }
     [[nodiscard]] int get_mouse_speed_multiplier() const { return m_mouse_speed_multiplier; }
 
+    void set_deadzone_stick_left(float deadzone) { m_deadzone_stick_left = deadzone; }
+    [[nodiscard]] float get_deadzone_stick_left() const { return m_deadzone_stick_left; }
+
+    void set_deadzone_stick_right(float deadzone) { m_deadzone_stick_right = deadzone; }
+    [[nodiscard]] float get_deadzone_stick_right() const { return m_deadzone_stick_right; }
+
     int get_current_mapping_layout();
     void set_current_mapping_layout(int layout) { m_current_mapping_layout = layout; }
 
@@ -217,6 +223,9 @@ class Settings : public Singleton<Settings> {
         .holdTime = 0,
         .buttons = {},
     };
+
+    float m_deadzone_stick_left = 0;
+    float m_deadzone_stick_right = 0;
 
     void loadBaseLayouts();
 };

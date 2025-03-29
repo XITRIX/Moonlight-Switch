@@ -12,6 +12,14 @@
 
 using namespace brls;
 
+float fsqrt_(float f) {
+    int i = *(int *)&f;
+    i = (i >> 1) + 0x1fbb67ae;
+    float f1 = *(float *)&i;
+    return 0.5F * (f1 + f / f1);
+
+}
+
 MoonlightInputManager::MoonlightInputManager() {
     auto inputManager = brls::Application::getPlatform()->getInputManager();
 
@@ -181,6 +189,31 @@ GamepadState MoonlightInputManager::getControllerState(int controllerNum,
     float lzAxis = controller.axes[LEFT_Z] > 0 ? controller.axes[LEFT_Z] : (controller.buttons[brls::BUTTON_LT] ? 1.f : 0.f);
     float rzAxis = controller.axes[RIGHT_Z] > 0 ? controller.axes[RIGHT_Z] : (controller.buttons[brls::BUTTON_RT] ? 1.f : 0.f);
 
+    // Truncate dead zones
+    float leftStickDeadzone = Settings::instance().get_deadzone_stick_left();
+    float rightStickDeadzone = Settings::instance().get_deadzone_stick_right();
+
+    float leftXAxis = controller.axes[brls::LEFT_X];
+    float leftYAxis = controller.axes[brls::LEFT_Y];
+    float rightXAxis = controller.axes[brls::RIGHT_X];
+    float rightYAxis = controller.axes[brls::RIGHT_Y];
+
+    if (leftStickDeadzone > 0) {
+        float magnitude = fsqrt_(std::powf(leftXAxis, 2) + std::powf(leftYAxis, 2));
+        if (magnitude < leftStickDeadzone) {
+            leftXAxis = 0;
+            leftYAxis = 0;
+        }
+    }
+
+    if (rightStickDeadzone > 0) {
+        float magnitude = fsqrt_(std::powf(rightXAxis, 2) + std::powf(rightYAxis, 2));
+        if (magnitude < rightStickDeadzone) {
+            rightXAxis = 0;
+            rightYAxis = 0;
+        }
+    }
+
     GamepadState gamepadState{
         .buttonFlags = 0,
         .leftTrigger = static_cast<unsigned char>(
@@ -188,13 +221,13 @@ GamepadState MoonlightInputManager::getControllerState(int controllerNum,
         .rightTrigger = static_cast<unsigned char>(
             0xFFFF * (!specialKey ? rzAxis : 0)),
         .leftStickX = static_cast<short>(
-            0x7FFF * (!specialKey ? controller.axes[brls::LEFT_X] : 0)),
+            0x7FFF * (!specialKey ? leftXAxis : 0)),
         .leftStickY = static_cast<short>(
-            -0x7FFF * (!specialKey ? controller.axes[brls::LEFT_Y] : 0)),
+            -0x7FFF * (!specialKey ? leftYAxis : 0)),
         .rightStickX = static_cast<short>(
-            0x7FFF * (!specialKey ? controller.axes[brls::RIGHT_X] : 0)),
+            0x7FFF * (!specialKey ? rightXAxis : 0)),
         .rightStickY = static_cast<short>(
-            -0x7FFF * (!specialKey ? controller.axes[brls::RIGHT_Y] : 0)),
+            -0x7FFF * (!specialKey ? rightYAxis : 0)),
     };
 
     brls::ControllerButton a = brls::BUTTON_A;

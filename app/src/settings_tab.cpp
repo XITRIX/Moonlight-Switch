@@ -297,6 +297,48 @@ SettingsTab::SettingsTab() {
         return true;
     });
 
+
+    deadzoneStickLeft->setText("settings/deadzone/stick_left"_i18n);
+    deadzoneStickRight->setText("settings/deadzone/stick_right"_i18n);
+
+    updateDeadZoneItems();
+
+    deadzoneStickLeft->registerClickAction([this](View* view) {
+        int currentValue = int(Settings::instance().get_deadzone_stick_left() * 100);
+        bool res = Application::getImeManager()->openForNumber([&](long number) {
+                                                        Settings::instance().set_deadzone_stick_left(float(number) / 100.f);
+                                                        this->updateDeadZoneItems();
+                                                    },
+                                                    "settings/deadzone/stick_left"_i18n, "settings/deadzone/input_hint"_i18n, 2,
+                                                    currentValue > 0 ? std::to_string(currentValue) : "", "",
+                                                    "", 0);
+
+        if (!res) {
+            Settings::instance().set_deadzone_stick_left(0);
+            this->updateDeadZoneItems();
+        }
+
+        return true;
+    });
+
+    deadzoneStickRight->registerClickAction([this](View* view) {
+        int currentValue = int(Settings::instance().get_deadzone_stick_right() * 100);
+        bool res = Application::getImeManager()->openForNumber([&](long number) {
+                                                        Settings::instance().set_deadzone_stick_right(float(number) / 100.f);
+                                                        this->updateDeadZoneItems();
+                                                    },
+                                                    "settings/deadzone/stick_right"_i18n, "settings/deadzone/input_hint"_i18n, 2,
+                                                    currentValue > 0 ? std::to_string(currentValue) : "", "",
+                                                    "", 0);
+
+        if (!res) {
+            Settings::instance().set_deadzone_stick_right(0);
+            this->updateDeadZoneItems();
+        }
+
+        return true;
+    });
+
     float rumbleForceProgress = Settings::instance().get_rumble_force();
     rumbleForceSlider->getProgressEvent()->subscribe([this](float value) {
         std::stringstream stream;
@@ -508,6 +550,24 @@ SettingsTab::SettingsTab() {
                        Settings::instance().set_write_log(value);
                        brls::Application::enableDebuggingView(value);
                    });
+}
+
+void SettingsTab::updateDeadZoneItems() {
+    if (Settings::instance().get_deadzone_stick_left() > 0) {
+        deadzoneStickLeft->setDetailTextColor(Application::getTheme()["brls/list/listItem_value_color"]);
+        deadzoneStickLeft->setDetailText(fmt::format("{}%", int(Settings::instance().get_deadzone_stick_left() * 100.f)));
+    } else {
+        deadzoneStickLeft->setDetailTextColor(Application::getTheme()["brls/text_disabled"]);
+        deadzoneStickLeft->setDetailText("hints/off"_i18n);
+    }
+
+    if (Settings::instance().get_deadzone_stick_right() > 0) {
+        deadzoneStickRight->setDetailTextColor(Application::getTheme()["brls/list/listItem_value_color"]);
+        deadzoneStickRight->setDetailText(fmt::format("{}%", int(Settings::instance().get_deadzone_stick_right() * 100)));
+    } else {
+        deadzoneStickRight->setDetailTextColor(Application::getTheme()["brls/text_disabled"]);
+        deadzoneStickRight->setDetailText("hints/off"_i18n);
+    }
 }
 
 void SettingsTab::setupButtonsSelectorCell(

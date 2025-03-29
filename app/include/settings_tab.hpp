@@ -27,6 +27,8 @@ class SettingsTab : public brls::Box {
     BRLS_BIND(brls::BooleanCell, pcAudio, "pcAudio");
     BRLS_BIND(brls::BooleanCell, swapUi, "swap_ui");
     BRLS_BIND(brls::DetailCell, swapGame, "swap_game");
+    BRLS_BIND(brls::DetailCell, deadzoneStickLeft, "dead_zone_stick_left");
+    BRLS_BIND(brls::DetailCell, deadzoneStickRight, "dead_zone_stick_right");
     BRLS_BIND(brls::Header, rumbleForceHeader, "rumble_slider_header");
     BRLS_BIND(brls::Slider, rumbleForceSlider, "rumble_slider");
     BRLS_BIND(brls::BooleanCell, swapStickToDpad, "swap_stick_to_dpad");
@@ -54,4 +56,5 @@ class SettingsTab : public brls::Box {
                                   std::vector<brls::ControllerButton> buttons);
     std::string getTextFromButtons(std::vector<brls::ControllerButton> buttons);
     NVGcolor getColorFromButtons(std::vector<brls::ControllerButton> buttons);
+    void updateDeadZoneItems();
 };
