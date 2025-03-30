@@ -77,7 +77,27 @@ void MoonlightSession::connection_started() {
 }
 
 void MoonlightSession::connection_terminated(int error_code) {
-    brls::Logger::info("MoonlightSession: Connection terminated...");
+    brls::Logger::info("MoonlightSession: Connection terminated with code: {}", error_code);
+
+    if (error_code != 0) {
+        if (!m_active_session) return;
+        brls::Logger::info("MoonlightSession: Reconnection attempt");
+
+        m_active_session->stop(false);
+
+        m_active_session->start([](const GSResult<bool>& result) {
+            if (result.isSuccess()) {
+                brls::Logger::info("MoonlightSession: Reconnected");
+            } else {
+                brls::Logger::info("MoonlightSession: Reconnection failed");
+                if (m_active_session) {
+                    m_active_session->m_is_active = false;
+                    m_active_session->m_is_terminated = true;
+                }
+            }
+        });
+        return;
+    }
 
     if (m_active_session) {
         m_active_session->m_is_active = false;
