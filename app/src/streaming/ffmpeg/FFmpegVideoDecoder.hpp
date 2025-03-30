@@ -1,7 +1,6 @@
-#include "IFFmpegVideoDecoder.hpp"
 #pragma once
-
-#define m_frames_count 2
+#include "IFFmpegVideoDecoder.hpp"
+#include "AVFrameHolder.hpp"
 
 class FFmpegVideoDecoder : public IFFmpegVideoDecoder {
   public:

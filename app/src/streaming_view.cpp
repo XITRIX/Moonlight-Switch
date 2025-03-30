@@ -10,6 +10,7 @@
 #endif
 
 #include "streaming_view.hpp"
+#include "AVFrameHolder.hpp"
 #include "InputManager.hpp"
 #include "click_gesture_recognizer.hpp"
 #include "helper.hpp"
@@ -331,13 +332,19 @@ void StreamingView::draw(NVGcontext* vg, float x, float y, float width,
         statistics += fmt::format("Frames dropped by your network connection: {}\n"
                                   "Average receive time: {:.{}f} | {:.{}f} ms\n"
                                   "Average decoding time: {:.{}f} | {:.{}f} ms\n"
-                                  "Average rendering time: {:.{}f} ms\n",
+                                  "Average rendering time: {:.{}f} ms\n"
+                                  "Frame holder push/get rate: {}\n"
+                                  "Fake frames produced: {}\n"
+                                  "Frames queue: {}",
                                   stats->video_decode_stats.network_dropped_frames,
                                   stats->video_decode_stats.current_receive_time, 2,
                                   stats->video_decode_stats.session_receive_time, 2,
                                   stats->video_decode_stats.current_decoding_time, 2,
                                   stats->video_decode_stats.session_decoding_time, 2,
-                                  stats->video_render_stats.rendering_time, 2);
+                                  stats->video_render_stats.rendering_time, 2,
+                                  AVFrameHolder::instance().getStat(),
+                                  AVFrameHolder::instance().getFakeFrameStat(),
+                                  AVFrameHolder::instance().getFrameQueueSize());
 
         nvgFontFaceId(vg, Application::getFont(FONT_REGULAR));
         nvgFontSize(vg, 20);
