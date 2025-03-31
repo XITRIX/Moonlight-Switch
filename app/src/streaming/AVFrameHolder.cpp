@@ -7,7 +7,7 @@
 
 #include "AVFrameHolder.hpp"
 
-AVFrameQueue::AVFrameQueue(size_t limit): limit(limit) {}
+AVFrameQueue::AVFrameQueue() {}
 
 AVFrameQueue::~AVFrameQueue() {
     for (; !queue.empty(); queue.pop()) {
@@ -25,8 +25,10 @@ void AVFrameQueue::push(AVFrame* item) {
     std::lock_guard<std::mutex> lock(m_mutex);
     queue.push(item);
 
-    if (queue.size() > limit)
+    if (queue.size() > limit) {
         queue.pop();
+        framesDroppedStat ++;
+    }
 }
 
 AVFrame* AVFrameQueue::pop() {
@@ -51,9 +53,14 @@ size_t AVFrameQueue::getFakeFrameUsage() const {
     return fakeFrameUsedStat;
 }
 
+size_t AVFrameQueue::getFramesDropStat() const {
+    return framesDroppedStat;
+}
+
 void AVFrameQueue::cleanup() {
     std::lock_guard<std::mutex> lock(m_mutex);
     fakeFrameUsedStat = 0;
+    framesDroppedStat = 0;
     bufferFrame = nullptr;
     queue = {};
 }

@@ -146,30 +146,37 @@ int FFmpegVideoDecoder::setup(int video_format, int width, int height,
         return err;
     }
 
+    AVFrameHolder::instance().prepare();
+
+    // One extra frame for decoding processing
+    m_frames_size = Settings::instance().frames_queue_size() + 1;
+    m_frames = new AVFrame*[m_frames_size];
+
     tmp_frame = av_frame_alloc();
-    for (auto & m_frame : m_frames) {
-        m_frame = av_frame_alloc();
-        if (m_frame == nullptr) {
+    for (int i = 0; i < m_frames_size; i++) {
+        auto& frame = m_frames[i];
+        frame = av_frame_alloc();
+        if (frame == nullptr) {
             brls::Logger::error("FFmpeg: Couldn't allocate frame");
             return -1;
         }
 
 #if defined(PLATFORM_SWITCH) && defined(BOREALIS_USE_DEKO3D)
-        m_frames[i]->format = AV_PIX_FMT_NVTEGRA;
+        frame->format = AV_PIX_FMT_NVTEGRA;
 #elif defined(PLATFORM_ANDROID)
-        m_frames[i]->format = AV_PIX_FMT_MEDIACODEC;
+        frame->format = AV_PIX_FMT_MEDIACODEC;
 #else
         if (video_format & VIDEO_FORMAT_MASK_10BIT)
-            m_frame->format = AV_PIX_FMT_P010;
+            frame->format = AV_PIX_FMT_P010;
         else
-            m_frame->format = AV_PIX_FMT_NV12;
+            frame->format = AV_PIX_FMT_NV12;
 #endif
-        m_frame->width  = width;
-        m_frame->height = height;
+        frame->width  = width;
+        frame->height = height;
 
 // Need to align Switch frame to 256, need to de reviewed
 #if defined(PLATFORM_SWITCH) && !defined(BOREALIS_USE_DEKO3D)
-        int err = av_frame_get_buffer(m_frame, 256);
+        int err = av_frame_get_buffer(frame, 256);
         if (err < 0) {
             char errs[64]; 
             brls::Logger::error("FFmpeg: Couldn't allocate frame buffer: {}", av_make_error_string(errs, 64, err));
@@ -177,10 +184,10 @@ int FFmpegVideoDecoder::setup(int video_format, int width, int height,
         }
 
         for (int j = 0; j < 2; j++) {
-            uintptr_t ptr = (uintptr_t)m_frame->data[j];
+            uintptr_t ptr = (uintptr_t)frame->data[j];
             uintptr_t dst = (((ptr)+(256)-1)&~((256)-1));
             uintptr_t gap = dst - ptr;
-            m_frame->data[j] += gap;
+            frame->data[j] += gap;
         }
 #endif
     }
@@ -235,7 +242,7 @@ void FFmpegVideoDecoder::cleanup() {
     }
 
 //    if (m_frames) {
-       for (int i = 0; i < m_frames_count; i++) {
+       for (int i = 0; i < m_frames_size; i++) {
         //    if (m_extra_frames[i])
                av_frame_free(&m_frames[i]);
        }
@@ -254,6 +261,7 @@ void FFmpegVideoDecoder::cleanup() {
     }
 
     AVFrameHolder::instance().cleanup();
+    delete[] m_frames;
 
     brls::Logger::info("FFmpeg: Cleanup done!");
 }
@@ -445,7 +453,7 @@ AVFrame* FFmpegVideoDecoder::get_frame(bool native_frame) {
 
     if (err == 0) {
         m_current_frame = m_next_frame;
-        m_next_frame = (m_current_frame + 1) % m_frames_count;
+        m_next_frame = (m_current_frame + 1) % m_frames_size;
         if (/*ffmpeg_decoder == SOFTWARE ||*/ native_frame)
             return resultFrame;
     } else {

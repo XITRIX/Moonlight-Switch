@@ -97,6 +97,9 @@ class Settings : public Singleton<Settings> {
     void set_decoder_threads(int decoder_threads) { m_decoder_threads = decoder_threads; }
     [[nodiscard]] int decoder_threads() const { return m_decoder_threads; }
 
+    void set_frames_queue_size(int frames_queue_size) { m_frames_queue_size = frames_queue_size; }
+    [[nodiscard]] int frames_queue_size() const { return m_frames_queue_size; }
+
     void set_sops(bool sops) { m_sops = sops; }
     [[nodiscard]] bool sops() const { return m_sops; }
 
@@ -190,6 +193,7 @@ class Settings : public Singleton<Settings> {
     bool m_enable_hdr = false;
     bool m_click_by_tap = false;
     int m_decoder_threads = 4;
+    int m_frames_queue_size = 3;
     bool m_sops = true;
     bool m_play_audio = false;
     bool m_write_log = false;

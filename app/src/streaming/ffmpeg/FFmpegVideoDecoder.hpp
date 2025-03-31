@@ -23,8 +23,8 @@ class FFmpegVideoDecoder : public IFFmpegVideoDecoder {
     const AVCodec* m_decoder = nullptr;
     AVCodecContext* m_decoder_context = nullptr;
     AVFrame *tmp_frame = nullptr;
-    // AVFrame* m_extra_frames[m_frames_count];
-    AVFrame* m_frames[m_frames_count];
+    AVFrame** m_frames;
+    int m_frames_size;
 
     int m_stream_fps = 0;
     int m_frames_in = 0;

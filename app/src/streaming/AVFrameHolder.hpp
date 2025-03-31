@@ -4,16 +4,15 @@
 #include <mutex>
 #include <functional>
 #include <queue>
+#include "Settings.hpp"
 
 extern "C" {
 #include <libavcodec/avcodec.h>
 }
 
-#define m_frames_count 4
-
 class AVFrameQueue {
 public:
-    explicit AVFrameQueue(size_t limit = m_frames_count - 1);
+    explicit AVFrameQueue();
     ~AVFrameQueue();
 
     void push(AVFrame* item);
@@ -21,16 +20,19 @@ public:
 
     [[nodiscard]] size_t size() const;
     [[nodiscard]] size_t getFakeFrameUsage() const;
+    [[nodiscard]] size_t getFramesDropStat() const;
 
     void cleanup();
 
 private:
+    friend class AVFrameHolder;
     size_t limit;
     std::queue<AVFrame*> queue;
     std::queue<AVFrame*> freeQueue;
     AVFrame* bufferFrame = nullptr;
     std::mutex m_mutex;
     size_t fakeFrameUsedStat = 0;
+    size_t framesDroppedStat = 0;
 };
 
 class AVFrameHolder : public Singleton<AVFrameHolder> {
@@ -49,6 +51,10 @@ class AVFrameHolder : public Singleton<AVFrameHolder> {
         }
     }
 
+    void prepare() {
+        m_frame_queue.limit = Settings::instance().frames_queue_size();
+    }
+
     void cleanup() {
         m_frame_queue.cleanup();
         stat = 0;
@@ -56,6 +62,7 @@ class AVFrameHolder : public Singleton<AVFrameHolder> {
 
     [[nodiscard]] int getStat() const { return stat; }
     [[nodiscard]] size_t getFakeFrameStat() const { return m_frame_queue.getFakeFrameUsage(); }
+    [[nodiscard]] size_t getFrameDropStat() const { return m_frame_queue.getFramesDropStat(); }
     [[nodiscard]] size_t getFrameQueueSize() const { return m_frame_queue.size(); }
 
   private:
