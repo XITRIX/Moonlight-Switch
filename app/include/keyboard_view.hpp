@@ -32,7 +32,6 @@ struct KeyboardLocale {
 struct KeyboardState {
     bool keys[_VK_KEY_MAX];
     KeyboardState() = default;
-    explicit KeyboardState(const bool keys[_VK_KEY_MAX]): keys(keys) {}
 };
 
 class KeyboardView;
