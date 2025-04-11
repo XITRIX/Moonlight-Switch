@@ -307,3 +307,126 @@ GSResult<bool> WakeOnLanManager::secure_wake(const Host& host,
 
     return wake_up_host_secure(host, relay_address, relay_port, rsa_manager);
 }
+
+// === Ajout des fonctions manquantes ===
+
+static Data mac_string_to_bytes(std::string mac) {
+    std::string str = mac;
+    std::string pattern = ":";
+
+    std::string::size_type i = str.find(pattern);
+    while (i != std::string::npos) {
+        str.erase(i, pattern.length());
+        i = str.find(pattern, i);
+    }
+    return Data((unsigned char*)str.c_str(), str.length()).hex_to_bytes();
+}
+
+static Data create_payload(const Host& host) {
+    Data payload;
+
+    // 6 bytes de 0xFF
+    uint8_t header = 0xFF;
+    for (int i = 0; i < 6; i++) {
+        payload = payload.append(Data(&header, 1));
+    }
+
+    // 16 répétitions de l'adresse MAC
+    Data mac_address = mac_string_to_bytes(host.mac);
+    for (int i = 0; i < 16; i++) {
+        payload = payload.append(mac_address);
+    }
+
+    return payload;
+}
+
+#if defined(UNIX_SOCKS)
+GSResult<bool> send_packet_unix(const Host& host, const Data& payload) {
+    struct sockaddr_in udpClient{}, udpServer{};
+    int broadcast = 1;
+
+    int udpSocket = socket(AF_INET, SOCK_DGRAM, 0);
+    if (udpSocket == -1) {
+        return GSResult<bool>::failure("Failed to create UDP socket");
+    }
+
+    setsockopt(udpSocket, SOL_SOCKET, SO_BROADCAST, &broadcast, sizeof broadcast);
+
+    udpClient.sin_family = AF_INET;
+    udpClient.sin_addr.s_addr = INADDR_ANY;
+    udpClient.sin_port = 0;
+
+    bind(udpSocket, (struct sockaddr*)&udpClient, sizeof(udpClient));
+
+#if defined(__SWITCH__)
+    uint32_t ip, subnet_mask;
+    nifmGetCurrentIpConfigInfo(&ip, &subnet_mask, nullptr, nullptr, nullptr);
+    udpServer.sin_family = AF_INET;
+    udpServer.sin_addr.s_addr = ip | ~subnet_mask;
+#else
+    udpServer.sin_family = AF_INET;
+    udpServer.sin_addr.s_addr = htonl(INADDR_BROADCAST);
+#endif
+    udpServer.sin_port = htons(9);
+
+    sendto(udpSocket, payload.bytes(), 102, 0,
+           (struct sockaddr*)&udpServer, sizeof(udpServer));
+
+    udpServer.sin_addr.s_addr = inet_addr(host.address.c_str());
+    sendto(udpSocket, payload.bytes(), 102, 0,
+           (struct sockaddr*)&udpServer, sizeof(udpServer));
+
+    close(udpSocket);
+    return GSResult<bool>::success(true);
+}
+#elif defined(_WIN32)
+GSResult<bool> send_packet_win32(const Host& host, const Data& payload) {
+    WSADATA data;
+    WSAStartup(MAKEWORD(2, 2), &data);
+
+    SOCKET udpSocket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    int broadcast = 1;
+    setsockopt(udpSocket, SOL_SOCKET, SO_BROADCAST, (char*)&broadcast, sizeof(broadcast));
+
+    struct sockaddr_in udpClient{}, udpServer{};
+    udpClient.sin_family = AF_INET;
+    udpClient.sin_addr.s_addr = INADDR_ANY;
+    udpClient.sin_port = 0;
+    bind(udpSocket, (struct sockaddr*)&udpClient, sizeof(udpClient));
+
+    udpServer.sin_family = AF_INET;
+    udpServer.sin_addr.s_addr = htonl(INADDR_BROADCAST);
+    udpServer.sin_port = htons(9);
+    sendto(udpSocket, (const char*)payload.bytes(), 102, 0,
+           (struct sockaddr*)&udpServer, sizeof(udpServer));
+
+    udpServer.sin_addr.s_addr = inet_addr(host.address.c_str());
+    sendto(udpSocket, (const char*)payload.bytes(), 102, 0,
+           (struct sockaddr*)&udpServer, sizeof(udpServer));
+
+    closesocket(udpSocket);
+    WSACleanup();
+    return GSResult<bool>::success(true);
+}
+#endif
+
+bool WakeOnLanManager::can_wake_up_host(const Host& host) {
+#if defined(UNIX_SOCKS) || defined(WIN32_SOCKS)
+    return true;
+#else
+    return false;
+#endif
+}
+
+GSResult<bool> WakeOnLanManager::wake_up_host(const Host& host) {
+    Data payload = create_payload(host);
+
+#if defined(UNIX_SOCKS)
+    return send_packet_unix(host, payload);
+#elif defined(_WIN32)
+    return send_packet_win32(host, payload);
+#else
+    return GSResult<bool>::failure("Wake up host not supported on this platform");
+#endif
+}
+
