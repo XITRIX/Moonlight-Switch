@@ -7,7 +7,7 @@ struct Host;
 class RsaManager;
 
 class WakeOnLanManager : public Singleton<WakeOnLanManager> {
-  private:
+public:
     static bool can_wake_up_host(const Host& host);
     static GSResult<bool> wake_up_host(const Host& host);
 
@@ -22,6 +22,5 @@ class WakeOnLanManager : public Singleton<WakeOnLanManager> {
     static GSResult<bool> secure_wake(const Host& host,
                                       const std::string& relay_address,
                                       int relay_port);
-
-    friend class GameStreamClient;
 };
+
