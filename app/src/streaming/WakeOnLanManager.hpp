@@ -7,20 +7,20 @@ struct Host;
 class RsaManager;
 
 class WakeOnLanManager : public Singleton<WakeOnLanManager> {
-public:
+  private:
     static bool can_wake_up_host(const Host& host);
     static GSResult<bool> wake_up_host(const Host& host);
+    
+    static GSResult<bool> wake_up_host_secure(const Host& host, 
+                                             RsaManager& rsa_manager, 
+                                             int port = 9);
 
-    static GSResult<bool> wake_up_host_secure(const Host& host,
-                                              const std::string& relay_address,
-                                              int relay_port,
-                                              RsaManager& rsa_manager);
+  public:
+    static GSResult<bool> setup_secure_wol(const std::string& key_path);
+    
+    static GSResult<bool> secure_wake(const Host& host, 
+                                     const std::string& private_key_path,
+                                     int port = 9);
 
-    static GSResult<bool> setup_secure_wol(const std::string& relay_address,
-                                           int relay_port);
-
-    static GSResult<bool> secure_wake(const Host& host,
-                                      const std::string& relay_address,
-                                      int relay_port);
+    friend class GameStreamClient;
 };
-
