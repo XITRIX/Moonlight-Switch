@@ -361,7 +361,7 @@ void GameStreamClient::setup_secure_wol(const std::function<void(GSResult<bool>)
         auto result = WakeOnLanManager::setup_secure_wol("/switch/moonlight/keys");
 
         brls::Application::getPlatform()->runOnMainThread([callback, result]() {
-            if (result.is_success()) {
+            if (result.isSuccess()) {
                 brls::Logger::info("GameStreamClient: Secure WOL keys generated successfully");
             } else {
                 brls::Logger::error("GameStreamClient: Failed to generate secure WOL keys: {}", result.error());
@@ -384,7 +384,7 @@ void GameStreamClient::wake_up_host_secure(const Host& host, const std::function
         auto result = WakeOnLanManager::secure_wake(host, "/switch/moonlight/keys/wol_private.pem", 9);
 
         brls::Application::getPlatform()->runOnMainThread([callback, result]() {
-            if (result.is_success()) {
+            if (result.isSuccess()) {
                 brls::Logger::info("GameStreamClient: Secure WOL packet sent successfully");
             } else {
                 brls::Logger::error("GameStreamClient: Failed to send secure WOL packet: {}", result.error());
