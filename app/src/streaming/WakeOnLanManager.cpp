@@ -253,9 +253,8 @@ public:
     }
 };
 
-GSResult<bool> WakeOnLanManager::setup_secure_wol(const std::string& relay_address, 
-                                                  int relay_port,
-                                                  const std::string& /*key_path*/) {
+GSResult<bool> WakeOnLanManager::setup_secure_wol(const std::string& relay_address,
+                                                  int relay_port) {
     const std::string key_folder = "keys";
     const std::string private_key_path = key_folder + "/wol_private.pem";
     const std::string public_key_path = key_folder + "/wol_public.pem";
@@ -295,11 +294,9 @@ GSResult<bool> WakeOnLanManager::setup_secure_wol(const std::string& relay_addre
 
     return GSResult<bool>::success(true);
 }
-
-GSResult<bool> WakeOnLanManager::secure_wake(const Host& host, 
+GSResult<bool> WakeOnLanManager::secure_wake(const Host& host,
                                              const std::string& relay_address,
-                                             int relay_port,
-                                             const std::string& /*private_key_path*/) {
+                                             int relay_port) {
     RsaManager rsa_manager;
     const std::string private_key_path = "keys/wol_private.pem";
 
