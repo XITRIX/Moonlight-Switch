@@ -215,7 +215,7 @@ public:
     // Envoie la clé publique au serveur relais
     GSResult<bool> register_key_with_relay(const std::string& relay_address, int port) {
         auto public_key_result = export_public_key();
-        if (!public_key_result.is_success()) {
+        if (!public_key_result.isSuccess()) {
             return GSResult<bool>::failure(public_key_result.error());
         }
 
@@ -478,7 +478,7 @@ GSResult<bool> WakeOnLanManager::wake_up_host_secure(const Host& host,
     
     // Signer le paquet complet
     auto signature_result = rsa_manager.sign_data(payload);
-    if (!signature_result.is_success()) {
+    if (!signature_result.isSuccess()) {
         return GSResult<bool>::failure(signature_result.error());
     }
     
@@ -543,7 +543,7 @@ GSResult<bool> WakeOnLanManager::setup_secure_wol(const std::string& relay_addre
     
     // Générer les clés RSA
     auto gen_result = rsa_manager.generate_keys();
-    if (!gen_result.is_success()) {
+    if (!gen_result.isSuccess()) {
         return GSResult<bool>::failure("Failed to generate RSA keys: " + gen_result.error());
     }
     
@@ -552,13 +552,13 @@ GSResult<bool> WakeOnLanManager::setup_secure_wol(const std::string& relay_addre
     std::string public_key_path = key_path + "/wol_public.pem";
     
     auto save_result = rsa_manager.save_keys(private_key_path, public_key_path);
-    if (!save_result.is_success()) {
+    if (!save_result.isSuccess()) {
         return GSResult<bool>::failure("Failed to save keys: " + save_result.error());
     }
     
     // Enregistrer la clé publique auprès du serveur relais
     auto reg_result = rsa_manager.register_key_with_relay(relay_address, relay_port + 1);
-    if (!reg_result.is_success()) {
+    if (!reg_result.isSuccess()) {
         return GSResult<bool>::failure("Failed to register key with relay: " + reg_result.error());
     }
     
@@ -574,7 +574,7 @@ GSResult<bool> WakeOnLanManager::secure_wake(const Host& host,
     
     // Charger la clé privée
     auto load_result = rsa_manager.load_keys(private_key_path);
-    if (!load_result.is_success()) {
+    if (!load_result.isSuccess()) {
         return GSResult<bool>::failure("Failed to load private key: " + load_result.error());
     }
     
