@@ -36,6 +36,9 @@ extern "C" {
 }
 #endif
 
+#include <filesystem>
+namespace fs = std::filesystem;
+
 using namespace brls;
 
 GameStreamClient::GameStreamClient() { start(); }
