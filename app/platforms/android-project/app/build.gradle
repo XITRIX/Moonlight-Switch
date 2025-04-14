@@ -25,6 +25,12 @@ android {
             }
         }
     }
+    packaging {
+        jniLibs {
+            keepDebugSymbols.add("**/*.so")
+            pickFirsts.add("**/*.so")
+        }
+    }
     buildTypes {
         release {
             minifyEnabled false
