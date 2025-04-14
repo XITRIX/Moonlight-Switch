@@ -69,6 +69,8 @@
         android:theme="@android:style/Theme.NoTitleBar.Fullscreen"
         android:hardwareAccelerated="true" >
 
+        <profileable android:shell="true" />
+
         <!-- Example of setting SDL hints from AndroidManifest.xml:
         <meta-data android:name="SDL_ENV.SDL_ACCELEROMETER_AS_JOYSTICK" android:value="0"/>
          -->
@@ -99,5 +101,13 @@
             -->
         </activity>
     </application>
+
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <category android:name="android.intent.category.BROWSABLE" />
+            <data android:scheme="https" />
+        </intent>
+    </queries>
 
 </manifest>
