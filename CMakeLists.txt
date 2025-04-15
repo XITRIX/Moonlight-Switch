@@ -63,7 +63,7 @@ else ()
     set(USE_MBEDTLS_CRYPTO ON)
 endif ()
 
-if (PLATFORM_ANDROID OR PLATFORM_PSV)
+if (PLATFORM_PSV)
     set(MULTICAST_DISABLED ON)
 endif ()
 
