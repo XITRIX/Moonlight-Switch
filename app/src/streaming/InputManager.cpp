@@ -217,9 +217,9 @@ GamepadState MoonlightInputManager::getControllerState(int controllerNum,
     GamepadState gamepadState{
         .buttonFlags = 0,
         .leftTrigger = static_cast<unsigned char>(
-            0xFFFF * (!specialKey ? lzAxis : 0)),
+            0xFF * (!specialKey ? lzAxis : 0)),
         .rightTrigger = static_cast<unsigned char>(
-            0xFFFF * (!specialKey ? rzAxis : 0)),
+            0xFF * (!specialKey ? rzAxis : 0)),
         .leftStickX = static_cast<short>(
             0x7FFF * (!specialKey ? leftXAxis : 0)),
         .leftStickY = static_cast<short>(
