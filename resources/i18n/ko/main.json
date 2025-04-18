@@ -100,6 +100,12 @@
             "home": "홈",
             "screenshot": "스크린샷"
         },
+        "deadzone": {
+            "input_hint": "데드존 값 (백분율)",
+            "stick_left": "왼쪽 스틱",
+            "stick_right": "오른쪽 스틱",
+            "title": "데드존"
+        },
         "debug": "디버그",
         "debugging_view": "디버깅 보기 표시",
         "decoder_threads": "디코더 스레드",
