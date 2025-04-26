@@ -42,6 +42,7 @@ typedef struct _SERVER_DATA {
     SERVER_INFORMATION serverInfo;
     unsigned short httpPort;
     unsigned short httpsPort;
+    bool isSunshine();
 } SERVER_DATA, *PSERVER_DATA;
 
 void gs_set_error(std::string error);

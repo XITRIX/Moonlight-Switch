@@ -78,20 +78,20 @@ StreamingView::StreamingView(const Host& host, const AppInfo& app) : host(host),
     keyboardHolder->setAlignItems(AlignItems::STRETCH);
     addView(keyboardHolder);
 
-    session = new MoonlightSession(host.address, app.app_id);
-
 #ifdef PLATFORM_TVOS
         updatePreferredDisplayMode(true);
 #endif
 
     ASYNC_RETAIN
     GameStreamClient::instance().connect(
-        host.address, [ASYNC_TOKEN](GSResult<SERVER_DATA> result) {
+        host.address, [ASYNC_TOKEN, host, app](GSResult<SERVER_DATA> result) {
             ASYNC_RELEASE
             if (!result.isSuccess()) {
                 showError(result.error(), [this]() { terminate(false); });
                 return;
             }
+
+            session = new MoonlightSession(host.address, app.app_id, result.value().isSunshine());
 
             ASYNC_RETAIN
             session->start([ASYNC_TOKEN](GSResult<bool> result) {
@@ -281,6 +281,8 @@ void StreamingView::onFocusLost() {
 
 void StreamingView::draw(NVGcontext* vg, float x, float y, float width,
                          float height, Style style, FrameContext* ctx) {
+    if (!session) return;
+    
     if (session->is_terminated()) {
         terminate(false);
         return;
@@ -553,6 +555,9 @@ StreamingView::~StreamingView() {
         ->getInputManager()
         ->getKeyboardKeyStateChanged()
         ->unsubscribe(keysSubscription);
-    session->stop(false);
-    delete session;
+    
+    if (session) {
+        session->stop(false);
+        delete session;
+    }
 }

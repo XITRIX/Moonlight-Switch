@@ -38,6 +38,31 @@
 
 static std::string unique_id = "0123456789ABCDEF";
 
+int extractVersionQuadFromString(const char* string, int* quad) {
+    const char* nextNumber = string;
+    for (int i = 0; i < 4; i++) {
+        // Parse the next component
+        quad[i] = (int)strtol(nextNumber, (char**)&nextNumber, 10);
+
+        // Skip the dot if we still have version components left.
+        //
+        // We continue looping even when we're at the end of the
+        // input string to ensure all subsequent version components
+        // are zeroed.
+        if (*nextNumber != 0) {
+            nextNumber++;
+        }
+    }
+
+    return 0;
+}
+
+bool _SERVER_DATA::isSunshine() {
+    int AppVersionQuad[4];
+    extractVersionQuadFromString(serverInfoAppVersion.c_str(), AppVersionQuad);
+    return AppVersionQuad[3] < 0;
+}
+
 static int load_serverinfo(PSERVER_DATA server, bool https) {
     int ret = GS_INVALID;
     char url[4096];
@@ -156,12 +181,12 @@ static int load_server_status(PSERVER_DATA server) {
     if (ret == GS_OK) {
         if (server->serverMajorVersion > MAX_SUPPORTED_GFE_VERSION) {
             gs_set_error(
-                "Ensure you're running the latest version of Moonlight "
-                "Embedded or downgrade GeForce Experience and try again");
+                "Ensure you're running the latest version of "
+                "Moonlight-Switch or downgrade GeForce Experience and try again");
             ret = GS_UNSUPPORTED_VERSION;
         } else if (server->serverMajorVersion < MIN_SUPPORTED_GFE_VERSION) {
             gs_set_error(
-                "Moonlight Embedded requires a newer version of GeForce "
+                "Moonlight-Switch requires a newer version of GeForce "
                 "Experience. Please upgrade GFE on your PC and try again.");
             ret = GS_UNSUPPORTED_VERSION;
         }

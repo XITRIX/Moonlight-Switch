@@ -17,10 +17,10 @@ void MoonlightSession::set_provider(
     m_provider = provider;
 }
 
-MoonlightSession::MoonlightSession(const std::string& address, int app_id) {
+MoonlightSession::MoonlightSession(const std::string& address, int app_id, bool is_sunshine) {
     m_address = address;
     m_app_id = app_id;
-
+    m_is_sunshine = is_sunshine;
     m_active_session = this;
 
     m_video_decoder = m_provider->video_decoder();
@@ -246,7 +246,7 @@ void MoonlightSession::start(ServerCallback<bool> callback) {
     m_config.packetSize = 1392;
     m_config.streamingRemotely = STREAM_CFG_AUTO;
     m_config.bitrate = Settings::instance().bitrate();
-    m_config.encryptionFlags = ENCFLG_ALL;
+    m_config.encryptionFlags = m_is_sunshine ? ENCFLG_ALL : ENCFLG_VIDEO;
 
     switch (Settings::instance().video_codec()) {
     case H264:

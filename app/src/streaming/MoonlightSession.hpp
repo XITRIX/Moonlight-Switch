@@ -14,7 +14,7 @@ class MoonlightSession {
     static void
     set_provider(MoonlightSessionDecoderAndRenderProvider* provider);
 
-    MoonlightSession(const std::string& address, int app_id);
+    MoonlightSession(const std::string& address, int app_id, bool is_sunshine);
     ~MoonlightSession();
 
     void start(ServerCallback<bool> callback);
@@ -66,6 +66,7 @@ class MoonlightSession {
 
     std::string m_address;
     int m_app_id;
+    bool m_is_sunshine;
     STREAM_CONFIGURATION m_config;
     CONNECTION_LISTENER_CALLBACKS m_connection_callbacks;
     DECODER_RENDERER_CALLBACKS m_video_callbacks;
