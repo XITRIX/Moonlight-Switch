@@ -26,12 +26,12 @@ extern "C" {
 #include <libavcodec/jni.h>
 #include <libavutil/hwcontext_mediacodec.h>
 
-static JavaVM *mJavaVM = NULL;
-JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved)
-{
-//    av_jni_set_java_vm(vm, NULL);
-    return JNI_VERSION_1_4;
-}
+//static JavaVM *mJavaVM = NULL;
+//JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved)
+//{
+////    av_jni_set_java_vm(vm, NULL);
+//    return JNI_VERSION_1_4;
+//}
 #endif
 
 FFmpegVideoDecoder::FFmpegVideoDecoder() {
@@ -119,8 +119,9 @@ int FFmpegVideoDecoder::setup(int video_format, int width, int height,
 
     int decoder_threads = Settings::instance().decoder_threads();
 
-    if (decoder_threads == 0) {
+    if (decoder_threads == 0 || Settings::instance().use_hw_decoding()) {
         m_decoder_context->thread_type = FF_THREAD_FRAME;
+        m_decoder_context->thread_count = 1;
     } else {
         m_decoder_context->thread_type = FF_THREAD_SLICE;
         m_decoder_context->thread_count = decoder_threads;

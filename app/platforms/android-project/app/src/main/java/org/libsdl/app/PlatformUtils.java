@@ -5,6 +5,7 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.media.AudioAttributes;
 import android.net.ConnectivityManager;
 import android.net.Network;
 import android.net.NetworkCapabilities;
@@ -13,12 +14,20 @@ import android.net.Uri;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.BatteryManager;
+import android.os.Build;
 import android.os.Message;
+import android.os.VibrationAttributes;
+import android.os.VibrationEffect;
+import android.os.Vibrator;
 import android.provider.Settings;
 import android.view.Window;
 import android.view.WindowManager;
 
 public class PlatformUtils {
+
+    private static Vibrator vibrator;
+    private static boolean rumbleDisabled;
+
     public static boolean isBatterySupported() {
         Context context = SDLActivity.getContext();
         Intent batteryIntent = context.registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
@@ -121,5 +130,84 @@ public class PlatformUtils {
         WindowManager.LayoutParams lp = window.getAttributes();
         if (lp.screenBrightness < 0) return getSystemScreenBrightness(activity);
         return lp.screenBrightness;
+    }
+
+    public static void initDeviceRumble() {
+        Context context = SDLActivity.getContext();
+        vibrator = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
+        rumbleDisabled = (vibrator == null || !vibrator.hasVibrator());
+//        if (rumbleDisabled && BuildConfig.DEBUG)
+//        {
+//            Log.w("Rumble", "System does not have a Vibrator, or the permission is disabled. " +
+//                    "Rumble has been turned rest. Subsequent calls to static methods will have no effect.");
+//        }
+    }
+
+    public static void deviceRumble(short lowFreqMotor, short highFreqMotor) {
+        if (rumbleDisabled) return;
+
+        Context context = SDLActivity.getContext();
+
+        short lowFreqMotorAdjusted = (short)(Math.min(lowFreqMotor, 0xFF));
+        short highFreqMotorAdjusted = (short)(Math.min(highFreqMotor, 0xFF));
+
+        rumbleSingleVibrator(vibrator, lowFreqMotorAdjusted, highFreqMotorAdjusted);
+    }
+
+    private static void rumbleSingleVibrator(Vibrator vibrator, short lowFreqMotor, short highFreqMotor) {
+        // Since we can only use a single amplitude value, compute the desired amplitude
+        // by taking 80% of the big motor and 33% of the small motor, then capping to 255.
+        // NB: This value is now 0-255 as required by VibrationEffect.
+//        short lowFreqMotorMSB = (short)((lowFreqMotor >> 8) & 0xFF);
+//        short highFreqMotorMSB = (short)((highFreqMotor >> 8) & 0xFF);
+        int simulatedAmplitude = Math.min(255, (int)((lowFreqMotor * 0.80) + (highFreqMotor * 0.33)));
+
+        if (simulatedAmplitude == 0) {
+            // This case is easy - just cancel the current effect and get out.
+            // NB: We cannot simply check lowFreqMotor == highFreqMotor == 0
+            // because our simulatedAmplitude could be 0 even though our inputs
+            // are not (ex: lowFreqMotor == 0 && highFreqMotor == 1).
+            vibrator.cancel();
+            return;
+        }
+
+        // Attempt to use amplitude-based control if we're on Oreo and the device
+        // supports amplitude-based vibration control.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            if (vibrator.hasAmplitudeControl()) {
+                VibrationEffect effect = VibrationEffect.createOneShot(60000, simulatedAmplitude);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    VibrationAttributes vibrationAttributes = new VibrationAttributes.Builder()
+                            .setUsage(VibrationAttributes.USAGE_MEDIA)
+                            .build();
+                    vibrator.vibrate(effect, vibrationAttributes);
+                }
+                else {
+                    AudioAttributes audioAttributes = new AudioAttributes.Builder()
+                            .setUsage(AudioAttributes.USAGE_GAME)
+                            .build();
+                    vibrator.vibrate(effect, audioAttributes);
+                }
+                return;
+            }
+        }
+
+        // If we reach this point, we don't have amplitude controls available, so
+        // we must emulate it by PWMing the vibration. Ick.
+        long pwmPeriod = 20;
+        long onTime = (long)((simulatedAmplitude / 255.0) * pwmPeriod);
+        long offTime = pwmPeriod - onTime;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            VibrationAttributes vibrationAttributes = new VibrationAttributes.Builder()
+                    .setUsage(VibrationAttributes.USAGE_MEDIA)
+                    .build();
+            vibrator.vibrate(VibrationEffect.createWaveform(new long[]{0, onTime, offTime}, 0), vibrationAttributes);
+        }
+        else {
+            AudioAttributes audioAttributes = new AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_GAME)
+                    .build();
+            vibrator.vibrate(new long[]{0, onTime, offTime}, 0, audioAttributes);
+        }
     }
 }
