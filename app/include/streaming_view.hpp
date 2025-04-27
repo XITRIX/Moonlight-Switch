@@ -39,7 +39,7 @@ class StreamingView : public brls::Box {
   private:
     Host host;
     AppInfo app;
-    MoonlightSession* session;
+    MoonlightSession* session = nullptr;
     LoadingOverlay* loader = nullptr;
     Box* keyboardHolder = nullptr;
     KeyboardView* keyboard = nullptr;

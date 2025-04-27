@@ -17,10 +17,9 @@ void MoonlightSession::set_provider(
     m_provider = provider;
 }
 
-MoonlightSession::MoonlightSession(const std::string& address, int app_id, bool is_sunshine) {
+MoonlightSession::MoonlightSession(const std::string& address, int app_id) {
     m_address = address;
     m_app_id = app_id;
-    m_is_sunshine = is_sunshine;
     m_active_session = this;
 
     m_video_decoder = m_provider->video_decoder();
@@ -95,7 +94,7 @@ void MoonlightSession::connection_terminated(int error_code) {
                     m_active_session->m_is_terminated = true;
                 }
             }
-        });
+        }, m_active_session->m_is_sunshine);
         return;
     }
 
@@ -224,7 +223,9 @@ void MoonlightSession::audio_renderer_decode_and_play_sample(
 
 // MARK: MoonlightSession
 
-void MoonlightSession::start(ServerCallback<bool> callback) {
+void MoonlightSession::start(ServerCallback<bool> callback, bool is_sunshine) {
+    m_is_sunshine = is_sunshine;
+
     LiInitializeStreamConfiguration(&m_config);
 
     int h = Settings::instance().resolution();
