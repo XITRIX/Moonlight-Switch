@@ -1,6 +1,7 @@
+#import <UIKit/UIKit.h>
+
 #ifdef PLATFORM_TVOS
 
-#import <UIKit/UIKit.h>
 #import <AVFoundation/AVDisplayCriteria.h>
 #import <AVKit/AVDisplayManager.h>
 #import <AVKit/UIWindow.h>
@@ -37,5 +38,10 @@ void updatePreferredDisplayMode(bool streamActive) {
         displayManager.preferredDisplayCriteria = nil;
     }
 }
-
 #endif
+
+void getWindowSize(int* w, int* h) {
+    UIWindow* window = [[[UIApplication sharedApplication] delegate] window];
+    *w = window.frame.size.width * window.traitCollection.displayScale;
+    *h = window.frame.size.height * window.traitCollection.displayScale;
+}

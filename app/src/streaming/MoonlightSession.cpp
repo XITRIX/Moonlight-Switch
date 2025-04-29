@@ -5,6 +5,11 @@
 #include "Settings.hpp"
 #include "borealis.hpp"
 #include <string.h>
+#include <SDL.h>
+
+#ifdef PLATFORM_IOS
+extern void getWindowSize(int* w, int* h);
+#endif
 
 using namespace brls;
 
@@ -231,8 +236,12 @@ void MoonlightSession::start(ServerCallback<bool> callback, bool is_sunshine) {
     int h = Settings::instance().resolution();
     int w = h * 16 / 9;
     if (h == -1) {
+#if defined(PLATFORM_IOS)
+        getWindowSize(&w, &h);
+#else
         h = Application::windowHeight;
         w = Application::windowWidth;
+#endif
     }
 
     // 480p cannot fit into 16/9 aspect ratio without manual adjustments
