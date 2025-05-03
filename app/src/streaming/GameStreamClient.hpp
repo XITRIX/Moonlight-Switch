@@ -41,7 +41,7 @@ template <typename T> struct GSResult {
 template <class T>
 using ServerCallback = const std::function<void(GSResult<T>)>;
 
-//struct Host;
+// struct Host;
 
 struct AppInfo {
     std::string name;
@@ -80,6 +80,10 @@ class GameStreamClient : public Singleton<GameStreamClient> {
     void start(const std::string& address, STREAM_CONFIGURATION config,
                int app_id, ServerCallback<STREAM_CONFIGURATION>& callback);
     void quit(const std::string& address, ServerCallback<bool>& callback);
+
+    // Added secure Wake-On-Lan function declarations:
+    void setup_secure_wol(const std::function<void(GSResult<bool>)>& callback);
+    void wake_up_host_secure(const Host& host, const std::function<void(GSResult<bool>)>& callback);
 
   private:
     std::map<std::string, SERVER_DATA> m_server_data;
