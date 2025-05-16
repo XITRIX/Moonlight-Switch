@@ -47,9 +47,9 @@ SettingsTab::SettingsTab() {
 
     std::vector<std::string> resolutions = {
         "Native", "360p", "480p", "720p", "1080p", 
-#if !defined(PLATFORM_SWITCH)
+// #if !defined(PLATFORM_SWITCH)
         "1440p"
-#endif
+// #endif
     };
     resolution->setText("settings/resolution"_i18n);
     resolution->setData(resolutions);
