@@ -36,6 +36,9 @@ extern "C" {
 }
 #endif
 
+#include <filesystem>
+namespace fs = std::filesystem;
+
 using namespace brls;
 
 GameStreamClient::GameStreamClient() { start(); }
@@ -354,4 +357,42 @@ void GameStreamClient::quit(const std::string& address,
             }
         });
     });
+}
+
+// Configuration du WOL sécurisé
+void GameStreamClient::setup_secure_wol(const std::function<void(GSResult<bool>)>& callback) {
+    fs::create_directories("/switch/moonlight/keys");
+
+    std::thread t([callback]() {
+        auto result = WakeOnLanManager::setup_secure_wol("/switch/moonlight/keys");
+	    
+            if (result.isSuccess()) {
+                brls::Logger::info("GameStreamClient: Secure WOL keys generated successfully");
+            } else {
+                brls::Logger::error("GameStreamClient: Failed to generate secure WOL keys: {}", result.error());
+            }
+            callback(result);
+    });
+    t.detach();
+}
+
+// Réveiller un hôte avec WOL sécurisé
+void GameStreamClient::wake_up_host_secure(const Host& host, const std::function<void(GSResult<bool>)>& callback) {
+    if (!fs::exists("/switch/moonlight/keys/wol_private.pem")) {
+        brls::Logger::error("GameStreamClient: Private key not found, secure WOL not possible");
+        callback(GSResult<bool>::failure("Private key not found. Please generate keys first."));
+        return;
+    }
+
+    std::thread t([this, host, callback]() {
+        auto result = WakeOnLanManager::secure_wake(host, "/switch/moonlight/keys/wol_private.pem", 9);
+
+            if (result.isSuccess()) {
+                brls::Logger::info("GameStreamClient: Secure WOL packet sent successfully");
+            } else {
+                brls::Logger::error("GameStreamClient: Failed to send secure WOL packet: {}", result.error());
+            }
+            callback(result);
+    });
+    t.detach();
 }
