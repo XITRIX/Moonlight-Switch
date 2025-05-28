@@ -100,6 +100,12 @@
             "home": "Home",
             "screenshot": "Capture d'écran"
         },
+        "deadzone": {
+            "input_hint": "Dead zone value in percent",
+            "stick_left": "Left stick",
+            "stick_right": "Right stick",
+            "title": "Dead zones"
+        },
         "debug": "Debug",
         "debugging_view": "Afficher la vue Debug",
         "decoder_threads": "Threads de décodage",

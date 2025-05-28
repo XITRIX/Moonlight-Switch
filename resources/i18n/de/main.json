@@ -40,7 +40,7 @@
     },
     "common": {
         "cancel": "Abbrechen",
-        "close": "",
+        "close": "Close",
         "confirm": "Bestätigen",
         "edit": "bearbeiten",
         "remove": "Entfernen"
@@ -50,7 +50,7 @@
         "no_ip": "IP Adresse kann nicht abgerufen werden"
     },
     "error": {
-        "applet_not_supported": "",
+        "applet_not_supported": "Applet Mode is unsupported\n\nPlease, launch this app using Title Redirection (By default it's hold  and start any game)",
         "dialog_header": "Fehler",
         "host_not_found": "Host nicht gefunden...",
         "ip_not_obtained": "IP Adresse kann nicht abgerufen werden...",
@@ -62,7 +62,7 @@
         "off": "Aus",
         "ok": "OK",
         "on": "An",
-        "submit": ""
+        "submit": "Done"
     },
     "host": {
         "connect": "Verbinden",
@@ -85,17 +85,27 @@
         "title": "Layouteditor"
     },
     "mouse_input": {
-        "delete": "",
-        "hide": "",
+        "delete": "Del",
+        "hide": "Hide hints",
         "keyboard": "Tastatur",
         "mouse": "Maus",
         "scroll": "Scrollen",
-        "space": "",
+        "space": "Space",
         "title": "Mauseingabemodus"
     },
     "settings": {
         "audio_backend": "Audio driver",
         "av1": "AV1 (Experimentell)",
+        "buttons": {
+            "home": "Home",
+            "screenshot": "Screenshot"
+        },
+        "deadzone": {
+            "input_hint": "Dead zone value in percent",
+            "stick_left": "Left stick",
+            "stick_right": "Right stick",
+            "title": "Dead zones"
+        },
         "debug": "Debug",
         "debugging_view": "Debugansicht anzeigen",
         "decoder_threads": "Decoder Threads",
@@ -105,11 +115,11 @@
         "guide_key_setup_message": "Drücken Sie die Tasten, die Sie benutzen wollen, um die Guide Taste zu drücken:\n\n\n",
         "h264": "H.264",
         "h265": "HEVC (H.265)",
-        "keyboard": "",
-        "keyboard_compact": "",
-        "keyboard_fingers": "",
-        "keyboard_fullsized": "",
-        "keyboard_type": "",
+        "keyboard": "Keyboard",
+        "keyboard_compact": "Compact",
+        "keyboard_fingers": "Taps to open keyboard",
+        "keyboard_fullsized": "Full-sized",
+        "keyboard_type": "Keyboard type",
         "keys": "/ und / Tasten",
         "keys_mapping": "Tastenlayout",
         "keys_mapping_create_new": "+ Neues Layout erstellen",
@@ -128,16 +138,19 @@
         "overlay_zero_time": "0 (keine Verzögerung)",
         "paop": "Audio auf Host abspielen",
         "quality": "Qualität (Higher settings requires CPU overclock)",
+        "request_hdr": "Request HDR Video",
         "resolution": "Auflösung",
-        "rumble_force": "",
+        "rumble_force": "Rumble force",
         "single_joycon": "Single Joycon",
         "stream_settings": "Streameinstellungen",
         "swap_mouse_keys": " und  Tasten tauschen",
         "swap_mouse_scroll": "Scrollrichtung umkehren",
         "swap_stick_to_dpad": "Use Stick as D-Pad",
         "swap_ui": "Für UI tauschen",
-        "touchscreen_mouse_mode": "",
+        "system_button_duplication_error": "Another action already use this system button.",
+        "touchscreen_mouse_mode": "Touchscreen mode",
         "use_hw_decoding": "Enable hardware acceleration",
+        "use_system_button": "Use system button",
         "usops": "Optimale Streameinstellungen benutzen",
         "video_bitrate": "Video Bitrate",
         "video_codec": "Video Codec",

@@ -96,6 +96,16 @@
     "settings": {
         "audio_backend": "Audio driver",
         "av1": "AV1 (Experimental)",
+        "buttons": {
+            "home": "Home",
+            "screenshot": "Screenshot"
+        },
+        "deadzone": {
+            "input_hint": "Dead zone value in percent",
+            "stick_left": "Left stick",
+            "stick_right": "Right stick",
+            "title": "Dead zones"
+        },
         "debug": "Debug",
         "debugging_view": "Mostra visualizzazione di debug",
         "decoder_threads": "Threads del decodificatore",
@@ -107,7 +117,7 @@
         "h265": "HEVC (H.265, Sperimentale)",
         "keyboard": "Keyboard",
         "keyboard_compact": "Compact",
-        "keyboard_fingers": "Clicks to open keyboard",
+        "keyboard_fingers": "Taps to open keyboard",
         "keyboard_fullsized": "Full-sized",
         "keyboard_type": "Keyboard type",
         "keys": "Tasti Controller",
@@ -128,6 +138,7 @@
         "overlay_zero_time": "0 (Immediato)",
         "paop": "Riproduci l'audio sul PC",
         "quality": "Qualità",
+        "request_hdr": "Request HDR Video",
         "resolution": "Risoluzione",
         "rumble_force": "Rumble force",
         "single_joycon": "Single Joycon",
@@ -136,8 +147,10 @@
         "swap_mouse_scroll": "Inverti direzione di scorrimento verticale",
         "swap_stick_to_dpad": "Use Stick as D-Pad",
         "swap_ui": "Inverti / e / per l'UI",
+        "system_button_duplication_error": "Another action already use this system button.",
         "touchscreen_mouse_mode": "Touchscreen mode",
         "use_hw_decoding": "Enable hardware acceleration",
+        "use_system_button": "Use system button",
         "usops": "Usa le Migliori Impostazioni Riproducibili per lo streaming",
         "video_bitrate": "Bitrate Video",
         "video_codec": "Codec Video",

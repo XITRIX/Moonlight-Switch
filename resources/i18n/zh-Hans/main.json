@@ -100,6 +100,12 @@
             "home": "Home",
             "screenshot": "截图"
         },
+        "deadzone": {
+            "input_hint": "Dead zone value in percent",
+            "stick_left": "Left stick",
+            "stick_right": "Right stick",
+            "title": "Dead zones"
+        },
         "debug": "调试",
         "debugging_view": "显示调试画面",
         "decoder_threads": "解码器线程",
