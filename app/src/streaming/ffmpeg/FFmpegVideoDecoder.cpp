@@ -383,6 +383,14 @@ int FFmpegVideoDecoder::decode(char* indata, int inlen) {
     m_packet->data = (uint8_t*)indata;
     m_packet->size = inlen;
 
+#if !defined(PLATFORM_SWITCH)
+    int policy;
+    sched_param params{};
+    pthread_getschedparam(pthread_self(), &policy, &params);
+    params.sched_priority = sched_get_priority_max(policy);
+    pthread_setschedparam(pthread_self(), policy, &params);
+#endif
+
 //    m_decoder_context->skip_frame = AVDISCARD_ALL;
 
     int err = avcodec_send_packet(m_decoder_context, m_packet);

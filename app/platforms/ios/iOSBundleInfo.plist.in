@@ -83,5 +83,7 @@
   	<string>Network usage is required to find hosts in your local network</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<key>LSSupportsGameMode</key>
+	<true/>
 </dict>
 </plist>

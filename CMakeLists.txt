@@ -41,7 +41,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${EXTERN_PATH}/cmake")
 project(Moonlight)
 set(VERSION_MAJOR "1")
 set(VERSION_MINOR "3")
-set(VERSION_ALTER "3")
+set(VERSION_ALTER "4")
 set(VERSION_BUILD "1")
 set(PACKAGE_NAME "ru.xitrix.Moonlight")
 set(PSN_TITLE_ID  "MNTL00000")
@@ -240,6 +240,7 @@ elseif (PLATFORM_IOS)
         XCODE_ATTRIBUTE_INFOPLIST_KEY_GCSupportsGameMode YES
         XCODE_ATTRIBUTE_INFOPLIST_KEY_GCSupportsControllerUserInteraction YES
         XCODE_ATTRIBUTE_INFOPLIST_KEY_GCRequiresControllerUserInteraction YES
+        XCODE_ATTRIBUTE_INFOPLIST_KEY_LSSupportsGameMode YES
         XCODE_ATTRIBUTE_INFOPLIST_KEY_LSApplicationCategoryType "public.app-category.games"
         XCODE_ATTRIBUTE_LD_RUNPATH_SEARCH_PATHS "@executable_path/Frameworks"
         XCODE_ATTRIBUTE_FRAMEWORK_SEARCH_PATHS "${CMAKE_CURRENT_SOURCE_DIR}/extern/borealis/library/lib/extern/angle/ios/"
