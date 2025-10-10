@@ -5,6 +5,15 @@
 #include <cerrno>
 #include <cstring>
 
+// Inclusion des bibliothèques mbedTLS pour la gestion RSA
+#include <mbedtls/pk.h>
+#include <mbedtls/entropy.h>
+#include <mbedtls/ctr_drbg.h>
+#include <mbedtls/rsa.h>
+#include <mbedtls/sha256.h>
+#include <mbedtls/error.h>
+#include <ctime>
+
 #if defined(__linux) || defined(__APPLE__) || defined(__SWITCH__) || defined(__vita__)
 #define UNIX_SOCKS
 #include <arpa/inet.h>
@@ -25,6 +34,184 @@
 #if defined(__SWITCH__)
 #include <switch.h>
 #endif
+
+// Classe pour gérer les clés RSA
+class RsaManager {
+private:
+    mbedtls_pk_context m_key;
+    mbedtls_entropy_context m_entropy;
+    mbedtls_ctr_drbg_context m_ctr_drbg;
+    bool m_initialized;
+
+public:
+    RsaManager() : m_initialized(false) {
+        mbedtls_pk_init(&m_key);
+        mbedtls_entropy_init(&m_entropy);
+        mbedtls_ctr_drbg_init(&m_ctr_drbg);
+    }
+
+    ~RsaManager() {
+        mbedtls_pk_free(&m_key);
+        mbedtls_ctr_drbg_free(&m_ctr_drbg);
+        mbedtls_entropy_free(&m_entropy);
+    }
+
+    // Génère une nouvelle paire de clés RSA
+    GSResult<bool> generate_keys(unsigned int key_size = 2048) {
+        const char *pers = "wol_key_gen";
+        char error_buf[100];
+        int ret;
+
+        // Initialiser le générateur aléatoire
+        ret = mbedtls_ctr_drbg_seed(&m_ctr_drbg, mbedtls_entropy_func, &m_entropy,
+                                  (const unsigned char *)pers, strlen(pers));
+        if (ret != 0) {
+            mbedtls_strerror(ret, error_buf, sizeof(error_buf));
+            return GSResult<bool>::failure(std::string("Failed to seed RNG: ") + error_buf);
+        }
+
+        // Configurer pour RSA
+        ret = mbedtls_pk_setup(&m_key, mbedtls_pk_info_from_type(MBEDTLS_PK_RSA));
+        if (ret != 0) {
+            mbedtls_strerror(ret, error_buf, sizeof(error_buf));
+            return GSResult<bool>::failure(std::string("Failed to setup PK: ") + error_buf);
+        }
+
+        // Générer la clé
+        ret = mbedtls_rsa_gen_key(mbedtls_pk_rsa(m_key), mbedtls_ctr_drbg_random, 
+                                &m_ctr_drbg, key_size, 65537);
+        if (ret != 0) {
+            mbedtls_strerror(ret, error_buf, sizeof(error_buf));
+            return GSResult<bool>::failure(std::string("Failed to generate key: ") + error_buf);
+        }
+
+        m_initialized = true;
+        return GSResult<bool>::success(true);
+    }
+
+    // Exporte la clé publique au format PEM
+    GSResult<std::string> export_public_key() {
+        if (!m_initialized) {
+            return GSResult<std::string>::failure("RSA not initialized");
+        }
+
+        unsigned char output[4096];
+        int ret = mbedtls_pk_write_pubkey_pem(&m_key, output, sizeof(output));
+        if (ret != 0) {
+            char error_buf[100];
+            mbedtls_strerror(ret, error_buf, sizeof(error_buf));
+            return GSResult<std::string>::failure(std::string("Failed to export public key: ") + error_buf);
+        }
+
+        return GSResult<std::string>::success(std::string((char*)output));
+    }
+
+    // Signe un message avec la clé privée
+    GSResult<Data> sign_data(const Data& data) {
+        if (!m_initialized) {
+            return GSResult<Data>::failure("RSA not initialized");
+        }
+
+        unsigned char hash[32];
+        unsigned char signature[MBEDTLS_MPI_MAX_SIZE];
+        size_t sig_len = 0;
+        char error_buf[100];
+
+        // Calculer le hash SHA-256 des données
+        mbedtls_sha256(data.bytes(), data.size(), hash, 0);
+
+        // Signer le hash
+        int ret = mbedtls_pk_sign(&m_key, MBEDTLS_MD_SHA256, hash, sizeof(hash),
+                               signature, &sig_len, mbedtls_ctr_drbg_random, &m_ctr_drbg);
+        if (ret != 0) {
+            mbedtls_strerror(ret, error_buf, sizeof(error_buf));
+            return GSResult<Data>::failure(std::string("Failed to sign: ") + error_buf);
+        }
+
+        return GSResult<Data>::success(Data(signature, sig_len));
+    }
+
+    // Sauvegarde les clés dans un fichier
+    GSResult<bool> save_keys(const std::string& private_key_file, const std::string& public_key_file) {
+        if (!m_initialized) {
+            return GSResult<bool>::failure("RSA not initialized");
+        }
+
+        // Exporter la clé privée
+        unsigned char priv_buf[4096];
+        int ret = mbedtls_pk_write_key_pem(&m_key, priv_buf, sizeof(priv_buf));
+        if (ret != 0) {
+            char error_buf[100];
+            mbedtls_strerror(ret, error_buf, sizeof(error_buf));
+            return GSResult<bool>::failure(std::string("Failed to export private key: ") + error_buf);
+        }
+
+        // Exporter la clé publique
+        unsigned char pub_buf[4096];
+        ret = mbedtls_pk_write_pubkey_pem(&m_key, pub_buf, sizeof(pub_buf));
+        if (ret != 0) {
+            char error_buf[100];
+            mbedtls_strerror(ret, error_buf, sizeof(error_buf));
+            return GSResult<bool>::failure(std::string("Failed to export public key: ") + error_buf);
+        }
+
+        // Sauvegarder les clés dans des fichiers
+        FILE* f_priv = fopen(private_key_file.c_str(), "wb");
+        if (!f_priv) {
+            return GSResult<bool>::failure("Failed to open private key file");
+        }
+        fwrite(priv_buf, 1, strlen((char*)priv_buf), f_priv);
+        fclose(f_priv);
+
+        FILE* f_pub = fopen(public_key_file.c_str(), "wb");
+        if (!f_pub) {
+            return GSResult<bool>::failure("Failed to open public key file");
+        }
+        fwrite(pub_buf, 1, strlen((char*)pub_buf), f_pub);
+        fclose(f_pub);
+
+        return GSResult<bool>::success(true);
+    }
+
+    // Charge les clés depuis un fichier
+    GSResult<bool> load_keys(const std::string& private_key_file) {
+        unsigned char key_buf[4096];
+        FILE* f = fopen(private_key_file.c_str(), "rb");
+        if (!f) {
+            return GSResult<bool>::failure("Failed to open key file");
+        }
+
+        size_t olen = fread(key_buf, 1, sizeof(key_buf) - 1, f);
+        fclose(f);
+
+        key_buf[olen] = 0;
+
+        // Libérer la clé existante si nécessaire
+        mbedtls_pk_free(&m_key);
+        mbedtls_pk_init(&m_key);
+
+        // Initialiser le générateur aléatoire
+        const char *pers = "wol_key_load";
+        int ret = mbedtls_ctr_drbg_seed(&m_ctr_drbg, mbedtls_entropy_func, &m_entropy,
+                                     (const unsigned char *)pers, strlen(pers));
+        if (ret != 0) {
+            char error_buf[100];
+            mbedtls_strerror(ret, error_buf, sizeof(error_buf));
+            return GSResult<bool>::failure(std::string("Failed to seed RNG: ") + error_buf);
+        }
+
+        // Parser la clé
+        ret = mbedtls_pk_parse_key(&m_key, key_buf, olen + 1, NULL, 0);
+        if (ret != 0) {
+            char error_buf[100];
+            mbedtls_strerror(ret, error_buf, sizeof(error_buf));
+            return GSResult<bool>::failure(std::string("Failed to parse key: ") + error_buf);
+        }
+
+        m_initialized = true;
+        return GSResult<bool>::success(true);
+    }
+};
 
 #if defined(UNIX_SOCKS) || defined(WIN32_SOCKS)
 
@@ -49,7 +236,7 @@ static Data create_payload(const Host& host) {
         payload = payload.append(Data(&header, 1));
     }
 
-    // 16 repitiions of MAC address
+    // 16 repetitions of MAC address
     Data mac_address = mac_string_to_bytes(host.mac);
     for (int i = 0; i < 16; i++) {
         payload = payload.append(mac_address);
@@ -98,25 +285,24 @@ GSResult<bool> send_packet_unix(const Host& host, const Data& payload) {
                                        std::string(strerror(errno)));
     }
 
-    // Set server end point (the broadcast addres)
-    udpServer.sin_family = AF_INET;
+    // Send to local broadcast address
 #if defined(__SWITCH__)
     uint32_t ip, subnet_mask;
-    // Get the current IP address and subnet mask to calculate subnet broadcast address
     nifmGetCurrentIpConfigInfo(&ip, &subnet_mask, nullptr, nullptr, nullptr);
-    udpServer.sin_addr.s_addr = ip | ~subnet_mask;
+    udpServer.sin_family = AF_INET;
+    udpServer.sin_addr.s_addr = ip | ~subnet_mask; // Local broadcast address
+    brls::Logger::info("WakeOnLanManager: Sending magic packet to local broadcast address: '{}'",
+                    inet_ntoa(udpServer.sin_addr));
 #else
-    udpServer.sin_addr.s_addr = inet_addr(host.address.c_str());
+    udpServer.sin_family = AF_INET;
+    udpServer.sin_addr.s_addr = htonl(INADDR_BROADCAST); // Default broadcast address for other platforms
+    brls::Logger::info("WakeOnLanManager: Sending magic packet to default broadcast address");
 #endif
     udpServer.sin_port = htons(9);
 
-    brls::Logger::info("WakeOnLanManager: Sending magic packet to: '{}'",
-                    inet_ntoa(udpServer.sin_addr));
-
-    // Send the packet
-    ssize_t result =
-        sendto(udpSocket, payload.bytes(), sizeof(unsigned char) * 102, 0,
-               (struct sockaddr*)&udpServer, sizeof(udpServer));
+    // Send the WoL packet to the local broadcast address
+    ssize_t result = sendto(udpSocket, payload.bytes(), sizeof(unsigned char) * 102, 0,
+                            (struct sockaddr*)&udpServer, sizeof(udpServer));
     if (result == -1) {
         brls::Logger::error(
             "WakeOnLanManager: Failed to send magic packet to socket: '{}'",
@@ -125,6 +311,23 @@ GSResult<bool> send_packet_unix(const Host& host, const Data& payload) {
             "Failed to send magic packet to socket: " +
             std::string(strerror(errno)));
     }
+
+    // Send to the public IP address
+    udpServer.sin_addr.s_addr = inet_addr(host.address.c_str());
+    brls::Logger::info("WakeOnLanManager: Sending magic packet to public IP: '{}'",
+                    inet_ntoa(udpServer.sin_addr));
+
+    result = sendto(udpSocket, payload.bytes(), sizeof(unsigned char) * 102, 0,
+                    (struct sockaddr*)&udpServer, sizeof(udpServer));
+    if (result == -1) {
+        brls::Logger::error(
+            "WakeOnLanManager: Failed to send magic packet to socket: '{}'",
+            strerror(errno));
+        return GSResult<bool>::failure(
+            "Failed to send magic packet to socket: " +
+            std::string(strerror(errno)));
+    }
+
     return GSResult<bool>::success(true);
 }
 #elif defined(_WIN32)
@@ -151,24 +354,26 @@ GSResult<bool> send_packet_win32(const Host& host, const Data& payload) {
     // Bind socket
     bind(udpSocket, (struct sockaddr*)&udpClient, sizeof(udpClient));
 
-    // Set server end point (the broadcast addres)
+    // Send to local broadcast address
     udpServer.sin_family = AF_INET;
-#if defined(__SWITCH__)
-    uint32_t ip, subnet_mask;
-    // Get the current IP address and subnet mask to calculate subnet broadcast address
-    nifmGetCurrentIpConfigInfo(&ip, &subnet_mask, nullptr, nullptr, nullptr);
-    udpServer.sin_addr.s_addr = ip | ~subnet_mask;
-#else
-    udpServer.sin_addr.s_addr = inet_addr(host.address.c_str());
-#endif
+    udpServer.sin_addr.s_addr = htonl(INADDR_BROADCAST); // Default broadcast address
     udpServer.sin_port = htons(9);
 
-    brls::Logger::info("WakeOnLanManager: Sending magic packet to: '{}'",
+    brls::Logger::info("WakeOnLanManager: Sending magic packet to local broadcast address: '{}'",
                     inet_ntoa(udpServer.sin_addr));
 
-    // Send the packet
+    // Send the WoL packet to the local broadcast address
     sendto(udpSocket, (const char*)payload.bytes(), sizeof(unsigned char) * 102,
            0, (struct sockaddr*)&udpServer, sizeof(udpServer));
+
+    // Send to the public IP address
+    udpServer.sin_addr.s_addr = inet_addr(host.address.c_str());
+    brls::Logger::info("WakeOnLanManager: Sending magic packet to public IP: '{}'",
+                    inet_ntoa(udpServer.sin_addr));
+
+    sendto(udpSocket, (const char*)payload.bytes(), sizeof(unsigned char) * 102,
+           0, (struct sockaddr*)&udpServer, sizeof(udpServer));
+
     return GSResult<bool>::success(true);
 }
 #endif
@@ -191,4 +396,148 @@ GSResult<bool> WakeOnLanManager::wake_up_host(const Host& host) {
 #endif
 
     return GSResult<bool>::failure("Wake up host not supported...");
+}
+
+// Fonction auxiliaire pour envoyer un paquet WOL sécurisé
+GSResult<bool> WakeOnLanManager::wake_up_host_secure(const Host& host, 
+                                                    RsaManager& rsa_manager,
+                                                    int port) {
+    // Créer le paquet WOL standard
+    Data payload = create_payload(host);
+    
+    // Ajouter un timestamp pour éviter les attaques par rejeu
+    uint64_t now = static_cast<uint64_t>(time(nullptr));
+    Data timestamp_data((unsigned char*)&now, sizeof(uint64_t));
+    payload = payload.append(timestamp_data);
+    
+    // Signer le paquet
+    auto signature_result = rsa_manager.sign_data(payload);
+    if (!signature_result.isSuccess()) {
+        return GSResult<bool>::failure(signature_result.error());
+    }
+    
+    Data signature = signature_result.value();
+    
+    // Ajouter la taille de la signature
+    uint32_t sig_size = signature.size();
+    Data sig_size_data((unsigned char*)&sig_size, sizeof(uint32_t));
+    
+    // Assembler le paquet final
+    Data final_payload = payload.append(signature).append(sig_size_data);
+    
+#if defined(UNIX_SOCKS)
+    struct sockaddr_in udpClient{}, udpServer{};
+    int broadcast = 1;
+    
+    int udpSocket = socket(AF_INET, SOCK_DGRAM, 0);
+    if (udpSocket == -1) {
+        return GSResult<bool>::failure("Failed to create UDP socket");
+    }
+    
+    // Configuration du socket
+    udpClient.sin_family = AF_INET;
+    udpClient.sin_addr.s_addr = INADDR_ANY;
+    udpClient.sin_port = 0;
+    
+    int bind_result = bind(udpSocket, (struct sockaddr*)&udpClient, sizeof(udpClient));
+    if (bind_result == -1) {
+        close(udpSocket);
+        return GSResult<bool>::failure("Failed to bind socket");
+    }
+    
+    // Configuration du serveur cible - utilise directement l'adresse du host
+    udpServer.sin_family = AF_INET;
+    udpServer.sin_addr.s_addr = inet_addr(host.address.c_str());
+    udpServer.sin_port = htons(port);
+    
+    brls::Logger::info("WakeOnLanManager: Sending secured WOL packet to {}:{}",
+                    host.address, port);
+    
+    // Envoi du paquet
+    ssize_t result = sendto(udpSocket, final_payload.bytes(), final_payload.size(), 0,
+                          (struct sockaddr*)&udpServer, sizeof(udpServer));
+    
+    close(udpSocket);
+    
+    if (result == -1) {
+        return GSResult<bool>::failure("Failed to send secured WOL packet");
+    }
+    
+    return GSResult<bool>::success(true);
+#elif defined(WIN32_SOCKS)
+    struct sockaddr_in udpClient, udpServer;
+    int broadcast = 1;
+
+    WSADATA data;
+    SOCKET udpSocket;
+
+    // Setup socket
+    WSAStartup(MAKEWORD(2, 2), &data);
+    udpSocket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+
+    // Set parameters
+    udpClient.sin_family = AF_INET;
+    udpClient.sin_addr.s_addr = INADDR_ANY;
+    udpClient.sin_port = htons(0);
+    
+    // Bind socket
+    bind(udpSocket, (struct sockaddr*)&udpClient, sizeof(udpClient));
+
+    // Send to the host address
+    udpServer.sin_family = AF_INET;
+    udpServer.sin_addr.s_addr = inet_addr(host.address.c_str());
+    udpServer.sin_port = htons(port);
+
+    brls::Logger::info("WakeOnLanManager: Sending secured WOL packet to {}:{}",
+                    host.address, port);
+
+    // Send the secured WoL packet
+    sendto(udpSocket, (const char*)final_payload.bytes(), final_payload.size(),
+           0, (struct sockaddr*)&udpServer, sizeof(udpServer));
+    
+    closesocket(udpSocket);
+    WSACleanup();
+    
+    return GSResult<bool>::success(true);
+#else
+    return GSResult<bool>::failure("Secure WOL not supported on this platform");
+#endif
+}
+
+// Fonction simplifiée pour générer une paire de clés sans serveur relais
+GSResult<bool> WakeOnLanManager::setup_secure_wol(const std::string& key_path) {
+    RsaManager rsa_manager;
+    
+    // Générer les clés RSA
+    auto gen_result = rsa_manager.generate_keys();
+    if (!gen_result.isSuccess()) {
+        return GSResult<bool>::failure("Failed to generate RSA keys: " + gen_result.error());
+    }
+    
+    // Sauvegarder les clés localement
+    std::string private_key_path = key_path + "/wol_private.pem";
+    std::string public_key_path = key_path + "/wol_public.pem";
+    
+    auto save_result = rsa_manager.save_keys(private_key_path, public_key_path);
+    if (!save_result.isSuccess()) {
+        return GSResult<bool>::failure("Failed to save keys: " + save_result.error());
+    }
+    
+    return GSResult<bool>::success(true);
+}
+
+// Fonction pour charger une clé existante et envoyer un paquet WOL sécurisé
+GSResult<bool> WakeOnLanManager::secure_wake(const Host& host, 
+                                            const std::string& private_key_path,
+                                            int port) {
+    RsaManager rsa_manager;
+    
+    // Charger la clé privée
+    auto load_result = rsa_manager.load_keys(private_key_path);
+    if (!load_result.isSuccess()) {
+        return GSResult<bool>::failure("Failed to load private key: " + load_result.error());
+    }
+    
+    // Envoyer le paquet WOL sécurisé
+    return wake_up_host_secure(host, rsa_manager, port);
 }
