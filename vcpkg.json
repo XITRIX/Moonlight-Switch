@@ -1,5 +1,5 @@
 {
-  "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
+  "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json", 
   "name": "moonlight",
   "builtin-baseline": "2de6b07379e32daf149ae46c1e315fe180008d51",
   "version": "1.0",
