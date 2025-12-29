@@ -3,7 +3,7 @@
 //  Moonlight
 //
 //  Created by Даниил Виноградов on 22.06.2021.
-//
+//  Modified by Kyle Hart
 
 #include "keyboard_view.hpp"
 
