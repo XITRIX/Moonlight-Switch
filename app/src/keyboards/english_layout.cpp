@@ -85,6 +85,7 @@ void KeyboardView::createEnglishLayout() {
 
     ButtonView* winButton = new ButtonView(this);
     winButton->setKey(VK_LWIN);
+    winButton->triggerType = true;
     winButton->charLabel->setFontSize(21);
     winButton->setMargins(4, 4, 4, 4);
     winButton->setWidth(120);
