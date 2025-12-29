@@ -175,6 +175,7 @@ void KeyboardView::createFullLayout() {
 
     ButtonView* lwinButton = new ButtonView(this);
     lwinButton->setKey(VK_LWIN);
+    lwinButton->triggerType = true;
     lwinButton->charLabel->setFontSize(21);
     lwinButton->setMargins(4, 4, 4, 4);
     lwinButton->setWidth(menuButtonWidth);
