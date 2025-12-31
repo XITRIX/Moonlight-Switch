@@ -77,10 +77,8 @@ SettingsTab::SettingsTab() {
     std::vector<std::string> fpss = {
         "30", 
         "40", 
-        "60", 
-#if !defined(PLATFORM_SWITCH)
+        "60",
         "120",
-#endif
         };
     fps->setText("settings/fps"_i18n);
     fps->setData(fpss);
