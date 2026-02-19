@@ -15,29 +15,17 @@ layout (std140, binding = 0) uniform Transformation
 
 void main()
 {
-    // Not work
-    // vec2 uv = (vTextureCoord - u.uv_data.xy) * u.uv_data.zw;
-    // vec3 YCbCr = vec3(texture(plane0, uv).r, texture(plane1, uv).r, texture(plane1, uv).g) - u.offset;
-    // outColor = vec4(clamp(u.yuvmat * YCbCr, 0.0, 1.0), 1.0);
+    vec2 uv = (vTextureCoord - u.uv_data.xy) * u.uv_data.zw;
 
-    // Almost work
-    // vec3 YCbCr = vec3(
-	// 	texture2D(plane0, vTextureCoord)[0],
-	// 	texture2D(plane1, vTextureCoord).xy
-	// );
+    float y = texture(plane0, uv).r - (16.0 / 255.0);
+    float u_chroma = texture(plane1, uv).r - (128.0 / 255.0);
+    float v_chroma = texture(plane1, uv).g - (128.0 / 255.0);
 
-	// YCbCr -= u.offset;
-	// outColor = vec4(clamp(u.yuvmat * YCbCr, 0.0, 1.0), 1.0f);
+    // Explicit BT.709 limited-range YUV -> RGB conversion.
+    vec3 rgb;
+    rgb.r = 1.1644 * y + 1.7927 * v_chroma;
+    rgb.g = 1.1644 * y - 0.2132 * u_chroma - 0.5329 * v_chroma;
+    rgb.b = 1.1644 * y + 2.1124 * u_chroma;
 
-    float r, g, b, yt, ut, vt;
-    
-    yt = texture2D(plane0, vTextureCoord).r;
-    ut = texture2D(plane1, vTextureCoord).r - 0.5;// - u.offset.y;
-    vt = texture2D(plane1, vTextureCoord).g - 0.5;// - u.offset.z;
-
-    r = yt + 1.13983*vt;
-    g = yt - 0.39465*ut - 0.58060*vt;
-    b = yt + 2.03211*ut;
-
-    outColor = vec4(r, g, b, 1.0);
+    outColor = vec4(clamp(rgb, 0.0, 1.0), 1.0);
 }

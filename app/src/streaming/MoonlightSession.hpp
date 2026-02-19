@@ -46,7 +46,7 @@ class MoonlightSession {
     static void connection_log_message(const char* format, ...);
     static void connection_rumble(unsigned short, unsigned short,
                                   unsigned short);
-    static void connection_rumble_triggers(uint16_t controllerNumber, 
+    static void connection_rumble_triggers(uint16_t controllerNumber,
                                            uint16_t leftTriggerMotor, uint16_t rightTriggerMotor);
     static void connection_status_update(int);
     static void connection_set_hdr_mode(bool);
@@ -78,6 +78,7 @@ class MoonlightSession {
 
     bool m_is_active = false;
     bool m_is_terminated = false;
+    bool m_stop_requested = false;
     bool m_connection_status_is_poor = false;
     bool m_use_hdr = false;
 

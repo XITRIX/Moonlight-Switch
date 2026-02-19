@@ -412,19 +412,20 @@ int FFmpegVideoDecoder::decode(char* indata, int inlen) {
 
 AVFrame* FFmpegVideoDecoder::get_frame(bool native_frame) {
     int err;
-#if defined(PLATFORM_ANDROID)
-    // Android produce software copied Frame, no need in tmp_hardware frame
-    auto decodeFrame = m_frames[m_next_frame];
-#else
-    // Temp hardware frame to copy into software frame later
-    auto decodeFrame = tmp_frame;
-#endif
-    // Software result frame
     AVFrame* resultFrame = m_frames[m_next_frame];
+    AVFrame* decodeFrame = resultFrame;
 
-    RECEIVE_RETRY:
+#if !defined(PLATFORM_ANDROID) && !defined(BOREALIS_USE_DEKO3D) && !defined(USE_METAL_RENDERER)
+    if (hw_device_ctx) {
+        // For HW->SW transfer path we decode into a temporary hardware frame.
+        decodeFrame = tmp_frame;
+    }
+#endif
+
     if ((err = avcodec_receive_frame(m_decoder_context, decodeFrame)) < 0) {
-        if (err == AVERROR(EAGAIN)) goto RECEIVE_RETRY;
+        if (err == AVERROR(EAGAIN)) {
+            return nullptr;
+        }
 
         char a[AV_ERROR_MAX_STRING_SIZE] = { 0 };
         brls::Logger::error("FFmpeg: Error receiving frame with error {}",  av_make_error_string(a, AV_ERROR_MAX_STRING_SIZE, err));
@@ -433,8 +434,7 @@ AVFrame* FFmpegVideoDecoder::get_frame(bool native_frame) {
 
     if (hw_device_ctx) {
 #if defined(BOREALIS_USE_DEKO3D) || defined(PLATFORM_ANDROID) || defined(USE_METAL_RENDERER)
-        // DEKO decoder will work with hardware frame
-        // Android already produce software Frame
+        // Keep hardware-backed frame references per queue slot.
         resultFrame = decodeFrame;
 #else
 
@@ -453,26 +453,22 @@ AVFrame* FFmpegVideoDecoder::get_frame(bool native_frame) {
             brls::Logger::error("FFmpeg: Error transferring the data to system memory with error {}",  av_make_error_string(a, AV_ERROR_MAX_STRING_SIZE, err));
             return nullptr;
         }
-        
+
         av_frame_copy_props(resultFrame, decodeFrame);
 #endif
     } else {
         resultFrame = decodeFrame;
     }
 
-    if (err == 0) {
-        m_current_frame = m_next_frame;
-        m_next_frame = (m_current_frame + 1) % m_frames_size;
-        if (/*ffmpeg_decoder == SOFTWARE ||*/ native_frame)
-            return resultFrame;
-    } else {
-        char error[512];
-        av_strerror(err, error, sizeof(error));
-        brls::Logger::error("FFmpeg: Receive failed - %d/%s", err, error);
-    }
+    m_current_frame = m_next_frame;
+    m_next_frame = (m_current_frame + 1) % m_frames_size;
+    if (native_frame)
+        return resultFrame;
+
     return nullptr;
 }
 
 VideoDecodeStats* FFmpegVideoDecoder::video_decode_stats() {
     return (VideoDecodeStats*)&m_video_decode_stats_cache;
 }
+

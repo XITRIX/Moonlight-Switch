@@ -12,6 +12,7 @@
 #include <nanovg/framework/CExternalImage.h>
 #include <nanovg/framework/CDescriptorSet.h>
 #include <optional>
+#include <vector>
 
 class DKVideoRenderer : public IVideoRenderer {
   public:
@@ -24,15 +25,16 @@ class DKVideoRenderer : public IVideoRenderer {
 
   private:
     void checkAndInitialize(int width, int height, AVFrame* frame);
+    void updateFrameMapping(AVFrame* frame);
 
     bool m_is_initialized = false;
-    
+
     int m_frame_width = 0;
     int m_frame_height = 0;
     int m_screen_width = 0;
     int m_screen_height = 0;
 
-    brls::SwitchVideoContext *vctx = nullptr;
+    brls::SwitchVideoContext* vctx = nullptr;
     dk::Device dev;
     dk::Queue queue;
 
@@ -41,9 +43,12 @@ class DKVideoRenderer : public IVideoRenderer {
     std::optional<CMemPool> pool_data;
 
     dk::UniqueCmdBuf cmdbuf;
-    DkCmdList cmdlist;
+    dk::UniqueCmdBuf updateCmdbuf;
+    CMemPool::Handle updateCmdMem;
+    uint32_t updateCmdMemSlice = 0;
+    DkCmdList cmdlist = 0;
 
-    CDescriptorSet<4096U> *imageDescriptorSet;
+    CDescriptorSet<4096U>* imageDescriptorSet = nullptr;
     // CDescriptorSet<1> samplerDescriptorSet;
 
     CShader vertexShader;
@@ -52,15 +57,23 @@ class DKVideoRenderer : public IVideoRenderer {
     CMemPool::Handle vertexBuffer;
     CMemPool::Handle transformUniformBuffer;
 
-    dk::ImageLayout lumaMappingLayout; 
-    dk::ImageLayout chromaMappingLayout; 
-    dk::MemBlock mappingMemblock;
+    dk::ImageLayout lumaMappingLayout;
+    dk::ImageLayout chromaMappingLayout;
 
-    dk::Image luma;
-    dk::Image chroma;
+    struct FrameMapping {
+        uint32_t handle = 0;
+        void* cpuAddr = nullptr;
+        uint32_t size = 0;
+        uint32_t chromaOffset = 0;
+        dk::UniqueMemBlock memblock;
+        dk::Image luma;
+        dk::Image chroma;
+        dk::ImageDescriptor lumaDesc;
+        dk::ImageDescriptor chromaDesc;
+    };
 
-    dk::ImageDescriptor lumaDesc;
-    dk::ImageDescriptor chromaDesc;
+    std::vector<FrameMapping> frameMappings;
+    int currentMappingIndex = -1;
 
     int lumaTextureId = 0;
     int chromaTextureId = 0;

@@ -77,17 +77,31 @@ void MoonlightSession::connection_stage_failed(int stage, int error_code) {
 
 void MoonlightSession::connection_started() {
     brls::Logger::info("MoonlightSession: Connection started");
-        m_active_session->m_is_active = true;
+    if (!m_active_session)
+        return;
+
+    m_active_session->m_stop_requested = false;
+    m_active_session->m_is_active = true;
 }
 
 void MoonlightSession::connection_terminated(int error_code) {
     brls::Logger::info("MoonlightSession: Connection terminated with code: {}", error_code);
 
+    if (!m_active_session)
+        return;
+
+    if (m_active_session->m_stop_requested) {
+        brls::Logger::info("MoonlightSession: Termination acknowledged after stop request");
+        m_active_session->m_is_active = false;
+        m_active_session->m_is_terminated = true;
+        return;
+    }
+
     if (error_code != 0) {
-        if (!m_active_session) return;
         brls::Logger::info("MoonlightSession: Reconnection attempt");
 
-        m_active_session->stop(false);
+        // Connection is already terminated here; avoid toggling the user stop flag.
+        LiStopConnection();
 
         m_active_session->start([](const GSResult<bool>& result) {
             if (result.isSuccess()) {
@@ -103,10 +117,8 @@ void MoonlightSession::connection_terminated(int error_code) {
         return;
     }
 
-    if (m_active_session) {
-        m_active_session->m_is_active = false;
-        m_active_session->m_is_terminated = true;
-    }
+    m_active_session->m_is_active = false;
+    m_active_session->m_is_terminated = true;
 }
 
 void MoonlightSession::connection_log_message(const char* format, ...) {
@@ -230,6 +242,8 @@ void MoonlightSession::audio_renderer_decode_and_play_sample(
 
 void MoonlightSession::start(ServerCallback<bool> callback, bool is_sunshine) {
     m_is_sunshine = is_sunshine;
+    m_stop_requested = false;
+    m_is_terminated = false;
 
     LiInitializeStreamConfiguration(&m_config);
 
@@ -339,6 +353,11 @@ void MoonlightSession::start(ServerCallback<bool> callback, bool is_sunshine) {
 }
 
 void MoonlightSession::stop(int terminate_app) {
+    if (m_stop_requested)
+        return;
+
+    m_stop_requested = true;
+
     if (terminate_app) {
         GameStreamClient::instance().quit(m_address, [](auto _) {});
     }
