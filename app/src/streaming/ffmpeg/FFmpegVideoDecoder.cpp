@@ -301,7 +301,7 @@ int FFmpegVideoDecoder::submit_decode_unit(PDECODE_UNIT decode_unit) {
             entry = entry->next;
         }
 
-        m_video_decode_stats_progress.current_reassembly_time += LiGetMillis() - decode_unit->receiveTimeMs;
+        m_video_decode_stats_progress.current_reassembly_time += LiGetMillis() - (decode_unit->receiveTimeUs / 1000);
         m_frames_in++;
 
         uint64_t before_decode = LiGetMillis();
