@@ -78,9 +78,9 @@ SettingsTab::SettingsTab() {
         "30", 
         "40", 
         "60", 
-#if !defined(PLATFORM_SWITCH)
+// #if !defined(PLATFORM_SWITCH)
         "120",
-#endif
+// #endif
         };
     fps->setText("settings/fps"_i18n);
     fps->setData(fpss);

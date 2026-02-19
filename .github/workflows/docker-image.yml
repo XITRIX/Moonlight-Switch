@@ -33,10 +33,10 @@ jobs:
 
     - name: Run cmake
       continue-on-error: true
-      run: cmake -B build/switch -DPLATFORM_SWITCH=ON
+      run: cmake -B build/switch -DPLATFORM_SWITCH=ON -DUSE_DEKO3D=ON
     
     - name: Dirty second cmake run
-      run: cmake -B build/switch -DPLATFORM_SWITCH=ON
+      run: cmake -B build/switch -DPLATFORM_SWITCH=ON -DUSE_DEKO3D=ON
 
     - name: Run build
       run: make -C build/switch Moonlight.nro -j8
