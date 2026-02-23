@@ -452,7 +452,7 @@ void MetalVideoRenderer::draw(NVGcontext* vg, int width, int height, AVFrame* fr
 }
 
 id<MTLDevice> getMetalDevice() {
-    if (@available(iOS 18.0, *)) {
+    if (@available(iOS 18.0, tvOS 18.0, *)) {
         NSArray<id<MTLDevice>> *devices = MTLCopyAllDevices();
         if (devices.count == 0) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,

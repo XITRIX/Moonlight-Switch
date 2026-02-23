@@ -59,11 +59,30 @@ int FFmpegVideoDecoder::setup(int video_format, int width, int height,
                               int redraw_rate, void* context, int dr_flags) {
     m_stream_fps = redraw_rate;
 
+    std::string format;
+    switch (video_format) {
+        case VIDEO_FORMAT_H264:
+            format = "H264";
+            break;
+        case VIDEO_FORMAT_H265:
+            format = "HEVC";
+            break;
+        case VIDEO_FORMAT_H265_MAIN10:
+            format = "HEVC HDR";
+            break;
+        case VIDEO_FORMAT_AV1_MAIN8:
+            format = "AV1";
+            break;
+        case VIDEO_FORMAT_AV1_MAIN10:
+            format = "AV1 HDR";
+            break;
+        default:
+            format = "UNKNOWN";
+            break;
+    }
     brls::Logger::debug("FFMpeg's AVCodec version: {}.{}.{}", AV_VERSION_MAJOR(avcodec_version()), AV_VERSION_MINOR(avcodec_version()), AV_VERSION_MICRO(avcodec_version()));
     brls::Logger::info(
-        "FFmpeg: Setup with format: {}, width: {}, height: {}, fps: {}",
-        video_format == VIDEO_FORMAT_H264 ? "H264" : "HEVC", width, height,
-        redraw_rate);
+        "FFmpeg: Setup with format: {}, width: {}, height: {}, fps: {}", format, width, height, redraw_rate);
 
     av_log_set_level(AV_LOG_WARNING);
     // av_log_set_callback(&ffmpegLog); // Uncomment to see FFMpeg logs
