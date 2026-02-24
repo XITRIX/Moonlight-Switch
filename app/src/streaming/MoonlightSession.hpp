@@ -17,8 +17,12 @@ class MoonlightSession {
     MoonlightSession(const std::string& address, int app_id);
     ~MoonlightSession();
 
+    static MoonlightSession* activeSession();
+
     void start(ServerCallback<bool> callback, bool is_sunshine);
     void stop(int terminate_app);
+
+    void restart();
 
     void draw(NVGcontext* vg, int width, int height);
 

@@ -2,6 +2,7 @@
 #include "AVFrameHolder.hpp"
 #include "Settings.hpp"
 #include "borealis.hpp"
+#include "MoonlightSession.hpp"
 
 #ifdef PLATFORM_APPLE
 extern "C" {
@@ -387,6 +388,10 @@ int FFmpegVideoDecoder::submit_decode_unit(PDECODE_UNIT decode_unit) {
             m_frame = get_frame(true);
             if (m_frame != nullptr)
                 AVFrameHolder::instance().push(m_frame);
+        }
+        else {
+            if (MoonlightSession::activeSession() != nullptr)
+                MoonlightSession::activeSession()->restart();
         }
     } else {
         brls::Logger::error("FFmpeg: Big buffer to decode... 2");

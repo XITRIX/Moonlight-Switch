@@ -17,6 +17,11 @@ int m_video_format;
 static MoonlightSession* m_active_session = nullptr;
 static MoonlightSessionDecoderAndRenderProvider* m_provider = nullptr;
 
+
+MoonlightSession* MoonlightSession::activeSession() {
+    return m_active_session;
+}
+
 void MoonlightSession::set_provider(
     MoonlightSessionDecoderAndRenderProvider* provider) {
     m_provider = provider;
@@ -363,6 +368,22 @@ void MoonlightSession::stop(int terminate_app) {
     }
 
     LiStopConnection();
+}
+
+void MoonlightSession::restart() {
+    LiStopConnection();
+
+    start([](const GSResult<bool>& result) {
+        if (result.isSuccess()) {
+            brls::Logger::info("MoonlightSession: Reconnected");
+        } else {
+            brls::Logger::info("MoonlightSession: Reconnection failed");
+            if (m_active_session) {
+                m_active_session->m_is_active = false;
+                m_active_session->m_is_terminated = true;
+            }
+        }
+    }, m_active_session->m_is_sunshine);
 }
 
 void MoonlightSession::draw(NVGcontext* vg, int width, int height) {
