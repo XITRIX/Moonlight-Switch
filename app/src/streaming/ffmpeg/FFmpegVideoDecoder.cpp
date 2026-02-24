@@ -446,8 +446,12 @@ AVFrame* FFmpegVideoDecoder::get_frame(bool native_frame) {
     }
 #endif
 
+    RECEIVE_RETRY:
     if ((err = avcodec_receive_frame(m_decoder_context, decodeFrame)) < 0) {
         if (err == AVERROR(EAGAIN)) {
+#if defined(PLATFORM_ANDROID)
+            goto RECEIVE_RETRY;
+#elif
             return nullptr;
         }
 
