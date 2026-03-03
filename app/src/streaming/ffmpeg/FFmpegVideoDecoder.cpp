@@ -257,9 +257,7 @@ void FFmpegVideoDecoder::cleanup() {
     }
 
     if (m_decoder_context) {
-        avcodec_close(m_decoder_context);
-        av_free(m_decoder_context);
-        m_decoder_context = nullptr;
+        avcodec_free_context(&m_decoder_context);
     }
 
 //    if (m_frames) {
@@ -451,8 +449,9 @@ AVFrame* FFmpegVideoDecoder::get_frame(bool native_frame) {
         if (err == AVERROR(EAGAIN)) {
 #if defined(PLATFORM_ANDROID)
             goto RECEIVE_RETRY;
-#elif
+#else
             return nullptr;
+#endif
         }
 
         char a[AV_ERROR_MAX_STRING_SIZE] = { 0 };

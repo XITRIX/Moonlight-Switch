@@ -27,6 +27,8 @@ std::string getVideoCodecName(VideoCodec codec) {
             return "settings/h265"_i18n;
         case AV1:
             return "settings/av1"_i18n;
+        default:
+            return "settings/h264"_i18n;
     }
 }
 

@@ -180,7 +180,7 @@ size_t AudrenAudioRenderer::append_audio(const void* buf, size_t size) {
         }
 
         m_current_wavebuf = &m_wavebufs[index];
-        current_pool_ptr = mempool_ptr + (index * m_buffer_size);
+        current_pool_ptr = static_cast<char*>(mempool_ptr) + (index * m_buffer_size);
         m_current_size = 0;
     }
 
@@ -188,7 +188,7 @@ size_t AudrenAudioRenderer::append_audio(const void* buf, size_t size) {
         size = m_buffer_size - m_current_size;
     }
 
-    void* dstbuf = current_pool_ptr + m_current_size;
+    void* dstbuf = static_cast<char*>(current_pool_ptr) + m_current_size;
     memcpy(dstbuf, buf, size);
     armDCacheFlush(dstbuf, size);
 
@@ -240,7 +240,7 @@ void AudrenAudioRenderer::write_audio(const void* buf, size_t size) {
 
     size_t written = 0;
     while (written < size) {
-        written += append_audio(buf + written, size - written);
+        written += append_audio(static_cast<const char*>(buf) + written, size - written);
 
         if (written != size) {
             mutexLock(&m_update_lock);
