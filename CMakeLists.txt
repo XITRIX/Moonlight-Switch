@@ -231,7 +231,6 @@ elseif (PLATFORM_IOS)
             "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_ALTER}"
             "${VERSION_BUILD}")
 
-    list(APPEND IOS_FRAMEWORKS ${CMAKE_CURRENT_SOURCE_DIR}/extern/borealis/library/lib/extern/angle/ios/MetalANGLE.framework)
     set_target_properties(${PROJECT_NAME} PROPERTIES 
         INSTALL_RPATH @executable_path/Frameworks
         XCODE_EMBED_FRAMEWORKS_CODE_SIGN_ON_COPY ON
@@ -253,7 +252,6 @@ elseif (PLATFORM_TVOS)
             ${PROJECT_NAME}
             "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_ALTER}"
             "${VERSION_BUILD}")
-    list(APPEND IOS_FRAMEWORKS ${CMAKE_CURRENT_SOURCE_DIR}/extern/borealis/library/lib/extern/angle/tvos/MetalANGLE.framework)
     set_target_properties(${PROJECT_NAME} PROPERTIES 
         INSTALL_RPATH @executable_path/Frameworks
         XCODE_EMBED_FRAMEWORKS_CODE_SIGN_ON_COPY ON

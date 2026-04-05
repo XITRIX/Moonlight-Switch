@@ -20,6 +20,7 @@ extern "C" {
 #import <CoreVideo/CoreVideo.h>
 #import <Metal/Metal.h>
 #import <MetalKit/MetalKit.h>
+#import <TargetConditionals.h>
 
 #define MAX_VIDEO_PLANES 3
 
@@ -432,12 +433,21 @@ void MetalVideoRenderer::draw(NVGcontext* vg, int width, int height, AVFrame* fr
     SDL_LockMutex(m_PresentationMutex);
     m_PendingPresentationCount++;
     SDL_UnlockMutex(m_PresentationMutex);
+#if TARGET_OS_SIMULATOR
+    [commandBuffer addCompletedHandler:^(id<MTLCommandBuffer>) {
+        SDL_LockMutex(m_PresentationMutex);
+        m_PendingPresentationCount--;
+        SDL_CondSignal(m_PresentationCond);
+        SDL_UnlockMutex(m_PresentationMutex);
+    }];
+#else
     [m_NextDrawable addPresentedHandler:^(id<MTLDrawable>) {
         SDL_LockMutex(m_PresentationMutex);
         m_PendingPresentationCount--;
         SDL_CondSignal(m_PresentationCond);
         SDL_UnlockMutex(m_PresentationMutex);
     }];
+#endif
 //    }
 
     // Flip to the newly rendered buffer
