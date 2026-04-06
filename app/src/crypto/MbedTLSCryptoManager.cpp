@@ -8,6 +8,7 @@
 #include <mbedtls/error.h>
 #include <mbedtls/sha1.h>
 #include <mbedtls/sha256.h>
+#include <mbedtls/version.h>
 #include <mbedtls/x509.h>
 #include <mbedtls/x509_crt.h>
 #include <string.h>
@@ -16,6 +17,60 @@ static Data m_cert;
 static Data m_key;
 
 static bool _generate_new_cert_key_pair();
+
+static int _mbedtls_sha1(const unsigned char* input, size_t ilen,
+                         unsigned char output[20]) {
+#if defined(MBEDTLS_VERSION_MAJOR) && MBEDTLS_VERSION_MAJOR >= 3
+    return mbedtls_sha1(input, ilen, output);
+#else
+    return mbedtls_sha1_ret(input, ilen, output);
+#endif
+}
+
+static int _mbedtls_sha256(const unsigned char* input, size_t ilen,
+                           unsigned char output[32]) {
+#if defined(MBEDTLS_VERSION_MAJOR) && MBEDTLS_VERSION_MAJOR >= 3
+    return mbedtls_sha256(input, ilen, output, 0);
+#else
+    return mbedtls_sha256_ret(input, ilen, output, 0);
+#endif
+}
+
+static Data _mbedtls_cert_signature(const mbedtls_x509_crt& x509) {
+#if defined(MBEDTLS_VERSION_MAJOR) && MBEDTLS_VERSION_MAJOR >= 3
+    return Data(x509.MBEDTLS_PRIVATE(sig).p, x509.MBEDTLS_PRIVATE(sig).len);
+#else
+    return Data(x509.sig.p, x509.sig.len);
+#endif
+}
+
+static int _mbedtls_pk_parse_private_key(mbedtls_pk_context* pk, Data key,
+                                         mbedtls_ctr_drbg_context* ctr_drbg) {
+#if defined(MBEDTLS_VERSION_MAJOR) && MBEDTLS_VERSION_MAJOR >= 3
+    return mbedtls_pk_parse_key(pk, key.bytes(), key.size() + 1, NULL, 0,
+                                mbedtls_ctr_drbg_random, ctr_drbg);
+#else
+    (void)ctr_drbg;
+    return mbedtls_pk_parse_key(pk, key.bytes(), key.size() + 1, NULL, 0);
+#endif
+}
+
+static int _mbedtls_pk_sign_sha256(mbedtls_pk_context* pk,
+                                   const unsigned char hash[32],
+                                   unsigned char* signature,
+                                   size_t signature_capacity,
+                                   size_t* signature_size,
+                                   mbedtls_ctr_drbg_context* ctr_drbg) {
+#if defined(MBEDTLS_VERSION_MAJOR) && MBEDTLS_VERSION_MAJOR >= 3
+    return mbedtls_pk_sign(pk, MBEDTLS_MD_SHA256, hash, 32, signature,
+                           signature_capacity, signature_size,
+                           mbedtls_ctr_drbg_random, ctr_drbg);
+#else
+    (void)signature_capacity;
+    return mbedtls_pk_sign(pk, MBEDTLS_MD_SHA256, hash, 0, signature,
+                           signature_size, mbedtls_ctr_drbg_random, ctr_drbg);
+#endif
+}
 
 bool MbedTLSCryptoManager::load_cert_key_pair() {
     if (m_key.is_empty() || m_cert.is_empty()) {
@@ -63,7 +118,7 @@ Data MbedTLSCryptoManager::SHA1_hash_data(Data data) {
     mbedtls_sha1_context ctx;
     unsigned char sha1[20];
     mbedtls_sha1_init(&ctx);
-    mbedtls_sha1_ret(data.bytes(), data.size(), sha1);
+    _mbedtls_sha1(data.bytes(), data.size(), sha1);
     mbedtls_sha1_free(&ctx);
     return Data(sha1, sizeof(sha1));
 }
@@ -72,7 +127,7 @@ Data MbedTLSCryptoManager::SHA256_hash_data(Data data) {
     mbedtls_sha256_context ctx;
     unsigned char sha256[32];
     mbedtls_sha256_init(&ctx);
-    mbedtls_sha256_ret(data.bytes(), data.size(), sha256, 0);
+    _mbedtls_sha256(data.bytes(), data.size(), sha256);
     mbedtls_sha256_free(&ctx);
     return Data(sha256, sizeof(sha256));
 }
@@ -141,7 +196,7 @@ Data MbedTLSCryptoManager::signature(Data cert) {
 
     mbedtls_x509_crt_parse(&x509, cert.bytes(), cert.size() + 1);
 
-    Data data(x509.sig.p, x509.sig.len);
+    Data data = _mbedtls_cert_signature(x509);
     mbedtls_x509_crt_free(&x509);
     return data;
 }
@@ -158,7 +213,7 @@ Data MbedTLSCryptoManager::sign_data(Data data, Data key) {
     mbedtls_ctr_drbg_context ctr_drbg;
 
     unsigned char hash[32];
-    unsigned char buf[MBEDTLS_MPI_MAX_SIZE];
+    unsigned char buf[MBEDTLS_PK_SIGNATURE_MAX_SIZE];
     size_t size = 0;
 
     mbedtls_entropy_init(&entropy);
@@ -166,11 +221,10 @@ Data MbedTLSCryptoManager::sign_data(Data data, Data key) {
     mbedtls_pk_init(&pk);
     mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy, NULL, 0);
 
-    mbedtls_pk_parse_key(&pk, key.bytes(), key.size() + 1, NULL, 0);
+    _mbedtls_pk_parse_private_key(&pk, key, &ctr_drbg);
     mbedtls_md(mbedtls_md_info_from_type(MBEDTLS_MD_SHA256), data.bytes(),
                data.size(), hash);
-    mbedtls_pk_sign(&pk, MBEDTLS_MD_SHA256, hash, 0, buf, &size,
-                    mbedtls_ctr_drbg_random, &ctr_drbg);
+    _mbedtls_pk_sign_sha256(&pk, hash, buf, sizeof(buf), &size, &ctr_drbg);
 
     mbedtls_pk_free(&pk);
     mbedtls_ctr_drbg_free(&ctr_drbg);

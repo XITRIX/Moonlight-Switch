@@ -18,7 +18,7 @@ if (APPLE AND PLATFORM_DESKTOP)
     message(STATUS "CMAKE_OSX_ARCHITECTURES: ${CMAKE_OSX_ARCHITECTURES}")
 endif ()
 
-if (PLATFORM_IOS OR PLATFORM_TVOS)
+if (PLATFORM_IOS OR PLATFORM_TVOS OR PLATFORM_VISIONOS)
     # set(ENABLE_ARC OFF)
 endif ()
 
@@ -26,7 +26,8 @@ endif ()
 include(${EXTERN_PATH}/cmake/toolchain.cmake)
 
 # Renderers
-if (PLATFORM_IOS OR PLATFORM_TVOS)
+if (PLATFORM_IOS OR PLATFORM_TVOS OR PLATFORM_VISIONOS)
+    set(USE_METAL ON)
     set(USE_METAL_RENDERER ON)
 #     set(USE_GL_RENDERER ON)
 else()
@@ -50,6 +51,13 @@ set(PROJECT_AUTHOR "XITRIX")
 set(PROJECT_ICON ${CMAKE_CURRENT_SOURCE_DIR}/resources/img/moonlight_icon.jpg)
 set(PROJECT_RESOURCES ${CMAKE_CURRENT_SOURCE_DIR}/resources)
 
+if (DEFINED VCPKG_INSTALLED_DIR AND DEFINED VCPKG_TARGET_TRIPLET)
+    set(_moonlight_vcpkg_triplet_dir "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}")
+    if (EXISTS "${_moonlight_vcpkg_triplet_dir}")
+        list(PREPEND CMAKE_PREFIX_PATH "${_moonlight_vcpkg_triplet_dir}")
+    endif ()
+endif ()
+
 add_definitions(
         -DAPP_VERSION="${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_ALTER}"
         -Dcimg_display=0
@@ -72,12 +80,14 @@ if (USE_LIBROMFS)
 endif ()
 
 if (USE_MBEDTLS_CRYPTO)
-    find_package(MbedTLS REQUIRED)
+    find_package(MbedTLS REQUIRED COMPONENTS crypto tls x509)
     add_compile_definitions(USE_MBEDTLS_CRYPTO)
 elseif (USE_OPENSSL_CRYPTO)
     find_package(OpenSSL REQUIRED)
     add_definitions(-DUSE_OPENSSL_CRYPTO)
 endif ()
+
+unset(_moonlight_vcpkg_triplet_dir)
 
 set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
 add_subdirectory(extern)
@@ -107,7 +117,7 @@ elseif (PLATFORM_SWITCH)
 elseif (PLATFORM_PSV)
     add_definitions(-D__psp2__ -D__PSV__)
 elseif (PLATFORM_ANDROID)
-elseif (PLATFORM_IOS OR PLATFORM_TVOS)
+elseif (PLATFORM_IOS OR PLATFORM_TVOS OR PLATFORM_VISIONOS)
     list(APPEND MAIN_SRC app/platforms/ios/apple_mdns.mm)
     list(APPEND MAIN_SRC app/platforms/ios/apple_display.mm)
 endif ()
@@ -244,6 +254,28 @@ elseif (PLATFORM_IOS)
         XCODE_ATTRIBUTE_LD_RUNPATH_SEARCH_PATHS "@executable_path/Frameworks"
         XCODE_ATTRIBUTE_FRAMEWORK_SEARCH_PATHS "${CMAKE_CURRENT_SOURCE_DIR}/extern/borealis/library/lib/extern/angle/ios/"
         XCODE_ATTRIBUTE_INSTALL_PATH $(LOCAL_APPS_DIR))
+elseif (PLATFORM_VISIONOS)
+    ios_bundle(
+            "${CMAKE_CURRENT_SOURCE_DIR}/app/platforms/ios/iphoneos/Splash.storyboard"
+            "${CMAKE_CURRENT_SOURCE_DIR}/app/platforms/ios/Images.xcassets"
+            "${CMAKE_CURRENT_SOURCE_DIR}/app/platforms/ios/iOSBundleInfo.plist.in"
+            ${PROJECT_NAME}
+            "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_ALTER}"
+            "${VERSION_BUILD}")
+
+    set_target_properties(${PROJECT_NAME} PROPERTIES
+        INSTALL_RPATH @executable_path/Frameworks
+        XCODE_EMBED_FRAMEWORKS_CODE_SIGN_ON_COPY ON
+        MACOSX_BUNDLE_COPYRIGHT "Copyright 2024 ${PROJECT_AUTHOR}"
+        XCODE_ATTRIBUTE_CURRENT_PROJECT_VERSION "${VERSION_BUILD}"
+        XCODE_ATTRIBUTE_INFOPLIST_KEY_GCSupportsGameMode YES
+        XCODE_ATTRIBUTE_INFOPLIST_KEY_GCSupportsControllerUserInteraction YES
+        XCODE_ATTRIBUTE_INFOPLIST_KEY_GCRequiresControllerUserInteraction YES
+        XCODE_ATTRIBUTE_INFOPLIST_KEY_LSSupportsGameMode YES
+        XCODE_ATTRIBUTE_INFOPLIST_KEY_LSApplicationCategoryType "public.app-category.games"
+        XCODE_ATTRIBUTE_LD_RUNPATH_SEARCH_PATHS "@executable_path/Frameworks"
+        XCODE_ATTRIBUTE_FRAMEWORK_SEARCH_PATHS "${CMAKE_CURRENT_SOURCE_DIR}/extern/borealis/library/lib/extern/angle/vision/"
+        XCODE_ATTRIBUTE_INSTALL_PATH $(LOCAL_APPS_DIR))
 elseif (PLATFORM_TVOS)
     ios_bundle(
             "${CMAKE_CURRENT_SOURCE_DIR}/app/platforms/ios/tvos/Splash.storyboard"
@@ -360,9 +392,9 @@ endif ()
 
 if (USE_MBEDTLS_CRYPTO)
     target_link_libraries(${PROJECT_NAME} PRIVATE
-            mbed::tls
-            mbed::x509
-            mbed::crypto)
+            MbedTLS::mbedtls
+            MbedTLS::mbedx509
+            MbedTLS::mbedcrypto)
 else ()
     target_link_libraries(${PROJECT_NAME} PRIVATE
             OpenSSL::SSL
@@ -385,7 +417,7 @@ if (SUPPORT_HDR)
     add_definitions(-DSUPPORT_HDR)
 endif ()
 
-if (PLATFORM_IOS OR PLATFORM_TVOS)
+if (PLATFORM_IOS OR PLATFORM_TVOS OR PLATFORM_VISIONOS)
     set_target_properties(${PROJECT_NAME} PROPERTIES
         XCODE_EMBED_FRAMEWORKS "${IOS_FRAMEWORKS}")
 endif()

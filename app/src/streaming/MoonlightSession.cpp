@@ -7,7 +7,7 @@
 #include <string.h>
 #include <SDL.h>
 
-#ifdef PLATFORM_IOS
+#if defined(PLATFORM_IOS) || defined(PLATFORM_VISIONOS)
 extern void getWindowSize(int* w, int* h);
 #endif
 
@@ -255,7 +255,7 @@ void MoonlightSession::start(ServerCallback<bool> callback, bool is_sunshine) {
     int h = Settings::instance().resolution();
     int w = h * 16 / 9;
     if (h == -1) {
-#if defined(PLATFORM_IOS)
+#if defined(PLATFORM_IOS) || defined(PLATFORM_VISIONOS)
         getWindowSize(&w, &h);
 #else
         h = Application::windowHeight;

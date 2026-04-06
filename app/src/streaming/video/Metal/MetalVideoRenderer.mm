@@ -24,7 +24,7 @@ extern "C" {
 
 #define MAX_VIDEO_PLANES 3
 
-UIView* m_MetalView;
+MTKView* m_MetalView;
 CAMetalLayer* m_MetalLayer;
 CVMetalTextureCacheRef m_TextureCache;
 id<MTLBuffer> m_CscParamsBuffer;
@@ -325,7 +325,9 @@ void MetalVideoRenderer::waitToRender()
 }}
 
 void MetalVideoRenderer::draw(NVGcontext* vg, int width, int height, AVFrame* frame, int imageFormat) {
-    initialize(imageFormat);
+    if (!initialize(imageFormat)) {
+        return;
+    }
     waitToRender();
 
     if (frame->format != AV_PIX_FMT_VIDEOTOOLBOX) { return; }
@@ -462,6 +464,9 @@ void MetalVideoRenderer::draw(NVGcontext* vg, int width, int height, AVFrame* fr
 }
 
 id<MTLDevice> getMetalDevice() {
+#if defined(PLATFORM_VISIONOS)
+    return MTLCreateSystemDefaultDevice();
+#else
     if (@available(iOS 18.0, tvOS 18.0, *)) {
         NSArray<id<MTLDevice>> *devices = MTLCopyAllDevices();
         if (devices.count == 0) {
@@ -480,14 +485,14 @@ id<MTLDevice> getMetalDevice() {
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                 "Using Metal renderer due to VT_FORCE_METAL=1 override.");
     return MTLCreateSystemDefaultDevice();
+#endif
 }
 
 bool MetalVideoRenderer::initialize(int imageFormat)
 { @autoreleasepool {
-    if (initialized) return;
-    initialized = true;
-
-    int err;
+    if (initialized) {
+        return true;
+    }
 
     auto videoContext = (brls::SDLVideoContext*) brls::Application::getPlatform()->getVideoContext();
     m_Window = videoContext->getSDLWindow();
@@ -505,17 +510,6 @@ bool MetalVideoRenderer::initialize(int imageFormat)
 //        return false;
 //    }
 
-//    err = av_hwdevice_ctx_create(&m_HwContext,
-//                                 AV_HWDEVICE_TYPE_VIDEOTOOLBOX,
-//                                 nullptr,
-//                                 nullptr,
-//                                 0);
-    if (err < 0) {
-        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                    "av_hwdevice_ctx_create() failed for VT decoder: %d",
-                    err);
-        return false;
-    }
     SDL_SysWMinfo info;
     UIView *view = NULL;
     SDL_VERSION(&info.version);
@@ -532,18 +526,39 @@ bool MetalVideoRenderer::initialize(int imageFormat)
         return false;
     }
 
-    m_MetalView = [[MTKView alloc] init];
+    if ([view.layer isKindOfClass:[CAMetalLayer class]]) {
+        CAMetalLayer *rootMetalLayer = (CAMetalLayer *)view.layer;
+        view.opaque = NO;
+        view.backgroundColor = UIColor.clearColor;
+        rootMetalLayer.opaque = NO;
+        rootMetalLayer.backgroundColor = UIColor.clearColor.CGColor;
+    }
+
+    m_MetalView = [[MTKView alloc] initWithFrame:view.frame device:device];
+    m_MetalView.opaque = NO;
+    m_MetalView.backgroundColor = UIColor.clearColor;
+    m_MetalView.clearColor = MTLClearColorMake(0.0, 0.0, 0.0, 0.0);
+    m_MetalView.userInteractionEnabled = NO;
+    m_MetalView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+
     m_MetalLayer = (CAMetalLayer*) [m_MetalView layer];
-    [view.superview insertSubview:m_MetalView atIndex:0];
-    view.layer.sublayers[0].opaque = false;
-    m_MetalView.frame = view.bounds;
+    m_MetalLayer.opaque = NO;
+    m_MetalLayer.backgroundColor = UIColor.clearColor.CGColor;
+
+    if (view.superview) {
+        [view.superview insertSubview:m_MetalView belowSubview:view];
+    } else {
+        m_MetalView.frame = view.bounds;
+        [view addSubview:m_MetalView];
+        [view sendSubviewToBack:m_MetalView];
+    }
 
     // Choose a device
     m_MetalLayer.device = device;
 
     // Allow EDR content if we're streaming in a 10-bit format
-#if defined(PLATFORM_IOS)
-    if (@available(iOS 16.0, *)) {
+#if defined(PLATFORM_IOS) || defined(PLATFORM_TVOS) || defined(PLATFORM_VISIONOS)
+    if (@available(iOS 16.0, tvOS 16.0, visionOS 1.0, *)) {
         m_MetalLayer.wantsExtendedDynamicRangeContent = imageFormat & VIDEO_FORMAT_MASK_10BIT;
     }
 #endif
@@ -565,7 +580,7 @@ bool MetalVideoRenderer::initialize(int imageFormat)
     CFStringRef keys[1] = { kCVMetalTextureUsage };
     NSUInteger values[1] = { MTLTextureUsageShaderRead };
     auto cacheAttributes = CFDictionaryCreate(kCFAllocatorDefault, (const void**)keys, (const void**)values, 1, nullptr, nullptr);
-    err = CVMetalTextureCacheCreate(kCFAllocatorDefault, cacheAttributes, m_MetalLayer.device, nullptr, &m_TextureCache);
+    CVReturn err = CVMetalTextureCacheCreate(kCFAllocatorDefault, cacheAttributes, m_MetalLayer.device, nullptr, &m_TextureCache);
     CFRelease(cacheAttributes);
 
     if (err != kCVReturnSuccess) {
@@ -586,6 +601,13 @@ bool MetalVideoRenderer::initialize(int imageFormat)
 
     // Create a command queue for submission
     m_CommandQueue = [m_MetalLayer.device newCommandQueue];
+    if (!m_CommandQueue) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "Failed to create Metal command queue");
+        return false;
+    }
+
+    initialized = true;
     return true;
 }}
 

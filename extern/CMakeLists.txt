@@ -5,7 +5,6 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/")
 set(BUILD_SHARED_LIBS OFF)
 
 if (USE_MBEDTLS_CRYPTO)
-    find_library(MbedTLS MbedTLS)
     set(USE_MBEDTLS ON)
 endif ()
 
