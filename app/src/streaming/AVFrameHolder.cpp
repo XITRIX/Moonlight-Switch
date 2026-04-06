@@ -7,34 +7,76 @@
 
 #include "AVFrameHolder.hpp"
 
-AVFrameQueue::AVFrameQueue() {}
+namespace {
 
-AVFrameQueue::~AVFrameQueue() {
-    for (; !queue.empty(); queue.pop()) {
-        AVFrame* frame = queue.front();
-        av_frame_free(&frame);
-    }
-
-    for (; !freeQueue.empty(); freeQueue.pop()) {
-        AVFrame* frame = freeQueue.front();
+void freeFrameQueue(std::queue<AVFrame*>& frames) {
+    for (; !frames.empty(); frames.pop()) {
+        AVFrame* frame = frames.front();
         av_frame_free(&frame);
     }
 }
 
-void AVFrameQueue::push(AVFrame* item) {
+void recycleFrame(std::queue<AVFrame*>& freeQueue, AVFrame*& frame) {
+    if (!frame) {
+        return;
+    }
+
+    av_frame_unref(frame);
+    freeQueue.push(frame);
+    frame = nullptr;
+}
+
+} // namespace
+
+AVFrameQueue::AVFrameQueue() {}
+
+AVFrameQueue::~AVFrameQueue() {
+    cleanup();
+    freeFrameQueue(freeQueue);
+}
+
+bool AVFrameQueue::push(AVFrame* item) {
     std::lock_guard<std::mutex> lock(m_mutex);
-    queue.push(item);
+
+    if (!item) {
+        return false;
+    }
+
+    AVFrame* queuedFrame = nullptr;
+    if (!freeQueue.empty()) {
+        queuedFrame = freeQueue.front();
+        freeQueue.pop();
+        av_frame_unref(queuedFrame);
+    } else {
+        queuedFrame = av_frame_alloc();
+        if (!queuedFrame) {
+            return false;
+        }
+    }
+
+    if (av_frame_ref(queuedFrame, item) < 0) {
+        av_frame_free(&queuedFrame);
+        return false;
+    }
+
+    queue.push(queuedFrame);
 
     if (queue.size() > limit) {
+        AVFrame* droppedFrame = queue.front();
         queue.pop();
+        recycleFrame(freeQueue, droppedFrame);
         framesDroppedStat ++;
     }
+
+    return true;
 }
 
 AVFrame* AVFrameQueue::pop() {
     std::lock_guard<std::mutex> lock(m_mutex);
 
     if (!queue.empty()) {
+        recycleFrame(freeQueue, bufferFrame);
+
         AVFrame* item = queue.front();
         queue.pop();
         bufferFrame = item;
@@ -61,6 +103,13 @@ void AVFrameQueue::cleanup() {
     std::lock_guard<std::mutex> lock(m_mutex);
     fakeFrameUsedStat = 0;
     framesDroppedStat = 0;
-    bufferFrame = nullptr;
+
+    if (bufferFrame) {
+        av_frame_free(&bufferFrame);
+    }
+
+    freeFrameQueue(queue);
+    freeFrameQueue(freeQueue);
     queue = {};
+    freeQueue = {};
 }

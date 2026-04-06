@@ -247,6 +247,9 @@ bool MetalVideoRenderer::updateVideoRegionSizeForFrame(AVFrame* frame) {
         return true;
     }
 
+    discardNextDrawable();
+    m_MetalView.drawableSize = CGSizeMake(drawableWidth, drawableHeight);
+
     // Determine the correct scaled size for the video region
     SDL_Rect src, dst;
     src.x = src.y = 0;
@@ -328,9 +331,13 @@ void MetalVideoRenderer::draw(NVGcontext* vg, int width, int height, AVFrame* fr
     if (!initialize(imageFormat)) {
         return;
     }
-    waitToRender();
 
     if (frame->format != AV_PIX_FMT_VIDEOTOOLBOX) { return; }
+
+    CVPixelBufferRef pixBuf = reinterpret_cast<CVPixelBufferRef>(frame->data[3]);
+    if (!pixBuf || !m_TextureCache) {
+        return;
+    }
 
     // Handle changes to the frame's colorspace from last time we rendered
     if (!updateColorSpaceForFrame(frame)) {
@@ -350,6 +357,8 @@ void MetalVideoRenderer::draw(NVGcontext* vg, int width, int height, AVFrame* fr
         return;
     }
 
+    waitToRender();
+
     // Don't proceed with rendering if we don't have a drawable
     if (m_NextDrawable == nullptr) {
         return;
@@ -358,8 +367,6 @@ void MetalVideoRenderer::draw(NVGcontext* vg, int width, int height, AVFrame* fr
     std::array<CVMetalTextureRef, MAX_VIDEO_PLANES> cvMetalTextures;
     size_t planes = getFramePlaneCount(frame);
 //    SDL_assert(planes <= MAX_VIDEO_PLANES);
-
-    CVPixelBufferRef pixBuf = reinterpret_cast<CVPixelBufferRef>(frame->data[3]);
 
     // Create Metal textures for the planes of the CVPixelBuffer
     for (size_t i = 0; i < planes; i++) {

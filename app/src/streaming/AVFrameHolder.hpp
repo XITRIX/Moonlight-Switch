@@ -15,7 +15,7 @@ public:
     explicit AVFrameQueue();
     ~AVFrameQueue();
 
-    void push(AVFrame* item);
+    bool push(AVFrame* item);
     AVFrame* pop();
 
     [[nodiscard]] size_t size() const;
@@ -38,8 +38,9 @@ private:
 class AVFrameHolder : public Singleton<AVFrameHolder> {
   public:
     void push(AVFrame* frame) {
-        m_frame_queue.push(frame);
-        stat ++;
+        if (m_frame_queue.push(frame)) {
+            stat ++;
+        }
     }
 
     void get(const std::function<void(AVFrame*)>& fn) {
