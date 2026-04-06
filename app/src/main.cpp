@@ -38,23 +38,13 @@
 using namespace brls::literals; // for _i18n
 
 int main(int argc, char* argv[]) {
-    // Enable recording for Twitter memes
 #ifdef __SWITCH__
-    appletInitializeGamePlayRecording();
-    appletSetWirelessPriorityMode(AppletWirelessPriorityMode_OptimizedForWlan);
-
     // Keep the main thread above others so that the program stays responsive
-    // when doing software decoding
+    // when doing software decoding.
+    // Note: appletInitializeGamePlayRecording() and appletSetWirelessPriorityMode()
+    // are handled by borealis SwitchPlatform — calling them here again would double-init
+    // and may return unexpected result codes on HOS 22.x+.
     svcSetThreadPriority(CUR_THREAD_HANDLE, 0x20);
-
-    // auto at = appletGetAppletType();
-    // g_application_mode = at == AppletType_Application || at == AppletType_SystemApplication;
-
-    // // To get access to /dev/nvhost-nvjpg, we need nvdrv:{a,s,t}
-    // // However, nvdrv:{a,s} have limited address space for gpu mappings
-    // extern u32 __nx_nv_service_type, __nx_nv_transfermem_size;
-    // __nx_nv_service_type     = NvServiceType_Factory;
-    // __nx_nv_transfermem_size = (g_application_mode ? 16 : 3) * 0x100000;
 #endif
 
     // Set log level
@@ -117,7 +107,8 @@ int main(int argc, char* argv[]) {
 
     // Exit
 #ifdef __SWITCH__
-    nvExit();
+    // Note: nvExit() omitted — deko3D owns the nvInitialize() refcount.
+    // Calling nvExit() here double-decrements it on HOS 22.x causing a panic.
 #elif defined(PLATFORM_TVOS)
     exit(0);
 #endif
