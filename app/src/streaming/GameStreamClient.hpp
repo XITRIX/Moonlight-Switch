@@ -65,6 +65,7 @@ class GameStreamClient : public Singleton<GameStreamClient> {
 
     static bool can_find_host();
     static void find_hosts(ServerCallback<std::vector<Host>>& callback);
+    static void cancel_find_hosts();
 
     static bool can_wake_up_host(const Host& host);
     static void wake_up_host(const Host& host, ServerCallback<bool>& callback);

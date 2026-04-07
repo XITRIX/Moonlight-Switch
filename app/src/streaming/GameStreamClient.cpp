@@ -4,6 +4,7 @@
 #include <borealis.hpp>
 #include <thread>
 #include <unistd.h>
+#include <atomic>
 #include <vector>
 
 #include <curl/curl.h>
@@ -42,7 +43,11 @@ GameStreamClient::GameStreamClient() { start(); }
 
 void GameStreamClient::start() {}
 
-void GameStreamClient::stop() {}
+void GameStreamClient::stop() {
+#ifndef MULTICAST_DISABLED
+    cancel_find_hosts();
+#endif
+}
 
 static uint32_t get_my_ip_address() {
     uint32_t address = 0;
@@ -89,8 +94,11 @@ std::vector<std::string> GameStreamClient::host_addresses_for_find() {
 bool GameStreamClient::can_find_host() { return get_my_ip_address() != 0; }
 
 #ifndef MULTICAST_DISABLED
- static std::vector<Host> foundHosts;
- static std::string foundHost;
+static std::atomic_uint64_t findHostsGeneration = 0;
+
+struct MdnsSearchContext {
+    std::string foundHost;
+};
 
 std::string get_ip_str(const struct sockaddr *addr)
 {
@@ -120,29 +128,47 @@ static int mdns_discovery_callback(int sock, const struct sockaddr* from, size_t
                                    size_t offset, size_t length, size_t record_offset,
                                    size_t record_length, void* user_data)
 {
+    auto* context = static_cast<MdnsSearchContext*>(user_data);
     if (type == MDNS_RECORDTYPE_A) {
-        foundHost = get_ip_str(from);
+        context->foundHost = get_ip_str(from);
     }
     return 0;
 }
 
 void GameStreamClient::find_hosts(ServerCallback<std::vector<Host>>& callback) {
-    brls::async([callback] {
-        foundHosts.clear();
+    const uint64_t generation = ++findHostsGeneration;
+    brls::async([callback, generation] {
+        auto isCancelled = [generation]() {
+            return generation != findHostsGeneration.load();
+        };
 
+        std::vector<Host> foundHosts;
+        MdnsSearchContext searchContext;
         size_t capacity = 2048;
-        void* buffer = malloc(capacity);
+        std::vector<uint8_t> buffer(capacity);
         size_t records;
-
 
         int sock = mdns_socket_open_ipv4(nullptr);
         if (sock < 0) {
             return;
         }
 
+        auto closeSocket = [&sock]() {
+            if (sock >= 0) {
+                mdns_socket_close(sock);
+                sock = -1;
+            }
+        };
+
+        if (isCancelled()) {
+            closeSocket();
+            return;
+        }
+
         if (mdns_query_send(sock, MDNS_RECORDTYPE_PTR,
                         MDNS_STRING_CONST("_nvstream._tcp.local"),
-                        buffer, capacity, 0)) {
+                        buffer.data(), capacity, 0)) {
+            closeSocket();
             brls::sync([callback] {
                 callback(GSResult<std::vector<Host>>::failure(
                         "error/unknown_error"_i18n));
@@ -151,8 +177,8 @@ void GameStreamClient::find_hosts(ServerCallback<std::vector<Host>>& callback) {
         }
 
         int empty_cnt = 0;
-        while (true) {
-            records = mdns_query_recv(sock, buffer, capacity, mdns_discovery_callback, (void*)(&callback), 0);
+        while (!isCancelled()) {
+            records = mdns_query_recv(sock, buffer.data(), capacity, mdns_discovery_callback, &searchContext, 0);
             if (records == 0) {
                 empty_cnt++;
             } else {
@@ -160,15 +186,15 @@ void GameStreamClient::find_hosts(ServerCallback<std::vector<Host>>& callback) {
 
                 SERVER_DATA server_data;
 
-                int status = gs_init(&server_data, foundHost);
+                int status = gs_init(&server_data, searchContext.foundHost);
                 if (status == GS_OK) {
                     Host host;
-                    host.address = foundHost;
+                    host.address = searchContext.foundHost;
                     host.hostname = server_data.hostname;
                     host.mac = server_data.mac;
                     foundHosts.push_back(host);
 
-                    brls::sync([callback] {
+                    brls::sync([callback, foundHosts] {
                         callback(GSResult<std::vector<Host>>::success(foundHosts));
                     });
                 }
@@ -180,7 +206,13 @@ void GameStreamClient::find_hosts(ServerCallback<std::vector<Host>>& callback) {
 
             retro_sleep(500);
         }
+
+        closeSocket();
     });
+}
+
+void GameStreamClient::cancel_find_hosts() {
+    ++findHostsGeneration;
 }
 #endif
 

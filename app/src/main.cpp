@@ -112,13 +112,8 @@ int main(int argc, char* argv[]) {
     while (brls::Application::mainLoop())
         ;
 
-    GameStreamClient::instance().stop();
-    DiscoverManager::instance().pause();
-
     // Exit
-#ifdef __SWITCH__
-    nvExit();
-#elif defined(PLATFORM_TVOS)
+#if defined(PLATFORM_TVOS)
     exit(0);
 #endif
     

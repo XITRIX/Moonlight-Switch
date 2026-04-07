@@ -93,6 +93,7 @@ void AddHostTab::findHost() {
         DiscoverManager::instance().getHostsUpdateEvent()->subscribe(
             [this](auto result) { fillSearchBox(result); });
 #else
+    stopSearchHost();
     ASYNC_RETAIN
 #if defined(PLATFORM_IOS) || defined(PLATFORM_TVOS) || defined(PLATFORM_VISIONOS)
     darwin_mdns_start(
@@ -128,7 +129,9 @@ void AddHostTab::findHost() {
 
 void AddHostTab::stopSearchHost() {
 #ifdef PLATFORM_IOS
-    
+#elif defined(PLATFORM_TVOS) || defined(PLATFORM_VISIONOS)
+#else
+    GameStreamClient::cancel_find_hosts();
 #endif
 }
 
@@ -204,6 +207,7 @@ void AddHostTab::startSearching() {
 }
 
 AddHostTab::~AddHostTab() {
+    stopSearchHost();
 #ifdef MULTICAST_DISABLED
     DiscoverManager::instance().pause();
     DiscoverManager::instance().getHostsUpdateEvent()->unsubscribe(
