@@ -106,6 +106,35 @@ namespace
         Vertex{{+1.0f, -1.0f, 0.0f}, {1.0f, 1.0f}},
         Vertex{{+1.0f, +1.0f, 0.0f}, {1.0f, 0.0f}},
     };
+
+    static void getFrameColorInfo(AVFrame* frame, AVColorSpace& colorSpace,
+                                  bool& colorFull) {
+        colorFull = frame->color_range == AVCOL_RANGE_JPEG;
+
+        // NVDEC/NVTEGRA frames can report JPEG range even when stream
+        // negotiation requested limited range. This manifests as lifted blacks.
+        if (frame->format == AV_PIX_FMT_NVTEGRA &&
+            frame->color_range == AVCOL_RANGE_JPEG) {
+            colorFull = false;
+        }
+
+        switch (frame->colorspace) {
+        case AVCOL_SPC_SMPTE170M:
+        case AVCOL_SPC_BT470BG:
+            colorSpace = AVCOL_SPC_SMPTE170M;
+            break;
+        case AVCOL_SPC_BT709:
+            colorSpace = AVCOL_SPC_BT709;
+            break;
+        case AVCOL_SPC_BT2020_NCL:
+        case AVCOL_SPC_BT2020_CL:
+            colorSpace = AVCOL_SPC_BT2020_NCL;
+            break;
+        default:
+            colorSpace = to_av_colorspace(COLORSPACE_REC_601);
+            break;
+        }
+    }
 }
 
 DKVideoRenderer::DKVideoRenderer() {}
@@ -116,7 +145,7 @@ DKVideoRenderer::~DKVideoRenderer() {
     }
 
     frameMappings.clear();
-    updateCmdMem.destroy();
+    releaseImageSlots();
     vertexBuffer.destroy();
     transformUniformBuffer.destroy();
 }
@@ -153,11 +182,7 @@ void DKVideoRenderer::checkAndInitialize(int width, int height, AVFrame* frame) 
 
     // Dynamic descriptor update command buffer with a tiny ring
     updateCmdbuf = dk::CmdBufMaker{dev}.create();
-    updateCmdMem = pool_data->allocate(
-        UpdateCmdSliceSize * brls::FRAMEBUFFERS_COUNT, DK_CMDMEM_ALIGNMENT);
-
-    // Create image descriptor set
-    imageDescriptorSet = vctx->getImageDescriptor();
+    updateCmdMemRing.allocate(*pool_data, UpdateCmdSliceSize);
 
     // Load the shaders
     vertexShader.load(*pool_code, "romfs:/shaders/basic_vsh.dksh");
@@ -169,17 +194,52 @@ void DKVideoRenderer::checkAndInitialize(int width, int height, AVFrame* frame) 
 
     // Load the transform buffer
     transformUniformBuffer =
-        pool_code->allocate(sizeof(Transformation), DK_UNIFORM_BUF_ALIGNMENT);
+        pool_data->allocate(sizeof(Transformation), DK_UNIFORM_BUF_ALIGNMENT);
 
-    bool colorFull = isFrameFullRange(frame);
+    // Allocate image indexes for planes
+    lumaTextureId = vctx->allocateImageIndex();
+    chromaTextureId = vctx->allocateImageIndex();
 
-    // NVDEC/NVTEGRA frames can report JPEG range even when stream negotiation
-    // requested limited range. This manifests as lifted blacks (washed image).
-    if (frame->format == AV_PIX_FMT_NVTEGRA && frame->color_range == AVCOL_RANGE_JPEG) {
-        colorFull = false;
+    if (lumaTextureId < 0 || chromaTextureId < 0) {
+        brls::Logger::error("{}: Failed to reserve image descriptor slots",
+                            __PRETTY_FUNCTION__);
+        releaseImageSlots();
+        return;
     }
 
-    enum AVColorSpace colorSpace = to_av_colorspace(getFrameColorspace(frame));
+    brls::Logger::debug("{}: Luma texture ID {}", __PRETTY_FUNCTION__,
+                        lumaTextureId);
+    brls::Logger::debug("{}: Chroma texture ID {}", __PRETTY_FUNCTION__,
+                        chromaTextureId);
+
+    updateFrameLayouts();
+    recordStaticCommands(frame);
+
+    m_is_initialized = true;
+}
+
+void DKVideoRenderer::updateFrameLayouts() {
+    dk::ImageLayoutMaker{dev}
+        .setType(DkImageType_2D)
+        .setFormat(DkImageFormat_R8_Unorm)
+        .setDimensions(m_frame_width, m_frame_height, 1)
+        .setFlags(DkImageFlags_UsageLoadStore | DkImageFlags_Usage2DEngine |
+                  DkImageFlags_UsageVideo)
+        .initialize(lumaMappingLayout);
+
+    dk::ImageLayoutMaker{dev}
+        .setType(DkImageType_2D)
+        .setFormat(DkImageFormat_RG8_Unorm)
+        .setDimensions(m_frame_width / 2, m_frame_height / 2, 1)
+        .setFlags(DkImageFlags_UsageLoadStore | DkImageFlags_Usage2DEngine |
+                  DkImageFlags_UsageVideo)
+        .initialize(chromaMappingLayout);
+}
+
+void DKVideoRenderer::recordStaticCommands(AVFrame* frame) {
+    AVColorSpace colorSpace = AVCOL_SPC_UNSPECIFIED;
+    bool colorFull = false;
+    getFrameColorInfo(frame, colorSpace, colorFull);
 
     Transformation transformState = {};
     const glm::vec3 colorOffset = gl_color_offset(colorFull);
@@ -205,58 +265,34 @@ void DKVideoRenderer::checkAndInitialize(int width, int height, AVFrame* frame) 
     transformState.offset[2] = colorOffset[2];
     transformState.offset[3] = 0.0f;
 
-    float frameAspect = ((float)m_frame_height / (float)m_frame_width);
-    float screenAspect = ((float)m_screen_height / (float)m_screen_width);
+    const float frameAspect = static_cast<float>(m_frame_height) /
+                              static_cast<float>(m_frame_width);
+    const float screenAspect = static_cast<float>(m_screen_height) /
+                               static_cast<float>(m_screen_width);
 
     if (frameAspect > screenAspect) {
-        float multiplier = frameAspect / screenAspect;
+        const float multiplier = frameAspect / screenAspect;
         transformState.uv_data[0] = 0.5f - 0.5f * (1.0f / multiplier);
         transformState.uv_data[1] = 0.0f;
         transformState.uv_data[2] = multiplier;
         transformState.uv_data[3] = 1.0f;
     } else {
-        float multiplier = screenAspect / frameAspect;
+        const float multiplier = screenAspect / frameAspect;
         transformState.uv_data[0] = 0.0f;
         transformState.uv_data[1] = 0.5f - 0.5f * (1.0f / multiplier);
         transformState.uv_data[2] = 1.0f;
         transformState.uv_data[3] = multiplier;
     }
 
-    // Allocate image indexes for planes
-    lumaTextureId = vctx->allocateImageIndex();
-    chromaTextureId = vctx->allocateImageIndex();
-
-    brls::Logger::debug("{}: Luma texture ID {}", __PRETTY_FUNCTION__,
-                        lumaTextureId);
-    brls::Logger::debug("{}: Chroma texture ID {}", __PRETTY_FUNCTION__,
-                        chromaTextureId);
-
-    dk::ImageLayoutMaker{dev}
-        .setType(DkImageType_2D)
-        .setFormat(DkImageFormat_R8_Unorm)
-        .setDimensions(m_frame_width, m_frame_height, 1)
-        .setFlags(DkImageFlags_UsageLoadStore | DkImageFlags_Usage2DEngine |
-                  DkImageFlags_UsageVideo)
-        .initialize(lumaMappingLayout);
-
-    dk::ImageLayoutMaker{dev}
-        .setType(DkImageType_2D)
-        .setFormat(DkImageFormat_RG8_Unorm)
-        .setDimensions(m_frame_width / 2, m_frame_height / 2, 1)
-        .setFlags(DkImageFlags_UsageLoadStore | DkImageFlags_Usage2DEngine |
-                  DkImageFlags_UsageVideo)
-        .initialize(chromaMappingLayout);
-
     dk::RasterizerState rasterizerState;
     dk::ColorState colorState;
     dk::ColorWriteState colorWriteState;
 
-    // Pre-record static draw list (textures are resolved via descriptor entries
-    // that we'll update when decoder surfaces rotate)
     cmdbuf.clear();
     cmdbuf.clearColor(0, DkColorMask_RGBA, 0.0f, 0.0f, 0.0f, 0.0f);
     cmdbuf.bindShaders(DkStageFlag_GraphicsMask, {vertexShader, fragmentShader});
-    cmdbuf.bindTextures(DkStage_Fragment, 0, dkMakeTextureHandle(lumaTextureId, 0));
+    cmdbuf.bindTextures(DkStage_Fragment, 0,
+                        dkMakeTextureHandle(lumaTextureId, 0));
     cmdbuf.bindTextures(DkStage_Fragment, 1,
                         dkMakeTextureHandle(chromaTextureId, 0));
     cmdbuf.bindUniformBuffer(DkStage_Fragment, 0,
@@ -274,12 +310,44 @@ void DKVideoRenderer::checkAndInitialize(int width, int height, AVFrame* frame) 
     cmdbuf.draw(DkPrimitive_Quads, QuadVertexData.size(), 1, 0, 0);
     cmdlist = cmdbuf.finishList();
 
-    m_is_initialized = true;
+    m_color_space = colorSpace;
+    m_color_full = colorFull;
+}
+
+void DKVideoRenderer::updateRenderState(int width, int height, AVFrame* frame) {
+    AVColorSpace colorSpace = AVCOL_SPC_UNSPECIFIED;
+    bool colorFull = false;
+    getFrameColorInfo(frame, colorSpace, colorFull);
+
+    const bool frameSizeChanged =
+        m_frame_width != frame->width || m_frame_height != frame->height;
+    const bool screenSizeChanged =
+        m_screen_width != width || m_screen_height != height;
+    const bool colorChanged =
+        m_color_space != static_cast<int>(colorSpace) || m_color_full != colorFull;
+
+    if (!frameSizeChanged && !screenSizeChanged && !colorChanged) {
+        return;
+    }
+
+    queue.waitIdle();
+
+    if (frameSizeChanged) {
+        m_frame_width = frame->width;
+        m_frame_height = frame->height;
+        frameMappings.clear();
+        currentMappingIndex = -1;
+        updateFrameLayouts();
+    }
+
+    m_screen_width = width;
+    m_screen_height = height;
+    recordStaticCommands(frame);
 }
 
 void DKVideoRenderer::updateFrameMapping(AVFrame* frame) {
     AVNVTegraMap* map = av_nvtegra_frame_get_fbuf_map(frame);
-    if (!map)
+    if (!map || lumaTextureId < 0 || chromaTextureId < 0)
         return;
 
     uint32_t handle = av_nvtegra_map_get_handle(map);
@@ -328,19 +396,39 @@ void DKVideoRenderer::updateFrameMapping(AVFrame* frame) {
     if (mappingIndex == currentMappingIndex)
         return;
 
-    updateCmdbuf.clear();
-    updateCmdbuf.addMemory(updateCmdMem.getMemBlock(),
-                           updateCmdMem.getOffset() +
-                               updateCmdMemSlice * UpdateCmdSliceSize,
-                           UpdateCmdSliceSize);
-    updateCmdMemSlice = (updateCmdMemSlice + 1) % brls::FRAMEBUFFERS_COUNT;
+    updateCmdMemRing.begin(updateCmdbuf);
 
     auto& active = frameMappings[mappingIndex];
-    imageDescriptorSet->update(updateCmdbuf, lumaTextureId, active.lumaDesc);
-    imageDescriptorSet->update(updateCmdbuf, chromaTextureId, active.chromaDesc);
+    const bool updatedLuma =
+        vctx->updateImageDescriptor(updateCmdbuf, lumaTextureId, active.lumaDesc);
+    const bool updatedChroma = vctx->updateImageDescriptor(
+        updateCmdbuf, chromaTextureId, active.chromaDesc);
 
-    queue.submitCommands(updateCmdbuf.finishList());
-    currentMappingIndex = mappingIndex;
+    if (!updatedLuma || !updatedChroma) {
+        brls::Logger::error("{}: Failed to update video descriptors",
+                            __PRETTY_FUNCTION__);
+    } else {
+        vctx->invalidateImageDescriptors(updateCmdbuf);
+        currentMappingIndex = mappingIndex;
+    }
+
+    queue.submitCommands(updateCmdMemRing.end(updateCmdbuf));
+}
+
+void DKVideoRenderer::releaseImageSlots() {
+    if (!vctx) {
+        return;
+    }
+
+    if (lumaTextureId >= 0) {
+        vctx->freeImageIndex(lumaTextureId);
+        lumaTextureId = -1;
+    }
+
+    if (chromaTextureId >= 0) {
+        vctx->freeImageIndex(chromaTextureId);
+        chromaTextureId = -1;
+    }
 }
 
 int frames = 0;
@@ -349,6 +437,9 @@ uint64_t timeCount = 0;
 void DKVideoRenderer::draw(NVGcontext* vg, int width, int height, AVFrame* frame,
                            int imageFormat) {
     checkAndInitialize(width, height, frame);
+    if (!m_is_initialized) {
+        return;
+    }
 
     uint64_t before_render = LiGetMillis();
 
@@ -356,6 +447,7 @@ void DKVideoRenderer::draw(NVGcontext* vg, int width, int height, AVFrame* frame
         m_video_render_stats.measurement_start_timestamp = before_render;
     }
 
+    updateRenderState(width, height, frame);
     updateFrameMapping(frame);
 
     if (cmdlist != 0) {

@@ -17,15 +17,9 @@ void main()
 {
     vec2 uv = (vTextureCoord - u.uv_data.xy) * u.uv_data.zw;
 
-    float y = texture(plane0, uv).r - (16.0 / 255.0);
-    float u_chroma = texture(plane1, uv).r - (128.0 / 255.0);
-    float v_chroma = texture(plane1, uv).g - (128.0 / 255.0);
-
-    // Explicit BT.709 limited-range YUV -> RGB conversion.
-    vec3 rgb;
-    rgb.r = 1.1644 * y + 1.7927 * v_chroma;
-    rgb.g = 1.1644 * y - 0.2132 * u_chroma - 0.5329 * v_chroma;
-    rgb.b = 1.1644 * y + 2.1124 * u_chroma;
+    vec3 yuv = vec3(texture(plane0, uv).r, texture(plane1, uv).r,
+                    texture(plane1, uv).g) - u.offset;
+    vec3 rgb = u.yuvmat * yuv;
 
     outColor = vec4(clamp(rgb, 0.0, 1.0), 1.0);
 }

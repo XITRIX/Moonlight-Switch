@@ -8,9 +8,8 @@
 
 #include <borealis.hpp>
 #include <borealis/platforms/switch/switch_video.hpp>
+#include <nanovg/framework/CCmdMemRing.h>
 #include <nanovg/framework/CShader.h>
-#include <nanovg/framework/CExternalImage.h>
-#include <nanovg/framework/CDescriptorSet.h>
 #include <optional>
 #include <vector>
 
@@ -25,7 +24,11 @@ class DKVideoRenderer : public IVideoRenderer {
 
   private:
     void checkAndInitialize(int width, int height, AVFrame* frame);
+    void updateRenderState(int width, int height, AVFrame* frame);
     void updateFrameMapping(AVFrame* frame);
+    void updateFrameLayouts();
+    void recordStaticCommands(AVFrame* frame);
+    void releaseImageSlots();
 
     bool m_is_initialized = false;
 
@@ -44,12 +47,8 @@ class DKVideoRenderer : public IVideoRenderer {
 
     dk::UniqueCmdBuf cmdbuf;
     dk::UniqueCmdBuf updateCmdbuf;
-    CMemPool::Handle updateCmdMem;
-    uint32_t updateCmdMemSlice = 0;
+    CCmdMemRing<brls::FRAMEBUFFERS_COUNT> updateCmdMemRing;
     DkCmdList cmdlist = 0;
-
-    CDescriptorSet<4096U>* imageDescriptorSet = nullptr;
-    // CDescriptorSet<1> samplerDescriptorSet;
 
     CShader vertexShader;
     CShader fragmentShader;
@@ -75,8 +74,10 @@ class DKVideoRenderer : public IVideoRenderer {
     std::vector<FrameMapping> frameMappings;
     int currentMappingIndex = -1;
 
-    int lumaTextureId = 0;
-    int chromaTextureId = 0;
+    int lumaTextureId = -1;
+    int chromaTextureId = -1;
+    int m_color_space = -1;
+    bool m_color_full = false;
 
     VideoRenderStats m_video_render_stats = {};
 };
