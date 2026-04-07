@@ -87,4 +87,5 @@ class MoonlightSession {
     bool m_use_hdr = false;
 
     SessionStats m_session_stats = {};
+    uint64_t m_last_stats_update_ms = 0;
 };

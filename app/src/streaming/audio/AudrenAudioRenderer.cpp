@@ -3,6 +3,8 @@
 #include "AudrenAudioRenderer.hpp"
 #include <Settings.hpp>
 #include <borealis.hpp>
+#include <algorithm>
+#include <climits>
 #include <inttypes.h>
 #include <malloc.h>
 #include <stdio.h>
@@ -10,6 +12,21 @@
 #include <string.h>
 
 static const uint8_t m_sink_channels[] = {0, 1};
+
+namespace {
+
+void applyVolume(s16* buffer, size_t sampleCount, int volume) {
+    if (volume >= 100) {
+        return;
+    }
+
+    for (size_t i = 0; i < sampleCount; i++) {
+        const int scaled = (static_cast<int>(buffer[i]) * volume) / 100;
+        buffer[i] = static_cast<s16>(std::min<int>(SHRT_MAX, std::max<int>(SHRT_MIN, scaled)));
+    }
+}
+
+} // namespace
 
 static const AudioRendererConfig m_ar_config = {
     .output_rate = AudioRendererOutputRate_48kHz,
@@ -143,12 +160,10 @@ void AudrenAudioRenderer::decode_and_play_sample(char* data, int length) {
                 m_decoder, (const unsigned char*)data, length, m_decoded_buffer,
                 m_samples_per_frame, 0);
 
-            for (int i = 0; i < m_samples_per_frame * m_channel_count; i++) {
-                int scale = (int)((double)m_decoded_buffer[i] * (Settings::instance().get_volume() / 100.0));
-                m_decoded_buffer[i] = (s16) std::min(SHRT_MAX, std::max(SHRT_MIN, scale));
-            }
-
             if (decoded_samples > 0) {
+                applyVolume(m_decoded_buffer,
+                            static_cast<size_t>(decoded_samples) * m_channel_count,
+                            Settings::instance().get_volume());
                 write_audio(m_decoded_buffer,
                             decoded_samples * m_channel_count * sizeof(s16));
             }
@@ -158,7 +173,13 @@ void AudrenAudioRenderer::decode_and_play_sample(char* data, int length) {
     }
 }
 
-int AudrenAudioRenderer::capabilities() { return CAPABILITY_DIRECT_SUBMIT; }
+int AudrenAudioRenderer::capabilities() {
+#if defined(PLATFORM_SWITCH)
+    return 0;
+#else
+    return CAPABILITY_DIRECT_SUBMIT;
+#endif
+}
 
 ssize_t AudrenAudioRenderer::free_wavebuf_index() {
     for (int i = 0; i < BUFFER_COUNT; i++) {

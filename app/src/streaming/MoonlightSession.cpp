@@ -393,9 +393,13 @@ void MoonlightSession::draw(NVGcontext* vg, int width, int height) {
                 m_video_renderer->draw(vg, width, height, frame, m_video_format);
             });
 
-        m_session_stats.video_decode_stats =
-            *m_video_decoder->video_decode_stats();
-        m_session_stats.video_render_stats =
-            *m_video_renderer->video_render_stats();
+        const uint64_t now = LiGetMillis();
+        if (m_last_stats_update_ms == 0 || now - m_last_stats_update_ms >= 250) {
+            m_session_stats.video_decode_stats =
+                *m_video_decoder->video_decode_stats();
+            m_session_stats.video_render_stats =
+                *m_video_renderer->video_render_stats();
+            m_last_stats_update_ms = now;
+        }
     }
 }

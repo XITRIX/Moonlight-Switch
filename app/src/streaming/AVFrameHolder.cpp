@@ -42,16 +42,13 @@ bool AVFrameQueue::push(AVFrame* item) {
         return false;
     }
 
-    AVFrame* queuedFrame = nullptr;
-    if (!freeQueue.empty()) {
-        queuedFrame = freeQueue.front();
-        freeQueue.pop();
-        av_frame_unref(queuedFrame);
-    } else {
-        queuedFrame = av_frame_alloc();
-        if (!queuedFrame) {
-            return false;
-        }
+    if (transferOwnership) {
+        return pushTransferredLocked(item);
+    }
+
+    AVFrame* queuedFrame = acquireFrameLocked();
+    if (!queuedFrame) {
+        return false;
     }
 
     if (av_frame_ref(queuedFrame, item) < 0) {
@@ -71,8 +68,17 @@ bool AVFrameQueue::push(AVFrame* item) {
     return true;
 }
 
-AVFrame* AVFrameQueue::pop() {
+bool AVFrameQueue::pushTransferred(AVFrame* item) {
     std::lock_guard<std::mutex> lock(m_mutex);
+    return pushTransferredLocked(item);
+}
+
+AVFrame* AVFrameQueue::pop(bool* consumed) {
+    std::lock_guard<std::mutex> lock(m_mutex);
+
+    if (consumed) {
+        *consumed = false;
+    }
 
     if (!queue.empty()) {
         recycleFrame(freeQueue, bufferFrame);
@@ -80,6 +86,9 @@ AVFrame* AVFrameQueue::pop() {
         AVFrame* item = queue.front();
         queue.pop();
         bufferFrame = item;
+        if (consumed) {
+            *consumed = true;
+        }
     } else {
         fakeFrameUsedStat ++;
     }
@@ -87,16 +96,64 @@ AVFrame* AVFrameQueue::pop() {
     return bufferFrame;
 }
 
+AVFrame* AVFrameQueue::acquireWriteFrame() {
+    std::lock_guard<std::mutex> lock(m_mutex);
+    return acquireFrameLocked();
+}
+
+void AVFrameQueue::recycleWriteFrame(AVFrame*& frame) {
+    std::lock_guard<std::mutex> lock(m_mutex);
+    recycleFrame(freeQueue, frame);
+}
+
+void AVFrameQueue::setTransferOwnership(bool enabled) {
+    std::lock_guard<std::mutex> lock(m_mutex);
+    transferOwnership = enabled;
+}
+
 size_t AVFrameQueue::size() const {
+    std::lock_guard<std::mutex> lock(m_mutex);
     return queue.size();
 }
 
 size_t AVFrameQueue::getFakeFrameUsage() const {
+    std::lock_guard<std::mutex> lock(m_mutex);
     return fakeFrameUsedStat;
 }
 
 size_t AVFrameQueue::getFramesDropStat() const {
+    std::lock_guard<std::mutex> lock(m_mutex);
     return framesDroppedStat;
+}
+
+AVFrame* AVFrameQueue::acquireFrameLocked() {
+    AVFrame* frame = nullptr;
+    if (!freeQueue.empty()) {
+        frame = freeQueue.front();
+        freeQueue.pop();
+        av_frame_unref(frame);
+        return frame;
+    }
+
+    frame = av_frame_alloc();
+    return frame;
+}
+
+bool AVFrameQueue::pushTransferredLocked(AVFrame* item) {
+    if (!item) {
+        return false;
+    }
+
+    queue.push(item);
+
+    if (queue.size() > limit) {
+        AVFrame* droppedFrame = queue.front();
+        queue.pop();
+        recycleFrame(freeQueue, droppedFrame);
+        framesDroppedStat++;
+    }
+
+    return true;
 }
 
 void AVFrameQueue::cleanup() {

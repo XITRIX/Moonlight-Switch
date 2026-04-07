@@ -356,6 +356,17 @@ void DKVideoRenderer::updateFrameMapping(AVFrame* frame) {
     uint32_t chromaOffset = static_cast<uint32_t>(frame->data[1] - frame->data[0]);
 
     int mappingIndex = -1;
+    if (currentMappingIndex >= 0 &&
+        currentMappingIndex < static_cast<int>(frameMappings.size())) {
+        const auto& currentMapping = frameMappings[currentMappingIndex];
+        if (currentMapping.handle == handle &&
+            currentMapping.cpuAddr == cpuAddr &&
+            currentMapping.size == size &&
+            currentMapping.chromaOffset == chromaOffset) {
+            return;
+        }
+    }
+
     for (size_t i = 0; i < frameMappings.size(); ++i) {
         const auto& mapping = frameMappings[i];
         if (mapping.handle == handle && mapping.cpuAddr == cpuAddr &&
@@ -392,9 +403,6 @@ void DKVideoRenderer::updateFrameMapping(AVFrame* frame) {
         brls::Logger::debug("{}: Added mapping for handle {}", __PRETTY_FUNCTION__,
                             handle);
     }
-
-    if (mappingIndex == currentMappingIndex)
-        return;
 
     updateCmdMemRing.begin(updateCmdbuf);
 

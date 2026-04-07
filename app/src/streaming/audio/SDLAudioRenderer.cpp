@@ -26,6 +26,21 @@
 #include <climits>
 #include <cstdio>
 
+namespace {
+
+void applyVolume(short* buffer, size_t sampleCount, int volume) {
+    if (volume >= 100) {
+        return;
+    }
+
+    for (size_t i = 0; i < sampleCount; i++) {
+        const int scaled = (static_cast<int>(buffer[i]) * volume) / 100;
+        buffer[i] = static_cast<short>(std::min<int>(SHRT_MAX, std::max<int>(SHRT_MIN, scaled)));
+    }
+}
+
+} // namespace
+
 int SDLAudioRenderer::init(int audio_configuration,
                            const POPUS_MULTISTREAM_CONFIGURATION opus_config,
                            void* context, int ar_flags) {
@@ -88,10 +103,9 @@ void SDLAudioRenderer::decode_and_play_sample(char* sample_data,
         return;
     }
 
-    for (short & i : pcmBuffer) {
-        int scale = (int)((double)i * (Settings::instance().get_volume() / 100.0));
-        i = (short) std::min(SHRT_MAX, std::max(SHRT_MIN, scale));
-    }
+    applyVolume(pcmBuffer,
+                static_cast<size_t>(decodeLen) * channelCount,
+                Settings::instance().get_volume());
 
 #if defined(PLATFORM_SWITCH)
     int bufferOverflow = 24000;
@@ -108,4 +122,10 @@ void SDLAudioRenderer::decode_and_play_sample(char* sample_data,
                     decodeLen * channelCount * sizeof(short));
 }
 
-int SDLAudioRenderer::capabilities() { return CAPABILITY_DIRECT_SUBMIT; }
+int SDLAudioRenderer::capabilities() {
+#if defined(PLATFORM_SWITCH)
+    return 0;
+#else
+    return CAPABILITY_DIRECT_SUBMIT;
+#endif
+}

@@ -37,11 +37,52 @@
 
 using namespace brls::literals; // for _i18n
 
+#ifdef __SWITCH__
+namespace {
+
+s32 selectAllowedSwitchCore(u64 affinityMask, int ordinal) {
+    s32 lastAllowedCore = -1;
+
+    for (s32 core = 0; core < 4; core++) {
+        if ((affinityMask & (1ULL << core)) == 0) {
+            continue;
+        }
+
+        lastAllowedCore = core;
+        if (ordinal == 0) {
+            return core;
+        }
+
+        ordinal--;
+    }
+
+    return lastAllowedCore;
+}
+
+void preferSwitchCore(int ordinal) {
+    s32 preferredCore = -1;
+    u64 affinityMask = 0;
+    if (R_FAILED(svcGetThreadCoreMask(&preferredCore, &affinityMask, CUR_THREAD_HANDLE))) {
+        return;
+    }
+
+    s32 targetCore = selectAllowedSwitchCore(affinityMask, ordinal);
+    if (targetCore >= 0 && targetCore != preferredCore) {
+        svcSetThreadCoreMask(CUR_THREAD_HANDLE, targetCore, static_cast<u32>(affinityMask));
+    }
+}
+
+} // namespace
+#endif
+
 int main(int argc, char* argv[]) {
     // Enable recording for Twitter memes
 #ifdef __SWITCH__
     appletInitializeGamePlayRecording();
     appletSetWirelessPriorityMode(AppletWirelessPriorityMode_OptimizedForWlan);
+
+    // Keep the UI loop away from the hottest streaming worker core.
+    preferSwitchCore(0);
 
     // Keep the main thread above others so that the program stays responsive
     // when doing software decoding
