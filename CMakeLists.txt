@@ -46,7 +46,7 @@ endif ()
 
 set(VERSION_MAJOR "1")
 set(VERSION_MINOR "4")
-set(VERSION_ALTER "0")
+set(VERSION_ALTER "1")
 set(VERSION_BUILD "1")
 set(PACKAGE_NAME "ru.xitrix.Moonlight")
 set(PSN_TITLE_ID  "MNTL00000")
