@@ -28,6 +28,8 @@ cmake_dependent_option(LIBJBC "Root access enabled" OFF "PLATFORM_PS4" OFF)
 # iOS Only (If empty then not sign)
 set(IOS_CODE_SIGN_IDENTITY "" CACHE STRING "The code sign identity to use when building the IPA.")
 set(IOS_GUI_IDENTIFIER "" CACHE STRING "Package name.")
+set(APPLE_MOBILE_SDK_VARIANT "BOTH" CACHE STRING "Apple mobile SDK selection for iOS/tvOS/visionOS builds: DEVICE, SIMULATOR, or BOTH.")
+set_property(CACHE APPLE_MOBILE_SDK_VARIANT PROPERTY STRINGS DEVICE SIMULATOR BOTH)
 
 # Nintendo Switch Only
 cmake_dependent_option(USE_DEKO3D "Using deko3d instead of OpenGL." OFF "PLATFORM_SWITCH" OFF)

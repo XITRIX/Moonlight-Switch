@@ -10,6 +10,221 @@ function(check_libromfs_generator)
     endif()
 endfunction()
 
+function(_moonlight_normalize_apple_mobile_sdk_variant)
+    set(_moonlight_allowed_variants DEVICE SIMULATOR BOTH)
+    if (NOT DEFINED APPLE_MOBILE_SDK_VARIANT OR APPLE_MOBILE_SDK_VARIANT STREQUAL "")
+        set(APPLE_MOBILE_SDK_VARIANT "BOTH" CACHE STRING "Apple mobile SDK selection for iOS/tvOS/visionOS builds: DEVICE, SIMULATOR, or BOTH." FORCE)
+    endif ()
+
+    string(TOUPPER "${APPLE_MOBILE_SDK_VARIANT}" _moonlight_sdk_variant)
+    if (NOT _moonlight_sdk_variant IN_LIST _moonlight_allowed_variants)
+        message(FATAL_ERROR "APPLE_MOBILE_SDK_VARIANT must be one of DEVICE, SIMULATOR, or BOTH. Current value: ${APPLE_MOBILE_SDK_VARIANT}")
+    endif ()
+
+    set(APPLE_MOBILE_SDK_VARIANT "${_moonlight_sdk_variant}" CACHE STRING "Apple mobile SDK selection for iOS/tvOS/visionOS builds: DEVICE, SIMULATOR, or BOTH." FORCE)
+    set_property(CACHE APPLE_MOBILE_SDK_VARIANT PROPERTY STRINGS DEVICE SIMULATOR BOTH)
+endfunction()
+
+function(_moonlight_get_default_simulator_arch _out_var)
+    execute_process(
+        COMMAND /usr/sbin/sysctl -in hw.optional.arm64
+        OUTPUT_VARIABLE _moonlight_arm64_capable
+        ERROR_QUIET
+        OUTPUT_STRIP_TRAILING_WHITESPACE)
+    if (_moonlight_arm64_capable STREQUAL "1")
+        set(${_out_var} "arm64" PARENT_SCOPE)
+    elseif (CMAKE_HOST_SYSTEM_PROCESSOR MATCHES "^(arm64|aarch64)$")
+        set(${_out_var} "arm64" PARENT_SCOPE)
+    else ()
+        set(${_out_var} "x64" PARENT_SCOPE)
+    endif ()
+endfunction()
+
+function(_moonlight_sync_path _source _destination)
+    if (NOT EXISTS "${_source}")
+        message(FATAL_ERROR "Cannot stage missing dependency: ${_source}")
+    endif ()
+
+    get_filename_component(_moonlight_destination_dir "${_destination}" DIRECTORY)
+    file(MAKE_DIRECTORY "${_moonlight_destination_dir}")
+
+    if (EXISTS "${_destination}" OR IS_SYMLINK "${_destination}")
+        file(REMOVE "${_destination}")
+    endif ()
+
+    execute_process(
+        COMMAND "${CMAKE_COMMAND}" -E create_symlink "${_source}" "${_destination}"
+        RESULT_VARIABLE _moonlight_link_result
+        ERROR_VARIABLE _moonlight_link_error)
+    if (NOT _moonlight_link_result EQUAL 0)
+        if (IS_DIRECTORY "${_source}")
+            execute_process(
+                COMMAND "${CMAKE_COMMAND}" -E copy_directory "${_source}" "${_destination}"
+                RESULT_VARIABLE _moonlight_copy_result
+                ERROR_VARIABLE _moonlight_copy_error)
+        else ()
+            execute_process(
+                COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${_source}" "${_destination}"
+                RESULT_VARIABLE _moonlight_copy_result
+                ERROR_VARIABLE _moonlight_copy_error)
+        endif ()
+        if (NOT _moonlight_copy_result EQUAL 0)
+            message(FATAL_ERROR "Failed to stage ${_source} at ${_destination}: ${_moonlight_copy_error}")
+        endif ()
+    endif ()
+endfunction()
+
+function(_moonlight_collect_vcpkg_install_args _out_var)
+    set(_moonlight_install_root_override)
+    if (ARGC GREATER 1)
+        set(_moonlight_install_root_override "${ARGV1}")
+    endif ()
+    set(_moonlight_args)
+    if (DEFINED VCPKG_MANIFEST_DIR AND NOT VCPKG_MANIFEST_DIR STREQUAL "")
+        list(APPEND _moonlight_args "--x-manifest-root=${VCPKG_MANIFEST_DIR}")
+    endif ()
+    if (DEFINED _moonlight_install_root_override AND NOT _moonlight_install_root_override STREQUAL "")
+        list(APPEND _moonlight_args "--x-install-root=${_moonlight_install_root_override}")
+    elseif (DEFINED VCPKG_INSTALLED_DIR AND NOT VCPKG_INSTALLED_DIR STREQUAL "")
+        list(APPEND _moonlight_args "--x-install-root=${VCPKG_INSTALLED_DIR}")
+    endif ()
+    if (DEFINED VCPKG_OVERLAY_PORTS)
+        foreach(_moonlight_overlay_port IN LISTS VCPKG_OVERLAY_PORTS)
+            list(APPEND _moonlight_args "--overlay-ports=${_moonlight_overlay_port}")
+        endforeach ()
+    endif ()
+    if (DEFINED VCPKG_OVERLAY_TRIPLETS)
+        foreach(_moonlight_overlay_triplet IN LISTS VCPKG_OVERLAY_TRIPLETS)
+            list(APPEND _moonlight_args "--overlay-triplets=${_moonlight_overlay_triplet}")
+        endforeach ()
+    endif ()
+    if (DEFINED VCPKG_INSTALL_OPTIONS)
+        foreach(_moonlight_install_option IN LISTS VCPKG_INSTALL_OPTIONS)
+            list(APPEND _moonlight_args "${_moonlight_install_option}")
+        endforeach ()
+    endif ()
+    set(${_out_var} "${_moonlight_args}" PARENT_SCOPE)
+endfunction()
+
+function(_moonlight_install_vcpkg_triplet _triplet _install_root)
+    if (NOT DEFINED Z_VCPKG_EXECUTABLE OR NOT EXISTS "${Z_VCPKG_EXECUTABLE}")
+        message(FATAL_ERROR "vcpkg executable is unavailable, cannot install companion triplet ${_triplet}")
+    endif ()
+    if (NOT DEFINED Z_VCPKG_ROOT_DIR OR Z_VCPKG_ROOT_DIR STREQUAL "")
+        message(FATAL_ERROR "vcpkg root is unavailable, cannot install companion triplet ${_triplet}")
+    endif ()
+
+    _moonlight_collect_vcpkg_install_args(_moonlight_install_args "${_install_root}")
+    message(STATUS "Ensuring vcpkg dependencies are installed for ${_triplet}")
+    execute_process(
+        COMMAND "${Z_VCPKG_EXECUTABLE}" install
+            --triplet "${_triplet}"
+            --vcpkg-root "${Z_VCPKG_ROOT_DIR}"
+            ${_moonlight_install_args}
+        RESULT_VARIABLE _moonlight_install_result
+        OUTPUT_VARIABLE _moonlight_install_log
+        ERROR_VARIABLE _moonlight_install_log)
+
+    if (NOT _moonlight_install_result EQUAL 0)
+        set(_moonlight_install_log_file "${CMAKE_BINARY_DIR}/vcpkg-manifest-install-${_triplet}.log")
+        file(WRITE "${_moonlight_install_log_file}" "${_moonlight_install_log}")
+        message(FATAL_ERROR "vcpkg install failed for ${_triplet}. See ${_moonlight_install_log_file}")
+    endif ()
+endfunction()
+
+function(moonlight_prepare_apple_mobile_vcpkg)
+    if (NOT MOONLIGHT_APPLE_MOBILE_USE_MULTI_SDK)
+        return()
+    endif ()
+
+    # Manifest mode treats one install root as one desired dependency state. If we
+    # install the simulator triplet into the primary root, vcpkg removes the device
+    # triplet packages. Keep a hidden companion root, then surface the simulator
+    # triplet back under the main vcpkg_installed tree for convenience.
+    set(_moonlight_simulator_install_root "${VCPKG_INSTALLED_DIR}/.moonlight-companion")
+    _moonlight_install_vcpkg_triplet("${MOONLIGHT_APPLE_MOBILE_VCPKG_SIMULATOR_TRIPLET}" "${_moonlight_simulator_install_root}")
+    _moonlight_sync_path(
+        "${_moonlight_simulator_install_root}/${MOONLIGHT_APPLE_MOBILE_VCPKG_SIMULATOR_TRIPLET}"
+        "${VCPKG_INSTALLED_DIR}/${MOONLIGHT_APPLE_MOBILE_VCPKG_SIMULATOR_TRIPLET}")
+
+    set(_moonlight_stage_specs
+        "curl|libcurl.a|libcurl-d.a"
+        "jansson|libjansson.a|libjansson.a"
+        "expat|libexpat.a|libexpat.a"
+        "png16|libpng16.a|libpng16d.a"
+        "avcodec|libavcodec.a|libavcodec.a"
+        "avformat|libavformat.a|libavformat.a"
+        "avutil|libavutil.a|libavutil.a"
+        "swresample|libswresample.a|libswresample.a"
+        "zstd|libzstd.a|libzstd.a"
+        "opus|libopus.a|libopus.a"
+        "z|libz.a|libz.a"
+        "mbedtls|libmbedtls.a|libmbedtls.a"
+        "mbedx509|libmbedx509.a|libmbedx509.a"
+        "mbedcrypto|libmbedcrypto.a|libmbedcrypto.a")
+
+    set(_moonlight_stage_root "${CMAKE_BINARY_DIR}/apple-mobile-vcpkg")
+    foreach(_moonlight_sdk_kind DEVICE SIMULATOR)
+        if (_moonlight_sdk_kind STREQUAL "DEVICE")
+            set(_moonlight_triplet "${MOONLIGHT_APPLE_MOBILE_VCPKG_DEVICE_TRIPLET}")
+            set(_moonlight_sdk_name "${MOONLIGHT_APPLE_MOBILE_XCODE_DEVICE_SDK}")
+            set(_moonlight_triplet_root "${VCPKG_INSTALLED_DIR}/${_moonlight_triplet}")
+        else ()
+            set(_moonlight_triplet "${MOONLIGHT_APPLE_MOBILE_VCPKG_SIMULATOR_TRIPLET}")
+            set(_moonlight_sdk_name "${MOONLIGHT_APPLE_MOBILE_XCODE_SIMULATOR_SDK}")
+            set(_moonlight_triplet_root "${_moonlight_simulator_install_root}/${_moonlight_triplet}")
+        endif ()
+
+        foreach(_moonlight_config Debug Release)
+            set(_moonlight_stage_dir "${_moonlight_stage_root}/${_moonlight_sdk_name}/${_moonlight_config}")
+            if (_moonlight_config STREQUAL "Debug")
+                set(_moonlight_config_dir "${_moonlight_triplet_root}/debug/lib")
+            else ()
+                set(_moonlight_config_dir "${_moonlight_triplet_root}/lib")
+            endif ()
+
+            foreach(_moonlight_stage_spec IN LISTS _moonlight_stage_specs)
+                string(REPLACE "|" ";" _moonlight_stage_spec_parts "${_moonlight_stage_spec}")
+                list(GET _moonlight_stage_spec_parts 0 _moonlight_alias_name)
+                list(GET _moonlight_stage_spec_parts 1 _moonlight_release_name)
+                list(GET _moonlight_stage_spec_parts 2 _moonlight_debug_name)
+
+                if (_moonlight_config STREQUAL "Debug")
+                    set(_moonlight_source_file "${_moonlight_config_dir}/${_moonlight_debug_name}")
+                    if (NOT EXISTS "${_moonlight_source_file}")
+                        set(_moonlight_source_file "${_moonlight_triplet_root}/lib/${_moonlight_release_name}")
+                    endif ()
+                else ()
+                    set(_moonlight_source_file "${_moonlight_config_dir}/${_moonlight_release_name}")
+                endif ()
+
+                set(_moonlight_staged_file "${_moonlight_stage_dir}/lib${_moonlight_alias_name}.a")
+                _moonlight_sync_path("${_moonlight_source_file}" "${_moonlight_staged_file}")
+            endforeach ()
+        endforeach ()
+    endforeach ()
+
+    set(MOONLIGHT_APPLE_MOBILE_VCPKG_INCLUDE_DIR "${VCPKG_INSTALLED_DIR}/${MOONLIGHT_APPLE_MOBILE_VCPKG_PRIMARY_TRIPLET}/include" PARENT_SCOPE)
+    set(MOONLIGHT_APPLE_MOBILE_VCPKG_STAGING_ROOT "${_moonlight_stage_root}" PARENT_SCOPE)
+    set(MOONLIGHT_APPLE_MOBILE_VCPKG_LIBRARIES
+        curl
+        jansson
+        expat
+        png16
+        avcodec
+        avutil
+        avformat
+        swresample
+        zstd
+        opus
+        z
+        mbedtls
+        mbedx509
+        mbedcrypto
+        PARENT_SCOPE)
+    message(STATUS "Prepared Apple mobile multi-SDK dependency staging at ${_moonlight_stage_root}")
+endfunction()
+
 # For unknown reason PLATFORM_SWITCH reports APPLE flag as TRUE
 if (APPLE AND NOT PLATFORM_SWITCH)
     set(PLATFORM_APPLE ON)
@@ -31,21 +246,54 @@ if (PLATFORM_DESKTOP)
     set(USE_LIBROMFS ON)
     check_libromfs_generator()
 elseif (PLATFORM_IOS OR PLATFORM_TVOS OR PLATFORM_VISIONOS)
+    _moonlight_normalize_apple_mobile_sdk_variant()
+    _moonlight_get_default_simulator_arch(_moonlight_simulator_arch)
+
     if (PLATFORM_IOS)
         add_definitions(-DPLATFORM_IOS)
         message(STATUS "building for iOS")
-        set(PLATFORM OS64)
+        set(_moonlight_device_platform OS64)
+        set(_moonlight_simulator_sdk iphonesimulator)
+        set(_moonlight_device_triplet arm64-ios)
+        set(_moonlight_device_sdk iphoneos)
+        if (_moonlight_simulator_arch STREQUAL "arm64")
+            set(_moonlight_simulator_platform SIMULATORARM64)
+            set(_moonlight_simulator_triplet arm64-ios-simulator)
+        else ()
+            set(_moonlight_simulator_platform SIMULATOR64)
+            set(_moonlight_simulator_triplet x64-ios)
+        endif ()
     elseif (PLATFORM_TVOS)
         add_definitions(-DPLATFORM_TVOS)
         message(STATUS "building for tvOS")
-        set(PLATFORM TVOS)
+        set(_moonlight_device_platform TVOS)
+        set(_moonlight_device_triplet arm64-tvos)
+        set(_moonlight_device_sdk appletvos)
+        set(_moonlight_simulator_sdk appletvsimulator)
+        if (_moonlight_simulator_arch STREQUAL "arm64")
+            set(_moonlight_simulator_platform SIMULATORARM64_TVOS)
+            set(_moonlight_simulator_triplet arm64-tvos-simulator)
+        else ()
+            set(_moonlight_simulator_platform SIMULATOR_TVOS)
+            set(_moonlight_simulator_triplet x64-tvos-simulator)
+        endif ()
 
         # Allow VCPKG to build for unsupported tvOS platform skipping platform checks
         set(VCPKG_INSTALL_OPTIONS "--allow-unsupported")
     elseif (PLATFORM_VISIONOS)
         add_definitions(-DPLATFORM_VISIONOS)
         message(STATUS "building for visionOS")
-        set(PLATFORM VISIONOS)
+        set(_moonlight_device_platform VISIONOS)
+        set(_moonlight_device_triplet arm64-visionos)
+        set(_moonlight_device_sdk xros)
+        set(_moonlight_simulator_sdk xrsimulator)
+        if (_moonlight_simulator_arch STREQUAL "arm64")
+            set(_moonlight_simulator_platform SIMULATORARM64_VISIONOS)
+            set(_moonlight_simulator_triplet arm64-visionos-simulator)
+        else ()
+            set(_moonlight_simulator_platform SIMULATOR_VISIONOS)
+            set(_moonlight_simulator_triplet x64-visionos-simulator)
+        endif ()
 
         # visionOS is not part of the bundled vcpkg platform matrix yet.
         set(VCPKG_INSTALL_OPTIONS "--allow-unsupported")
@@ -55,16 +303,16 @@ elseif (PLATFORM_IOS OR PLATFORM_TVOS OR PLATFORM_VISIONOS)
     if (NOT DEFINED BOREALIS_LIBRARY)
         message(FATAL_ERROR BOREALIS_LIBRARY is not defined)
     endif ()
+    set(_moonlight_vcpkg_overlay_triplets ${EXTERN_PATH}/cmake/vcpkg-triplets)
+    if (DEFINED VCPKG_OVERLAY_TRIPLETS)
+        list(APPEND _moonlight_vcpkg_overlay_triplets ${VCPKG_OVERLAY_TRIPLETS})
+    endif ()
+    list(REMOVE_DUPLICATES _moonlight_vcpkg_overlay_triplets)
+    set(VCPKG_OVERLAY_TRIPLETS "${_moonlight_vcpkg_overlay_triplets}" CACHE STRING "Overlay triplets to use for Apple mobile builds")
+    unset(_moonlight_vcpkg_overlay_triplets)
+
     if (PLATFORM_VISIONOS)
         set(DEPLOYMENT_TARGET 1.0)
-
-        set(_moonlight_vcpkg_overlay_triplets ${EXTERN_PATH}/cmake/vcpkg-triplets)
-        if (DEFINED VCPKG_OVERLAY_TRIPLETS)
-            list(APPEND _moonlight_vcpkg_overlay_triplets ${VCPKG_OVERLAY_TRIPLETS})
-        endif ()
-        list(REMOVE_DUPLICATES _moonlight_vcpkg_overlay_triplets)
-        set(VCPKG_OVERLAY_TRIPLETS "${_moonlight_vcpkg_overlay_triplets}" CACHE STRING "Overlay triplets to use for visionOS builds")
-        unset(_moonlight_vcpkg_overlay_triplets)
 
         # Force manifest mode to use the live vendored ports tree so local visionOS
         # fixes are applied instead of a versioned snapshot cached by vcpkg.
@@ -75,13 +323,37 @@ elseif (PLATFORM_IOS OR PLATFORM_TVOS OR PLATFORM_VISIONOS)
         list(REMOVE_DUPLICATES _moonlight_vcpkg_overlay_ports)
         set(VCPKG_OVERLAY_PORTS "${_moonlight_vcpkg_overlay_ports}" CACHE STRING "Overlay ports to use for visionOS builds")
         unset(_moonlight_vcpkg_overlay_ports)
-
-        if (NOT VCPKG_TARGET_TRIPLET)
-            set(VCPKG_TARGET_TRIPLET arm64-visionos CACHE STRING "vcpkg triplet for visionOS builds")
-        endif ()
     else ()
         set(DEPLOYMENT_TARGET 13.0)
     endif ()
+
+    if (APPLE_MOBILE_SDK_VARIANT STREQUAL "SIMULATOR")
+        set(PLATFORM "${_moonlight_simulator_platform}")
+        if (NOT VCPKG_TARGET_TRIPLET)
+            set(VCPKG_TARGET_TRIPLET "${_moonlight_simulator_triplet}" CACHE STRING "vcpkg triplet for Apple mobile builds" FORCE)
+        endif ()
+        set(MOONLIGHT_APPLE_MOBILE_USE_MULTI_SDK OFF)
+    elseif (APPLE_MOBILE_SDK_VARIANT STREQUAL "DEVICE")
+        set(PLATFORM "${_moonlight_device_platform}")
+        if (NOT VCPKG_TARGET_TRIPLET)
+            set(VCPKG_TARGET_TRIPLET "${_moonlight_device_triplet}" CACHE STRING "vcpkg triplet for Apple mobile builds" FORCE)
+        endif ()
+        set(MOONLIGHT_APPLE_MOBILE_USE_MULTI_SDK OFF)
+    else ()
+        set(PLATFORM "${_moonlight_device_platform}")
+        if (NOT VCPKG_TARGET_TRIPLET)
+            set(VCPKG_TARGET_TRIPLET "${_moonlight_device_triplet}" CACHE STRING "vcpkg triplet for Apple mobile builds" FORCE)
+        endif ()
+        set(MOONLIGHT_APPLE_MOBILE_USE_MULTI_SDK ON)
+    endif ()
+
+    set(MOONLIGHT_APPLE_MOBILE_SDK_VARIANT "${APPLE_MOBILE_SDK_VARIANT}")
+    set(MOONLIGHT_APPLE_MOBILE_VCPKG_PRIMARY_TRIPLET "${VCPKG_TARGET_TRIPLET}")
+    set(MOONLIGHT_APPLE_MOBILE_VCPKG_DEVICE_TRIPLET "${_moonlight_device_triplet}")
+    set(MOONLIGHT_APPLE_MOBILE_VCPKG_SIMULATOR_TRIPLET "${_moonlight_simulator_triplet}")
+    set(MOONLIGHT_APPLE_MOBILE_XCODE_DEVICE_SDK "${_moonlight_device_sdk}")
+    set(MOONLIGHT_APPLE_MOBILE_XCODE_SIMULATOR_SDK "${_moonlight_simulator_sdk}")
+    message(STATUS "Apple mobile SDK variant: ${APPLE_MOBILE_SDK_VARIANT}")
 
     set(CMAKE_TOOLCHAIN_FILE ${EXTERN_PATH}/vcpkg/scripts/buildsystems/vcpkg.cmake CACHE PATH "vcpkg toolchain file")
     set(VCPKG_CHAINLOAD_TOOLCHAIN_FILE ${BOREALIS_LIBRARY}/cmake/ios.toolchain.cmake CACHE PATH "ios toolchain file")

@@ -40,6 +40,10 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${EXTERN_PATH}/cmake")
 
 # project info
 project(Moonlight)
+if (PLATFORM_IOS OR PLATFORM_TVOS OR PLATFORM_VISIONOS)
+    moonlight_prepare_apple_mobile_vcpkg()
+endif ()
+
 set(VERSION_MAJOR "1")
 set(VERSION_MINOR "4")
 set(VERSION_ALTER "0")
@@ -50,6 +54,47 @@ set(PSN_VERSION  "01.00")
 set(PROJECT_AUTHOR "XITRIX")
 set(PROJECT_ICON ${CMAKE_CURRENT_SOURCE_DIR}/resources/img/moonlight_icon.jpg)
 set(PROJECT_RESOURCES ${CMAKE_CURRENT_SOURCE_DIR}/resources)
+
+function(moonlight_define_multi_sdk_mbedtls_targets)
+    if (TARGET MbedTLS::mbedcrypto)
+        return()
+    endif ()
+
+    set(_moonlight_mbedtls_include_dir "${MOONLIGHT_APPLE_MOBILE_VCPKG_INCLUDE_DIR}")
+
+    add_library(MbedTLS::mbedcrypto INTERFACE IMPORTED GLOBAL)
+    set_target_properties(MbedTLS::mbedcrypto PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES "${_moonlight_mbedtls_include_dir}"
+        INTERFACE_LINK_LIBRARIES "mbedcrypto")
+
+    add_library(MbedTLS::mbedx509 INTERFACE IMPORTED GLOBAL)
+    set_target_properties(MbedTLS::mbedx509 PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES "${_moonlight_mbedtls_include_dir}"
+        INTERFACE_LINK_LIBRARIES "mbedx509;MbedTLS::mbedcrypto")
+
+    add_library(MbedTLS::mbedtls INTERFACE IMPORTED GLOBAL)
+    set_target_properties(MbedTLS::mbedtls PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES "${_moonlight_mbedtls_include_dir}"
+        INTERFACE_LINK_LIBRARIES "mbedtls;MbedTLS::mbedx509;MbedTLS::mbedcrypto")
+
+    if (NOT TARGET mbed::crypto)
+        add_library(mbed::crypto INTERFACE IMPORTED GLOBAL)
+        set_target_properties(mbed::crypto PROPERTIES
+            INTERFACE_LINK_LIBRARIES "MbedTLS::mbedcrypto")
+    endif ()
+
+    if (NOT TARGET mbed::x509)
+        add_library(mbed::x509 INTERFACE IMPORTED GLOBAL)
+        set_target_properties(mbed::x509 PROPERTIES
+            INTERFACE_LINK_LIBRARIES "MbedTLS::mbedx509")
+    endif ()
+
+    if (NOT TARGET mbed::tls)
+        add_library(mbed::tls INTERFACE IMPORTED GLOBAL)
+        set_target_properties(mbed::tls PROPERTIES
+            INTERFACE_LINK_LIBRARIES "MbedTLS::mbedtls")
+    endif ()
+endfunction()
 
 if (DEFINED VCPKG_INSTALLED_DIR AND DEFINED VCPKG_TARGET_TRIPLET)
     set(_moonlight_vcpkg_triplet_dir "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}")
@@ -80,7 +125,12 @@ if (USE_LIBROMFS)
 endif ()
 
 if (USE_MBEDTLS_CRYPTO)
-    find_package(MbedTLS REQUIRED COMPONENTS crypto tls x509)
+    if (MOONLIGHT_APPLE_MOBILE_USE_MULTI_SDK)
+        set(MBEDTLS_INCLUDE_DIRS "${MOONLIGHT_APPLE_MOBILE_VCPKG_INCLUDE_DIR}")
+        moonlight_define_multi_sdk_mbedtls_targets()
+    else ()
+        find_package(MbedTLS REQUIRED COMPONENTS crypto tls x509)
+    endif ()
     add_compile_definitions(USE_MBEDTLS_CRYPTO)
 elseif (USE_OPENSSL_CRYPTO)
     find_package(OpenSSL REQUIRED)
@@ -94,6 +144,10 @@ add_subdirectory(extern)
 
 # setting src and include
 file(GLOB_RECURSE MAIN_SRC app/src/*.cpp)
+
+if (MOONLIGHT_APPLE_MOBILE_USE_MULTI_SDK)
+    list(APPEND APP_PLATFORM_INCLUDE "${MOONLIGHT_APPLE_MOBILE_VCPKG_INCLUDE_DIR}")
+endif ()
 
 set(PLATFORM_OPTION)
 if (PLATFORM_DESKTOP)
@@ -129,6 +183,12 @@ endif ()
 # building target
 program_target(${PROJECT_NAME} "${MAIN_SRC}")
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 20)
+if (MOONLIGHT_APPLE_MOBILE_USE_MULTI_SDK)
+    set_target_properties(${PROJECT_NAME} PROPERTIES
+        XCODE_ATTRIBUTE_LIBRARY_SEARCH_PATHS[sdk=${MOONLIGHT_APPLE_MOBILE_XCODE_DEVICE_SDK}*] "$(inherited) ${MOONLIGHT_APPLE_MOBILE_VCPKG_STAGING_ROOT}/${MOONLIGHT_APPLE_MOBILE_XCODE_DEVICE_SDK}/$(CONFIGURATION)"
+        XCODE_ATTRIBUTE_LIBRARY_SEARCH_PATHS[sdk=${MOONLIGHT_APPLE_MOBILE_XCODE_SIMULATOR_SDK}*] "$(inherited) ${MOONLIGHT_APPLE_MOBILE_VCPKG_STAGING_ROOT}/${MOONLIGHT_APPLE_MOBILE_XCODE_SIMULATOR_SDK}/$(CONFIGURATION)")
+    target_compile_definitions(${PROJECT_NAME} PRIVATE CURL_STATICLIB)
+endif ()
 
 
 # building release file
@@ -326,45 +386,63 @@ if(PLATFORM_SWITCH)
     )
 endif ()
 
-find_package(CURL REQUIRED)
-#find_package(MbedTLS REQUIRED)
 if(NOT PLATFORM_ANDROID)
     find_package(SDL2 REQUIRED)
 endif()
-find_package(Jansson REQUIRED)
-find_package(EXPAT REQUIRED)
-find_package(PNG REQUIRED)
+set(MOONLIGHT_APP_FFMPEG_LIBS)
+set(MOONLIGHT_APP_MISC_LIBS)
+if (MOONLIGHT_APPLE_MOBILE_USE_MULTI_SDK)
+    list(APPEND MOONLIGHT_APP_FFMPEG_LIBS avcodec avformat avutil swresample)
+    list(APPEND MOONLIGHT_APP_MISC_LIBS jansson expat zstd opus png16 z)
+else ()
+    find_package(CURL REQUIRED)
+    find_package(Jansson REQUIRED)
+    find_package(EXPAT REQUIRED)
+    find_package(PNG REQUIRED)
 
-find_library(OPUS_LIBRARY opus)
-message("opus: ${OPUS_LIBRARY}")
+    find_library(OPUS_LIBRARY opus)
+    message("opus: ${OPUS_LIBRARY}")
 
-if(PLATFORM_SWITCH)
-    target_link_libraries(${PROJECT_NAME} PRIVATE
+    if(PLATFORM_SWITCH)
+        list(APPEND MOONLIGHT_APP_FFMPEG_LIBS
             ${CMAKE_CURRENT_SOURCE_DIR}/lib/switch/libavcodec.a
             ${CMAKE_CURRENT_SOURCE_DIR}/lib/switch/libavformat.a
             ${CMAKE_CURRENT_SOURCE_DIR}/lib/switch/libavutil.a
-            ${CMAKE_CURRENT_SOURCE_DIR}/lib/switch/libswresample.a
-    )
-else()
-    find_library(AVCODEC_LIBRARY avcodec)
-    message("avcodec: ${AVCODEC_LIBRARY}")
+            ${CMAKE_CURRENT_SOURCE_DIR}/lib/switch/libswresample.a)
+    else()
+        find_library(AVCODEC_LIBRARY avcodec)
+        message("avcodec: ${AVCODEC_LIBRARY}")
 
-    find_library(AVFORMAT_LIBRARY avformat)
-    message("avformat: ${AVFORMAT_LIBRARY}")
+        find_library(AVFORMAT_LIBRARY avformat)
+        message("avformat: ${AVFORMAT_LIBRARY}")
 
-    find_library(AVUTIL_LIBRARY avutil)
-    message("avutil: ${AVUTIL_LIBRARY}")
+        find_library(AVUTIL_LIBRARY avutil)
+        message("avutil: ${AVUTIL_LIBRARY}")
 
-    find_library(SWRESAMPLE_LIBRARY swresample)
-    message("swresample: ${SWRESAMPLE_LIBRARY}")
+        find_library(SWRESAMPLE_LIBRARY swresample)
+        message("swresample: ${SWRESAMPLE_LIBRARY}")
+        list(APPEND MOONLIGHT_APP_FFMPEG_LIBS
+            ${AVCODEC_LIBRARY}
+            ${AVUTIL_LIBRARY}
+            ${AVFORMAT_LIBRARY}
+            ${SWRESAMPLE_LIBRARY})
+    endif ()
+
+    find_library(ZSTD_LIBRARY zstd)
+    message("zstd: ${ZSTD_LIBRARY}")
+    list(APPEND MOONLIGHT_APP_MISC_LIBS
+        Jansson::Jansson
+        EXPAT::EXPAT
+        ${ZSTD_LIBRARY}
+        ${OPUS_LIBRARY}
+        PNG::PNG)
 endif ()
-
-find_library(ZSTD_LIBRARY zstd)
-message("zstd: ${ZSTD_LIBRARY}")
 
 # Recompiled CURL with Mbedtls support for Switch
 if(PLATFORM_SWITCH)
     target_link_libraries(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/lib/switch/libcurl.a)
+elseif (MOONLIGHT_APPLE_MOBILE_USE_MULTI_SDK)
+    target_link_libraries(${PROJECT_NAME} PRIVATE curl)
 else()
     target_link_libraries(${PROJECT_NAME} PRIVATE CURL::libcurl)
 endif ()
@@ -372,15 +450,8 @@ endif ()
 target_link_libraries(${PROJECT_NAME} PRIVATE
         borealis
         moonlight-common-c
-        Jansson::Jansson
-        EXPAT::EXPAT
-        ${AVCODEC_LIBRARY}
-        ${AVUTIL_LIBRARY}
-        ${AVFORMAT_LIBRARY}
-        ${SWRESAMPLE_LIBRARY}
-        ${ZSTD_LIBRARY}
-        ${OPUS_LIBRARY}
-        PNG::PNG
+        ${MOONLIGHT_APP_MISC_LIBS}
+        ${MOONLIGHT_APP_FFMPEG_LIBS}
         SDL2::SDL2
         ${APP_PLATFORM_LIB})
 
@@ -425,6 +496,13 @@ endif()
 if (APPLE)
     set(XCODE_ATTRIBUTE_CLANG_ENABLE_OBJC_ARC OFF)
     target_link_libraries(${PROJECT_NAME} PRIVATE "-framework CoreMedia" "-framework VideoToolbox" "-framework AVKit" "-framework MetalKit")
+    if (MOONLIGHT_APPLE_MOBILE_USE_MULTI_SDK)
+        target_link_libraries(${PROJECT_NAME} PRIVATE
+            "-framework Security"
+            "-framework CoreFoundation"
+            "-framework CoreServices"
+            m)
+    endif ()
 elseif (PLATFORM_PSV)
     target_link_libraries(${PROJECT_NAME} PRIVATE mp3lame libGLESv2_stub)
 endif ()
