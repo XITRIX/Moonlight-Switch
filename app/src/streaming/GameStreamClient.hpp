@@ -6,6 +6,7 @@
 #include <functional>
 #include <map>
 #include <string>
+#include <utility>
 #include <vector>
 
 #pragma once
@@ -55,6 +56,11 @@ class GameStreamClient : public Singleton<GameStreamClient> {
     SERVER_DATA server_data(const std::string& address) {
         return m_server_data[address];
     }
+    SERVER_DATA server_data(const Host& host) {
+        return server_data(active_address(host));
+    }
+
+    [[nodiscard]] std::string active_address(const Host& host) const;
 
     GameStreamClient();
 
@@ -62,6 +68,7 @@ class GameStreamClient : public Singleton<GameStreamClient> {
     void stop();
 
     static std::vector<std::string> host_addresses_for_find();
+    static std::string external_address_for_mdns(const std::string& address = "");
 
     static bool can_find_host();
     static void find_hosts(ServerCallback<std::vector<Host>>& callback);
@@ -72,17 +79,48 @@ class GameStreamClient : public Singleton<GameStreamClient> {
 
     void connect(const std::string& address,
                  ServerCallback<SERVER_DATA>& callback);
+    void connect(const Host& host, ServerCallback<SERVER_DATA>& callback);
     void pair(const std::string& address, const std::string& pin,
+              ServerCallback<bool>& callback);
+    void pair(const Host& host, const std::string& pin,
               ServerCallback<bool>& callback);
     void applist(const std::string& address,
                  ServerCallback<AppInfoList>& callback);
+    void applist(const Host& host, ServerCallback<AppInfoList>& callback);
     void app_boxart(const std::string& address, int app_id,
+                    ServerCallback<Data>& callback);
+    void app_boxart(const Host& host, int app_id,
                     ServerCallback<Data>& callback);
     void start(const std::string& address, STREAM_CONFIGURATION config,
                int app_id, ServerCallback<STREAM_CONFIGURATION>& callback);
+    void start(const Host& host, STREAM_CONFIGURATION config,
+               int app_id, ServerCallback<STREAM_CONFIGURATION>& callback);
     void quit(const std::string& address, ServerCallback<bool>& callback);
+    void quit(const Host& host, ServerCallback<bool>& callback);
 
   private:
+    template <typename T, typename Worker>
+    void with_cached_server_data(const std::string& address,
+                                 const std::string& missingError,
+                                 ServerCallback<T>& callback,
+                                 Worker&& worker) {
+        if (m_server_data.count(address) == 0) {
+            callback(GSResult<T>::failure(missingError));
+            return;
+        }
+
+        brls::async([this, address, callback,
+                     worker = std::forward<Worker>(worker)]() mutable {
+            worker(address, callback);
+        });
+    }
+
+    void cache_server_data(const std::string& address, const SERVER_DATA& data);
+    void connect_to_addresses(const std::vector<std::string>& addresses,
+                              const std::string& activeKey,
+                              ServerCallback<SERVER_DATA>& callback);
+
     std::map<std::string, SERVER_DATA> m_server_data;
+    std::map<std::string, std::string> m_active_addresses;
     STREAM_CONFIGURATION m_config;
 };

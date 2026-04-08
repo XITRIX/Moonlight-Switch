@@ -7,6 +7,7 @@
 
 #include "DiscoverManager.hpp"
 #include "GameStreamClient.hpp"
+#include <algorithm>
 
 using namespace brls::literals;
 
@@ -53,9 +54,29 @@ void DiscoverManager::loop() {
             if (status == GS_OK) {
                 Host host;
                 host.address = addresses[counter];
+                host.remoteAddress =
+                    GameStreamClient::external_address_for_mdns(host.address);
                 host.hostname = server_data.hostname;
                 host.mac = server_data.mac;
-                _hosts.push_back(host);
+                auto it = std::find_if(_hosts.begin(), _hosts.end(), [host](const Host& existing) {
+                    return hosts_match(existing, host);
+                });
+                if (it == _hosts.end()) {
+                    _hosts.push_back(host);
+                } else {
+                    if (!host.address.empty()) {
+                        it->address = host.address;
+                    }
+                    if (!host.remoteAddress.empty()) {
+                        it->remoteAddress = host.remoteAddress;
+                    }
+                    if (!host.hostname.empty()) {
+                        it->hostname = host.hostname;
+                    }
+                    if (!host.mac.empty()) {
+                        it->mac = host.mac;
+                    }
+                }
                 hosts = hosts.success(_hosts);
                 brls::sync([this] { getHostsUpdateEvent()->fire(hosts); });
             }

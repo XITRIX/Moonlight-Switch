@@ -94,7 +94,7 @@ void AppListView::terninateApp() {
 
         ASYNC_RETAIN
         GameStreamClient::instance().quit(
-            host.address, [ASYNC_TOKEN](const GSResult<bool>& result) {
+            host, [ASYNC_TOKEN](const GSResult<bool>& result) {
                 ASYNC_RELEASE
 
                 loading = false;
@@ -128,7 +128,7 @@ void AppListView::updateAppList() {
 
     ASYNC_RETAIN
     GameStreamClient::instance().connect(
-        host.address, [ASYNC_TOKEN](const GSResult<SERVER_DATA>& result) {
+        host, [ASYNC_TOKEN](const GSResult<SERVER_DATA>& result) {
             ASYNC_RELEASE
 
             if (result.isSuccess()) {
@@ -136,7 +136,7 @@ void AppListView::updateAppList() {
 
                 ASYNC_RETAIN
                 GameStreamClient::instance().applist(
-                    host.address,
+                    host,
                     [ASYNC_TOKEN, currentGame](const GSResult<AppInfoList>& result) {
                         ASYNC_RELEASE
 

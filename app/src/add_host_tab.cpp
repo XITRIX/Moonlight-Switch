@@ -9,11 +9,51 @@
 #include "DiscoverManager.hpp"
 #include "helper.hpp"
 #include "main_tabs_view.hpp"
+#include <arpa/inet.h>
+#include <sys/socket.h>
 
 #if defined(PLATFORM_IOS) || defined(PLATFORM_TVOS) || defined(PLATFORM_VISIONOS)
 extern void darwin_mdns_start(ServerCallback<std::vector<Host>>& callback);
 extern void darwin_mdns_stop();
 #endif
+
+namespace {
+std::string strip_ipv4_port(const std::string& address) {
+    const auto firstColon = address.find(':');
+    if (firstColon == std::string::npos) {
+        return address;
+    }
+
+    if (address.find(':', firstColon + 1) != std::string::npos) {
+        return address;
+    }
+
+    return address.substr(0, firstColon);
+}
+
+bool is_private_ipv4(const in_addr& address) {
+    const uint32_t value = ntohl(address.s_addr);
+    const uint8_t a = (value >> 24) & 0xFF;
+    const uint8_t b = (value >> 16) & 0xFF;
+
+    return a == 10 || a == 127 || (a == 169 && b == 254) ||
+           (a == 192 && b == 168) || (a == 172 && b >= 16 && b <= 31);
+}
+
+bool should_store_manual_address_as_remote(const std::string& address) {
+    const auto hostPart = strip_ipv4_port(address);
+    if (hostPart.empty()) {
+        return false;
+    }
+
+    in_addr parsed{};
+    if (inet_pton(AF_INET, hostPart.c_str(), &parsed) != 1) {
+        return false;
+    }
+
+    return !is_private_ipv4(parsed);
+}
+}
 
 AddHostTab::AddHostTab() {
     // Inflate the tab from the XML file
@@ -25,7 +65,14 @@ AddHostTab::AddHostTab() {
 
     connect->setText("add_host/connect"_i18n);
     connect->registerClickAction([this](View* view) {
-        connectHost(hostIP->getValue());
+        Host host;
+        const auto inputAddress = hostIP->getValue();
+        if (should_store_manual_address_as_remote(inputAddress)) {
+            host.remoteAddress = inputAddress;
+        } else {
+            host.address = inputAddress;
+        }
+        connectHost(host);
         return true;
     });
 
@@ -55,16 +102,17 @@ void AddHostTab::fillSearchBox(const GSResult<std::vector<Host>>& hostsRes) {
     if (hostsRes.isSuccess()) {
         std::vector<Host> hosts = hostsRes.value();
         for (const Host& host : hosts) {
-            if (searchBoxIpExists(host.address))
+            const auto displayAddress = host.preferred_address();
+            if (searchBoxIpExists(displayAddress))
                 continue;
 
             auto hostButton = new brls::DetailCell();
             hostButton->setText(host.hostname);
-            hostButton->setDetailText(host.address);
+            hostButton->setDetailText(displayAddress);
             hostButton->setDetailTextColor(
                 brls::Application::getTheme()["brls/text_disabled"]);
             hostButton->registerClickAction([this, host](View* view) {
-                connectHost(host.address);
+                connectHost(host);
                 return true;
             });
             searchBox->addView(hostButton);
@@ -110,11 +158,11 @@ void AddHostTab::findHost() {
                 for (const Host& host : hosts) {
                     auto hostButton = new brls::DetailCell();
                     hostButton->setText(host.hostname);
-                    hostButton->setDetailText(host.address);
+                    hostButton->setDetailText(host.preferred_address());
                     hostButton->setDetailTextColor(
                         brls::Application::getTheme()["brls/text_disabled"]);
                     hostButton->registerClickAction([this, host](View* view) {
-                        connectHost(host.address);
+                        connectHost(host);
                         return true;
                     });
                     searchBox->addView(hostButton);
@@ -135,25 +183,23 @@ void AddHostTab::stopSearchHost() {
 #endif
 }
 
-void AddHostTab::connectHost(const std::string& address) {
-//    if (address.empty()) return;
-
+void AddHostTab::connectHost(const Host& host) {
     pauseSearching();
 
     Dialog* loaderView = createLoadingDialog("add_host/try_connect"_i18n);
     loaderView->open();
 
     GameStreamClient::instance().connect(
-        address, [this, loaderView, address](const GSResult<SERVER_DATA>& result) {
-                loaderView->close([this, result, address] {
+        host, [this, loaderView, host](const GSResult<SERVER_DATA>& result) {
+            loaderView->close([this, result, host] {
                 if (result.isSuccess()) {
-                    Host host{.address = address,
-                              .hostname = result.value().hostname,
-                              .mac = result.value().mac};
+                    Host pairedHost = host;
+                    pairedHost.hostname = result.value().hostname;
+                    pairedHost.mac = result.value().mac;
 
                     if (result.value().paired) {
-                        showAlert("add_host/paired_error"_i18n, [host] {
-                            Settings::instance().add_host(host);
+                        showAlert("add_host/paired_error"_i18n, [pairedHost] {
+                            Settings::instance().add_host(pairedHost);
                             MainTabs::getInstanse()->refillTabs();
                         });
 
@@ -171,12 +217,12 @@ void AddHostTab::connectHost(const std::string& address) {
 
                     ASYNC_RETAIN
                     GameStreamClient::instance().pair(
-                        address, pin,
-                        [ASYNC_TOKEN, host, dialog](const GSResult<bool>& result) {
+                        pairedHost, pin,
+                        [ASYNC_TOKEN, pairedHost, dialog](const GSResult<bool>& result) {
                             ASYNC_RELEASE
-                            dialog->dismiss([result, host] {
+                            dialog->dismiss([result, pairedHost] {
                                 if (result.isSuccess()) {
-                                    Settings::instance().add_host(host);
+                                    Settings::instance().add_host(pairedHost);
                                     MainTabs::getInstanse()->refillTabs();
                                     AddHostTab::startSearching();
                                 } else {

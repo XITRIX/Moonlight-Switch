@@ -2,6 +2,7 @@
 #include "Settings.hpp"
 #include "WakeOnLanManager.hpp"
 #include <borealis.hpp>
+#include <algorithm>
 #include <thread>
 #include <unistd.h>
 #include <atomic>
@@ -38,6 +39,84 @@ extern "C" {
 #endif
 
 using namespace brls;
+
+namespace {
+void rebind_server_info(SERVER_DATA& server) {
+    server.serverInfo.address = server.address.c_str();
+    server.serverInfo.serverInfoAppVersion =
+        server.serverInfoAppVersion.c_str();
+    server.serverInfo.serverInfoGfeVersion =
+        server.serverInfoGfeVersion.c_str();
+}
+
+std::string host_key(const Host& host) {
+    if (!host.mac.empty()) {
+        return "mac:" + host.mac;
+    }
+    if (!host.address.empty()) {
+        return "address:" + host.address;
+    }
+    if (!host.remoteAddress.empty()) {
+        return "remote:" + host.remoteAddress;
+    }
+    return "hostname:" + host.hostname;
+}
+
+void merge_discovered_host(std::vector<Host>& hosts, const Host& host) {
+    auto it = std::find_if(hosts.begin(), hosts.end(), [host](const Host& existing) {
+        return hosts_match(existing, host);
+    });
+
+    if (it == hosts.end()) {
+        hosts.push_back(host);
+        return;
+    }
+
+    if (!host.address.empty()) {
+        it->address = host.address;
+    }
+    if (!host.remoteAddress.empty()) {
+        it->remoteAddress = host.remoteAddress;
+    }
+    if (!host.hostname.empty()) {
+        it->hostname = host.hostname;
+    }
+    if (!host.mac.empty()) {
+        it->mac = host.mac;
+    }
+}
+
+bool is_ipv4_address(const std::string& address) {
+    if (address.empty()) {
+        return false;
+    }
+
+    in_addr parsed{};
+    return inet_pton(AF_INET, address.c_str(), &parsed) == 1;
+}
+
+std::string strip_ipv4_port(const std::string& address) {
+    const auto firstColon = address.find(':');
+    if (firstColon == std::string::npos) {
+        return address;
+    }
+    if (address.find(':', firstColon + 1) != std::string::npos) {
+        return address;
+    }
+    return address.substr(0, firstColon);
+}
+
+std::string ipv4_port_suffix(const std::string& address) {
+    const auto firstColon = address.find(':');
+    if (firstColon == std::string::npos) {
+        return "";
+    }
+    if (address.find(':', firstColon + 1) != std::string::npos) {
+        return "";
+    }
+    return address.substr(firstColon);
+}
+}
 
 GameStreamClient::GameStreamClient() { start(); }
 
@@ -89,6 +168,38 @@ std::vector<std::string> GameStreamClient::host_addresses_for_find() {
         }
     }
     return addresses;
+}
+
+std::string GameStreamClient::external_address_for_mdns(const std::string& address) {
+    const auto localAddress = strip_ipv4_port(address);
+    if (!localAddress.empty() && !is_ipv4_address(localAddress)) {
+        return "";
+    }
+
+    unsigned int wanAddress = 0;
+    const int err =
+        LiFindExternalAddressIP4("stun.moonlight-stream.org", 3478, &wanAddress);
+    if (err != 0) {
+        Logger::error("Failed to get remote IPv4 address over STUN: {}", err);
+        return "";
+    }
+
+    in_addr externalAddr{};
+    externalAddr.s_addr = wanAddress;
+
+    char addressBuffer[INET_ADDRSTRLEN] = {};
+    if (inet_ntop(AF_INET, &externalAddr, addressBuffer, sizeof(addressBuffer)) == nullptr) {
+        Logger::error("Failed to format remote IPv4 address returned by STUN");
+        return "";
+    }
+
+    std::string externalAddress = addressBuffer;
+    const auto portSuffix = ipv4_port_suffix(address);
+    if (!portSuffix.empty()) {
+        externalAddress += portSuffix;
+    }
+
+    return externalAddress;
 }
 
 bool GameStreamClient::can_find_host() { return get_my_ip_address() != 0; }
@@ -190,9 +301,11 @@ void GameStreamClient::find_hosts(ServerCallback<std::vector<Host>>& callback) {
                 if (status == GS_OK) {
                     Host host;
                     host.address = searchContext.foundHost;
+                    host.remoteAddress =
+                        GameStreamClient::external_address_for_mdns(host.address);
                     host.hostname = server_data.hostname;
                     host.mac = server_data.mac;
-                    foundHosts.push_back(host);
+                    merge_discovered_host(foundHosts, host);
 
                     brls::sync([callback, foundHosts] {
                         callback(GSResult<std::vector<Host>>::success(foundHosts));
@@ -234,156 +347,227 @@ void GameStreamClient::wake_up_host(const Host& host,
     });
 }
 
-void GameStreamClient::connect(const std::string& address,
-                               ServerCallback<SERVER_DATA>& callback) {
-    if (address.empty()) {
+void GameStreamClient::cache_server_data(const std::string& address,
+                                         const SERVER_DATA& data) {
+    m_server_data[address] = data;
+    rebind_server_info(m_server_data[address]);
+    if (!data.mac.empty()) {
+        m_active_addresses["mac:" + data.mac] = address;
+    }
+}
+
+void GameStreamClient::connect_to_addresses(
+    const std::vector<std::string>& addresses, const std::string& activeKey,
+    ServerCallback<SERVER_DATA>& callback) {
+    if (std::none_of(addresses.begin(), addresses.end(),
+                     [](const std::string& address) {
+                         return !address.empty();
+                     })) {
         callback(GSResult<SERVER_DATA>::failure("Address is Empty"));
         return;
     }
 
-    SERVER_DATA* data = new SERVER_DATA();
-    brls::async([this, address, callback, data] {
-        int status = gs_init(data, address);
+    brls::async([this, addresses, activeKey, callback] {
+        std::string connectedAddress;
+        std::string error = "Address is Empty";
+        SERVER_DATA connectedServer{};
 
-        brls::sync([this, address, callback, status, data] {
-            if (status == GS_OK) {
-                m_server_data[address] = *data;
-                callback(GSResult<SERVER_DATA>::success(m_server_data[address]));
-            } else {
-                callback(GSResult<SERVER_DATA>::failure(gs_error()));
+        for (const auto& address : addresses) {
+            if (address.empty()) {
+                continue;
             }
+
+            SERVER_DATA serverData{};
+            const int status = gs_init(&serverData, address);
+            if (status == GS_OK) {
+                connectedAddress = address;
+                connectedServer = serverData;
+                break;
+            }
+
+            error = gs_error();
+        }
+
+        brls::sync([this, callback, activeKey, connectedAddress,
+                    connectedServer, error] {
+            if (connectedAddress.empty()) {
+                callback(GSResult<SERVER_DATA>::failure(error));
+                return;
+            }
+
+            cache_server_data(connectedAddress, connectedServer);
+            if (!activeKey.empty()) {
+                m_active_addresses[activeKey] = connectedAddress;
+            }
+
+            callback(
+                GSResult<SERVER_DATA>::success(m_server_data[connectedAddress]));
         });
     });
+}
+
+void GameStreamClient::connect(const std::string& address,
+                               ServerCallback<SERVER_DATA>& callback) {
+    connect_to_addresses({address}, "", callback);
+}
+
+std::string GameStreamClient::active_address(const Host& host) const {
+    if (const auto it = m_active_addresses.find(host_key(host));
+        it != m_active_addresses.end() && !it->second.empty()) {
+        return it->second;
+    }
+
+    return host.preferred_address();
+}
+
+void GameStreamClient::connect(const Host& host,
+                               ServerCallback<SERVER_DATA>& callback) {
+    connect_to_addresses(host.connection_addresses(), host_key(host), callback);
 }
 
 void GameStreamClient::pair(const std::string& address, const std::string& pin,
                             ServerCallback<bool>& callback) {
-    if (m_server_data.count(address) == 0) {
-        callback(GSResult<bool>::failure("Firstly call connect()..."));
-        return;
-    }
+    with_cached_server_data<bool>(
+        address, "Firstly call connect()...", callback,
+        [this, pin](const std::string& cachedAddress,
+                    ServerCallback<bool>& callback) {
+            int status = gs_pair(&m_server_data[cachedAddress], (char*)pin.c_str());
 
-    brls::async([this, address, pin, callback] {
-        int status = gs_pair(&m_server_data[address], (char*)pin.c_str());
-
-        brls::sync([callback, status] {
-            if (status == GS_OK) {
-                callback(GSResult<bool>::success(true));
-            } else {
-                callback(GSResult<bool>::failure(gs_error()));
-            }
+            brls::sync([callback, status] {
+                if (status == GS_OK) {
+                    callback(GSResult<bool>::success(true));
+                } else {
+                    callback(GSResult<bool>::failure(gs_error()));
+                }
+            });
         });
-    });
+}
+
+void GameStreamClient::pair(const Host& host, const std::string& pin,
+                            ServerCallback<bool>& callback) {
+    pair(active_address(host), pin, callback);
 }
 
 void GameStreamClient::applist(const std::string& address,
                                ServerCallback<AppInfoList>& callback) {
-    if (m_server_data.count(address) == 0) {
-        callback(GSResult<AppInfoList>::failure(
-            "Firstly call connect() & pair()..."));
-        return;
-    }
+    with_cached_server_data<AppInfoList>(
+        address, "Firstly call connect() & pair()...", callback,
+        [this](const std::string& cachedAddress,
+               ServerCallback<AppInfoList>& callback) {
+            PAPP_LIST list;
 
-    brls::async([this, address, callback] {
-        PAPP_LIST list;
-
-        int status = gs_applist(&m_server_data[address], &list);
-        if (status != CURLE_OK) {
-            callback(GSResult<AppInfoList>::failure(gs_error()));
-            return;
-        }
-
-        AppInfoList app_list;
-
-        while (list) {
-
-            std::string name = std::string(list->name);
-            int id = list->id;
-            AppInfo info;
-            info.name = name;
-            info.app_id = id;
-            app_list.push_back(info);
-            list = list->next;
-        }
-
-        std::sort(app_list.begin(), app_list.end(),
-                  [](const AppInfo& a, const AppInfo& b) { return a.name < b.name; });
-
-        brls::sync([app_list, callback, status] {
-            if (status == GS_OK) {
-                callback(GSResult<AppInfoList>::success(app_list));
-            } else {
+            int status = gs_applist(&m_server_data[cachedAddress], &list);
+            if (status != CURLE_OK) {
                 callback(GSResult<AppInfoList>::failure(gs_error()));
+                return;
             }
+
+            AppInfoList app_list;
+
+            while (list) {
+                std::string name = std::string(list->name);
+                int id = list->id;
+                AppInfo info;
+                info.name = name;
+                info.app_id = id;
+                app_list.push_back(info);
+                list = list->next;
+            }
+
+            std::sort(app_list.begin(), app_list.end(),
+                      [](const AppInfo& a, const AppInfo& b) {
+                          return a.name < b.name;
+                      });
+
+            brls::sync([app_list, callback, status] {
+                if (status == GS_OK) {
+                    callback(GSResult<AppInfoList>::success(app_list));
+                } else {
+                    callback(GSResult<AppInfoList>::failure(gs_error()));
+                }
+            });
         });
-    });
+}
+
+void GameStreamClient::applist(const Host& host,
+                               ServerCallback<AppInfoList>& callback) {
+    applist(active_address(host), callback);
 }
 
 void GameStreamClient::app_boxart(const std::string& address, int app_id,
                                   ServerCallback<Data>& callback) {
-    if (m_server_data.count(address) == 0) {
-        callback(GSResult<Data>::failure("Firstly call connect() & pair()..."));
-        return;
-    }
+    with_cached_server_data<Data>(
+        address, "Firstly call connect() & pair()...", callback,
+        [this, app_id](const std::string& cachedAddress,
+                       ServerCallback<Data>& callback) {
+            Data data;
+            int status =
+                gs_app_boxart(&m_server_data[cachedAddress], app_id, &data);
 
-    brls::async([this, address, app_id, callback] {
-        Data data;
-        int status = gs_app_boxart(&m_server_data[address], app_id, &data);
-
-        brls::sync([callback, data, status] {
-            if (status == GS_OK) {
-                callback(GSResult<Data>::success(data));
-            } else {
-                callback(GSResult<Data>::failure(gs_error()));
-            }
+            brls::sync([callback, data, status] {
+                if (status == GS_OK) {
+                    callback(GSResult<Data>::success(data));
+                } else {
+                    callback(GSResult<Data>::failure(gs_error()));
+                }
+            });
         });
-    });
+}
+
+void GameStreamClient::app_boxart(const Host& host, int app_id,
+                                  ServerCallback<Data>& callback) {
+    app_boxart(active_address(host), app_id, callback);
 }
 
 void GameStreamClient::start(const std::string& address,
                              STREAM_CONFIGURATION config, int app_id,
                              ServerCallback<STREAM_CONFIGURATION>& callback) {
-    if (m_server_data.count(address) == 0) {
-        callback(GSResult<STREAM_CONFIGURATION>::failure(
-            "Firstly call connect() & pair()..."));
-        return;
-    }
-
     m_config = config;
 
-    brls::async([this, address, app_id, callback] {
-        int status = gs_start_app(&m_server_data[address], &m_config, app_id,
-                                  Settings::instance().sops(),
-                                  Settings::instance().play_audio(), 0x1);
+    with_cached_server_data<STREAM_CONFIGURATION>(
+        address, "Firstly call connect() & pair()...", callback,
+        [this, app_id](const std::string& cachedAddress,
+                       ServerCallback<STREAM_CONFIGURATION>& callback) {
+            int status = gs_start_app(&m_server_data[cachedAddress], &m_config,
+                                      app_id, Settings::instance().sops(),
+                                      Settings::instance().play_audio(), 0x1);
 
-        brls::sync([this, callback, status] {
-            if (status == GS_OK) {
-                callback(GSResult<STREAM_CONFIGURATION>::success(m_config));
-            } else {
-                callback(GSResult<STREAM_CONFIGURATION>::failure(gs_error()));
-            }
+            brls::sync([this, callback, status] {
+                if (status == GS_OK) {
+                    callback(GSResult<STREAM_CONFIGURATION>::success(m_config));
+                } else {
+                    callback(GSResult<STREAM_CONFIGURATION>::failure(gs_error()));
+                }
+            });
         });
-    });
+}
+
+void GameStreamClient::start(const Host& host, STREAM_CONFIGURATION config,
+                             int app_id,
+                             ServerCallback<STREAM_CONFIGURATION>& callback) {
+    start(active_address(host), config, app_id, callback);
 }
 
 void GameStreamClient::quit(const std::string& address,
                             ServerCallback<bool>& callback) {
-    if (m_server_data.count(address) == 0) {
-        callback(GSResult<bool>::failure("Firstly call connect() & pair()..."));
-        return;
-    }
+    with_cached_server_data<bool>(
+        address, "Firstly call connect() & pair()...", callback,
+        [this](const std::string& cachedAddress, ServerCallback<bool>& callback) {
+            auto server_data = m_server_data[cachedAddress];
 
-    auto server_data = m_server_data[address];
+            int status = gs_quit_app((PSERVER_DATA)&server_data);
 
-    brls::async([server_data, callback] {
-        int status = gs_quit_app((PSERVER_DATA)&server_data);
-
-        brls::sync([callback, status] {
-            if (status == GS_OK) {
-                callback(GSResult<bool>::success(true));
-            } else {
-                callback(GSResult<bool>::failure(gs_error()));
-            }
+            brls::sync([callback, status] {
+                if (status == GS_OK) {
+                    callback(GSResult<bool>::success(true));
+                } else {
+                    callback(GSResult<bool>::failure(gs_error()));
+                }
+            });
         });
-    });
+}
+
+void GameStreamClient::quit(const Host& host,
+                            ServerCallback<bool>& callback) {
+    quit(active_address(host), callback);
 }

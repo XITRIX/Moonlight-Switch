@@ -40,10 +40,41 @@ struct App {
 
 struct Host {
     std::string address;
+    std::string remoteAddress;
     std::string hostname;
     std::string mac;
     std::vector<App> favorites;
+
+    [[nodiscard]] std::vector<std::string> connection_addresses() const {
+        std::vector<std::string> addresses;
+        if (!address.empty())
+            addresses.push_back(address);
+        if (!remoteAddress.empty() && remoteAddress != address)
+            addresses.push_back(remoteAddress);
+        return addresses;
+    }
+
+    [[nodiscard]] std::string preferred_address() const {
+        return !address.empty() ? address : remoteAddress;
+    }
+
+    [[nodiscard]] bool has_address(const std::string& value) const {
+        return !value.empty() &&
+               (address == value || remoteAddress == value);
+    }
 };
+
+inline bool hosts_match(const Host& lhs, const Host& rhs) {
+    if (!lhs.mac.empty() && !rhs.mac.empty())
+        return lhs.mac == rhs.mac;
+
+    for (const auto& address : lhs.connection_addresses()) {
+        if (rhs.has_address(address))
+            return true;
+    }
+
+    return false;
+}
 
 class Settings : public Singleton<Settings> {
   public:

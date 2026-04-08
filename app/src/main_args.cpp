@@ -65,7 +65,7 @@ bool startFromArgs(int argc, char** argv) {
 
     auto hosts = Settings::instance().hosts();
     if (auto it = std::find_if(hosts.begin(), hosts.end(), [mac, ip](const Host& host) {
-        return host.mac == mac || host.address == ip;
+        return host.mac == mac || host.has_address(ip);
     }); it != std::end(hosts)) {
         const Host& host = *it;
         AppInfo info { appName, stoi(appId) };

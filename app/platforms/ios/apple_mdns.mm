@@ -2,6 +2,7 @@
 #import <Foundation/Foundation.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <algorithm>
 
 std::vector<Host> foundHosts;
 std::function<void(void)> _callback;
@@ -210,8 +211,27 @@ static NSString* NV_SERVICE_TYPE = @"_nvstream._tcp";
         auto hostName = [service.hostName stringByReplacingOccurrencesOfString:@".local." withString:@""];
 
         host.address = std::string([hostAddress UTF8String]);
+        host.remoteAddress = GameStreamClient::external_address_for_mdns(host.address);
         host.hostname = std::string([hostName UTF8String]);
-        foundHosts.push_back(host);
+        auto it = std::find_if(foundHosts.begin(), foundHosts.end(), [host](const Host& existing) {
+            return hosts_match(existing, host);
+        });
+        if (it == foundHosts.end()) {
+            foundHosts.push_back(host);
+        } else {
+            if (!host.address.empty()) {
+                it->address = host.address;
+            }
+            if (!host.remoteAddress.empty()) {
+                it->remoteAddress = host.remoteAddress;
+            }
+            if (!host.hostname.empty()) {
+                it->hostname = host.hostname;
+            }
+            if (!host.mac.empty()) {
+                it->mac = host.mac;
+            }
+        }
 
         _callback();
     });

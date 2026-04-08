@@ -13,6 +13,17 @@
 
 using namespace brls::literals;
 
+namespace {
+std::string host_subtitle(const Host& host) {
+    std::string subtitle = host.address;
+    if (!host.remoteAddress.empty() && host.remoteAddress != host.address) {
+        subtitle = subtitle.empty() ? host.remoteAddress
+                                    : subtitle + " | " + host.remoteAddress;
+    }
+    return subtitle;
+}
+}
+
 HostTab::HostTab(const Host& host) : host(host) {
     // Inflate the tab from the XML file
     this->inflateFromXMLRes("xml/tabs/host.xml");
@@ -81,16 +92,21 @@ HostTab::HostTab(const Host& host) : host(host) {
 void HostTab::reloadHost() {
     state = FETCHING;
     header->setTitle("host/status"_i18n + ": " + "host/fetching"_i18n);
-    header->setSubtitle(host.address);
+    header->setSubtitle(host_subtitle(host));
     connect->setText("host/wait"_i18n);
 
     ASYNC_RETAIN
     GameStreamClient::instance().connect(
-        host.address, [ASYNC_TOKEN](const GSResult<SERVER_DATA>& result) {
+        host, [ASYNC_TOKEN](const GSResult<SERVER_DATA>& result) {
             ASYNC_RELEASE
 
             if (result.isSuccess()) {
+                const auto connectedAddress =
+                    GameStreamClient::instance().active_address(this->host);
                 header->setTitle("host/status"_i18n + ": " + "host/ready"_i18n);
+                header->setSubtitle(connectedAddress.empty()
+                                        ? host_subtitle(this->host)
+                                        : connectedAddress);
                 connect->setText("host/connect"_i18n);
                 state = AVAILABLE;
             } else {

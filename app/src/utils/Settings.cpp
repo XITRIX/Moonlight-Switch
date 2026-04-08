@@ -9,6 +9,33 @@
 using namespace brls;
 using namespace brls::literals;
 
+namespace {
+Host* find_host(std::vector<Host>& hosts, const Host& target) {
+    auto it = std::find_if(hosts.begin(), hosts.end(), [target](const Host& host) {
+        return hosts_match(host, target);
+    });
+    return it != hosts.end() ? &(*it) : nullptr;
+}
+
+const Host* find_host(const std::vector<Host>& hosts, const Host& target) {
+    auto it = std::find_if(hosts.begin(), hosts.end(), [target](const Host& host) {
+        return hosts_match(host, target);
+    });
+    return it != hosts.end() ? &(*it) : nullptr;
+}
+
+void merge_host(Host& target, const Host& source) {
+    if (!source.address.empty())
+        target.address = source.address;
+    if (!source.remoteAddress.empty())
+        target.remoteAddress = source.remoteAddress;
+    if (!source.hostname.empty())
+        target.hostname = source.hostname;
+    if (!source.mac.empty())
+        target.mac = source.mac;
+}
+}
+
 #ifdef _WIN32
 static int mkdir(const char* dir, mode_t mode) {
     return mkdir(dir);
@@ -75,15 +102,9 @@ void Settings::set_working_dir(const std::string& working_dir) {
 }
 
 void Settings::add_host(const Host& host) {
-    auto it = std::find_if(m_hosts.begin(), m_hosts.end(), [host](auto h){
-        return h.address == host.address;
-    });
-
-    if (it != m_hosts.end()) {
-        it->address = host.address;
-        it->hostname = host.hostname;
-        it->mac = host.mac;
-    } else if (!host.address.empty() && !host.mac.empty()) {
+    if (Host* existing = find_host(m_hosts, host)) {
+        merge_host(*existing, host);
+    } else if (!host.preferred_address().empty() && !host.mac.empty()) {
         m_hosts.push_back(host);
     }
 
@@ -91,8 +112,8 @@ void Settings::add_host(const Host& host) {
 }
 
 void Settings::remove_host(const Host& host) {
-    auto it = std::find_if(m_hosts.begin(), m_hosts.end(), [host](auto h){
-        return h.address == host.address;
+    auto it = std::find_if(m_hosts.begin(), m_hosts.end(), [host](const Host& item) {
+        return hosts_match(item, host);
     });
     
     if (it != m_hosts.end()) {
@@ -102,52 +123,40 @@ void Settings::remove_host(const Host& host) {
 }
 
 void Settings::add_favorite(const Host& host, const App& app) {
-    auto it = std::find_if(m_hosts.begin(), m_hosts.end(), [host](auto h){
-        return h.address == host.address;
-    });
-
-    if (it != m_hosts.end()) {
-        auto app_it = std::find_if(it->favorites.begin(), it->favorites.end(), [app](auto h){
+    if (Host* existing = find_host(m_hosts, host)) {
+        auto app_it = std::find_if(existing->favorites.begin(), existing->favorites.end(), [app](auto h){
             return h.app_id == app.app_id;
         });
 
-        if (app_it != it->favorites.end()) {
-            it->favorites.erase(app_it);
+        if (app_it != existing->favorites.end()) {
+            existing->favorites.erase(app_it);
         }
         
-        it->favorites.push_back(app);
+        existing->favorites.push_back(app);
         save();
     }
 }
 
 void Settings::remove_favorite(const Host& host, int app_id) {
-    auto it = std::find_if(m_hosts.begin(), m_hosts.end(), [host](auto h){
-        return h.address == host.address;
-    });
-
-    if (it != m_hosts.end()) {
-        auto app_it = std::find_if(it->favorites.begin(), it->favorites.end(), [app_id](auto h){
+    if (Host* existing = find_host(m_hosts, host)) {
+        auto app_it = std::find_if(existing->favorites.begin(), existing->favorites.end(), [app_id](auto h){
             return h.app_id == app_id;
         });
 
-        if (app_it != it->favorites.end()) {
-            it->favorites.erase(app_it);
+        if (app_it != existing->favorites.end()) {
+            existing->favorites.erase(app_it);
             save();
         }
     }
 }
 
 bool Settings::is_favorite(const Host& host, int app_id) {
-    auto it = std::find_if(m_hosts.begin(), m_hosts.end(), [host](auto h){
-        return h.address == host.address;
-    });
-
-    if (it != m_hosts.end()) {
-        auto app_it = std::find_if(it->favorites.begin(), it->favorites.end(), [app_id](auto h){
+    if (const Host* existing = find_host(m_hosts, host)) {
+        auto app_it = std::find_if(existing->favorites.begin(), existing->favorites.end(), [app_id](auto h){
             return h.app_id == app_id;
         });
 
-        if (app_it != it->favorites.end()) {
+        if (app_it != existing->favorites.end()) {
             return true;
         }
     }
@@ -177,6 +186,16 @@ void Settings::load() {
                         if (json_t* address = json_object_get(json, "address")) {
                             if (json_typeof(address) == JSON_STRING) {
                                 host.address = json_string_value(address);
+                            }
+                        }
+
+                        if (json_t* remoteAddress = json_object_get(json, "remote_address")) {
+                            if (json_typeof(remoteAddress) == JSON_STRING) {
+                                host.remoteAddress = json_string_value(remoteAddress);
+                            }
+                        } else if (json_t* legacyRemoteAddress = json_object_get(json, "remoteAddress")) {
+                            if (json_typeof(legacyRemoteAddress) == JSON_STRING) {
+                                host.remoteAddress = json_string_value(legacyRemoteAddress);
                             }
                         }
                         
@@ -474,6 +493,7 @@ void Settings::save() {
             for (const auto& host: m_hosts) {
                 if (json_t* json = json_object()) {
                     json_object_set_new(json, "address", json_string(host.address.c_str()));
+                    json_object_set_new(json, "remote_address", json_string(host.remoteAddress.c_str()));
                     json_object_set_new(json, "hostname", json_string(host.hostname.c_str()));
                     json_object_set_new(json, "mac", json_string(host.mac.c_str()));
                     if (json_t* apps = json_array()) {

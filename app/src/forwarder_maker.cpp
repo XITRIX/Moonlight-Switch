@@ -1371,9 +1371,11 @@ std::string buildForwarderArgs(const Host& host, const App& app) {
 
     if (!host.mac.empty()) {
         append("--host=" + host.mac);
-    }
-    if (!host.address.empty()) {
-        append("--ip=" + host.address);
+    } else {
+        const auto preferredAddress = host.preferred_address();
+        if (!preferredAddress.empty()) {
+            append("--ip=" + preferredAddress);
+        }
     }
 
     append("--appid=" + std::to_string(app.app_id));

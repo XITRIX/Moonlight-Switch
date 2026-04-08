@@ -40,7 +40,7 @@ AppCell::AppCell(const Host& host, const AppInfo& app, int currentApp) {
     else {
         ASYNC_RETAIN
         GameStreamClient::instance().app_boxart(
-            host.address, app.app_id, [ASYNC_TOKEN, host, app](auto result) {
+            host, app.app_id, [ASYNC_TOKEN, host, app](auto result) {
                 ASYNC_RELEASE
 
                 if (result.isSuccess()) {
