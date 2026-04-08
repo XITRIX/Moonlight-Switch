@@ -49,6 +49,7 @@ option(USE_GL2 "using OpenGL 2.1" OFF)
 option(USE_GLES2 "using OpenGL ES 2.0" OFF)
 option(USE_GLES3 "using OpenGL ES 3.0" OFF)
 option(USE_METAL "using Metal" OFF)
+option(USE_DEKO3D "using Deko3D" OFF)
 
 # On platforms that are not convenient to load files, such as Android and iOS, they will be forcibly enabled.
 # On other platforms, if you do not want to attach necessary resource files when sending the program to others,

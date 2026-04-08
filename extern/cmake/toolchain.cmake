@@ -249,6 +249,8 @@ elseif (PLATFORM_IOS OR PLATFORM_TVOS OR PLATFORM_VISIONOS)
     _moonlight_normalize_apple_mobile_sdk_variant()
     _moonlight_get_default_simulator_arch(_moonlight_simulator_arch)
 
+    set(USE_METAL ON)
+
     if (PLATFORM_IOS)
         add_definitions(-DPLATFORM_IOS)
         message(STATUS "building for iOS")
@@ -415,6 +417,8 @@ elseif (PLATFORM_SWITCH)
     message(STATUS "building for SWITCH")
     # set(USE_SDL2 ON)
     set(USE_GLFW ON)
+    set(USE_DEKO3D ON)
+
     if (NOT DEFINED ENV{DEVKITPRO})
         message(FATAL_ERROR "Please set DEVKITPRO in your environment. export DEVKITPRO=<path to>/devkitpro")
     endif ()
