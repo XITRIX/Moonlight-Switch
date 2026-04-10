@@ -116,6 +116,44 @@ std::string ipv4_port_suffix(const std::string& address) {
     }
     return address.substr(firstColon);
 }
+
+bool connect_to_addresses_sync(const std::vector<std::string>& addresses,
+                               std::string& connectedAddress,
+                               SERVER_DATA& connectedServer,
+                               std::string& error) {
+    if (std::none_of(addresses.begin(), addresses.end(),
+                     [](const std::string& address) {
+                         return !address.empty();
+                     })) {
+        error = "Address is Empty";
+        return false;
+    }
+
+    error = "Address is Empty";
+    connectedAddress.clear();
+    connectedServer = SERVER_DATA{};
+
+    for (const auto& address : addresses) {
+        if (address.empty()) {
+            continue;
+        }
+
+        SERVER_DATA serverData{};
+        const int status = gs_init(&serverData, address);
+        if (status == GS_OK) {
+            connectedAddress = address;
+            connectedServer = serverData;
+            return true;
+        }
+
+        error = gs_error();
+    }
+
+    return false;
+}
+
+constexpr int WAKE_POLL_ATTEMPTS = 20;
+constexpr useconds_t WAKE_POLL_INTERVAL_US = 1'000'000;
 }
 
 GameStreamClient::GameStreamClient() { start(); }
@@ -337,13 +375,39 @@ void GameStreamClient::wake_up_host(const Host& host,
                                     ServerCallback<bool>& callback) {
     brls::async([host, callback] {
         auto result = WakeOnLanManager::wake_up_host(host);
-
-        if (result.isSuccess()) {
-            usleep(5'000'000);
+        if (!result.isSuccess()) {
             brls::sync([callback, result] { callback(result); });
-        } else {
-            brls::sync([callback, result] { callback(result); });
+            return;
         }
+
+        std::string connectedAddress;
+        std::string error;
+        SERVER_DATA connectedServer{};
+
+        for (int attempt = 0; attempt < WAKE_POLL_ATTEMPTS; attempt++) {
+            if (connect_to_addresses_sync(host.connection_addresses(),
+                                          connectedAddress, connectedServer,
+                                          error)) {
+                auto& client = GameStreamClient::instance();
+                client.cache_server_data(connectedAddress, connectedServer);
+                client.m_active_addresses[host_key(host)] = connectedAddress;
+
+                brls::sync([callback] {
+                    callback(GSResult<bool>::success(true));
+                });
+                return;
+            }
+
+            if (attempt + 1 < WAKE_POLL_ATTEMPTS) {
+                usleep(WAKE_POLL_INTERVAL_US);
+            }
+        }
+
+        brls::sync([callback, error] {
+            callback(GSResult<bool>::failure(
+                error.empty() ? "Host did not come online after wake signal"
+                              : error));
+        });
     });
 }
 
@@ -369,24 +433,10 @@ void GameStreamClient::connect_to_addresses(
 
     brls::async([this, addresses, activeKey, callback] {
         std::string connectedAddress;
-        std::string error = "Address is Empty";
+        std::string error;
         SERVER_DATA connectedServer{};
-
-        for (const auto& address : addresses) {
-            if (address.empty()) {
-                continue;
-            }
-
-            SERVER_DATA serverData{};
-            const int status = gs_init(&serverData, address);
-            if (status == GS_OK) {
-                connectedAddress = address;
-                connectedServer = serverData;
-                break;
-            }
-
-            error = gs_error();
-        }
+        connect_to_addresses_sync(addresses, connectedAddress, connectedServer,
+                                  error);
 
         brls::sync([this, callback, activeKey, connectedAddress,
                     connectedServer, error] {
