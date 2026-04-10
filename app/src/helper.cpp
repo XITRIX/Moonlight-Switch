@@ -22,7 +22,8 @@ void showError(const std::string& message, const std::function<void(void)>& cb) 
     showAlert("error/dialog_header"_i18n + "\n\n" + message, cb);
 }
 
-brls::Dialog* createLoadingDialog(const std::string& text) {
+brls::Dialog* createLoadingDialog(
+    const std::string& text, const std::function<void(void)>& onCancel) {
     Style style = Application::getStyle();
     Box* holder = new Box(Axis::COLUMN);
 
@@ -45,8 +46,11 @@ brls::Dialog* createLoadingDialog(const std::string& text) {
                        style["brls/dialog/paddingLeftRight"]);
 
     auto* dialog = new Dialog(holder);
+    if (onCancel) {
+        dialog->addButton("common/cancel"_i18n, [onCancel] { onCancel(); });
+    }
     dialog->setCancelable(false);
-    dialog->setFocusable(true);
-    dialog->setHideHighlight(true);
+    dialog->setFocusable(!onCancel);
+    dialog->setHideHighlight(!onCancel);
     return dialog;
 }

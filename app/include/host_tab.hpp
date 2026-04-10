@@ -9,6 +9,7 @@
 
 #include <Settings.hpp>
 #include <borealis.hpp>
+#include <cstdint>
 
 enum HostState { FETCHING, AVAILABLE, UNAVAILABLE };
 
@@ -24,4 +25,6 @@ class HostTab : public brls::Box {
   private:
     Host host;
     HostState state = HostState::FETCHING;
+    uint64_t wakeRequestGeneration = 0;
+    uint64_t canceledWakeRequestGeneration = 0;
 };

@@ -54,13 +54,41 @@ HostTab::HostTab(const Host& host) : host(host) {
             break;
         case UNAVAILABLE:
             if (GameStreamClient::can_wake_up_host(this->host)) {
+                const auto wakeRequestId = ++this->wakeRequestGeneration;
+                this->canceledWakeRequestGeneration = 0;
+
                 Dialog* loader =
-                    createLoadingDialog("host/wake_up_message"_i18n);
+                    createLoadingDialog("host/wake_up_message"_i18n,
+                                        [this, wakeRequestId] {
+                                            if (this->wakeRequestGeneration ==
+                                                wakeRequestId) {
+                                                this->canceledWakeRequestGeneration =
+                                                    wakeRequestId;
+                                            }
+                                        });
                 loader->open();
 
+                ASYNC_RETAIN
                 GameStreamClient::wake_up_host(
-                    this->host, [this, loader](const GSResult<bool>& result) {
-                        loader->close([this, result] {
+                    this->host,
+                    [ASYNC_TOKEN, loader, wakeRequestId](
+                        const GSResult<bool>& result) {
+                        ASYNC_RELEASE
+
+                        if (wakeRequestId != this->wakeRequestGeneration) {
+                            return;
+                        }
+
+                        if (this->canceledWakeRequestGeneration ==
+                            wakeRequestId) {
+                            return;
+                        }
+
+                        loader->close([this, result, wakeRequestId] {
+                            if (wakeRequestId != this->wakeRequestGeneration) {
+                                return;
+                            }
+
                             if (result.isSuccess()) {
                                 reloadHost();
                             } else {

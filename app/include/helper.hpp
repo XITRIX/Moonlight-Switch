@@ -13,4 +13,6 @@ void showAlert(
     std::string message, const std::function<void(void)>& cb = [] {});
 void showError(
     const std::string& message, const std::function<void(void)>& cb = [] {});
-brls::Dialog* createLoadingDialog(const std::string& text);
+brls::Dialog* createLoadingDialog(
+    const std::string& text,
+    const std::function<void(void)>& onCancel = nullptr);
