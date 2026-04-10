@@ -57,7 +57,7 @@
             <brls:Header
                 id="rumble_slider_header"
                 title="@i18n/settings/rumble_force"
-                subtitle="100%"
+                subtitle=""
                 paddingTop="60"
                 lineTop="1px"/>
                 
@@ -78,7 +78,7 @@
             <brls:Header
                 id="mouse_speed_header"
                 title="@i18n/streaming/mouse_speed"
-                subtitle="x1.0"
+                subtitle=""
                 paddingTop="60"/>
                 
             <brls:Slider

@@ -25,7 +25,7 @@ void KeyboardView::createLocales() {
     });
 
     locales.push_back(KeyboardLocale{
-        .name = "Russian",
+        .name = "Русский",
         .localization = {
             {"Remove", "Remove"}, {"Esc", "Esc"}, {"0", ")"}, {"1", "!"}, {"2", "\""}, {"3", "№"}, {"4", ";"}, {"5", "%"}, {"6", ":"},
             {"7", "?"}, {"8", "*"}, {"9", "("}, {"ф", "Ф"}, {"и", "И"}, {"с", "С"}, {"в", "В"}, {"у", "У"}, {"а", "А"}, {"п", "П"},
@@ -39,7 +39,7 @@ void KeyboardView::createLocales() {
     });
 
     locales.push_back(KeyboardLocale{
-        .name = "French",
+        .name = "Français",
         .localization = {
             {"Remove", "Remove"}, {"Esc", "Esc"}, {"à", "0"}, {"&", "1"}, {"é", "2"}, {"\"", "3"}, {"'", "4"}, {"(", "5"}, {"-", "6"},
             {"è", "7"}, {"_", "8"}, {"ç", "9"}, {"a", "A"}, {"b", "B"}, {"c", "C"}, {"d", "D"}, {"e", "E"}, {"f", "F"}, {"g", "G"},
@@ -57,7 +57,7 @@ void KeyboardView::createLocales() {
     });
 
     locales.push_back(KeyboardLocale{
-        .name = "German",
+        .name = "Deutsch",
         .localization = {
             {"Remove", "Remove"}, {"Esc", "Esc"}, {"0", "="}, {"1", "!"}, {"2", "\""}, {"3", "§"}, {"4", "$"}, {"5", "%"}, {"6", "&"},
             {"7", "/"}, {"8", "("}, {"9", ")"}, {"a", "A"}, {"b", "B"}, {"c", "C"}, {"d", "D"}, {"e", "E"}, {"f", "F"}, {"g", "G"},
@@ -72,7 +72,7 @@ void KeyboardView::createLocales() {
     });
 
     locales.push_back(KeyboardLocale{
-        .name = "Spanish",
+        .name = "Español",
         .localization = {
             {"Remove", "Remove"}, {"Esc", "Esc"}, {"0", "="}, {"1", "!"}, {"2", "\""}, {"3", "·"}, {"4", "$"}, {"5", "%"}, {"6", "&"},
             {"7", "/"}, {"8", "("}, {"9", ")"}, {"a", "A"}, {"b", "B"}, {"c", "C"}, {"d", "D"}, {"e", "E"}, {"f", "F"}, {"g", "G"},
@@ -87,7 +87,7 @@ void KeyboardView::createLocales() {
     });
 
     locales.push_back(KeyboardLocale{
-        .name = "Korean",
+        .name = "한국어",
         .localization = {
             {"Remove", "Remove"}, {"Esc", "Esc"}, {"0", ")"}, {"1", "!"}, {"2", "@"}, {"3", "#"}, {"4", "$"}, {"5", "%"}, {"6", "^"},
             {"7", "&"}, {"8", "*"}, {"9", "("}, {"ㅁ", "ㅁ"}, {"ㅠ", "ㅠ"}, {"ㅊ", "ㅊ"}, {"ㅇ", "ㅇ"}, {"ㄷ", "ㄸ"}, {"ㄹ", "ㄹ"}, {"ㅎ", "ㅎ"},

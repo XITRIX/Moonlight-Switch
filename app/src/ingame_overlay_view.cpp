@@ -185,7 +185,7 @@ OptionsTab::OptionsTab(StreamingView* streamView) : streamView(streamView) {
     });
 
     std::vector<std::string> keyboardFingersOptions = {
-        "3", "4", "5", "Disabled"};
+        "3", "4", "5", "hints/off"_i18n};
     keyboardFingers->setText("settings/keyboard_fingers"_i18n);
     keyboardFingers->setData(keyboardFingersOptions);
     switch (Settings::instance().get_keyboard_fingers()) {

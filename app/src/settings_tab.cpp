@@ -46,7 +46,7 @@ SettingsTab::SettingsTab() {
     this->inflateFromXMLRes("xml/tabs/settings.xml");
 
     std::vector<std::string> resolutions = {
-        "Native", "360p", "480p", "720p", "1080p", 
+        "settings/resolution_native"_i18n, "360p", "480p", "720p", "1080p",
 // #if !defined(PLATFORM_SWITCH)
         "1440p"
 // #endif
@@ -487,7 +487,7 @@ SettingsTab::SettingsTab() {
     });
 
     std::vector<std::string> keyboardFingersOptions = {
-        "3", "4", "5", "Disabled"};
+        "3", "4", "5", "hints/off"_i18n};
     keyboardFingers->setText("settings/keyboard_fingers"_i18n);
     keyboardFingers->setData(keyboardFingersOptions);
     switch (Settings::instance().get_keyboard_fingers()) {

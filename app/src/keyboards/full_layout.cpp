@@ -9,6 +9,7 @@
 #include "keyboard_view.hpp"
 
 using namespace brls;
+using namespace brls::literals;
 
 void KeyboardView::createFullLayout() {
     clearViews();
@@ -158,7 +159,7 @@ void KeyboardView::createFullLayout() {
                        [](KeyboardLocale locale) { return locale.name; });
 
         Dropdown* dropdown = new Dropdown(
-            "Select language", langs,
+            "settings/select_language"_i18n, langs,
             [this](int selected) { this->changeLang(selected); },
             Settings::instance().get_keyboard_locale());
         Application::pushActivity(new Activity(dropdown));

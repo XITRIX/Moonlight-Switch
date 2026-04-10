@@ -33,7 +33,7 @@ HostTab::HostTab(const Host& host) : host(host) {
 
     reloadHost();
 
-    registerAction("Rename"_i18n, ControllerButton::BUTTON_START,
+    registerAction("host/rename"_i18n, ControllerButton::BUTTON_START,
                    [this](View* view) {
                        std::string title = this->host.hostname;
                        Application::getPlatform()->getImeManager()->openForText(
@@ -42,7 +42,7 @@ HostTab::HostTab(const Host& host) : host(host) {
                                    Settings::instance().add_host(this->host);
                                    MainTabs::getInstanse()->refillTabs();
                                },
-                               "Rename Host"_i18n, "", 60, title, 0);
+                               "host/rename_title"_i18n, "", 60, title, 0);
 
                        return true;
                    });
