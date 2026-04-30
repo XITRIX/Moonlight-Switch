@@ -334,20 +334,22 @@ void MoonlightSession::start(ServerCallback<bool> callback, bool is_sunshine) {
         m_address, m_config, m_app_id, [this, callback](auto result) {
             if (result.isSuccess()) {
                 m_config = result.value();
+                brls::async([this, callback]() mutable {
+                    auto m_data =
+                        GameStreamClient::instance().server_data(m_address);
 
-                auto m_data =
-                    GameStreamClient::instance().server_data(m_address);
-                int result = LiStartConnection(
-                    &m_data.serverInfo, &m_config, &m_connection_callbacks,
-                    &m_video_callbacks, &m_audio_callbacks, NULL, 0, NULL, 0);
+                    int result = LiStartConnection(
+                        &m_data.serverInfo, &m_config, &m_connection_callbacks,
+                        &m_video_callbacks, &m_audio_callbacks, NULL, 0, NULL, 0);
 
-                if (result != 0) {
-                    LiStopConnection();
-                    callback(
-                        GSResult<bool>::failure("error/stream_start"_i18n));
-                } else {
-                    callback(GSResult<bool>::success(true));
-                }
+                    if (result != 0) {
+                        LiStopConnection();
+                        callback(
+                            GSResult<bool>::failure("error/stream_start"_i18n));
+                    } else {
+                        callback(GSResult<bool>::success(true));
+                    }
+                });
             } else {
                 brls::Logger::error(
                     "MoonlightSession: Failed to start stream: {}",

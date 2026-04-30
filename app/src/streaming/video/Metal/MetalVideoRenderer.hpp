@@ -13,6 +13,8 @@ public:
     void draw(NVGcontext* vg, int width, int height, AVFrame* frame, int imageFormat) override;
     VideoRenderStats* video_render_stats() override;
 private:
+    struct MetalRendererState;
+
     void discardNextDrawable();
     bool updateColorSpaceForFrame(AVFrame* frame);
     bool updateVideoRegionSizeForFrame(AVFrame* frame);
@@ -29,6 +31,7 @@ private:
     int m_LastFrameHeight = -1;
     int m_LastDrawableWidth = -1;
     int m_LastDrawableHeight = -1;
+    MetalRendererState* m_State = nullptr;
 };
 
 #endif // USE_METAL_RENDERER

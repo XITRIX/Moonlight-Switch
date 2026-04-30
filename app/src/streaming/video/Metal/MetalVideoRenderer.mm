@@ -22,21 +22,116 @@ extern "C" {
 #import <MetalKit/MetalKit.h>
 #import <TargetConditionals.h>
 
+#if TARGET_OS_OSX
+#import <AppKit/AppKit.h>
+#else
+#import <UIKit/UIKit.h>
+#endif
+
+#if TARGET_OS_OSX
+#define AppView NSView
+#else
+#define AppView UIView
+#endif
+
 #define MAX_VIDEO_PLANES 3
 
-MTKView* m_MetalView;
-CAMetalLayer* m_MetalLayer;
-CVMetalTextureCacheRef m_TextureCache;
-id<MTLBuffer> m_CscParamsBuffer;
-id<MTLBuffer> m_VideoVertexBuffer;
-id<MTLRenderPipelineState> m_VideoPipelineState;
-id<MTLRenderPipelineState> m_OverlayPipelineState;
-id<MTLLibrary> m_ShaderLibrary;
-id<MTLCommandQueue> m_CommandQueue;
-id<CAMetalDrawable> m_NextDrawable;
-SDL_mutex* m_PresentationMutex = SDL_CreateMutex();
-SDL_cond* m_PresentationCond = SDL_CreateCond();
-int m_PendingPresentationCount = 0;
+struct MetalVideoRenderer::MetalRendererState {
+    MTKView* metalView = nil;
+    CAMetalLayer* metalLayer = nil;
+    CVMetalTextureCacheRef textureCache = nullptr;
+    id<MTLBuffer> cscParamsBuffer = nil;
+    id<MTLBuffer> videoVertexBuffer = nil;
+    id<MTLRenderPipelineState> videoPipelineState = nil;
+    id<MTLRenderPipelineState> overlayPipelineState = nil;
+    id<MTLLibrary> shaderLibrary = nil;
+    id<MTLCommandQueue> commandQueue = nil;
+    __strong id<CAMetalDrawable> nextDrawable = nil;
+    SDL_mutex* presentationMutex = SDL_CreateMutex();
+    SDL_cond* presentationCond = SDL_CreateCond();
+    int pendingPresentationCount = 0;
+
+    ~MetalRendererState()
+    {
+        if (textureCache != nullptr) {
+            CFRelease(textureCache);
+        }
+        if (presentationCond != nullptr) {
+            SDL_DestroyCond(presentationCond);
+        }
+        if (presentationMutex != nullptr) {
+            SDL_DestroyMutex(presentationMutex);
+        }
+    }
+};
+
+#define m_MetalView m_State->metalView
+#define m_MetalLayer m_State->metalLayer
+#define m_TextureCache m_State->textureCache
+#define m_CscParamsBuffer m_State->cscParamsBuffer
+#define m_VideoVertexBuffer m_State->videoVertexBuffer
+#define m_VideoPipelineState m_State->videoPipelineState
+#define m_OverlayPipelineState m_State->overlayPipelineState
+#define m_ShaderLibrary m_State->shaderLibrary
+#define m_CommandQueue m_State->commandQueue
+#define m_NextDrawable m_State->nextDrawable
+#define m_PresentationMutex m_State->presentationMutex
+#define m_PresentationCond m_State->presentationCond
+#define m_PendingPresentationCount m_State->pendingPresentationCount
+
+static CGColorRef clearLayerColor()
+{
+#if TARGET_OS_OSX
+    return NSColor.clearColor.CGColor;
+#else
+    return UIColor.clearColor.CGColor;
+#endif
+}
+
+static void prepareHostViewForMetal(AppView* view)
+{
+#if TARGET_OS_OSX
+    [view setWantsLayer:YES];
+    view.layer.backgroundColor = clearLayerColor();
+#else
+    view.opaque = NO;
+    view.backgroundColor = UIColor.clearColor;
+#endif
+}
+
+static void prepareMetalView(MTKView* metalView)
+{
+    metalView.clearColor = MTLClearColorMake(0.0, 0.0, 0.0, 0.0);
+    metalView.autoResizeDrawable = NO;
+
+#if TARGET_OS_OSX
+    metalView.layer.backgroundColor = clearLayerColor();
+    metalView.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
+#else
+    metalView.opaque = NO;
+    metalView.backgroundColor = UIColor.clearColor;
+    metalView.userInteractionEnabled = NO;
+    metalView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+#endif
+}
+
+static CGSize drawableSizeForMetalView(MTKView* metalView)
+{
+#if TARGET_OS_OSX
+    if (metalView.window != nil) {
+        NSRect backingRect = [metalView convertRectToBacking:metalView.bounds];
+        return backingRect.size;
+    }
+#else
+    if (metalView.window != nil) {
+        CGFloat scale = metalView.window.screen.scale;
+        return CGSizeMake(metalView.bounds.size.width * scale,
+                          metalView.bounds.size.height * scale);
+    }
+#endif
+
+    return metalView.bounds.size;
+}
 
 struct CscParams
 {
@@ -130,11 +225,6 @@ int getFramePlaneCount(AVFrame* frame)
 
 void MetalVideoRenderer::discardNextDrawable()
 { @autoreleasepool {
-    if (!m_NextDrawable) {
-        return;
-    }
-
-//    [m_NextDrawable release];
     m_NextDrawable = nullptr;
 }}
 
@@ -236,8 +326,13 @@ bool MetalVideoRenderer::updateColorSpaceForFrame(AVFrame* frame) {
 }
 
 bool MetalVideoRenderer::updateVideoRegionSizeForFrame(AVFrame* frame) {
-    int drawableWidth, drawableHeight;
-    SDL_Metal_GetDrawableSize(m_Window, &drawableWidth, &drawableHeight);
+    CGSize drawableSize = drawableSizeForMetalView(m_MetalView);
+    int drawableWidth = (int)drawableSize.width;
+    int drawableHeight = (int)drawableSize.height;
+
+    if (drawableWidth <= 0 || drawableHeight <= 0) {
+        return false;
+    }
 
     // Check if anything has changed since the last vertex buffer upload
     if (m_VideoVertexBuffer &&
@@ -248,7 +343,7 @@ bool MetalVideoRenderer::updateVideoRegionSizeForFrame(AVFrame* frame) {
     }
 
     discardNextDrawable();
-    m_MetalView.drawableSize = CGSizeMake(drawableWidth, drawableHeight);
+    m_MetalView.drawableSize = drawableSize;
 
     // Determine the correct scaled size for the video region
     SDL_Rect src, dst;
@@ -289,42 +384,28 @@ bool MetalVideoRenderer::updateVideoRegionSizeForFrame(AVFrame* frame) {
     return true;
 }
 
-MetalVideoRenderer::MetalVideoRenderer() {}
+MetalVideoRenderer::MetalVideoRenderer()
+    : m_State(new MetalRendererState())
+{}
 
 MetalVideoRenderer::~MetalVideoRenderer()
 {@autoreleasepool {
-    if (m_TextureCache != nullptr) {
-        CFRelease(m_TextureCache);
-    }
-
     [m_MetalView removeFromSuperview];
-
-//    if (m_MetalView != nullptr) {
-//        SDL_Metal_DestroyView(m_MetalView);
-//    }
+    delete m_State;
+    m_State = nullptr;
 }}
 
 void MetalVideoRenderer::waitToRender()
 { @autoreleasepool {
-    if (!m_NextDrawable) {
-        // Wait for the next available drawable before latching the frame to render
-        m_NextDrawable = [m_MetalLayer nextDrawable];
-        if (m_NextDrawable == nullptr) {
-            return;
+    // Pace ourselves by waiting if too many frames are pending presentation
+    SDL_LockMutex(m_PresentationMutex);
+    if (m_PendingPresentationCount > 2) {
+        if (SDL_CondWaitTimeout(m_PresentationCond, m_PresentationMutex, 100) == SDL_MUTEX_TIMEDOUT) {
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "Presentation wait timed out after 100 ms");
         }
-
-//        if (m_MetalLayer.displaySyncEnabled) {
-        // Pace ourselves by waiting if too many frames are pending presentation
-        SDL_LockMutex(m_PresentationMutex);
-        if (m_PendingPresentationCount > 2) {
-            if (SDL_CondWaitTimeout(m_PresentationCond, m_PresentationMutex, 100) == SDL_MUTEX_TIMEDOUT) {
-                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                            "Presentation wait timed out after 100 ms");
-            }
-        }
-        SDL_UnlockMutex(m_PresentationMutex);
-//        }
     }
+    SDL_UnlockMutex(m_PresentationMutex);
 }}
 
 void MetalVideoRenderer::draw(NVGcontext* vg, int width, int height, AVFrame* frame, int imageFormat) {
@@ -359,8 +440,19 @@ void MetalVideoRenderer::draw(NVGcontext* vg, int width, int height, AVFrame* fr
 
     waitToRender();
 
-    // Don't proceed with rendering if we don't have a drawable
-    if (m_NextDrawable == nullptr) {
+    id<CAMetalDrawable> nextDrawable = m_MetalView.currentDrawable;
+    if (nextDrawable == nil) {
+        nextDrawable = [m_MetalLayer nextDrawable];
+    }
+
+    if (nextDrawable != nil && ![nextDrawable respondsToSelector:@selector(texture)]) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "Metal drawable has unexpected class during draw: %s",
+                     NSStringFromClass([nextDrawable class]).UTF8String);
+        return;
+    }
+
+    if (nextDrawable == nil) {
         return;
     }
 
@@ -407,12 +499,27 @@ void MetalVideoRenderer::draw(NVGcontext* vg, int width, int height, AVFrame* fr
         }
     }
 
-    // Prepare a render pass to render into the next drawable
     auto renderPassDescriptor = [MTLRenderPassDescriptor renderPassDescriptor];
-    renderPassDescriptor.colorAttachments[0].texture = m_NextDrawable.texture;
-    renderPassDescriptor.colorAttachments[0].loadAction = MTLLoadActionClear;
-    renderPassDescriptor.colorAttachments[0].clearColor = MTLClearColorMake(0.0, 0.0, 0.0, 0.0);
-    renderPassDescriptor.colorAttachments[0].storeAction = MTLStoreActionStore;
+    MTLRenderPassColorAttachmentDescriptor* colorAttachment =
+        [renderPassDescriptor.colorAttachments objectAtIndexedSubscript:0];
+    if (colorAttachment == nil) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "Failed to acquire Metal color attachment descriptor");
+        return;
+    }
+
+    id<MTLTexture> drawableTexture = [nextDrawable texture];
+    if (drawableTexture == nil) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "Failed to acquire Metal drawable texture");
+        return;
+    }
+
+    [colorAttachment setTexture:drawableTexture];
+    [colorAttachment setLoadAction:MTLLoadActionClear];
+    [colorAttachment setClearColor:MTLClearColorMake(0.0, 0.0, 0.0, 0.0)];
+    [colorAttachment setStoreAction:MTLStoreActionStore];
+
     auto commandBuffer = [m_CommandQueue commandBuffer];
     auto renderEncoder = [commandBuffer renderCommandEncoderWithDescriptor:renderPassDescriptor];
 
@@ -442,31 +549,21 @@ void MetalVideoRenderer::draw(NVGcontext* vg, int width, int height, AVFrame* fr
     SDL_LockMutex(m_PresentationMutex);
     m_PendingPresentationCount++;
     SDL_UnlockMutex(m_PresentationMutex);
-#if TARGET_OS_SIMULATOR
     [commandBuffer addCompletedHandler:^(id<MTLCommandBuffer>) {
         SDL_LockMutex(m_PresentationMutex);
         m_PendingPresentationCount--;
         SDL_CondSignal(m_PresentationCond);
         SDL_UnlockMutex(m_PresentationMutex);
     }];
-#else
-    [m_NextDrawable addPresentedHandler:^(id<MTLDrawable>) {
-        SDL_LockMutex(m_PresentationMutex);
-        m_PendingPresentationCount--;
-        SDL_CondSignal(m_PresentationCond);
-        SDL_UnlockMutex(m_PresentationMutex);
-    }];
-#endif
 //    }
 
     // Flip to the newly rendered buffer
-    [commandBuffer presentDrawable:m_NextDrawable];
+    [commandBuffer presentDrawable:nextDrawable];
     [commandBuffer commit];
 
     // Wait for the command buffer to complete and free our CVMetalTextureCache references
     [commandBuffer waitUntilCompleted];
 
-//    [m_NextDrawable release];
     m_NextDrawable = nullptr;
 }
 
@@ -518,12 +615,23 @@ bool MetalVideoRenderer::initialize(int imageFormat)
 //    }
 
     SDL_SysWMinfo info;
-    UIView *view = NULL;
+    AppView *view = NULL;
     SDL_VERSION(&info.version);
     if (SDL_GetWindowWMInfo(m_Window, &info)) {
+#if TARGET_OS_OSX
+        if (info.subsystem == SDL_SYSWM_COCOA) {
+            AppView* contentView = info.info.cocoa.window.contentView;
+            if (contentView.subviews.count > 0) {
+                view = contentView.subviews[0];
+            } else {
+                view = contentView;
+            }
+        }
+#else
         if (info.subsystem == SDL_SYSWM_UIKIT) {
             view = info.info.uikit.window.rootViewController.view;
         }
+#endif
     }
 
     if (!view) {
@@ -535,30 +643,35 @@ bool MetalVideoRenderer::initialize(int imageFormat)
 
     if ([view.layer isKindOfClass:[CAMetalLayer class]]) {
         CAMetalLayer *rootMetalLayer = (CAMetalLayer *)view.layer;
-        view.opaque = NO;
-        view.backgroundColor = UIColor.clearColor;
+        prepareHostViewForMetal(view);
         rootMetalLayer.opaque = NO;
-        rootMetalLayer.backgroundColor = UIColor.clearColor.CGColor;
+        rootMetalLayer.backgroundColor = clearLayerColor();
     }
 
-    m_MetalView = [[MTKView alloc] initWithFrame:view.frame device:device];
-    m_MetalView.opaque = NO;
-    m_MetalView.backgroundColor = UIColor.clearColor;
-    m_MetalView.clearColor = MTLClearColorMake(0.0, 0.0, 0.0, 0.0);
-    m_MetalView.userInteractionEnabled = NO;
-    m_MetalView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+    m_MetalView = [[MTKView alloc] initWithFrame:view.bounds device:device];
+    prepareMetalView(m_MetalView);
 
-    m_MetalLayer = (CAMetalLayer*) [m_MetalView layer];
-    m_MetalLayer.opaque = NO;
-    m_MetalLayer.backgroundColor = UIColor.clearColor.CGColor;
-
-    if (view.superview) {
-        [view.superview insertSubview:m_MetalView belowSubview:view];
-    } else {
+    if (m_MetalView != nil) {
         m_MetalView.frame = view.bounds;
-        [view addSubview:m_MetalView];
-        [view sendSubviewToBack:m_MetalView];
     }
+
+#if TARGET_OS_OSX
+    if (view.superview != nil) {
+        [view.superview addSubview:m_MetalView positioned:NSWindowBelow relativeTo:view];
+    } else if (m_MetalView.superview == view && view != nil) {
+        [view addSubview:m_MetalView positioned:NSWindowBelow relativeTo:nil];
+    }
+#else
+    if (m_MetalView.superview == view) {
+        [view sendSubviewToBack:m_MetalView];
+    } else if (m_MetalView.superview != nil) {
+        [m_MetalView.superview sendSubviewToBack:m_MetalView];
+    }
+#endif
+
+    m_MetalLayer = (CAMetalLayer*)[m_MetalView layer];
+    m_MetalLayer.opaque = NO;
+    m_MetalLayer.backgroundColor = clearLayerColor();
 
     // Choose a device
     m_MetalLayer.device = device;
