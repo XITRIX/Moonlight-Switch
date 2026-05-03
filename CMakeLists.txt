@@ -26,10 +26,11 @@ endif ()
 include(${EXTERN_PATH}/cmake/toolchain.cmake)
 
 # Renderers
-if (PLATFORM_APPLE OR PLATFORM_IOS OR PLATFORM_TVOS OR PLATFORM_VISIONOS)
+if (PLATFORM_APPLE)
     set(USE_METAL_RENDERER ON)
-#     set(USE_GL_RENDERER ON)
-else()
+elseif (PLATFORM_SWITCH)
+    set(USE_DEKO3D_RENDERER ON)
+else ()
     set(USE_GL_RENDERER ON)
 endif ()
 
@@ -142,7 +143,18 @@ set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
 add_subdirectory(extern)
 
 # setting src and include
-file(GLOB_RECURSE MAIN_SRC app/src/*.cpp)
+#file(GLOB_RECURSE MAIN_SRC app/src/*.cpp )
+file(GLOB MAIN_SRC CONFIGURE_DEPENDS
+    app/src/*.cpp
+    app/src/crypto/*.cpp
+    app/src/gestures/*.cpp
+    app/src/keyboards/*.cpp
+    app/src/libgamestream/*.cpp
+    app/src/streaming/*.cpp
+    app/src/streaming/audio/*.cpp
+    app/src/streaming/ffmpeg/*.cpp
+    app/src/streaming/switch/*.cpp
+    app/src/utils/*.cpp)
 
 if (MOONLIGHT_APPLE_MOBILE_USE_MULTI_SDK)
     list(APPEND APP_PLATFORM_INCLUDE "${MOONLIGHT_APPLE_MOBILE_VCPKG_INCLUDE_DIR}")
@@ -177,6 +189,11 @@ endif ()
 
 if (USE_METAL_RENDERER)
     list(APPEND MAIN_SRC app/src/streaming/video/Metal/MetalVideoRenderer.mm)
+    list(APPEND MAIN_SRC app/src/streaming/video/Metal/streamutils.cpp)
+elseif (USE_DEKO3D_RENDERER)
+    list(APPEND MAIN_SRC app/src/streaming/video/deko3d/DKVideoRenderer.cpp)
+elseif (USE_GL_RENDERER)
+    list(APPEND MAIN_SRC app/src/streaming/video/OpenGL/GLVideoRenderer.cpp)
 endif ()
 
 # building target
@@ -477,11 +494,11 @@ if (USE_GL_RENDERER)
         set(SUPPORT_HDR ON)
     endif ()
     add_definitions(-DUSE_GL_RENDERER)
-endif ()
-
-if (USE_METAL_RENDERER)
+elseif (USE_METAL_RENDERER)
     set(SUPPORT_HDR ON)
     add_definitions(-DUSE_METAL_RENDERER)
+elseif (USE_DEKO3D_RENDERER)
+    add_definitions(-DUSE_DEKO3D_RENDERER)
 endif ()
 
 if (SUPPORT_HDR)
