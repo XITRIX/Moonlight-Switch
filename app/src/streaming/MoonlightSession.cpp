@@ -5,7 +5,6 @@
 #include "Settings.hpp"
 #include "borealis.hpp"
 #include <string.h>
-#include <SDL.h>
 
 #if defined(PLATFORM_IOS) || defined(PLATFORM_VISIONOS)
 extern void getWindowSize(int* w, int* h);

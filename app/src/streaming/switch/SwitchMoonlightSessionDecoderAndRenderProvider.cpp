@@ -1,10 +1,12 @@
 #include "SwitchMoonlightSessionDecoderAndRenderProvider.hpp"
 #include "FFmpegVideoDecoder.hpp"
-#include "Settings.hpp"
-#include "SDLAudiorenderer.hpp"
 
 #ifdef __SWITCH__
 #include "AudrenAudioRenderer.hpp"
+#endif
+
+#ifdef __SDL2__
+#include "SDLAudiorenderer.hpp"
 #endif
 
 #ifdef BOREALIS_USE_DEKO3D
@@ -36,12 +38,10 @@ SwitchMoonlightSessionDecoderAndRenderProvider::video_renderer() {
 IAudioRenderer*
 SwitchMoonlightSessionDecoderAndRenderProvider::audio_renderer() {
 #ifdef __SWITCH__
-    if (Settings::instance().audio_backend() == SDL) {
-        return new SDLAudioRenderer();
-    } else {
-        return new AudrenAudioRenderer();
-    }
-#else
+    return new AudrenAudioRenderer();
+#elif defined(__SDL2__)
     return new SDLAudioRenderer();
+#else
+#error No audio renderer selected
 #endif
 }

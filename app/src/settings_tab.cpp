@@ -33,12 +33,17 @@
 
 using namespace brls::literals;
 
+#if defined(__SWITCH__)
+std::vector<std::string> audio_backends {
+    "Audren",
+};
+#elif defined(__SDL2__)
 std::vector<std::string> audio_backends {
     "SDL2",
-#ifdef __SWITCH__
-    "Audren",
-#endif
 };
+#else
+std::vector<std::string> audio_backends;
+#endif
 
 
 SettingsTab::SettingsTab() {
@@ -180,8 +185,15 @@ SettingsTab::SettingsTab() {
     });
     slider->setProgress(progress);
 
+#if defined(__SWITCH__)
+    audioBackend->init("settings/audio_backend"_i18n, audio_backends, 0,
+                       [](int) { Settings::instance().set_audio_backend(AUDREN); });
+#elif defined(__SDL2__)
     audioBackend->init("settings/audio_backend"_i18n, audio_backends, Settings::instance().audio_backend(),
                        [](int selected) { Settings::instance().set_audio_backend((AudioBackend)selected); });
+#else
+    audioBackend->removeFromSuperView(true);
+#endif
 
     optimal->init("settings/usops"_i18n, Settings::instance().sops(),
                   [](bool value) { Settings::instance().set_sops(value); });

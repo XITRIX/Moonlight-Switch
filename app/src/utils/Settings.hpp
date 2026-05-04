@@ -225,7 +225,11 @@ class Settings : public Singleton<Settings> {
     int m_resolution = 720;
     int m_fps = 60;
     VideoCodec m_video_codec = H265;
+#ifdef __SWITCH__
+    AudioBackend m_audio_backend = AUDREN;
+#else
     AudioBackend m_audio_backend = SDL;
+#endif
     int m_bitrate = 10000;
     bool m_enable_hdr = false;
     bool m_click_by_tap = false;

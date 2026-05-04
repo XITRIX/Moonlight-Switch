@@ -267,6 +267,10 @@ void Settings::load() {
                 }
             }
 
+#ifdef __SWITCH__
+            m_audio_backend = AUDREN;
+#endif
+
             if (json_t* bitrate = json_object_get(settings, "bitrate")) {
                 if (json_typeof(bitrate) == JSON_INTEGER) {
                     m_bitrate = (int)json_integer_value(bitrate);

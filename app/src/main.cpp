@@ -27,12 +27,14 @@
 #include "SwitchMoonlightSessionDecoderAndRenderProvider.hpp"
 
 
-#ifdef _WIN32
+#if defined(_WIN32) && defined(__SDL2__)
 #include <SDL.h>
 #define SDL_MAIN
 #endif
 
+#ifdef __SDL2__
 #include <SDL_main.h>
+#endif
 #include <main_args.hpp>
 
 using namespace brls::literals; // for _i18n

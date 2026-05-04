@@ -160,6 +160,10 @@ if (MOONLIGHT_APPLE_MOBILE_USE_MULTI_SDK)
     list(APPEND APP_PLATFORM_INCLUDE "${MOONLIGHT_APPLE_MOBILE_VCPKG_INCLUDE_DIR}")
 endif ()
 
+if (PLATFORM_SWITCH)
+    list(REMOVE_ITEM MAIN_SRC ${CMAKE_CURRENT_SOURCE_DIR}/app/src/streaming/audio/SDLAudioRenderer.cpp)
+endif ()
+
 set(PLATFORM_OPTION)
 if (PLATFORM_DESKTOP)
     if (WIN32)
@@ -170,8 +174,6 @@ if (PLATFORM_DESKTOP)
     endif ()
 elseif (PLATFORM_SWITCH)
     set(PLATFORM_LIBS
-        # needed by borealis
-        EGL glapi drm_nouveau
         # base lib
         nx m
     )
@@ -246,27 +248,9 @@ if (PLATFORM_DESKTOP)
         )
     endif ()
 
-    list(APPEND google_angle_libs 
-        ${CMAKE_CURRENT_SOURCE_DIR}/extern/borealis/library/lib/extern/angle/mac/libEGL.dylib
-        ${CMAKE_CURRENT_SOURCE_DIR}/extern/borealis/library/lib/extern/angle/mac/libGLESv2.dylib
-    )
-
-    set_property(
-        SOURCE ${google_angle_libs}
-        PROPERTY MACOSX_PACKAGE_LOCATION "Frameworks"
-    )
-
-    target_sources(${PROJECT_NAME} PRIVATE
-        ${google_angle_libs}
-    )
-
     set_target_properties(${PROJECT_NAME} PROPERTIES
         INSTALL_RPATH "@executable_path/../Frameworks"
         XCODE_ATTRIBUTE_LD_RUNPATH_SEARCH_PATHS "@executable_path/../Frameworks"
-    )
-
-    target_link_libraries(${PROJECT_NAME} PRIVATE 
-        ${google_angle_libs}
     )
 
     if (NOT USE_LIBROMFS)
@@ -403,9 +387,26 @@ if(PLATFORM_SWITCH)
     )
 endif ()
 
-if(NOT PLATFORM_ANDROID)
-    find_package(SDL2 REQUIRED)
-endif()
+set(MOONLIGHT_APP_SDL_LIBS)
+if (USE_SDL2 AND NOT PLATFORM_ANDROID)
+    if (TARGET SDL2::SDL2)
+        list(APPEND MOONLIGHT_APP_SDL_LIBS SDL2::SDL2)
+    elseif (TARGET SDL2::SDL2-static)
+        list(APPEND MOONLIGHT_APP_SDL_LIBS SDL2::SDL2-static)
+    else ()
+        find_package(SDL2 REQUIRED)
+        if (TARGET SDL2::SDL2)
+            list(APPEND MOONLIGHT_APP_SDL_LIBS SDL2::SDL2)
+        elseif (TARGET SDL2::SDL2-static)
+            list(APPEND MOONLIGHT_APP_SDL_LIBS SDL2::SDL2-static)
+        elseif (SDL2_LIBRARIES)
+            list(APPEND MOONLIGHT_APP_SDL_LIBS ${SDL2_LIBRARIES})
+        else ()
+            message(FATAL_ERROR "SDL2 requested but no SDL2 target was found")
+        endif ()
+    endif ()
+endif ()
+
 set(MOONLIGHT_APP_FFMPEG_LIBS)
 set(MOONLIGHT_APP_MISC_LIBS)
 if (MOONLIGHT_APPLE_MOBILE_USE_MULTI_SDK)
@@ -469,7 +470,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
         moonlight-common-c
         ${MOONLIGHT_APP_MISC_LIBS}
         ${MOONLIGHT_APP_FFMPEG_LIBS}
-        SDL2::SDL2
+        ${MOONLIGHT_APP_SDL_LIBS}
         ${APP_PLATFORM_LIB})
 
 if (MULTICAST_DISABLED)
