@@ -235,7 +235,7 @@ class Settings : public Singleton<Settings> {
     bool m_click_by_tap = false;
     int m_decoder_threads = 4;
     int m_frames_queue_size = 3;
-    bool m_sops = true;
+    bool m_sops = false;
     bool m_play_audio = false;
     bool m_write_log = false;
     bool m_swap_ui_keys = false;
