@@ -508,7 +508,9 @@ void GameStreamClient::applist(const std::string& address,
 
             int status = gs_applist(&m_server_data[cachedAddress], &list);
             if (status != CURLE_OK) {
-                callback(GSResult<AppInfoList>::failure(gs_error()));
+                brls::sync([callback] {
+                    callback(GSResult<AppInfoList>::failure(gs_error()));
+                });
                 return;
             }
 
