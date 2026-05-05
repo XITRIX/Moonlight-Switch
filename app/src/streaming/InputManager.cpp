@@ -9,6 +9,7 @@
 #include <borealis.hpp>
 #include <streaming_view.hpp>
 #include <chrono>
+#include <cmath>
 
 using namespace brls;
 
@@ -34,8 +35,9 @@ MoonlightInputManager::MoonlightInputManager() {
                         1.5f + 0.5f;
 
                 if (!this->inputDropped) {
-                    LiSendMouseMoveEvent(short(offset.x * multiplier),
-                                         short(offset.y * multiplier));
+                    sendRelativeMouseMove(
+                        brls::Point(offset.x * multiplier,
+                                    offset.y * multiplier));
                 }
             }
         });
@@ -85,6 +87,23 @@ MoonlightInputManager::MoonlightInputManager() {
                     break;
             }
         });
+}
+
+void MoonlightInputManager::sendRelativeMouseMove(brls::Point offset) {
+    desktopMouseRemainder.x += offset.x;
+    desktopMouseRemainder.y += offset.y;
+
+    short deltaX = static_cast<short>(std::trunc(desktopMouseRemainder.x));
+    short deltaY = static_cast<short>(std::trunc(desktopMouseRemainder.y));
+
+    if (deltaX == 0 && deltaY == 0) {
+        return;
+    }
+
+    desktopMouseRemainder.x -= deltaX;
+    desktopMouseRemainder.y -= deltaY;
+
+    LiSendMouseMoveEvent(deltaX, deltaY);
 }
 
 void MoonlightInputManager::reloadButtonMappingLayout() {
@@ -141,6 +160,8 @@ void MoonlightInputManager::handleRumbleTriggers(uint16_t controllerNumber,
 void MoonlightInputManager::dropInput() {
     if (inputDropped)
         return;
+
+    desktopMouseRemainder = {0, 0};
 
     bool res = true;
     // Drop gamepad state

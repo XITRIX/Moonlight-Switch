@@ -66,11 +66,13 @@ class MoonlightInputManager : public Singleton<MoonlightInputManager> {
     brls::ControllerButton mappingButtons[brls::_BUTTON_MAX];
     std::optional<brls::PanGestureStatus> panStatus;
     std::map<uint32_t, bool> activeTouchIDs;
+    brls::Point desktopMouseRemainder = {0, 0};
     bool inputDropped = false;
     bool inputEnabled = true;
 
     brls::ControllerState mapController(brls::ControllerState controller);
     static short glfwKeyToVKKey(brls::BrlsKeyboardScancode key);
+    void sendRelativeMouseMove(brls::Point offset);
 
     GamepadState getControllerState(int controllerNum, bool specialKey);
     void handleControllers(bool specialKey);
