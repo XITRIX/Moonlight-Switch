@@ -46,7 +46,6 @@ struct MetalVideoRenderer::MetalRendererState {
     id<MTLRenderPipelineState> overlayPipelineState = nil;
     id<MTLLibrary> shaderLibrary = nil;
     id<MTLCommandQueue> commandQueue = nil;
-    __strong id<CAMetalDrawable> nextDrawable = nil;
     SDL_mutex* presentationMutex = SDL_CreateMutex();
     SDL_cond* presentationCond = SDL_CreateCond();
     int pendingPresentationCount = 0;
@@ -74,7 +73,6 @@ struct MetalVideoRenderer::MetalRendererState {
 #define m_OverlayPipelineState m_State->overlayPipelineState
 #define m_ShaderLibrary m_State->shaderLibrary
 #define m_CommandQueue m_State->commandQueue
-#define m_NextDrawable m_State->nextDrawable
 #define m_PresentationMutex m_State->presentationMutex
 #define m_PresentationCond m_State->presentationCond
 #define m_PendingPresentationCount m_State->pendingPresentationCount
@@ -88,21 +86,30 @@ static CGColorRef clearLayerColor()
 #endif
 }
 
-static void prepareHostViewForMetal(AppView* view)
+static void prepareOriginalMetalView(AppView* view)
 {
 #if TARGET_OS_OSX
     [view setWantsLayer:YES];
-    view.layer.backgroundColor = clearLayerColor();
 #else
     view.opaque = NO;
     view.backgroundColor = UIColor.clearColor;
 #endif
+
+    view.layer.backgroundColor = clearLayerColor();
+
+    if ([view.layer isKindOfClass:[CAMetalLayer class]]) {
+        CAMetalLayer* metalLayer = (CAMetalLayer*)view.layer;
+        metalLayer.opaque = NO;
+        metalLayer.backgroundColor = clearLayerColor();
+    }
 }
 
 static void prepareMetalView(MTKView* metalView)
 {
     metalView.clearColor = MTLClearColorMake(0.0, 0.0, 0.0, 0.0);
     metalView.autoResizeDrawable = NO;
+    metalView.paused = YES;
+    metalView.enableSetNeedsDisplay = NO;
 
 #if TARGET_OS_OSX
     metalView.layer.backgroundColor = clearLayerColor();
@@ -131,6 +138,35 @@ static CGSize drawableSizeForMetalView(MTKView* metalView)
 #endif
 
     return metalView.bounds.size;
+}
+
+static AppView* getOriginalMetalView(SDL_Window* window)
+{
+    SDL_SysWMinfo info;
+    SDL_VERSION(&info.version);
+
+    if (!SDL_GetWindowWMInfo(window, &info)) {
+        return nil;
+    }
+
+#if TARGET_OS_OSX
+    if (info.subsystem != SDL_SYSWM_COCOA) {
+        return nil;
+    }
+
+    NSView* contentView = info.info.cocoa.window.contentView;
+    if (contentView.subviews.count == 0) {
+        return nil;
+    }
+
+    return contentView.subviews[0];
+#else
+    if (info.subsystem != SDL_SYSWM_UIKIT) {
+        return nil;
+    }
+
+    return info.info.uikit.window.rootViewController.view;
+#endif
 }
 
 struct CscParams
@@ -223,11 +259,6 @@ int getFramePlaneCount(AVFrame* frame)
     return CVPixelBufferGetPlaneCount((CVPixelBufferRef)frame->data[3]);
 }
 
-void MetalVideoRenderer::discardNextDrawable()
-{ @autoreleasepool {
-    m_NextDrawable = nullptr;
-}}
-
 int getBitnessScaleFactor(AVFrame* frame) {
     // VideoToolbox frames never require scaling
     return 1;
@@ -239,9 +270,6 @@ bool MetalVideoRenderer::updateColorSpaceForFrame(AVFrame* frame) {
     if (colorspace != m_LastColorSpace || fullRange != m_LastFullRange) {
         CGColorSpaceRef newColorSpace;
         ParamBuffer paramBuffer;
-
-        // Free any unpresented drawable since we're changing pixel formats
-        discardNextDrawable();
 
         switch (colorspace) {
         case COLORSPACE_REC_709:
@@ -342,7 +370,6 @@ bool MetalVideoRenderer::updateVideoRegionSizeForFrame(AVFrame* frame) {
         return true;
     }
 
-    discardNextDrawable();
     m_MetalView.drawableSize = drawableSize;
 
     // Determine the correct scaled size for the video region
@@ -390,7 +417,9 @@ MetalVideoRenderer::MetalVideoRenderer()
 
 MetalVideoRenderer::~MetalVideoRenderer()
 {@autoreleasepool {
-    [m_MetalView removeFromSuperview];
+    if (m_MetalView != nil) {
+        [m_MetalView removeFromSuperview];
+    }
     delete m_State;
     m_State = nullptr;
 }}
@@ -440,10 +469,7 @@ void MetalVideoRenderer::draw(NVGcontext* vg, int width, int height, AVFrame* fr
 
     waitToRender();
 
-    id<CAMetalDrawable> nextDrawable = m_MetalView.currentDrawable;
-    if (nextDrawable == nil) {
-        nextDrawable = [m_MetalLayer nextDrawable];
-    }
+    id<CAMetalDrawable> nextDrawable = [m_MetalLayer nextDrawable];
 
     if (nextDrawable != nil && ![nextDrawable respondsToSelector:@selector(texture)]) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -563,8 +589,6 @@ void MetalVideoRenderer::draw(NVGcontext* vg, int width, int height, AVFrame* fr
 
     // Wait for the command buffer to complete and free our CVMetalTextureCache references
     [commandBuffer waitUntilCompleted];
-
-    m_NextDrawable = nullptr;
 }
 
 id<MTLDevice> getMetalDevice() {
@@ -614,59 +638,23 @@ bool MetalVideoRenderer::initialize(int imageFormat)
 //        return false;
 //    }
 
-    SDL_SysWMinfo info;
-    AppView *view = NULL;
-    SDL_VERSION(&info.version);
-    if (SDL_GetWindowWMInfo(m_Window, &info)) {
-#if TARGET_OS_OSX
-        if (info.subsystem == SDL_SYSWM_COCOA) {
-            AppView* contentView = info.info.cocoa.window.contentView;
-            if (contentView.subviews.count > 0) {
-                view = contentView.subviews[0];
-            } else {
-                view = contentView;
-            }
-        }
-#else
-        if (info.subsystem == SDL_SYSWM_UIKIT) {
-            view = info.info.uikit.window.rootViewController.view;
-        }
-#endif
-    }
-
-    if (!view) {
+    AppView* originalMetalView = getOriginalMetalView(m_Window);
+    AppView* containerView = originalMetalView != nil ? originalMetalView.superview : nil;
+    if (originalMetalView == nil || containerView == nil) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "SDL_Metal_CreateView() failed: %s",
-                     SDL_GetError());
+                     "Failed to locate SDL Metal host view");
         return false;
     }
 
-    if ([view.layer isKindOfClass:[CAMetalLayer class]]) {
-        CAMetalLayer *rootMetalLayer = (CAMetalLayer *)view.layer;
-        prepareHostViewForMetal(view);
-        rootMetalLayer.opaque = NO;
-        rootMetalLayer.backgroundColor = clearLayerColor();
-    }
+    prepareOriginalMetalView(originalMetalView);
 
-    m_MetalView = [[MTKView alloc] initWithFrame:view.bounds device:device];
+    m_MetalView = [[MTKView alloc] initWithFrame:originalMetalView.frame device:device];
     prepareMetalView(m_MetalView);
 
-    if (m_MetalView != nil) {
-        m_MetalView.frame = view.bounds;
-    }
-
 #if TARGET_OS_OSX
-    if (view.superview != nil) {
-        [view.superview addSubview:m_MetalView positioned:NSWindowBelow relativeTo:view];
-    } else if (m_MetalView.superview == view && view != nil) {
-        [view addSubview:m_MetalView positioned:NSWindowBelow relativeTo:nil];
-    }
+    [containerView addSubview:m_MetalView positioned:NSWindowBelow relativeTo:originalMetalView];
 #else
-    if (m_MetalView.superview == view) {
-        [view sendSubviewToBack:m_MetalView];
-    } else if (m_MetalView.superview != nil) {
-        [m_MetalView.superview sendSubviewToBack:m_MetalView];
-    }
+    [containerView insertSubview:m_MetalView atIndex:0];
 #endif
 
     m_MetalLayer = (CAMetalLayer*)[m_MetalView layer];

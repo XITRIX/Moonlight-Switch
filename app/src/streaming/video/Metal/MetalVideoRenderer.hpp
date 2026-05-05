@@ -15,7 +15,6 @@ public:
 private:
     struct MetalRendererState;
 
-    void discardNextDrawable();
     bool updateColorSpaceForFrame(AVFrame* frame);
     bool updateVideoRegionSizeForFrame(AVFrame* frame);
     bool initialize(int imageFormat);
