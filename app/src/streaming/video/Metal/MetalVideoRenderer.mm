@@ -110,6 +110,7 @@ static void prepareMetalView(MTKView* metalView)
     metalView.autoResizeDrawable = NO;
     metalView.paused = YES;
     metalView.enableSetNeedsDisplay = NO;
+    metalView.preferredFramesPerSecond = 120;
 
 #if TARGET_OS_OSX
     metalView.layer.backgroundColor = clearLayerColor();
@@ -424,10 +425,18 @@ MetalVideoRenderer::~MetalVideoRenderer()
     m_State = nullptr;
 }}
 
-void MetalVideoRenderer::waitToRender()
+bool MetalVideoRenderer::waitToRender()
 { @autoreleasepool {
-    // Pace ourselves by waiting if too many frames are pending presentation
     SDL_LockMutex(m_PresentationMutex);
+
+#if TARGET_OS_OSX
+    // On macOS, blocking the UI render loop here causes visible stutter bursts
+    // when the compositor or drawable presentation falls behind.
+    const bool canRender = m_PendingPresentationCount < (int)m_MetalLayer.maximumDrawableCount;
+    SDL_UnlockMutex(m_PresentationMutex);
+    return canRender;
+#else
+    // Pace ourselves by waiting if too many frames are pending presentation
     if (m_PendingPresentationCount > 2) {
         if (SDL_CondWaitTimeout(m_PresentationCond, m_PresentationMutex, 100) == SDL_MUTEX_TIMEDOUT) {
             SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
@@ -435,6 +444,8 @@ void MetalVideoRenderer::waitToRender()
         }
     }
     SDL_UnlockMutex(m_PresentationMutex);
+    return true;
+#endif
 }}
 
 void MetalVideoRenderer::draw(NVGcontext* vg, int width, int height, AVFrame* frame, int imageFormat) {
@@ -467,7 +478,9 @@ void MetalVideoRenderer::draw(NVGcontext* vg, int width, int height, AVFrame* fr
         return;
     }
 
-    waitToRender();
+    if (!waitToRender()) {
+        return;
+    }
 
     id<CAMetalDrawable> nextDrawable = [m_MetalLayer nextDrawable];
 
@@ -588,7 +601,9 @@ void MetalVideoRenderer::draw(NVGcontext* vg, int width, int height, AVFrame* fr
     [commandBuffer commit];
 
     // Wait for the command buffer to complete and free our CVMetalTextureCache references
+#if !TARGET_OS_OSX
     [commandBuffer waitUntilCompleted];
+#endif
 }
 
 id<MTLDevice> getMetalDevice() {

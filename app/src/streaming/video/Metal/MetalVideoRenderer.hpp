@@ -9,7 +9,7 @@ public:
     MetalVideoRenderer();
     ~MetalVideoRenderer();
 
-    void waitToRender();
+    bool waitToRender();
     void draw(NVGcontext* vg, int width, int height, AVFrame* frame, int imageFormat) override;
     VideoRenderStats* video_render_stats() override;
 private:
