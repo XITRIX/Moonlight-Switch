@@ -67,7 +67,39 @@ SettingsTab::SettingsTab() {
         GET_SETTINGS(resolution, 1440, 5);
         DEFAULT;
     }
-    resolution->getEvent()->subscribe([](int selected) {
+
+    std::vector<std::string> nativeResolutionScales = {
+        "0.5x", "0.75x", "1.0x", "2.0x"
+    };
+    resolutionScale->setText("settings/resolution_scale"_i18n);
+    resolutionScale->setData(nativeResolutionScales);
+    switch (Settings::instance().native_resolution_scale()) {
+        GET_SETTINGS(resolutionScale, 50, 0);
+        GET_SETTINGS(resolutionScale, 75, 1);
+        GET_SETTINGS(resolutionScale, 100, 2);
+        GET_SETTINGS(resolutionScale, 200, 3);
+        default:
+            resolutionScale->setSelection(2);
+            break;
+    }
+    resolutionScale->getEvent()->subscribe([](int selected) {
+        switch (selected) {
+            SET_SETTING(0, set_native_resolution_scale(50));
+            SET_SETTING(1, set_native_resolution_scale(75));
+            SET_SETTING(2, set_native_resolution_scale(100));
+            SET_SETTING(3, set_native_resolution_scale(200));
+            DEFAULT;
+        }
+    });
+
+    auto updateNativeResolutionScaleVisibility = [this]() {
+        resolutionScale->setVisibility(
+            resolution->getSelection() == 0 ? brls::Visibility::VISIBLE
+                                            : brls::Visibility::GONE);
+    };
+    updateNativeResolutionScaleVisibility();
+
+    resolution->getEvent()->subscribe([this, updateNativeResolutionScaleVisibility](int selected) {
         switch (selected) {
             SET_SETTING(0, set_resolution(-1));
             SET_SETTING(1, set_resolution(360));
@@ -77,6 +109,7 @@ SettingsTab::SettingsTab() {
             SET_SETTING(5, set_resolution(1440));
             DEFAULT;
         }
+        updateNativeResolutionScaleVisibility();
     });
 
     std::vector<std::string> fpss = {

@@ -106,6 +106,23 @@ class Settings : public Singleton<Settings> {
     [[nodiscard]] int resolution() const { return m_resolution; }
     void set_resolution(int resolution) { m_resolution = resolution; }
 
+    [[nodiscard]] int native_resolution_scale() const {
+        return m_native_resolution_scale;
+    }
+    void set_native_resolution_scale(int native_resolution_scale) {
+        switch (native_resolution_scale) {
+        case 50:
+        case 75:
+        case 100:
+        case 200:
+            m_native_resolution_scale = native_resolution_scale;
+            break;
+        default:
+            m_native_resolution_scale = 100;
+            break;
+        }
+    }
+
     [[nodiscard]] int fps() const { return m_fps; }
     void set_fps(int fps) { m_fps = fps; }
 
@@ -223,6 +240,7 @@ class Settings : public Singleton<Settings> {
 
     std::vector<Host> m_hosts;
     int m_resolution = 720;
+    int m_native_resolution_scale = 100;
     int m_fps = 60;
     VideoCodec m_video_codec = H265;
 #ifdef __SWITCH__

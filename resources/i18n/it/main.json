@@ -144,6 +144,7 @@
         "request_hdr": "Request HDR Video",
         "resolution": "Risoluzione",
         "resolution_native": "Nativa",
+        "resolution_scale": "Scala",
         "rumble_force": "Rumble force",
         "single_joycon": "Single Joycon",
         "stream_settings": "Impostazioni Stream",

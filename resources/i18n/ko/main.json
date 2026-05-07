@@ -144,6 +144,7 @@
         "request_hdr": "HDR 비디오 요청",
         "resolution": "해상도",
         "resolution_native": "기본",
+        "resolution_scale": "배율",
         "rumble_force": "진동 강도",
         "single_joycon": "1인용 조이콘",
         "stream_settings": "스트림 설정",

@@ -144,6 +144,7 @@
         "request_hdr": "Request HDR Video",
         "resolution": "解像度",
         "resolution_native": "ネイティブ",
+        "resolution_scale": "倍率",
         "rumble_force": "Rumble force",
         "single_joycon": "Single Joycon",
         "stream_settings": "ストリーム設定",

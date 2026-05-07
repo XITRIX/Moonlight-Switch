@@ -251,19 +251,26 @@ void MoonlightSession::start(ServerCallback<bool> callback, bool is_sunshine) {
 
     LiInitializeStreamConfiguration(&m_config);
 
-    int h = Settings::instance().resolution();
+    int resolution = Settings::instance().resolution();
+    int h = resolution;
     int w = h * 16 / 9;
-    if (h == -1) {
+    if (resolution == -1) {
 #if defined(PLATFORM_IOS) || defined(PLATFORM_VISIONOS)
         getWindowSize(&w, &h);
 #else
         h = Application::windowHeight;
         w = Application::windowWidth;
 #endif
+
+        int nativeResolutionScale = Settings::instance().native_resolution_scale();
+        if (nativeResolutionScale != 100 && w > 0 && h > 0) {
+            w = (w * nativeResolutionScale + 50) / 100;
+            h = (h * nativeResolutionScale + 50) / 100;
+        }
     }
 
     // 480p cannot fit into 16/9 aspect ratio without manual adjustments
-    if (h == 480) {
+    if (resolution == 480) {
         h = 480;
         w = 854;
     }

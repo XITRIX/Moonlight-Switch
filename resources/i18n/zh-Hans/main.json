@@ -144,6 +144,7 @@
         "request_hdr": "请求 HDR 视频",
         "resolution": "分辨率",
         "resolution_native": "原生",
+        "resolution_scale": "缩放",
         "rumble_force": "震动力度",
         "single_joycon": "单个Joycon",
         "stream_settings": "串流设置",

@@ -248,6 +248,12 @@ void Settings::load() {
                     m_resolution = (int)json_integer_value(resolution);
                 }
             }
+
+            if (json_t* native_resolution_scale = json_object_get(settings, "native_resolution_scale")) {
+                if (json_typeof(native_resolution_scale) == JSON_INTEGER) {
+                    set_native_resolution_scale((int)json_integer_value(native_resolution_scale));
+                }
+            }
             
             if (json_t* fps = json_object_get(settings, "fps")) {
                 if (json_typeof(fps) == JSON_INTEGER) {
@@ -518,6 +524,7 @@ void Settings::save() {
         
         if (json_t* settings = json_object()) {
             json_object_set_new(settings, "resolution", json_integer(m_resolution));
+            json_object_set_new(settings, "native_resolution_scale", json_integer(m_native_resolution_scale));
             json_object_set_new(settings, "fps", json_integer(m_fps));
             json_object_set_new(settings, "video_codec", json_integer(m_video_codec));
             json_object_set_new(settings, "audio_backend", json_integer(m_audio_backend));
