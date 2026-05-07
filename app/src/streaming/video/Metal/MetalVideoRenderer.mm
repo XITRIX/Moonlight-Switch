@@ -132,7 +132,10 @@ static CGSize drawableSizeForMetalView(MTKView* metalView)
     }
 #else
     if (metalView.window != nil) {
-        CGFloat scale = metalView.window.screen.scale;
+        CGFloat scale = metalView.layer.contentsScale;
+        if (scale <= 0.0) {
+            scale = metalView.contentScaleFactor;
+        }
         return CGSizeMake(metalView.bounds.size.width * scale,
                           metalView.bounds.size.height * scale);
     }
