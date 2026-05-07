@@ -603,8 +603,10 @@ void MetalVideoRenderer::draw(NVGcontext* vg, int width, int height, AVFrame* fr
     [commandBuffer presentDrawable:nextDrawable];
     [commandBuffer commit];
 
-    // Wait for the command buffer to complete and free our CVMetalTextureCache references
-#if !TARGET_OS_OSX
+    // tvOS shares this thread with the Borealis UI loop, so waiting here
+    // stalls overlay animation even though presentation backpressure is already
+    // handled via m_PendingPresentationCount and the completed handlers above.
+#if !TARGET_OS_OSX && !TARGET_OS_TV
     [commandBuffer waitUntilCompleted];
 #endif
 }
@@ -683,7 +685,7 @@ bool MetalVideoRenderer::initialize(int imageFormat)
     m_MetalLayer.device = device;
 
     // Allow EDR content if we're streaming in a 10-bit format
-#if defined(PLATFORM_IOS) || defined(PLATFORM_TVOS) || defined(PLATFORM_VISIONOS)
+#if defined(PLATFORM_IOS) || defined(PLATFORM_VISIONOS)
     if (@available(iOS 16.0, tvOS 16.0, visionOS 1.0, *)) {
         m_MetalLayer.wantsExtendedDynamicRangeContent = imageFormat & VIDEO_FORMAT_MASK_10BIT;
     }

@@ -110,6 +110,10 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
+#if defined(PLATFORM_VISIONOS)
+    brls::Application::setMaximumUIScale(1.0f);
+#endif
+
     MoonlightSession::set_provider(
             new SwitchMoonlightSessionDecoderAndRenderProvider());
 
