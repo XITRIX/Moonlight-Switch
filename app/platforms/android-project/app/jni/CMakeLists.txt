@@ -37,8 +37,25 @@ if (NOT ANDROID_NDK_HOME OR NOT EXISTS "${ANDROID_NDK_HOME}/build/cmake/android.
 endif ()
 
 set(PROJECT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../../../../..)
+set(VCPKG_INSTALLED_DIR ${PROJECT_PATH}/extern/vcpkg/installed CACHE PATH "vcpkg installed directory" FORCE)
 set(CMAKE_TOOLCHAIN_FILE ${PROJECT_PATH}/extern/vcpkg/scripts/buildsystems/vcpkg.cmake CACHE PATH "vcpkg toolchain file" FORCE)
-set(VCPKG_CHAINLOAD_TOOLCHAIN_FILE ${ANDROID_NDK_HOME}/build/cmake/android.toolchain.cmake CACHE PATH "android toolchain file")
+set(VCPKG_CHAINLOAD_TOOLCHAIN_FILE ${ANDROID_NDK_HOME}/build/cmake/android.toolchain.cmake CACHE PATH "android toolchain file" FORCE)
+
+if (ANDROID_ABI STREQUAL "arm64-v8a")
+    set(VCPKG_TARGET_TRIPLET arm64-android CACHE STRING "vcpkg target triplet" FORCE)
+elseif (ANDROID_ABI STREQUAL "armeabi-v7a")
+    set(VCPKG_TARGET_TRIPLET arm-neon-android CACHE STRING "vcpkg target triplet" FORCE)
+elseif (ANDROID_ABI STREQUAL "x86")
+    set(VCPKG_TARGET_TRIPLET x86-android CACHE STRING "vcpkg target triplet" FORCE)
+elseif (ANDROID_ABI STREQUAL "x86_64")
+    set(VCPKG_TARGET_TRIPLET x64-android CACHE STRING "vcpkg target triplet" FORCE)
+else ()
+    message(FATAL_ERROR "Unsupported ANDROID_ABI for vcpkg: ${ANDROID_ABI}")
+endif ()
+
+message(STATUS "Using Android NDK: ${ANDROID_NDK_HOME}")
+message(STATUS "Using vcpkg target triplet: ${VCPKG_TARGET_TRIPLET}")
+
 #message(Toolchain!!!! ${CMAKE_TOOLCHAIN_FILE})
 
 project(Moonlight)
