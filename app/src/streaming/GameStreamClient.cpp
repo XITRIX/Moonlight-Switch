@@ -3,21 +3,28 @@
 #include "WakeOnLanManager.hpp"
 #include <borealis.hpp>
 #include <algorithm>
-#include <thread>
-#include <unistd.h>
 #include <atomic>
+#include <chrono>
+#include <thread>
 #include <vector>
 
 #include <curl/curl.h>
 #include <libretro-common/retro_timers.h>
 #include <cstring>
 
+#if defined(_WIN32)
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#else
 #include <arpa/inet.h>
-#include <sys/socket.h>
 #include <netinet/in.h>
+#include <sys/socket.h>
+#include <unistd.h>
+#endif
+
 #include <fmt/core.h>
 
-#ifndef PLATFORM_PSV
+#if defined(__linux) || defined(__APPLE__)
 #include <net/if.h>
 #include <sys/ioctl.h>
 #endif
@@ -153,7 +160,7 @@ bool connect_to_addresses_sync(const std::vector<std::string>& addresses,
 }
 
 constexpr int WAKE_POLL_ATTEMPTS = 20;
-constexpr useconds_t WAKE_POLL_INTERVAL_US = 1'000'000;
+constexpr auto WAKE_POLL_INTERVAL = std::chrono::seconds(1);
 }
 
 GameStreamClient::GameStreamClient() { start(); }
@@ -399,7 +406,7 @@ void GameStreamClient::wake_up_host(const Host& host,
             }
 
             if (attempt + 1 < WAKE_POLL_ATTEMPTS) {
-                usleep(WAKE_POLL_INTERVAL_US);
+                std::this_thread::sleep_for(WAKE_POLL_INTERVAL);
             }
         }
 

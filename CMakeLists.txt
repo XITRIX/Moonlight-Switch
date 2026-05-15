@@ -167,7 +167,10 @@ endif ()
 set(PLATFORM_OPTION)
 if (PLATFORM_DESKTOP)
     if (WIN32)
-        configure_file("${CMAKE_SOURCE_DIR}/app/resource.rc.in" "${CMAKE_BINARY_DIR}/resource.rc")
+        configure_file("${CMAKE_SOURCE_DIR}/app/platforms/windows/windows.manifest.in" "${CMAKE_BINARY_DIR}/app.manifest")
+        configure_file("${CMAKE_SOURCE_DIR}/app/platforms/windows/resource.rc.in" "${CMAKE_BINARY_DIR}/resource.rc")
+        set_source_files_properties(${CMAKE_BINARY_DIR}/resource.rc PROPERTIES
+            OBJECT_DEPENDS "${CMAKE_BINARY_DIR}/app.manifest")
         list(APPEND MAIN_SRC ${CMAKE_BINARY_DIR}/resource.rc)
     elseif (BUNDLE_MACOS_APP)
         # list(APPEND MAIN_SRC ${CMAKE_SOURCE_DIR}/app/borealis.icns)
@@ -243,7 +246,7 @@ if (PLATFORM_DESKTOP)
                 COMMAND "${CMAKE_COMMAND}" -E copy_directory ${PROJECT_RESOURCES} ${PROJECT_NAME}.app/Contents/Resources/resources
         )
     else ()
-        add_custom_target(${PRxOJECT_NAME}.data
+        add_custom_target(${PROJECT_NAME}.data
                 COMMAND "${CMAKE_COMMAND}" -E copy_directory ${PROJECT_RESOURCES} ${CMAKE_CURRENT_BINARY_DIR}/resources
         )
     endif ()
@@ -523,4 +526,17 @@ if (APPLE)
     endif ()
 elseif (PLATFORM_PSV)
     target_link_libraries(${PROJECT_NAME} PRIVATE mp3lame libGLESv2_stub)
+endif ()
+
+if (WIN32 AND PLATFORM_DESKTOP AND MOONLIGHT_DESKTOP_USE_SYSTEM_PACKAGES AND
+    NOT MOONLIGHT_DESKTOP_SYSTEM_PREFIX STREQUAL "")
+    set(_moonlight_runtime_dependency_dir "${MOONLIGHT_DESKTOP_SYSTEM_PREFIX}/bin")
+    add_custom_target(${PROJECT_NAME}.runtime ALL
+        COMMAND "${CMAKE_COMMAND}"
+            -DMOONLIGHT_RUNTIME_EXECUTABLE=$<TARGET_FILE:${PROJECT_NAME}>
+            -DMOONLIGHT_RUNTIME_SEARCH_DIR=${_moonlight_runtime_dependency_dir}
+            -DMOONLIGHT_OBJDUMP_COMMAND=${CMAKE_OBJDUMP}
+            -P "${CMAKE_CURRENT_SOURCE_DIR}/extern/cmake/stage_runtime_deps.cmake"
+        DEPENDS ${PROJECT_NAME}
+        VERBATIM)
 endif ()

@@ -9,8 +9,14 @@
 #include "DiscoverManager.hpp"
 #include "helper.hpp"
 #include "main_tabs_view.hpp"
+
+#if defined(_WIN32)
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#else
 #include <arpa/inet.h>
 #include <sys/socket.h>
+#endif
 
 #if defined(PLATFORM_IOS) || defined(PLATFORM_TVOS) || defined(PLATFORM_VISIONOS)
 extern void darwin_mdns_start(ServerCallback<std::vector<Host>>& callback);

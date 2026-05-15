@@ -138,6 +138,72 @@ make -C build/pc -j$(nproc)
 
 Also, please note that the `resources` folder must be available in the working directory, otherwise the program will fail to find the shaders.
 
+#### Windows (MSYS2)
+
+Windows desktop builds are supported through MSYS2 system packages for both x64 and ARM64.
+
+MSYS2 is recommended under `C:\msys64`.
+
+##### x64 (UCRT64)
+
+Install the required packages:
+
+```bash
+pacman -S --needed --noconfirm \
+  mingw-w64-ucrt-x86_64-gcc \
+  mingw-w64-ucrt-x86_64-cmake \
+  mingw-w64-ucrt-x86_64-ninja \
+  mingw-w64-ucrt-x86_64-pkgconf \
+  mingw-w64-ucrt-x86_64-SDL2 \
+  mingw-w64-ucrt-x86_64-ffmpeg \
+  mingw-w64-ucrt-x86_64-curl \
+  mingw-w64-ucrt-x86_64-mbedtls \
+  mingw-w64-ucrt-x86_64-jansson \
+  mingw-w64-ucrt-x86_64-libpng \
+  mingw-w64-ucrt-x86_64-opus \
+  mingw-w64-ucrt-x86_64-expat \
+  mingw-w64-ucrt-x86_64-zstd
+```
+
+Build with the bundled preset:
+
+```bash
+cmake --preset windows-ucrt64-release
+cmake --build --preset windows-ucrt64-release
+```
+
+The resulting executable is placed in `build/windows-ucrt64`. The build stages the required MSYS2 UCRT64 DLLs beside `Moonlight.exe`; keep the generated `resources` directory there as well, because the UCRT64 build uses external resources instead of `libromfs`.
+
+##### ARM64 (CLANGARM64)
+
+To build a native Windows ARM64 executable, install the CLANGARM64 packages:
+
+```bash
+pacman -S --needed --noconfirm \
+  mingw-w64-clang-aarch64-clang \
+  mingw-w64-clang-aarch64-cmake \
+  mingw-w64-clang-aarch64-ninja \
+  mingw-w64-clang-aarch64-pkgconf \
+  mingw-w64-clang-aarch64-SDL2 \
+  mingw-w64-clang-aarch64-ffmpeg \
+  mingw-w64-clang-aarch64-curl \
+  mingw-w64-clang-aarch64-mbedtls \
+  mingw-w64-clang-aarch64-jansson \
+  mingw-w64-clang-aarch64-libpng \
+  mingw-w64-clang-aarch64-opus \
+  mingw-w64-clang-aarch64-expat \
+  mingw-w64-clang-aarch64-zstd
+```
+
+Build with the ARM64 preset:
+
+```bash
+cmake --preset windows-clangarm64-release
+cmake --build --preset windows-clangarm64-release
+```
+
+The resulting executable is placed in `build/windows-clangarm64`. The build stages the required MSYS2 CLANGARM64 DLLs beside `Moonlight.exe`; keep the generated `resources` directory there as well, because the desktop ARM64 build also uses external resources instead of `libromfs`.
+
 ### iOS / tvOS:
 
 ```shell

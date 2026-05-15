@@ -1,11 +1,7 @@
 #ifdef USE_GL_RENDERER
 
 #include "GLVideoRenderer.hpp"
-
-// TODO: rework logging with callbacks
-#ifndef _WIN32
 #include "borealis.hpp"
-#endif
 
 #include "GLShaders.hpp"
 

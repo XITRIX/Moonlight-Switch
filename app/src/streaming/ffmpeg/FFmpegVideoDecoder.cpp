@@ -4,6 +4,10 @@
 #include "borealis.hpp"
 #include "MoonlightSession.hpp"
 
+#if defined(_WIN32)
+#include <SDL.h>
+#endif
+
 #ifdef PLATFORM_APPLE
 extern "C" {
 #include <libavcodec/videotoolbox.h>
@@ -445,7 +449,9 @@ int FFmpegVideoDecoder::decode(char* indata, int inlen) {
     m_packet->data = (uint8_t*)indata;
     m_packet->size = inlen;
 
-#if !defined(PLATFORM_SWITCH)
+#if defined(_WIN32)
+    (void) SDL_SetThreadPriority(SDL_THREAD_PRIORITY_HIGH);
+#elif !defined(PLATFORM_SWITCH)
     int policy;
     sched_param params{};
     pthread_getschedparam(pthread_self(), &policy, &params);

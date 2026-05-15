@@ -1,0 +1,92 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 23,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "windows-ucrt64-base",
+      "hidden": true,
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/windows-ucrt64",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      },
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "PLATFORM_DESKTOP": "ON",
+        "MOONLIGHT_DESKTOP_USE_SYSTEM_PACKAGES": "ON"
+      }
+    },
+    {
+      "name": "windows-ucrt64-c-root-base",
+      "hidden": true,
+      "inherits": "windows-ucrt64-base",
+      "environment": {
+        "PATH": "C:/msys64/ucrt64/bin;C:/msys64/usr/bin;$penv{PATH}"
+      },
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "C:/msys64/ucrt64/bin/gcc.exe",
+        "CMAKE_CXX_COMPILER": "C:/msys64/ucrt64/bin/g++.exe",
+        "CMAKE_RC_COMPILER": "C:/msys64/ucrt64/bin/windres.exe",
+        "MOONLIGHT_DESKTOP_SYSTEM_PREFIX": "C:/msys64/ucrt64"
+      }
+    },
+    {
+      "name": "windows-ucrt64-release",
+      "inherits": "windows-ucrt64-c-root-base",
+      "displayName": "Windows UCRT64 Release",
+      "description": "Build Moonlight for Windows with MSYS2 UCRT64 system packages using the recommended C:/msys64 root."
+    },
+    {
+      "name": "windows-clangarm64-base",
+      "hidden": true,
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/windows-clangarm64",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      },
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "PLATFORM_DESKTOP": "ON",
+        "MOONLIGHT_DESKTOP_USE_SYSTEM_PACKAGES": "ON"
+      }
+    },
+    {
+      "name": "windows-clangarm64-c-root-base",
+      "hidden": true,
+      "inherits": "windows-clangarm64-base",
+      "environment": {
+        "PATH": "C:/msys64/clangarm64/bin;C:/msys64/usr/bin;$penv{PATH}"
+      },
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "C:/msys64/clangarm64/bin/clang.exe",
+        "CMAKE_CXX_COMPILER": "C:/msys64/clangarm64/bin/clang++.exe",
+        "CMAKE_RC_COMPILER": "C:/msys64/clangarm64/bin/llvm-rc.exe",
+        "MOONLIGHT_DESKTOP_SYSTEM_PREFIX": "C:/msys64/clangarm64"
+      }
+    },
+    {
+      "name": "windows-clangarm64-release",
+      "inherits": "windows-clangarm64-c-root-base",
+      "displayName": "Windows CLANGARM64 Release",
+      "description": "Build Moonlight for Windows ARM64 with MSYS2 CLANGARM64 system packages using the recommended C:/msys64 root."
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "windows-ucrt64-release",
+      "configurePreset": "windows-ucrt64-release"
+    },
+    {
+      "name": "windows-clangarm64-release",
+      "configurePreset": "windows-clangarm64-release"
+    }
+  ]
+}

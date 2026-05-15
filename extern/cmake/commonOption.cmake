@@ -15,6 +15,9 @@ option(PLATFORM_PSV "build for psv" OFF)
 option(PLATFORM_PS4 "build for ps4" OFF)
 option(PLATFORM_SWITCH "build for switch" OFF)
 
+option(MOONLIGHT_DESKTOP_USE_SYSTEM_PACKAGES "Use system-installed desktop dependencies instead of the bundled vcpkg toolchain" OFF)
+set(MOONLIGHT_DESKTOP_SYSTEM_PREFIX "" CACHE PATH "Optional prefix to prepend when resolving desktop system packages")
+
 # Windows Only
 cmake_dependent_option(WIN32_TERMINAL "Show terminal when run on Windows" ON "WIN32" OFF)
 cmake_dependent_option(USE_D3D11 "Using directx 11 instead of OpenGL." OFF "WIN32" OFF)
