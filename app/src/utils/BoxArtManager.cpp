@@ -4,16 +4,24 @@
 #include "nanovg.h"
 #include <mutex>
 #include <CImg.h>
+#include <filesystem>
 
 std::mutex m_mutex;
+
+namespace {
+std::string boxart_path(int app_id) {
+    return (std::filesystem::path(Settings::instance().boxart_dir()) /
+            (std::to_string(app_id) + ".png"))
+            .string();
+}
+}
 
 bool BoxArtManager::has_boxart(int app_id) {
     if (m_has_boxart.count(app_id)) {
         return m_has_boxart[app_id];
     }
 
-    std::string path = Settings::instance().boxart_dir() + "/" +
-                       std::to_string(app_id) + ".png";
+    std::string path = boxart_path(app_id);
     Data data = Data::read_from_file(path);
     m_has_boxart[app_id] = !data.is_empty();
 
@@ -23,8 +31,7 @@ bool BoxArtManager::has_boxart(int app_id) {
 void BoxArtManager::set_data(Data data, int app_id) {
     std::lock_guard<std::mutex> guard(m_mutex);
 
-    std::string path = Settings::instance().boxart_dir() + "/" +
-                       std::to_string(app_id) + ".png";
+    std::string path = boxart_path(app_id);
 
     data.write_to_file(path);
     compress_texture(path);
@@ -51,15 +58,13 @@ void BoxArtManager::compress_texture(const std::string& path) {
 }
 
 std::string BoxArtManager::get_texture_path(int app_id) {
-    return Settings::instance().boxart_dir() + "/" + std::to_string(app_id) +
-           ".png";
+    return boxart_path(app_id);
 }
 
 void BoxArtManager::make_texture_from_boxart(NVGcontext* ctx, int app_id) {
     std::lock_guard<std::mutex> guard(m_mutex);
 
-    std::string path = Settings::instance().boxart_dir() + "/" +
-                       std::to_string(app_id) + ".png";
+    std::string path = boxart_path(app_id);
     Data data = Data::read_from_file(path);
 
     if (data.is_empty()) {

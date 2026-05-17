@@ -4,12 +4,14 @@
 #include <cstring>
 #include <iomanip>
 #include <climits>
-#include <sys/stat.h>
+#include <filesystem>
 
 using namespace brls;
 using namespace brls::literals;
 
 namespace {
+namespace fs = std::filesystem;
+
 Host* find_host(std::vector<Host>& hosts, const Host& target) {
     auto it = std::find_if(hosts.begin(), hosts.end(), [target](const Host& host) {
         return hosts_match(host, target);
@@ -34,17 +36,17 @@ void merge_host(Host& target, const Host& source) {
     if (!source.mac.empty())
         target.mac = source.mac;
 }
+
+std::string make_preferred_path(const fs::path& path) {
+    auto preferred = path;
+    preferred.make_preferred();
+    return preferred.string();
 }
 
-#ifdef _WIN32
-static int mkdir(const char* dir, mode_t mode) {
-    return mkdir(dir);
+std::string settings_file_path(const std::string& working_dir) {
+    return make_preferred_path(fs::path(working_dir) / "settings.json");
 }
-#endif
-
-#ifndef PATH_MAX
-#define PATH_MAX 1024
-#endif
+}
 
 std::string getVideoCodecName(VideoCodec codec) {
     switch (codec) {
@@ -59,44 +61,20 @@ std::string getVideoCodecName(VideoCodec codec) {
     }
 }
 
-static int mkdirtree(const char* directory) {
-    char buffer[PATH_MAX];
-    char* p = buffer;
-    
-    // The passed in string could be a string literal
-    // so we must copy it first
-    strncpy(p, directory, PATH_MAX - 1);
-    buffer[PATH_MAX - 1] = '\0';
-    
-    while (*p != 0) {
-        // Find the end of the path element
-        do {
-            p++;
-        } while (*p != 0 && *p != '/');
-        
-        char oldChar = *p;
-        *p = 0;
-        
-        // Create the directory if it doesn't exist already
-        if (mkdir(buffer, 0775) == -1 && errno != EEXIST) {
-            return -1;
-        }
-        
-        *p = oldChar;
-    }
-    return 0;
-}
-
 void Settings::set_working_dir(const std::string& working_dir) {
-    m_working_dir = working_dir;
-    m_key_dir = working_dir + "/key";
-    m_boxart_dir = working_dir + "/boxart";
-    m_log_path = working_dir + "/log.log";
-    m_gamepad_mapping_path = working_dir + "/gamepad_mapping_v1.2.0.json";
-    
-    mkdirtree(m_working_dir.c_str());
-    mkdirtree(m_key_dir.c_str());
-    mkdirtree(m_boxart_dir.c_str());
+    const fs::path base_path = fs::path(working_dir).make_preferred();
+
+    m_working_dir = base_path.string();
+    m_key_dir = make_preferred_path(base_path / "key");
+    m_boxart_dir = make_preferred_path(base_path / "boxart");
+    m_log_path = make_preferred_path(base_path / "log.log");
+    m_gamepad_mapping_path =
+            make_preferred_path(base_path / "gamepad_mapping_v1.2.0.json");
+
+    std::error_code error;
+    fs::create_directories(base_path, error);
+    fs::create_directories(fs::path(m_key_dir), error);
+    fs::create_directories(fs::path(m_boxart_dir), error);
     
     load();
 }
@@ -173,7 +151,7 @@ bool Settings::has_any_favorite() {
 void Settings::load() {
     loadBaseLayouts();
 
-    json_t* root = json_load_file((m_working_dir + "/settings.json").c_str(), 0, nullptr);
+    json_t* root = json_load_file(settings_file_path(m_working_dir).c_str(), 0, nullptr);
     
     if (root && json_typeof(root) == JSON_OBJECT) {
         if (json_t* hosts = json_object_get(root, "hosts")) {
@@ -598,7 +576,7 @@ void Settings::save() {
             json_object_set_new(root, "mapping_layouts", hosts);
         }
         
-        json_dump_file(root, (m_working_dir + "/settings.json").c_str(), JSON_INDENT(4));
+        json_dump_file(root, settings_file_path(m_working_dir).c_str(), JSON_INDENT(4));
         json_decref(root);
     }
 }
