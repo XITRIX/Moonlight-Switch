@@ -20,7 +20,7 @@ set(MOONLIGHT_DESKTOP_SYSTEM_PREFIX "" CACHE PATH "Optional prefix to prepend wh
 
 # Windows Only
 cmake_dependent_option(WIN32_TERMINAL "Show terminal when run on Windows" ON "WIN32" OFF)
-cmake_dependent_option(USE_D3D11 "Using directx 11 instead of OpenGL." OFF "WIN32" OFF)
+cmake_dependent_option(USE_D3D11 "Using directx 11 instead of OpenGL." ON "WIN32" OFF)
 
 # Linux Only
 cmake_dependent_option(INSTALL "Install to system." OFF "UNIX;NOT APPLE" OFF)

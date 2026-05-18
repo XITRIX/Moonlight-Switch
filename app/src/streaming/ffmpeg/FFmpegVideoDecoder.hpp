@@ -1,6 +1,7 @@
 #pragma once
 #include "IFFmpegVideoDecoder.hpp"
 #include "AVFrameHolder.hpp"
+#include "FFmpegVideoDecoderPlatformHelpers.hpp"
 
 class FFmpegVideoDecoder : public IFFmpegVideoDecoder {
   public:
@@ -39,4 +40,7 @@ class FFmpegVideoDecoder : public IFFmpegVideoDecoder {
     char* m_ffmpeg_buffer = nullptr;
     AVFrame* m_frame = nullptr;
     bool m_use_zero_copy_holder = false;
+#if defined(_WIN32) && defined(USE_D3D11_RENDERER)
+  ffmpeg::decoder::D3D11State m_d3d11;
+#endif
 };

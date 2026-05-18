@@ -30,6 +30,8 @@ if (PLATFORM_APPLE)
     set(USE_METAL_RENDERER ON)
 elseif (PLATFORM_SWITCH)
     set(USE_DEKO3D_RENDERER ON)
+elseif (WIN32 AND USE_D3D11)
+    set(USE_D3D11_RENDERER ON)
 else ()
     set(USE_GL_RENDERER ON)
 endif ()
@@ -195,6 +197,8 @@ endif ()
 if (USE_METAL_RENDERER)
     list(APPEND MAIN_SRC app/src/streaming/video/Metal/MetalVideoRenderer.mm)
     list(APPEND MAIN_SRC app/src/streaming/video/Metal/streamutils.cpp)
+elseif (USE_D3D11_RENDERER)
+    list(APPEND MAIN_SRC app/src/streaming/video/D3D11/D3D11VideoRenderer.cpp)
 elseif (USE_DEKO3D_RENDERER)
     list(APPEND MAIN_SRC app/src/streaming/video/deko3d/DKVideoRenderer.cpp)
 elseif (USE_GL_RENDERER)
@@ -375,6 +379,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
         app/src/streaming/ffmpeg
         app/src/streaming/switch
         app/src/streaming/video
+        app/src/streaming/video/D3D11
         app/src/streaming/video/deko3d
         app/src/streaming/video/OpenGL
         app/src/streaming/video/Metal
@@ -498,11 +503,17 @@ if (USE_GL_RENDERER)
         set(SUPPORT_HDR ON)
     endif ()
     add_definitions(-DUSE_GL_RENDERER)
+elseif (USE_D3D11_RENDERER)
+    add_definitions(-DUSE_D3D11_RENDERER)
 elseif (USE_METAL_RENDERER)
     set(SUPPORT_HDR ON)
     add_definitions(-DUSE_METAL_RENDERER)
 elseif (USE_DEKO3D_RENDERER)
     add_definitions(-DUSE_DEKO3D_RENDERER)
+endif ()
+
+if (USE_D3D11_RENDERER)
+    target_link_libraries(${PROJECT_NAME} PRIVATE d3dcompiler)
 endif ()
 
 if (SUPPORT_HDR)

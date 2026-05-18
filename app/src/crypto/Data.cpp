@@ -87,7 +87,7 @@ Data Data::random_bytes(size_t size) {
 }
 
 Data Data::read_from_file(std::string path) {
-    FILE* f = fopen(path.c_str(), "r");
+    FILE* f = fopen(path.c_str(), "rb");
     if (f) {
         fseek(f, 0, SEEK_END);
         int size = (int)ftell(f);
@@ -105,7 +105,7 @@ Data Data::read_from_file(std::string path) {
 }
 
 void Data::write_to_file(std::string path) {
-    FILE* f = fopen(path.c_str(), "w");
+    FILE* f = fopen(path.c_str(), "wb");
     if (f) {
         fwrite(m_bytes, m_size, 1, f);
         fclose(f);

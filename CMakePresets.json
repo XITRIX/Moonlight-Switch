@@ -19,7 +19,8 @@
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
         "PLATFORM_DESKTOP": "ON",
-        "MOONLIGHT_DESKTOP_USE_SYSTEM_PACKAGES": "ON"
+        "MOONLIGHT_DESKTOP_USE_SYSTEM_PACKAGES": "ON",
+        "USE_D3D11": "ON"
       }
     },
     {
@@ -55,7 +56,8 @@
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
         "PLATFORM_DESKTOP": "ON",
-        "MOONLIGHT_DESKTOP_USE_SYSTEM_PACKAGES": "ON"
+        "MOONLIGHT_DESKTOP_USE_SYSTEM_PACKAGES": "ON",
+        "USE_D3D11": "ON"
       }
     },
     {

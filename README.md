@@ -167,6 +167,8 @@ pacman -S --needed --noconfirm \
 
 Build with the bundled preset:
 
+These Windows presets default to native D3D11 (DirectX 11). Pass `-DUSE_D3D11=OFF` when configuring only if you want to force the legacy OpenGL path.
+
 ```bash
 cmake --preset windows-ucrt64-release
 cmake --build --preset windows-ucrt64-release

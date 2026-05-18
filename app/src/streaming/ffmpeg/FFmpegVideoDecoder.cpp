@@ -1,5 +1,6 @@
 #include "FFmpegVideoDecoder.hpp"
 #include "AVFrameHolder.hpp"
+#include "FFmpegVideoDecoderPlatformHelpers.hpp"
 #include "Settings.hpp"
 #include "borealis.hpp"
 #include "MoonlightSession.hpp"
@@ -8,11 +9,9 @@
 #include <SDL.h>
 #endif
 
-#ifdef PLATFORM_APPLE
 extern "C" {
-#include <libavcodec/videotoolbox.h>
+#include <libavutil/hwcontext.h>
 }
-#endif
 
 // Disables the deblocking filter at the cost of image quality
 #define DISABLE_LOOP_FILTER 0x1
@@ -63,6 +62,9 @@ void ffmpegLog(void* ptr, int level, const char* fmt, va_list vargs) {
 int FFmpegVideoDecoder::setup(int video_format, int width, int height,
                               int redraw_rate, void* context, int dr_flags) {
     m_stream_fps = redraw_rate;
+#if defined(_WIN32) && defined(USE_D3D11_RENDERER)
+    ffmpeg::decoder::resetD3D11State(m_d3d11);
+#endif
 
     std::string format;
     switch (video_format) {
@@ -145,14 +147,31 @@ int FFmpegVideoDecoder::setup(int video_format, int width, int height,
     hwType = AV_HWDEVICE_TYPE_NVTEGRA;
 #elif defined(PLATFORM_ANDROID)
     hwType = AV_HWDEVICE_TYPE_MEDIACODEC;
+#elif defined(USE_D3D11_RENDERER)
+    ffmpeg::decoder::prepareD3D11Setup(m_d3d11, video_format);
+    hwType = AV_HWDEVICE_TYPE_D3D11VA;
 #elif defined(PLATFORM_APPLE)
     hwType = AV_HWDEVICE_TYPE_VIDEOTOOLBOX;
 #endif
 
     if (Settings::instance().use_hw_decoding() && hwType != AV_HWDEVICE_TYPE_NONE) {
-        if ((err = av_hwdevice_ctx_create(&hw_device_ctx, hwType, nullptr, nullptr, 0)) < 0) {
+#if defined(USE_D3D11_RENDERER)
+        if (hwType == AV_HWDEVICE_TYPE_D3D11VA) {
+            err = ffmpeg::decoder::initializeD3D11HardwareDevice(m_d3d11, hw_device_ctx);
+        } else
+#endif
+        {
+            err = av_hwdevice_ctx_create(&hw_device_ctx, hwType, nullptr, nullptr, 0);
+        }
+
+        if (err < 0) {
             char error[512];
             av_strerror(err, error, sizeof(error));
+#if defined(USE_D3D11_RENDERER)
+            if (hwType == AV_HWDEVICE_TYPE_D3D11VA) {
+                ffmpeg::decoder::logD3D11HardwareInitFailure(m_d3d11, error);
+            } else
+#endif
             brls::Logger::error("FFmpeg: Error initializing hardware decoder - {}", error);
 #if defined(PLATFORM_SWITCH) && defined(BOREALIS_USE_DEKO3D)
             return err;
@@ -160,6 +179,12 @@ int FFmpegVideoDecoder::setup(int video_format, int width, int height,
         } else {
             m_decoder_context->hw_device_ctx = av_buffer_ref(hw_device_ctx);
             hw_decode_active = m_decoder_context->hw_device_ctx != nullptr;
+
+#if defined(USE_D3D11_RENDERER)
+            if (hwType == AV_HWDEVICE_TYPE_D3D11VA && hw_decode_active) {
+                ffmpeg::decoder::configureD3D11DecoderContext(m_d3d11, m_decoder_context);
+            }
+#endif
         }
     } else {
         brls::Logger::warning("FFmpeg: HW decoding disabled or unsupported by Platform");
@@ -186,11 +211,9 @@ int FFmpegVideoDecoder::setup(int video_format, int width, int height,
     m_decoder_context->height = height;
 #if defined(PLATFORM_SWITCH)
 #ifdef BOREALIS_USE_DEKO3D
-    if (!hw_decode_active) {
-        brls::Logger::error("FFmpeg: Deko3D rendering requires NVTEGRA hardware decoding");
+    if (ffmpeg::decoder::configureDeko3DDecoderContext(m_decoder_context, hw_decode_active) < 0) {
         return -1;
     }
-    m_decoder_context->pix_fmt = AV_PIX_FMT_NVTEGRA;
 #else
     m_decoder_context->pix_fmt = AV_PIX_FMT_NV12;
 #endif
@@ -218,7 +241,9 @@ int FFmpegVideoDecoder::setup(int video_format, int width, int height,
 
     m_use_zero_copy_holder = false;
 #if defined(PLATFORM_SWITCH) && defined(BOREALIS_USE_DEKO3D)
-    m_use_zero_copy_holder = hw_decode_active;
+    m_use_zero_copy_holder = ffmpeg::decoder::useDeko3DZeroCopyHolder(hw_decode_active);
+#elif defined(USE_D3D11_RENDERER)
+    m_use_zero_copy_holder = ffmpeg::decoder::useD3D11ZeroCopyHolder(m_d3d11);
 #endif
     AVFrameHolder::instance().prepare(m_use_zero_copy_holder);
 
@@ -496,8 +521,9 @@ AVFrame* FFmpegVideoDecoder::get_frame(bool native_frame) {
     }
 
 #if !defined(PLATFORM_ANDROID) && !defined(BOREALIS_USE_DEKO3D) && !defined(USE_METAL_RENDERER)
-    if (hw_device_ctx) {
+    if (hw_device_ctx && !m_use_zero_copy_holder) {
         // For HW->SW transfer path we decode into a temporary hardware frame.
+        av_frame_unref(resultFrame);
         decodeFrame = tmp_frame;
     }
 #endif
@@ -524,11 +550,22 @@ AVFrame* FFmpegVideoDecoder::get_frame(bool native_frame) {
     }
 
     if (hw_device_ctx) {
-#if defined(BOREALIS_USE_DEKO3D) || defined(PLATFORM_ANDROID) || defined(USE_METAL_RENDERER)
+#if defined(BOREALIS_USE_DEKO3D) || defined(USE_METAL_RENDERER) || defined(PLATFORM_ANDROID)
         // Keep hardware-backed frame references per queue slot.
         resultFrame = decodeFrame;
-#else
+#elif defined(USE_D3D11_RENDERER)
+        if (m_use_zero_copy_holder) {
+            resultFrame = decodeFrame;
+        } else {
+            if ((err = av_hwframe_transfer_data(resultFrame, decodeFrame, 0)) < 0) {
+                char a[AV_ERROR_MAX_STRING_SIZE] = { 0 };
+                brls::Logger::error("FFmpeg: Error transferring the data to system memory with error {}",  av_make_error_string(a, AV_ERROR_MAX_STRING_SIZE, err));
+                return nullptr;
+            }
 
+            av_frame_copy_props(resultFrame, decodeFrame);
+        }
+#else
 #if defined(PLATFORM_SWITCH) && !defined(BOREALIS_USE_DEKO3D)
         for (int i = 0; i < 2; ++i) {
             if (((uintptr_t)resultFrame->data[i] & 0xff) || (resultFrame->linesize[i] & 0xff)) {
