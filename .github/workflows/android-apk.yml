@@ -108,16 +108,37 @@ jobs:
       working-directory: extern/vcpkg
       run: ./bootstrap-vcpkg.sh -disableMetrics
 
+    - name: Compute vcpkg cache key
+      id: vcpkg-cache-key
+      shell: bash
+      run: |
+        runner_os="${{ runner.os }}"
+        manifest_hash="${{ hashFiles('app/platforms/android-project/app/jni/vcpkg.json', 'app/platforms/android-project/app/jni/vcpkg-configuration.json') }}"
+        vcpkg_revision="$(git -C extern/vcpkg rev-parse HEAD)"
+        triplets="arm-neon-android-arm64-android"
+
+        echo "key=${runner_os}-android-vcpkg-${ANDROID_NDK_VERSION}-${ANDROID_CMAKE_VERSION}-${triplets}-${vcpkg_revision}-${manifest_hash}" >> "$GITHUB_OUTPUT"
+        echo "restore-prefix=${runner_os}-android-vcpkg-${ANDROID_NDK_VERSION}-${ANDROID_CMAKE_VERSION}-${triplets}-${vcpkg_revision}-" >> "$GITHUB_OUTPUT"
+
+    - name: Restore Android vcpkg cache
+      id: vcpkg-cache
+      uses: actions/cache/restore@v4
+      with:
+        path: |
+          extern/vcpkg/buildtrees
+          extern/vcpkg/downloads
+          extern/vcpkg/installed
+          extern/vcpkg/packages
+        key: ${{ steps.vcpkg-cache-key.outputs.key }}
+        restore-keys: |
+          ${{ steps.vcpkg-cache-key.outputs.restore-prefix }}
+
     - name: Install Android vcpkg dependencies
       shell: bash
       working-directory: extern/vcpkg
       env:
         VCPKG_DISABLE_METRICS: 1
       run: |
-        rm -rf "$GITHUB_WORKSPACE/extern/vcpkg/installed"
-        rm -rf "$GITHUB_WORKSPACE/extern/vcpkg/packages"
-        rm -rf "$GITHUB_WORKSPACE/extern/vcpkg/buildtrees"
-
         ./vcpkg install \
           --triplet arm-neon-android \
           --x-manifest-root "$GITHUB_WORKSPACE/app/platforms/android-project/app/jni" \
@@ -127,6 +148,17 @@ jobs:
           --triplet arm64-android \
           --x-manifest-root "$GITHUB_WORKSPACE/app/platforms/android-project/app/jni" \
           --x-install-root "$GITHUB_WORKSPACE/extern/vcpkg/installed"
+
+    - name: Save Android vcpkg cache
+      if: ${{ steps.vcpkg-cache.outputs.cache-hit != 'true' }}
+      uses: actions/cache/save@v4
+      with:
+        path: |
+          extern/vcpkg/buildtrees
+          extern/vcpkg/downloads
+          extern/vcpkg/installed
+          extern/vcpkg/packages
+        key: ${{ steps.vcpkg-cache-key.outputs.key }}
 
     - name: Build unsigned debug APK
       shell: bash
