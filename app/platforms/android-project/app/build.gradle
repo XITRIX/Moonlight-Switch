@@ -32,6 +32,11 @@ android {
         }
     }
     buildTypes {
+        debug {
+            if (project.hasProperty('UNSIGNED_DEBUG')) {
+                signingConfig = null
+            }
+        }
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'

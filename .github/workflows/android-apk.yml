@@ -1,0 +1,152 @@
+name: Android APK
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    env:
+      ANDROID_NDK_VERSION: 29.0.14206865
+      ANDROID_CMAKE_VERSION: 3.22.1
+
+    steps:
+    - name: Check out repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        submodules: recursive
+
+    - name: Fetch vcpkg history and baseline
+      shell: bash
+      run: |
+        manifest="app/platforms/android-project/app/jni/vcpkg.json"
+        baseline="$(sed -nE 's/.*"builtin-baseline":[[:space:]]*"([0-9a-f]{40})".*/\1/p' "${manifest}" | head -n1)"
+
+        if [ -z "${baseline}" ]; then
+          echo "Unable to determine vcpkg builtin-baseline from ${manifest}"
+          exit 1
+        fi
+
+        if git -C extern/vcpkg rev-parse --is-shallow-repository | grep -q true; then
+          git -C extern/vcpkg fetch --force --prune --tags --unshallow origin \
+            "+refs/heads/*:refs/remotes/origin/*"
+        else
+          git -C extern/vcpkg fetch --force --prune --tags origin \
+            "+refs/heads/*:refs/remotes/origin/*"
+        fi
+
+        if ! git -C extern/vcpkg cat-file -e "${baseline}^{commit}" 2>/dev/null; then
+          git -C extern/vcpkg fetch --force origin "${baseline}"
+        fi
+
+        git -C extern/vcpkg cat-file -e "${baseline}^{commit}"
+
+    - name: Set up Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: temurin
+        java-version: '17'
+        cache: gradle
+
+    - name: Set up Android SDK
+      uses: android-actions/setup-android@v3
+
+    - name: Install Android SDK components
+      shell: bash
+      run: |
+        set +o pipefail
+        yes | sdkmanager --licenses > /dev/null
+        set -o pipefail
+        sdkmanager \
+          "platform-tools" \
+          "platforms;android-35" \
+          "build-tools;35.0.0" \
+          "cmake;${ANDROID_CMAKE_VERSION}" \
+          "ndk;${ANDROID_NDK_VERSION}"
+
+    - name: Install native build tools
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y nasm
+
+    - name: Prepare Android build environment
+      shell: bash
+      run: |
+        chmod +x build_libromfs_generator.sh app/platforms/android-project/gradlew
+
+        sdk_root="${ANDROID_SDK_ROOT:-${ANDROID_HOME}}"
+        ndk_root="${sdk_root}/ndk/${ANDROID_NDK_VERSION}"
+        cmake_root="${sdk_root}/cmake/${ANDROID_CMAKE_VERSION}"
+
+        if [ -z "${sdk_root}" ] || [ ! -d "${sdk_root}" ]; then
+          echo "Android SDK root could not be resolved"
+          exit 1
+        fi
+
+        printf 'sdk.dir=%s\n' "${sdk_root}" > app/platforms/android-project/local.properties
+        printf 'ndk.dir=%s\n' "${ndk_root}" >> app/platforms/android-project/local.properties
+        printf 'cmake.dir=%s\n' "${cmake_root}" >> app/platforms/android-project/local.properties
+
+        echo "ANDROID_SDK_ROOT=${sdk_root}" >> "$GITHUB_ENV"
+        echo "ANDROID_HOME=${sdk_root}" >> "$GITHUB_ENV"
+        echo "ANDROID_NDK_HOME=${ndk_root}" >> "$GITHUB_ENV"
+        echo "ANDROID_NDK_ROOT=${ndk_root}" >> "$GITHUB_ENV"
+
+    - name: Build libromfs-generator
+      shell: bash
+      run: ./build_libromfs_generator.sh
+
+    - name: Bootstrap vcpkg
+      shell: bash
+      working-directory: extern/vcpkg
+      run: ./bootstrap-vcpkg.sh -disableMetrics
+
+    - name: Install Android vcpkg dependencies
+      shell: bash
+      working-directory: extern/vcpkg
+      env:
+        VCPKG_DISABLE_METRICS: 1
+      run: |
+        rm -rf "$GITHUB_WORKSPACE/extern/vcpkg/installed"
+        rm -rf "$GITHUB_WORKSPACE/extern/vcpkg/packages"
+        rm -rf "$GITHUB_WORKSPACE/extern/vcpkg/buildtrees"
+
+        ./vcpkg install \
+          --triplet arm-neon-android \
+          --x-manifest-root "$GITHUB_WORKSPACE/app/platforms/android-project/app/jni" \
+          --x-install-root "$GITHUB_WORKSPACE/extern/vcpkg/installed"
+
+        ./vcpkg install \
+          --triplet arm64-android \
+          --x-manifest-root "$GITHUB_WORKSPACE/app/platforms/android-project/app/jni" \
+          --x-install-root "$GITHUB_WORKSPACE/extern/vcpkg/installed"
+
+    - name: Build unsigned debug APK
+      shell: bash
+      working-directory: app/platforms/android-project
+      run: ./gradlew --no-daemon -PUNSIGNED_DEBUG assembleDebug
+
+    - name: Upload Android build logs
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: Moonlight-android-build-logs
+        path: |
+          app/platforms/android-project/app/.cxx/**/vcpkg-manifest-install.log
+          app/platforms/android-project/app/.cxx/**/CMakeFiles/CMakeError.log
+          app/platforms/android-project/app/.cxx/**/CMakeFiles/CMakeOutput.log
+        if-no-files-found: ignore
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: Moonlight-android-unsigned-debug-apk
+        path: app/platforms/android-project/app/build/outputs/apk/debug/*-unsigned.apk
+        if-no-files-found: error
