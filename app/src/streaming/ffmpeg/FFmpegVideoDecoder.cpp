@@ -388,17 +388,26 @@ int FFmpegVideoDecoder::submit_decode_unit(PDECODE_UNIT decode_unit) {
             brls::Logger::error("FFmpeg: Big buffer to decode...");
         }
 
-        if (decode(m_ffmpeg_buffer, length) == 0) {
-            m_frames_out++;
+        const int decoded_frames = decode(m_ffmpeg_buffer, length);
+        if (decoded_frames >= 0) {
+            if (decoded_frames == 0) {
+                return DR_OK;
+            }
+
+            m_frames_out += decoded_frames;
 
             auto decodeTime = LiGetMillis() - before_decode;
             m_video_decode_stats_progress.current_decode_time += decodeTime;
 
             // Also count the frame-to-frame delay if the decoder is delaying
             // frames until a subsequent frame is submitted.
+            int pending_frames = m_frames_in - m_frames_out;
+            if (pending_frames < 0) {
+                pending_frames = 0;
+            }
             m_video_decode_stats_progress.current_decode_time +=
-                (m_frames_in - m_frames_out) * (1000 / m_stream_fps);
-            m_video_decode_stats_progress.current_decoded_frames++;
+                pending_frames * (1000 / m_stream_fps);
+            m_video_decode_stats_progress.current_decoded_frames += decoded_frames;
 
             const int time_interval = 60;
             timeCount += decodeTime;
@@ -443,14 +452,6 @@ int FFmpegVideoDecoder::submit_decode_unit(PDECODE_UNIT decode_unit) {
                 timeCount -= time_interval;
             }
 
-            m_frame = get_frame(true);
-            if (m_frame != nullptr) {
-                if (m_use_zero_copy_holder) {
-                    AVFrameHolder::instance().pushTransferred(m_frame);
-                } else {
-                    AVFrameHolder::instance().push(m_frame);
-                }
-            }
         }
         else {
             if (MoonlightSession::activeSession() != nullptr)
@@ -486,11 +487,15 @@ int FFmpegVideoDecoder::decode(char* indata, int inlen) {
 
 //    m_decoder_context->skip_frame = AVDISCARD_ALL;
 
+    int decoded_frames = 0;
     int err = avcodec_send_packet(m_decoder_context, m_packet);
     if (err == AVERROR(EAGAIN)) {
-        avcodec_flush_buffers(m_decoder_context);
-        brls::Logger::error("FFmpeg: Decode failed - Try again");
-        return 0;
+        decoded_frames = drain_frames();
+        if (decoded_frames < 0) {
+            return decoded_frames;
+        }
+
+        err = avcodec_send_packet(m_decoder_context, m_packet);
     }
 
     if (err != 0) {
@@ -500,11 +505,45 @@ int FFmpegVideoDecoder::decode(char* indata, int inlen) {
         return err;
     }
 
-    return 0;
+    const int drained_frames = drain_frames();
+    if (drained_frames < 0) {
+        return drained_frames;
+    }
+
+    return decoded_frames + drained_frames;
 }
 
-AVFrame* FFmpegVideoDecoder::get_frame(bool native_frame) {
+int FFmpegVideoDecoder::drain_frames() {
+    int decoded_frames = 0;
+
+    while (true) {
+        AVFrame* frame = nullptr;
+        const int err = get_frame(true, &frame);
+        if (err == AVERROR(EAGAIN) || err == AVERROR_EOF) {
+            return decoded_frames;
+        }
+
+        if (err < 0) {
+            return err;
+        }
+
+        if (!frame) {
+            continue;
+        }
+
+        if (m_use_zero_copy_holder) {
+            AVFrameHolder::instance().pushTransferred(frame);
+        } else {
+            AVFrameHolder::instance().push(frame);
+        }
+
+        decoded_frames++;
+    }
+}
+
+int FFmpegVideoDecoder::get_frame(bool native_frame, AVFrame** frame) {
     int err;
+    *frame = nullptr;
     AVFrame* resultFrame = nullptr;
     AVFrame* decodeFrame = resultFrame;
 
@@ -512,7 +551,7 @@ AVFrame* FFmpegVideoDecoder::get_frame(bool native_frame) {
         resultFrame = AVFrameHolder::instance().acquireWriteFrame();
         if (!resultFrame) {
             brls::Logger::error("FFmpeg: Couldn't acquire frame from holder");
-            return nullptr;
+            return AVERROR(EAGAIN);
         }
         decodeFrame = resultFrame;
     } else {
@@ -528,17 +567,12 @@ AVFrame* FFmpegVideoDecoder::get_frame(bool native_frame) {
     }
 #endif
 
-    RECEIVE_RETRY:
     if ((err = avcodec_receive_frame(m_decoder_context, decodeFrame)) < 0) {
         if (err == AVERROR(EAGAIN)) {
             if (m_use_zero_copy_holder) {
                 AVFrameHolder::instance().recycleWriteFrame(resultFrame);
             }
-#if defined(PLATFORM_ANDROID)
-            goto RECEIVE_RETRY;
-#else
-            return nullptr;
-#endif
+            return err;
         }
 
         char a[AV_ERROR_MAX_STRING_SIZE] = { 0 };
@@ -546,7 +580,7 @@ AVFrame* FFmpegVideoDecoder::get_frame(bool native_frame) {
         if (m_use_zero_copy_holder) {
             AVFrameHolder::instance().recycleWriteFrame(resultFrame);
         }
-        return nullptr;
+        return err;
     }
 
     if (hw_device_ctx) {
@@ -560,7 +594,7 @@ AVFrame* FFmpegVideoDecoder::get_frame(bool native_frame) {
             if ((err = av_hwframe_transfer_data(resultFrame, decodeFrame, 0)) < 0) {
                 char a[AV_ERROR_MAX_STRING_SIZE] = { 0 };
                 brls::Logger::error("FFmpeg: Error transferring the data to system memory with error {}",  av_make_error_string(a, AV_ERROR_MAX_STRING_SIZE, err));
-                return nullptr;
+                return err;
             }
 
             av_frame_copy_props(resultFrame, decodeFrame);
@@ -579,7 +613,7 @@ AVFrame* FFmpegVideoDecoder::get_frame(bool native_frame) {
         if ((err = av_hwframe_transfer_data(resultFrame, decodeFrame, 0)) < 0) {
             char a[AV_ERROR_MAX_STRING_SIZE] = { 0 };
             brls::Logger::error("FFmpeg: Error transferring the data to system memory with error {}",  av_make_error_string(a, AV_ERROR_MAX_STRING_SIZE, err));
-            return nullptr;
+            return err;
         }
 
         av_frame_copy_props(resultFrame, decodeFrame);
@@ -592,13 +626,15 @@ AVFrame* FFmpegVideoDecoder::get_frame(bool native_frame) {
         m_current_frame = m_next_frame;
         m_next_frame = (m_current_frame + 1) % m_frames_size;
     }
-    if (native_frame)
-        return resultFrame;
+    if (native_frame) {
+        *frame = resultFrame;
+        return 0;
+    }
 
     if (m_use_zero_copy_holder) {
         AVFrameHolder::instance().recycleWriteFrame(resultFrame);
     }
-    return nullptr;
+    return 0;
 }
 
 VideoDecodeStats* FFmpegVideoDecoder::video_decode_stats() {

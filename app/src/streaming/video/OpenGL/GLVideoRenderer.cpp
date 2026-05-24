@@ -294,6 +294,9 @@ void GLVideoRenderer::draw(NVGcontext* vg, int width, int height,
     uint64_t before_render = LiGetMillis();
 
     checkAndInitialize(width, height, frame);
+    if (!m_is_initialized) {
+        return;
+    }
 
     glBindVertexArray(m_vao);
 

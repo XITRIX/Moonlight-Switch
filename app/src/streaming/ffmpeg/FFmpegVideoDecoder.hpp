@@ -17,7 +17,8 @@ class FFmpegVideoDecoder : public IFFmpegVideoDecoder {
 
   private:
     int decode(char* indata, int inlen);
-    AVFrame* get_frame(bool native_frame);
+    int drain_frames();
+    int get_frame(bool native_frame, AVFrame** frame);
 
     AVPacket* m_packet;
     AVBufferRef *hw_device_ctx = nullptr;
@@ -38,7 +39,6 @@ class FFmpegVideoDecoder : public IFFmpegVideoDecoder {
     uint64_t timeCount = 0;
 
     char* m_ffmpeg_buffer = nullptr;
-    AVFrame* m_frame = nullptr;
     bool m_use_zero_copy_holder = false;
 #if defined(_WIN32) && defined(USE_D3D11_RENDERER)
   ffmpeg::decoder::D3D11State m_d3d11;
