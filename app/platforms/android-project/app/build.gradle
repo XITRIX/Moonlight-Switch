@@ -7,6 +7,7 @@ def buildWithCMake = project.hasProperty('BUILD_WITH_CMAKE');
 android {
     namespace = "com.borealis.demo"
     compileSdkVersion 35
+    ndkVersion "29.0.14206865"
     defaultConfig {
         minSdkVersion 21
         targetSdkVersion 35
@@ -25,6 +26,7 @@ android {
     }
     packaging {
         jniLibs {
+            useLegacyPackaging false
             keepDebugSymbols.add("**/*.so")
             pickFirsts.add("**/*.so")
         }
@@ -32,16 +34,12 @@ android {
     buildTypes {
         release {
             minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
-    }
-    applicationVariants.all { variant ->
-        tasks["merge${variant.name.capitalize()}Assets"]
-                .dependsOn("externalNativeBuild${variant.name.capitalize()}")
     }
     if (!project.hasProperty('EXCLUDE_NATIVE_LIBS')) {
         sourceSets.main {
-            jniLibs.srcDir 'libs'
+            jniLibs.srcDirs = ['libs']
         }
         externalNativeBuild {
             cmake {
@@ -54,6 +52,20 @@ android {
     }
 }
 
+androidComponents {
+    onVariants(selector().all()) { variant ->
+        def capitalizedVariantName = variant.name.capitalize()
+        tasks.matching { it.name == "merge${capitalizedVariantName}Assets" }.configureEach {
+            dependsOn("externalNativeBuild${capitalizedVariantName}")
+        }
+    }
+}
+
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
+}
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
 }
