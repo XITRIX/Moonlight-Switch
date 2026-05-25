@@ -3,6 +3,7 @@ package org.libsdl.app;
 
 import android.content.Context;
 import android.content.pm.ActivityInfo;
+import android.graphics.PixelFormat;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -78,6 +79,11 @@ public class SDLSurface extends SurfaceView implements SurfaceHolder.Callback,
 
     public Surface getNativeSurface() {
         return getHolder().getSurface();
+    }
+
+    public void enableMediaCodecOverlay() {
+        setZOrderMediaOverlay(true);
+        getHolder().setFormat(PixelFormat.TRANSLUCENT);
     }
 
     // Called when we have a valid drawing surface

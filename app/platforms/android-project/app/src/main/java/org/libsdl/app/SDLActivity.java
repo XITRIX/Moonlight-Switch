@@ -396,6 +396,7 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
         mSurface = createSDLSurface(this);
 
         mLayout = new RelativeLayout(this);
+        PlatformUtils.installMediaCodecVideoSurface(this, mLayout, mSurface);
         mLayout.addView(mSurface);
 
         // Get our current screen orientation and pass it down.

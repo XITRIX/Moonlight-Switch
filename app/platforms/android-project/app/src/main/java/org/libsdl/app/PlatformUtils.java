@@ -5,6 +5,7 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.graphics.Color;
 import android.media.AudioAttributes;
 import android.net.ConnectivityManager;
 import android.net.Network;
@@ -20,13 +21,169 @@ import android.os.VibrationAttributes;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.provider.Settings;
+import android.util.DisplayMetrics;
+import android.view.Surface;
+import android.view.SurfaceHolder;
+import android.view.SurfaceView;
+import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.RelativeLayout;
 
 public class PlatformUtils {
 
     private static Vibrator vibrator;
     private static boolean rumbleDisabled;
+    private static RelativeLayout mediaCodecSurfaceContainer;
+    private static SurfaceView mediaCodecSurfaceView;
+    private static volatile Surface mediaCodecSurface;
+    private static int mediaCodecVideoWidth;
+    private static int mediaCodecVideoHeight;
+
+    private static void updateMediaCodecVideoSurfaceLayout() {
+        if (mediaCodecSurfaceContainer == null || mediaCodecSurfaceView == null) {
+            return;
+        }
+
+        int containerWidth = mediaCodecSurfaceContainer.getWidth();
+        int containerHeight = mediaCodecSurfaceContainer.getHeight();
+
+        if (containerWidth <= 0 || containerHeight <= 0) {
+            Context context = SDLActivity.getContext();
+            if (context == null) {
+                return;
+            }
+
+            DisplayMetrics metrics = new DisplayMetrics();
+            WindowManager windowManager =
+                    (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+            if (windowManager == null) {
+                return;
+            }
+
+            windowManager.getDefaultDisplay().getRealMetrics(metrics);
+            containerWidth = metrics.widthPixels;
+            containerHeight = metrics.heightPixels;
+        }
+
+        int targetWidth = containerWidth;
+        int targetHeight = containerHeight;
+
+        if (mediaCodecVideoWidth > 0 && mediaCodecVideoHeight > 0) {
+            float videoAspect = (float) mediaCodecVideoWidth / (float) mediaCodecVideoHeight;
+            float containerAspect = (float) containerWidth / (float) containerHeight;
+
+            if (videoAspect > containerAspect) {
+                targetWidth = containerWidth;
+                targetHeight = Math.round(containerWidth / videoAspect);
+            }
+            else {
+                targetHeight = containerHeight;
+                targetWidth = Math.round(containerHeight * videoAspect);
+            }
+        }
+
+        RelativeLayout.LayoutParams layoutParams =
+                (RelativeLayout.LayoutParams) mediaCodecSurfaceView.getLayoutParams();
+        if (layoutParams == null) {
+            layoutParams = new RelativeLayout.LayoutParams(targetWidth, targetHeight);
+        }
+
+        layoutParams.width = targetWidth;
+        layoutParams.height = targetHeight;
+        layoutParams.addRule(RelativeLayout.CENTER_IN_PARENT, RelativeLayout.TRUE);
+        mediaCodecSurfaceView.setLayoutParams(layoutParams);
+
+        if (mediaCodecVideoWidth > 0 && mediaCodecVideoHeight > 0) {
+            mediaCodecSurfaceView.getHolder().setFixedSize(mediaCodecVideoWidth, mediaCodecVideoHeight);
+        }
+        else {
+            mediaCodecSurfaceView.getHolder().setSizeFromLayout();
+        }
+    }
+
+    public static void installMediaCodecVideoSurface(SDLActivity activity,
+                                                     ViewGroup layout,
+                                                     SDLSurface sdlSurface) {
+        if (!(layout instanceof RelativeLayout)) {
+            return;
+        }
+
+        RelativeLayout relativeLayout = (RelativeLayout) layout;
+
+        if (mediaCodecSurfaceContainer != null) {
+            if (mediaCodecSurfaceContainer.getParent() instanceof ViewGroup) {
+                ((ViewGroup) mediaCodecSurfaceContainer.getParent())
+                        .removeView(mediaCodecSurfaceContainer);
+            }
+
+            relativeLayout.addView(mediaCodecSurfaceContainer, 0);
+            sdlSurface.enableMediaCodecOverlay();
+            updateMediaCodecVideoSurfaceLayout();
+            return;
+        }
+
+        mediaCodecSurfaceContainer = new RelativeLayout(activity);
+        mediaCodecSurfaceContainer.setLayoutParams(new RelativeLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT));
+        mediaCodecSurfaceContainer.setBackgroundColor(Color.BLACK);
+
+        mediaCodecSurfaceView = new SurfaceView(activity);
+        mediaCodecSurfaceView.setFocusable(false);
+        mediaCodecSurfaceView.setClickable(false);
+
+        RelativeLayout.LayoutParams surfaceLayoutParams = new RelativeLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT);
+        surfaceLayoutParams.addRule(RelativeLayout.CENTER_IN_PARENT, RelativeLayout.TRUE);
+        mediaCodecSurfaceContainer.addView(mediaCodecSurfaceView, surfaceLayoutParams);
+        mediaCodecSurfaceView.getHolder().addCallback(new SurfaceHolder.Callback() {
+            @Override
+            public void surfaceCreated(SurfaceHolder holder) {
+                mediaCodecSurface = holder.getSurface();
+            }
+
+            @Override
+            public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+                mediaCodecSurface = holder.getSurface();
+            }
+
+            @Override
+            public void surfaceDestroyed(SurfaceHolder holder) {
+                mediaCodecSurface = null;
+            }
+        });
+
+        mediaCodecSurfaceContainer.addOnLayoutChangeListener((view, left, top, right, bottom,
+                                                              oldLeft, oldTop, oldRight, oldBottom) ->
+                updateMediaCodecVideoSurfaceLayout());
+
+        relativeLayout.addView(mediaCodecSurfaceContainer);
+        sdlSurface.enableMediaCodecOverlay();
+        updateMediaCodecVideoSurfaceLayout();
+    }
+
+    public static Surface getMediaCodecVideoSurface() {
+        if (mediaCodecSurface == null || !mediaCodecSurface.isValid()) {
+            return null;
+        }
+
+        return mediaCodecSurface;
+    }
+
+    public static void setMediaCodecVideoSurfaceContentSize(int width, int height) {
+        mediaCodecVideoWidth = width;
+        mediaCodecVideoHeight = height;
+
+        Context context = SDLActivity.getContext();
+        if (context instanceof Activity) {
+            ((Activity) context).runOnUiThread(PlatformUtils::updateMediaCodecVideoSurfaceLayout);
+        }
+        else {
+            updateMediaCodecVideoSurfaceLayout();
+        }
+    }
 
     public static boolean isBatterySupported() {
         Context context = SDLActivity.getContext();

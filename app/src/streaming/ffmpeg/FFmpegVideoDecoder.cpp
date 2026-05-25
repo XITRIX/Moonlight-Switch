@@ -25,19 +25,6 @@ extern "C" {
 //#endif
 #define DECODER_BUFFER_SIZE (1024 * 1024)
 
-#if defined(PLATFORM_ANDROID)
-#include <jni.h>
-#include <libavcodec/jni.h>
-#include <libavutil/hwcontext_mediacodec.h>
-
-//static JavaVM *mJavaVM = NULL;
-//JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved)
-//{
-////    av_jni_set_java_vm(vm, NULL);
-//    return JNI_VERSION_1_4;
-//}
-#endif
-
 FFmpegVideoDecoder::FFmpegVideoDecoder() {
 //    AVBufferRef* deviceRef = av_hwdevice_ctx_alloc(AV_HWDEVICE_TYPE_MEDIACODEC);
 //    AVHWDeviceContext* ctx = (AVHWDeviceContext*)deviceRef->data;
@@ -62,6 +49,9 @@ void ffmpegLog(void* ptr, int level, const char* fmt, va_list vargs) {
 int FFmpegVideoDecoder::setup(int video_format, int width, int height,
                               int redraw_rate, void* context, int dr_flags) {
     m_stream_fps = redraw_rate;
+#if defined(PLATFORM_ANDROID)
+    ffmpeg::decoder::cleanupAndroidMediaCodecState(m_android_mediacodec);
+#endif
 #if defined(_WIN32) && defined(USE_D3D11_RENDERER)
     ffmpeg::decoder::resetD3D11State(m_d3d11);
 #endif
@@ -155,6 +145,12 @@ int FFmpegVideoDecoder::setup(int video_format, int width, int height,
 #endif
 
     if (Settings::instance().use_hw_decoding() && hwType != AV_HWDEVICE_TYPE_NONE) {
+#if defined(PLATFORM_ANDROID)
+        if (hwType == AV_HWDEVICE_TYPE_MEDIACODEC) {
+            err = ffmpeg::decoder::initializeAndroidMediaCodecHardwareDevice(
+                m_android_mediacodec, hw_device_ctx, width, height);
+        } else
+#endif
 #if defined(USE_D3D11_RENDERER)
         if (hwType == AV_HWDEVICE_TYPE_D3D11VA) {
             err = ffmpeg::decoder::initializeD3D11HardwareDevice(m_d3d11, hw_device_ctx);
@@ -242,6 +238,8 @@ int FFmpegVideoDecoder::setup(int video_format, int width, int height,
     m_use_zero_copy_holder = false;
 #if defined(PLATFORM_SWITCH) && defined(BOREALIS_USE_DEKO3D)
     m_use_zero_copy_holder = ffmpeg::decoder::useDeko3DZeroCopyHolder(hw_decode_active);
+#elif defined(PLATFORM_ANDROID)
+    m_use_zero_copy_holder = ffmpeg::decoder::useAndroidDirectHardwareFrames(hw_decode_active);
 #elif defined(USE_D3D11_RENDERER)
     m_use_zero_copy_holder = ffmpeg::decoder::useD3D11ZeroCopyHolder(m_d3d11);
 #endif
@@ -317,6 +315,10 @@ void FFmpegVideoDecoder::cleanup() {
     if (m_decoder_context) {
         avcodec_free_context(&m_decoder_context);
     }
+
+#if defined(PLATFORM_ANDROID)
+    ffmpeg::decoder::cleanupAndroidMediaCodecState(m_android_mediacodec);
+#endif
 
     if (m_frames) {
         for (int i = 0; i < m_frames_size; i++) {

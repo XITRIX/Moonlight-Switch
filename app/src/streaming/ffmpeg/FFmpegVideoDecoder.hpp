@@ -40,6 +40,9 @@ class FFmpegVideoDecoder : public IFFmpegVideoDecoder {
 
     char* m_ffmpeg_buffer = nullptr;
     bool m_use_zero_copy_holder = false;
+#if defined(PLATFORM_ANDROID)
+    ffmpeg::decoder::AndroidMediaCodecState m_android_mediacodec;
+#endif
 #if defined(_WIN32) && defined(USE_D3D11_RENDERER)
   ffmpeg::decoder::D3D11State m_d3d11;
 #endif

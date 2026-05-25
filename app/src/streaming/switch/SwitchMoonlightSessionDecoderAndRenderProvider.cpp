@@ -11,6 +11,8 @@
 
 #ifdef BOREALIS_USE_DEKO3D
 #include "DKVideoRenderer.hpp"
+#elif defined(PLATFORM_ANDROID)
+#include "../video/Android/AndroidMediaCodecVideoRenderer.hpp"
 #elif defined(USE_D3D11_RENDERER)
 #include "D3D11VideoRenderer.hpp"
 #elif defined(USE_METAL_RENDERER)
@@ -30,6 +32,8 @@ IVideoRenderer*
 SwitchMoonlightSessionDecoderAndRenderProvider::video_renderer() {
 #ifdef BOREALIS_USE_DEKO3D
     return new DKVideoRenderer();
+#elif defined(PLATFORM_ANDROID)
+    return new AndroidMediaCodecVideoRenderer();
 #elif defined(USE_D3D11_RENDERER)
     return new D3D11VideoRenderer();
 #elif defined(USE_METAL_RENDERER)
