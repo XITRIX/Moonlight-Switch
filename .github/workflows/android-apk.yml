@@ -160,10 +160,77 @@ jobs:
           extern/vcpkg/packages
         key: ${{ steps.vcpkg-cache-key.outputs.key }}
 
-    - name: Build unsigned debug APK
+    - name: Build unsigned release APK
       shell: bash
       working-directory: app/platforms/android-project
-      run: ./gradlew --no-daemon -PUNSIGNED_DEBUG assembleDebug
+      run: ./gradlew --no-daemon assembleRelease
+
+    - name: Detect release signing configuration
+      id: signing
+      shell: bash
+      env:
+        ANDROID_RELEASE_KEYSTORE_BASE64: ${{ secrets['ANDROID_RELEASE_KEYSTORE_BASE64'] }}
+        ANDROID_RELEASE_KEY_ALIAS: ${{ secrets['ANDROID_RELEASE_KEY_ALIAS'] }}
+        ANDROID_RELEASE_STORE_PASSWORD: ${{ secrets['ANDROID_RELEASE_STORE_PASSWORD'] }}
+        ANDROID_RELEASE_KEY_PASSWORD: ${{ secrets['ANDROID_RELEASE_KEY_PASSWORD'] }}
+      run: |
+        if [ -n "$ANDROID_RELEASE_KEYSTORE_BASE64" ] && \
+           [ -n "$ANDROID_RELEASE_KEY_ALIAS" ] && \
+           [ -n "$ANDROID_RELEASE_STORE_PASSWORD" ] && \
+           [ -n "$ANDROID_RELEASE_KEY_PASSWORD" ]; then
+          echo "enabled=true" >> "$GITHUB_OUTPUT"
+        else
+          echo "enabled=false" >> "$GITHUB_OUTPUT"
+        fi
+
+    - name: Sign release APK
+      if: github.event_name != 'pull_request' && steps.signing.outputs.enabled == 'true'
+      shell: bash
+      working-directory: app/platforms/android-project
+      env:
+        ANDROID_RELEASE_KEYSTORE_BASE64: ${{ secrets['ANDROID_RELEASE_KEYSTORE_BASE64'] }}
+        ANDROID_RELEASE_KEY_ALIAS: ${{ secrets['ANDROID_RELEASE_KEY_ALIAS'] }}
+        ANDROID_RELEASE_STORE_PASSWORD: ${{ secrets['ANDROID_RELEASE_STORE_PASSWORD'] }}
+        ANDROID_RELEASE_KEY_PASSWORD: ${{ secrets['ANDROID_RELEASE_KEY_PASSWORD'] }}
+      run: |
+        keystore_path="$RUNNER_TEMP/android-release.keystore"
+        unsigned_apk="app/build/outputs/apk/release/app-release-unsigned.apk"
+        signed_apk="app/build/outputs/apk/release/app-release.apk"
+        apksigner_bin="$ANDROID_SDK_ROOT/build-tools/35.0.0/apksigner"
+
+        printf '%s' "$ANDROID_RELEASE_KEYSTORE_BASE64" | base64 --decode > "$keystore_path"
+
+        "$apksigner_bin" sign \
+          --ks "$keystore_path" \
+          --ks-key-alias "$ANDROID_RELEASE_KEY_ALIAS" \
+          --ks-pass "pass:$ANDROID_RELEASE_STORE_PASSWORD" \
+          --key-pass "pass:$ANDROID_RELEASE_KEY_PASSWORD" \
+          --out "$signed_apk" \
+          "$unsigned_apk"
+
+        "$apksigner_bin" verify --verbose "$signed_apk"
+
+    - name: Stage release APK artifact
+      id: apk-artifact
+      shell: bash
+      working-directory: app/platforms/android-project
+      run: |
+        artifact_dir="$RUNNER_TEMP/moonlight-android-apk"
+        signed_apk="app/build/outputs/apk/release/app-release.apk"
+        unsigned_apk="app/build/outputs/apk/release/app-release-unsigned.apk"
+
+        mkdir -p "$artifact_dir"
+
+        if [ -f "$signed_apk" ]; then
+          cp "$signed_apk" "$artifact_dir/Moonlight-android-release.apk"
+          echo "artifact_name=Moonlight-android-release-apk" >> "$GITHUB_OUTPUT"
+          echo "artifact_path=$artifact_dir/Moonlight-android-release.apk" >> "$GITHUB_OUTPUT"
+        else
+          cp "$unsigned_apk" "$artifact_dir/Moonlight-android-release-unsigned.apk"
+          echo "artifact_name=Moonlight-android-release-unsigned-apk" >> "$GITHUB_OUTPUT"
+          echo "artifact_path=$artifact_dir/Moonlight-android-release-unsigned.apk" >> "$GITHUB_OUTPUT"
+          echo "::warning::Release APK is unsigned. Configure Android release signing secrets to produce an installable APK artifact."
+        fi
 
     - name: Upload Android build logs
       if: failure()
@@ -179,6 +246,6 @@ jobs:
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: Moonlight-android-unsigned-debug-apk
-        path: app/platforms/android-project/app/build/outputs/apk/debug/*-unsigned.apk
+        name: ${{ steps.apk-artifact.outputs.artifact_name }}
+        path: ${{ steps.apk-artifact.outputs.artifact_path }}
         if-no-files-found: error
