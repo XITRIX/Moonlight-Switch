@@ -106,27 +106,30 @@ void AddHostTab::fillSearchBox(const GSResult<std::vector<Host>>& hostsRes) {
                               : brls::Visibility::VISIBLE);
 
     if (hostsRes.isSuccess()) {
-        std::vector<Host> hosts = hostsRes.value();
-        for (const Host& host : hosts) {
-            const auto displayAddress = host.preferred_address();
-            if (searchBoxIpExists(displayAddress))
-                continue;
-
-            auto hostButton = new brls::DetailCell();
-            hostButton->setText(host.hostname);
-            hostButton->setDetailText(displayAddress);
-            hostButton->setDetailTextColor(
-                brls::Application::getTheme()["brls/text_disabled"]);
-            hostButton->registerClickAction([this, host](View* view) {
-                connectHost(host);
-                return true;
-            });
-            searchBox->addView(hostButton);
-        }
+        appendSearchHosts(hostsRes.value());
     } else {
         loader->setVisibility(brls::Visibility::GONE);
         searchHeader->setTitle("add_host/search"_i18n + " - " +
                                hostsRes.error());
+    }
+}
+
+void AddHostTab::appendSearchHosts(const std::vector<Host>& hosts) {
+    for (const Host& host : hosts) {
+        const auto displayAddress = host.preferred_address();
+        if (displayAddress.empty() || searchBoxIpExists(displayAddress))
+            continue;
+
+        auto hostButton = new brls::DetailCell();
+        hostButton->setText(host.hostname);
+        hostButton->setDetailText(displayAddress);
+        hostButton->setDetailTextColor(
+            brls::Application::getTheme()["brls/text_disabled"]);
+        hostButton->registerClickAction([this, host](View* view) {
+            connectHost(host);
+            return true;
+        });
+        searchBox->addView(hostButton);
     }
 }
 
@@ -148,33 +151,27 @@ void AddHostTab::findHost() {
             [this](auto result) { fillSearchBox(result); });
 #else
     stopSearchHost();
+    const uint64_t generation = searchGeneration;
+    searchBox->clearViews();
+    searchHeader->setTitle("add_host/search"_i18n);
+    loader->setVisibility(brls::Visibility::VISIBLE);
     ASYNC_RETAIN
 #if defined(PLATFORM_IOS) || defined(PLATFORM_TVOS) || defined(PLATFORM_VISIONOS)
     darwin_mdns_start(
 #else
     GameStreamClient::find_hosts(
 #endif
-        [ASYNC_TOKEN](const GSResult<std::vector<Host>>& result) {
+        [ASYNC_TOKEN, generation](const GSResult<std::vector<Host>>& result) {
             ASYNC_RELEASE
 
-            if (result.isSuccess()) {
-                std::vector<Host> hosts = result.value();
+            if (generation != searchGeneration) {
+                return;
+            }
 
-                searchBox->clearViews();
-                for (const Host& host : hosts) {
-                    auto hostButton = new brls::DetailCell();
-                    hostButton->setText(host.hostname);
-                    hostButton->setDetailText(host.preferred_address());
-                    hostButton->setDetailTextColor(
-                        brls::Application::getTheme()["brls/text_disabled"]);
-                    hostButton->registerClickAction([this, host](View* view) {
-                        connectHost(host);
-                        return true;
-                    });
-                    searchBox->addView(hostButton);
-                }
-//                loader->setVisibility(brls::Visibility::GONE);
+            if (result.isSuccess()) {
+                appendSearchHosts(result.value());
             } else {
+                loader->setVisibility(brls::Visibility::GONE);
                 showError(result.error(), [] {});
             }
         });
@@ -182,6 +179,7 @@ void AddHostTab::findHost() {
 }
 
 void AddHostTab::stopSearchHost() {
+    searchGeneration++;
 #ifdef PLATFORM_IOS
 #elif defined(PLATFORM_TVOS) || defined(PLATFORM_VISIONOS)
 #else

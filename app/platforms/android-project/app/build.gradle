@@ -29,7 +29,6 @@ android {
             useLegacyPackaging false
             excludes.add("**/libEGL_angle.so")
             excludes.add("**/libGLESv2_angle.so")
-            keepDebugSymbols.add("**/*.so")
             pickFirsts.add("**/*.so")
         }
     }
