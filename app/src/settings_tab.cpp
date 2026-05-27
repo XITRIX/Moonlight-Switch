@@ -162,9 +162,7 @@ SettingsTab::SettingsTab() {
     });
 
     std::vector<VideoCodec> supportedCodecs = {
-#ifndef PLATFORM_ANDROID
         H264,
-#endif
         H265,
     };
 

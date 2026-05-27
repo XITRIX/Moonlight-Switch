@@ -12,8 +12,8 @@ struct D3D11State {
 	bool zeroCopyActive = false;
 	bool deviceSharedWithRenderer = false;
 	const char* unavailableReason = nullptr;
-	enum AVPixelFormat hwPixelFormat = AV_PIX_FMT_NONE;
-	enum AVPixelFormat hwSurfaceFormat = AV_PIX_FMT_NONE;
+	AVPixelFormat hwPixelFormat = AV_PIX_FMT_NONE;
+	AVPixelFormat hwSurfaceFormat = AV_PIX_FMT_NONE;
 };
 
 void resetD3D11State(D3D11State& state);
@@ -38,13 +38,17 @@ void cleanupAndroidMediaCodecState(AndroidMediaCodecState& state);
 bool useAndroidDirectHardwareFrames(bool hw_decode_active);
 #endif
 
+#if defined(PLATFORM_APPLE)
+AVHWDeviceType metalHardwareDeviceType();
+#endif
+
 #if defined(USE_METAL_RENDERER)
 bool useMetalDirectHardwareFrames();
 #endif
 
 #if defined(PLATFORM_SWITCH) && defined(BOREALIS_USE_DEKO3D)
-AVHWDeviceType deko3dHardwareDeviceType();
 int configureDeko3DDecoderContext(AVCodecContext* decoderContext, bool hw_decode_active);
+void initializeDeko3DFrame(AVFrame* frame);
 bool useDeko3DZeroCopyHolder(bool hw_decode_active);
 bool useDeko3DDirectHardwareFrames();
 #endif

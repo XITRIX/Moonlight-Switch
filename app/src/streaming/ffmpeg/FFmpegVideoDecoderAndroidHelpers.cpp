@@ -16,19 +16,11 @@ namespace ffmpeg::decoder {
 
 namespace {
 
-constexpr const char* PLATFORM_UTILS_CLASS = "org/libsdl/app/PlatformUtils";
 constexpr const char* PLATFORM_UTILS_CLASS_NAME = "org.libsdl.app.PlatformUtils";
 constexpr Uint32 MEDIA_CODEC_SURFACE_WAIT_TIMEOUT_MS = 500;
 constexpr Uint32 MEDIA_CODEC_SURFACE_WAIT_INTERVAL_MS = 10;
 
 jclass findPlatformUtilsClass(JNIEnv* env) {
-    jclass utilsClass = env->FindClass(PLATFORM_UTILS_CLASS);
-    if (utilsClass != nullptr) {
-        return utilsClass;
-    }
-
-    env->ExceptionClear();
-
     jobject activity = reinterpret_cast<jobject>(SDL_AndroidGetActivity());
     if (activity == nullptr) {
         brls::Logger::warning("FFmpeg: SDL didn't provide an Android activity while resolving PlatformUtils");
@@ -65,9 +57,10 @@ jclass findPlatformUtilsClass(JNIEnv* env) {
         return nullptr;
     }
 
-    jclass classLoaderClass = env->FindClass("java/lang/ClassLoader");
+    // Decoder threads can't reliably use FindClass() for app classes, so resolve
+    // PlatformUtils through the activity's class loader instead.
+    jclass classLoaderClass = env->GetObjectClass(classLoader);
     if (classLoaderClass == nullptr) {
-        env->ExceptionClear();
         env->DeleteLocalRef(classLoader);
         env->DeleteLocalRef(activityClass);
         env->DeleteLocalRef(activity);
