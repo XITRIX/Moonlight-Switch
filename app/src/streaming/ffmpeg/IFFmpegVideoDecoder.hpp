@@ -14,10 +14,12 @@ struct VideoDecodeStats {
     uint32_t network_dropped_frames;
     uint32_t current_reassembly_time;
     uint32_t current_decode_time;
+  uint32_t current_decoder_delay_time;
     uint32_t total_received_frames;
     uint32_t total_decoded_frames;
     uint32_t total_reassembly_time;
     uint32_t total_decode_time;
+  uint32_t total_decoder_delay_time;
 
     float current_host_fps;
     float current_received_fps;
@@ -25,9 +27,11 @@ struct VideoDecodeStats {
 
     float current_receive_time;
     float current_decoding_time;
+    float current_decoder_delay;
 
     float session_receive_time;
     float session_decoding_time;
+    float session_decoder_delay;
 
     uint64_t measurement_start_timestamp;
 };

@@ -334,7 +334,8 @@ void StreamingView::draw(NVGcontext* vg, float x, float y, float width,
 
         statistics += fmt::format("Frames dropped by your network connection: {}\n"
                                   "Average receive time: {:.{}f} | {:.{}f} ms\n"
-                                  "Average decoding time: {:.{}f} | {:.{}f} ms\n"
+                                  "Average decode time: {:.{}f} | {:.{}f} ms\n"
+                                  "Average decoder delay: {:.{}f} | {:.{}f} ms\n"
                                   "Average rendering time: {:.{}f} ms\n"
                                   "Frame holder push/get rate: {}\n"
                                   "Frames queue reuses | drops: {} | {}\n"
@@ -344,6 +345,8 @@ void StreamingView::draw(NVGcontext* vg, float x, float y, float width,
                                   stats->video_decode_stats.session_receive_time, 2,
                                   stats->video_decode_stats.current_decoding_time, 2,
                                   stats->video_decode_stats.session_decoding_time, 2,
+                                  stats->video_decode_stats.current_decoder_delay, 2,
+                                  stats->video_decode_stats.session_decoder_delay, 2,
                                   stats->video_render_stats.rendering_time, 2,
                                   AVFrameHolder::instance().getStat(),
                                   AVFrameHolder::instance().getFakeFrameStat(),

@@ -15,7 +15,7 @@ extern "C" {
 
 // Disables the deblocking filter at the cost of image quality
 #define DISABLE_LOOP_FILTER 0x1
-// Uses the low latency decode flag (disables multithreading)
+// Requests low latency decode behavior
 #define LOW_LATENCY_DECODE 0x2
 
 //#if defined(PLATFORM_TVOS)
@@ -408,7 +408,7 @@ int FFmpegVideoDecoder::submit_decode_unit(PDECODE_UNIT decode_unit) {
             if (pending_frames < 0) {
                 pending_frames = 0;
             }
-            m_video_decode_stats_progress.current_decode_time +=
+            m_video_decode_stats_progress.current_decoder_delay_time +=
                 pending_frames * (1000 / m_stream_fps);
             m_video_decode_stats_progress.current_decoded_frames += decoded_frames;
 
@@ -425,6 +425,7 @@ int FFmpegVideoDecoder::submit_decode_unit(PDECODE_UNIT decode_unit) {
                 m_video_decode_stats_progress.total_decoded_frames = m_video_decode_stats_cache.total_decoded_frames + m_video_decode_stats_cache.current_decoded_frames;
                 m_video_decode_stats_progress.total_reassembly_time = m_video_decode_stats_cache.total_reassembly_time + m_video_decode_stats_cache.current_reassembly_time;
                 m_video_decode_stats_progress.total_decode_time = m_video_decode_stats_cache.total_decode_time + m_video_decode_stats_cache.current_decode_time;
+                m_video_decode_stats_progress.total_decoder_delay_time = m_video_decode_stats_cache.total_decoder_delay_time + m_video_decode_stats_cache.current_decoder_delay_time;
 
                 m_video_decode_stats_progress.network_dropped_frames = m_video_decode_stats_cache.network_dropped_frames;
 
@@ -446,10 +447,14 @@ int FFmpegVideoDecoder::submit_decode_unit(PDECODE_UNIT decode_unit) {
                                                                   (float) m_video_decode_stats_cache.current_received_frames;
                 m_video_decode_stats_cache.current_decoding_time = (float) m_video_decode_stats_cache.current_decode_time /
                                                                    (float) m_video_decode_stats_cache.current_decoded_frames;
+                m_video_decode_stats_cache.current_decoder_delay = (float) m_video_decode_stats_cache.current_decoder_delay_time /
+                                                                   (float) m_video_decode_stats_cache.current_decoded_frames;
 
                 m_video_decode_stats_cache.session_receive_time = (float) m_video_decode_stats_cache.total_reassembly_time /
                                                                   (float) m_video_decode_stats_cache.total_received_frames;
                 m_video_decode_stats_cache.session_decoding_time = (float) m_video_decode_stats_cache.total_decode_time /
+                                                                   (float) m_video_decode_stats_cache.total_decoded_frames;
+                m_video_decode_stats_cache.session_decoder_delay = (float) m_video_decode_stats_cache.total_decoder_delay_time /
                                                                    (float) m_video_decode_stats_cache.total_decoded_frames;
 
                 timeCount -= time_interval;
