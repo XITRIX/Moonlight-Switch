@@ -189,7 +189,7 @@ int FFmpegVideoDecoder::setup(int video_format, int width, int height,
     const bool supports_slice_threading =
         (video_format & (VIDEO_FORMAT_MASK_H264 | VIDEO_FORMAT_MASK_H265)) != 0;
     const bool use_decoder_threads =
-        decoder_threads > 1 && supports_slice_threading;
+        !hw_decode_active && decoder_threads > 1 && supports_slice_threading;
 
     if ((perf_lvl & LOW_LATENCY_DECODE) && !use_decoder_threads)
         // Use low delay only when decoding stays effectively single threaded.
@@ -217,11 +217,12 @@ int FFmpegVideoDecoder::setup(int video_format, int width, int height,
 //    m_decoder_context->pix_fmt = AV_PIX_FMT_NV12;
 #endif
 
-    brls::Logger::info("FFmpeg: Decoder threading mode: hw={} threads={} low_delay={} codec={}",
+    brls::Logger::info("FFmpeg: Decoder threading mode: hw={} threads={} low_delay={} thread_type={} slice_support={}",
                        hw_decode_active ? "on" : "off",
                        m_decoder_context->thread_count,
                        (m_decoder_context->flags & AV_CODEC_FLAG_LOW_DELAY) != 0 ? "on" : "off",
-                       supports_slice_threading ? "slice" : "frame");
+                       use_decoder_threads ? "slice" : "single",
+                       supports_slice_threading ? "on" : "off");
 
     err = avcodec_open2(m_decoder_context, m_decoder, nullptr);
     if (err < 0) {

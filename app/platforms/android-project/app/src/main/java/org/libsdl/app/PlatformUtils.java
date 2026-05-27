@@ -16,6 +16,7 @@ import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.BatteryManager;
 import android.os.Build;
+import android.os.Looper;
 import android.os.Message;
 import android.os.VibrationAttributes;
 import android.os.VibrationEffect;
@@ -39,6 +40,34 @@ public class PlatformUtils {
     private static volatile Surface mediaCodecSurface;
     private static int mediaCodecVideoWidth;
     private static int mediaCodecVideoHeight;
+    private static boolean mediaCodecSurfaceLayoutUpdatePosted;
+    private static boolean mediaCodecSurfaceUsesFixedSize;
+    private static int mediaCodecSurfaceBufferWidth = -1;
+    private static int mediaCodecSurfaceBufferHeight = -1;
+
+    private static void requestMediaCodecVideoSurfaceLayoutUpdate() {
+        if (mediaCodecSurfaceContainer == null || mediaCodecSurfaceView == null) {
+            return;
+        }
+
+        if (Looper.myLooper() != Looper.getMainLooper()) {
+            Context context = SDLActivity.getContext();
+            if (context instanceof Activity) {
+                ((Activity) context).runOnUiThread(PlatformUtils::requestMediaCodecVideoSurfaceLayoutUpdate);
+            }
+            return;
+        }
+
+        if (mediaCodecSurfaceLayoutUpdatePosted) {
+            return;
+        }
+
+        mediaCodecSurfaceLayoutUpdatePosted = true;
+        mediaCodecSurfaceContainer.post(() -> {
+            mediaCodecSurfaceLayoutUpdatePosted = false;
+            updateMediaCodecVideoSurfaceLayout();
+        });
+    }
 
     private static void updateMediaCodecVideoSurfaceLayout() {
         if (mediaCodecSurfaceContainer == null || mediaCodecSurfaceView == null) {
@@ -85,19 +114,37 @@ public class PlatformUtils {
 
         RelativeLayout.LayoutParams layoutParams =
                 (RelativeLayout.LayoutParams) mediaCodecSurfaceView.getLayoutParams();
+        boolean layoutChanged = false;
         if (layoutParams == null) {
             layoutParams = new RelativeLayout.LayoutParams(targetWidth, targetHeight);
+            layoutParams.addRule(RelativeLayout.CENTER_IN_PARENT, RelativeLayout.TRUE);
+            layoutChanged = true;
         }
 
-        layoutParams.width = targetWidth;
-        layoutParams.height = targetHeight;
-        layoutParams.addRule(RelativeLayout.CENTER_IN_PARENT, RelativeLayout.TRUE);
-        mediaCodecSurfaceView.setLayoutParams(layoutParams);
+        if (layoutParams.width != targetWidth || layoutParams.height != targetHeight) {
+            layoutParams.width = targetWidth;
+            layoutParams.height = targetHeight;
+            layoutChanged = true;
+        }
+
+        if (layoutChanged) {
+            mediaCodecSurfaceView.setLayoutParams(layoutParams);
+        }
 
         if (mediaCodecVideoWidth > 0 && mediaCodecVideoHeight > 0) {
-            mediaCodecSurfaceView.getHolder().setFixedSize(mediaCodecVideoWidth, mediaCodecVideoHeight);
+            if (!mediaCodecSurfaceUsesFixedSize ||
+                    mediaCodecSurfaceBufferWidth != mediaCodecVideoWidth ||
+                    mediaCodecSurfaceBufferHeight != mediaCodecVideoHeight) {
+                mediaCodecSurfaceUsesFixedSize = true;
+                mediaCodecSurfaceBufferWidth = mediaCodecVideoWidth;
+                mediaCodecSurfaceBufferHeight = mediaCodecVideoHeight;
+                mediaCodecSurfaceView.getHolder().setFixedSize(mediaCodecVideoWidth, mediaCodecVideoHeight);
+            }
         }
-        else {
+        else if (mediaCodecSurfaceUsesFixedSize) {
+            mediaCodecSurfaceUsesFixedSize = false;
+            mediaCodecSurfaceBufferWidth = -1;
+            mediaCodecSurfaceBufferHeight = -1;
             mediaCodecSurfaceView.getHolder().setSizeFromLayout();
         }
     }
@@ -119,7 +166,7 @@ public class PlatformUtils {
 
             relativeLayout.addView(mediaCodecSurfaceContainer, 0);
             sdlSurface.enableMediaCodecOverlay();
-            updateMediaCodecVideoSurfaceLayout();
+            requestMediaCodecVideoSurfaceLayoutUpdate();
             return;
         }
 
@@ -156,12 +203,17 @@ public class PlatformUtils {
         });
 
         mediaCodecSurfaceContainer.addOnLayoutChangeListener((view, left, top, right, bottom,
-                                                              oldLeft, oldTop, oldRight, oldBottom) ->
-                updateMediaCodecVideoSurfaceLayout());
+                                                              oldLeft, oldTop, oldRight, oldBottom) -> {
+            if (left == oldLeft && top == oldTop && right == oldRight && bottom == oldBottom) {
+                return;
+            }
+
+            requestMediaCodecVideoSurfaceLayoutUpdate();
+        });
 
         relativeLayout.addView(mediaCodecSurfaceContainer);
         sdlSurface.enableMediaCodecOverlay();
-        updateMediaCodecVideoSurfaceLayout();
+        requestMediaCodecVideoSurfaceLayoutUpdate();
     }
 
     public static Surface getMediaCodecVideoSurface() {
@@ -178,10 +230,10 @@ public class PlatformUtils {
 
         Context context = SDLActivity.getContext();
         if (context instanceof Activity) {
-            ((Activity) context).runOnUiThread(PlatformUtils::updateMediaCodecVideoSurfaceLayout);
+            ((Activity) context).runOnUiThread(PlatformUtils::requestMediaCodecVideoSurfaceLayoutUpdate);
         }
         else {
-            updateMediaCodecVideoSurfaceLayout();
+            requestMediaCodecVideoSurfaceLayoutUpdate();
         }
     }
 

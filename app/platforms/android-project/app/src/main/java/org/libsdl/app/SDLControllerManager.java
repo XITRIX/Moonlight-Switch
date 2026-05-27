@@ -115,10 +115,13 @@ public class SDLControllerManager
         }
         */
 
-        return ((sources & InputDevice.SOURCE_CLASS_JOYSTICK) != 0 ||
-                ((sources & InputDevice.SOURCE_DPAD) == InputDevice.SOURCE_DPAD) ||
-                ((sources & InputDevice.SOURCE_GAMEPAD) == InputDevice.SOURCE_GAMEPAD)
-        );
+        boolean hasJoystickSource = (sources & InputDevice.SOURCE_CLASS_JOYSTICK) != 0;
+        boolean hasGamepadSource = (sources & InputDevice.SOURCE_GAMEPAD) == InputDevice.SOURCE_GAMEPAD;
+
+        // Ignore DPAD-only devices such as Android TV remotes and virtual DPAD endpoints.
+        // Those still arrive through the keyboard path, but counting them as joysticks can
+        // push the real controller beyond Borealis' expected controller slots.
+        return hasJoystickSource || hasGamepadSource;
     }
 
 }

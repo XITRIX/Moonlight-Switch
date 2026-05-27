@@ -17,9 +17,106 @@ namespace ffmpeg::decoder {
 namespace {
 
 constexpr const char* PLATFORM_UTILS_CLASS = "org/libsdl/app/PlatformUtils";
+constexpr const char* PLATFORM_UTILS_CLASS_NAME = "org.libsdl.app.PlatformUtils";
+constexpr Uint32 MEDIA_CODEC_SURFACE_WAIT_TIMEOUT_MS = 500;
+constexpr Uint32 MEDIA_CODEC_SURFACE_WAIT_INTERVAL_MS = 10;
 
 jclass findPlatformUtilsClass(JNIEnv* env) {
-    return env->FindClass(PLATFORM_UTILS_CLASS);
+    jclass utilsClass = env->FindClass(PLATFORM_UTILS_CLASS);
+    if (utilsClass != nullptr) {
+        return utilsClass;
+    }
+
+    env->ExceptionClear();
+
+    jobject activity = reinterpret_cast<jobject>(SDL_AndroidGetActivity());
+    if (activity == nullptr) {
+        brls::Logger::warning("FFmpeg: SDL didn't provide an Android activity while resolving PlatformUtils");
+        return nullptr;
+    }
+
+    jclass activityClass = env->GetObjectClass(activity);
+    if (activityClass == nullptr) {
+        env->DeleteLocalRef(activity);
+        brls::Logger::warning("FFmpeg: Couldn't inspect Android activity class while resolving PlatformUtils");
+        return nullptr;
+    }
+
+    jmethodID getClassLoaderMethod = env->GetMethodID(activityClass,
+                                                      "getClassLoader",
+                                                      "()Ljava/lang/ClassLoader;");
+    if (getClassLoaderMethod == nullptr) {
+        env->ExceptionClear();
+        env->DeleteLocalRef(activityClass);
+        env->DeleteLocalRef(activity);
+        brls::Logger::warning("FFmpeg: Android activity class loader is unavailable while resolving PlatformUtils");
+        return nullptr;
+    }
+
+    jobject classLoader = env->CallObjectMethod(activity, getClassLoaderMethod);
+    if (env->ExceptionCheck()) {
+        env->ExceptionClear();
+        classLoader = nullptr;
+    }
+    if (classLoader == nullptr) {
+        env->DeleteLocalRef(activityClass);
+        env->DeleteLocalRef(activity);
+        brls::Logger::warning("FFmpeg: Couldn't obtain Android class loader while resolving PlatformUtils");
+        return nullptr;
+    }
+
+    jclass classLoaderClass = env->FindClass("java/lang/ClassLoader");
+    if (classLoaderClass == nullptr) {
+        env->ExceptionClear();
+        env->DeleteLocalRef(classLoader);
+        env->DeleteLocalRef(activityClass);
+        env->DeleteLocalRef(activity);
+        brls::Logger::warning("FFmpeg: Java ClassLoader class unavailable while resolving PlatformUtils");
+        return nullptr;
+    }
+
+    jmethodID loadClassMethod = env->GetMethodID(classLoaderClass,
+                                                 "loadClass",
+                                                 "(Ljava/lang/String;)Ljava/lang/Class;");
+    if (loadClassMethod == nullptr) {
+        env->ExceptionClear();
+        env->DeleteLocalRef(classLoaderClass);
+        env->DeleteLocalRef(classLoader);
+        env->DeleteLocalRef(activityClass);
+        env->DeleteLocalRef(activity);
+        brls::Logger::warning("FFmpeg: Java class loader can't load PlatformUtils");
+        return nullptr;
+    }
+
+    jstring className = env->NewStringUTF(PLATFORM_UTILS_CLASS_NAME);
+    if (className == nullptr) {
+        env->DeleteLocalRef(classLoaderClass);
+        env->DeleteLocalRef(classLoader);
+        env->DeleteLocalRef(activityClass);
+        env->DeleteLocalRef(activity);
+        brls::Logger::warning("FFmpeg: Couldn't allocate PlatformUtils class name for JNI lookup");
+        return nullptr;
+    }
+
+    auto loadedClass = reinterpret_cast<jclass>(env->CallObjectMethod(classLoader,
+                                                                      loadClassMethod,
+                                                                      className));
+    if (env->ExceptionCheck()) {
+        env->ExceptionClear();
+        loadedClass = nullptr;
+    }
+
+    env->DeleteLocalRef(className);
+    env->DeleteLocalRef(classLoaderClass);
+    env->DeleteLocalRef(classLoader);
+    env->DeleteLocalRef(activityClass);
+    env->DeleteLocalRef(activity);
+
+    if (loadedClass == nullptr) {
+        brls::Logger::warning("FFmpeg: Android activity class loader couldn't resolve PlatformUtils");
+    }
+
+    return loadedClass;
 }
 
 void callSurfaceSizeUpdate(JNIEnv* env, int width, int height) {
@@ -78,6 +175,29 @@ jobject acquireSurfaceLocalRef(JNIEnv* env) {
     return surface;
 }
 
+jobject waitForSurfaceLocalRef(JNIEnv* env) {
+    jobject surface = acquireSurfaceLocalRef(env);
+    if (surface != nullptr) {
+        return surface;
+    }
+
+    const Uint32 waitStart = SDL_GetTicks();
+    while (SDL_GetTicks() - waitStart < MEDIA_CODEC_SURFACE_WAIT_TIMEOUT_MS) {
+        SDL_Delay(MEDIA_CODEC_SURFACE_WAIT_INTERVAL_MS);
+
+        surface = acquireSurfaceLocalRef(env);
+        if (surface != nullptr) {
+            brls::Logger::info("FFmpeg: Android MediaCodec surface became available after {} ms",
+                              SDL_GetTicks() - waitStart);
+            return surface;
+        }
+    }
+
+    brls::Logger::error("FFmpeg: Dedicated Android MediaCodec surface did not become available within {} ms",
+                        MEDIA_CODEC_SURFACE_WAIT_TIMEOUT_MS);
+    return nullptr;
+}
+
 } // namespace
 
 int initializeAndroidMediaCodecHardwareDevice(AndroidMediaCodecState& state,
@@ -94,7 +214,7 @@ int initializeAndroidMediaCodecHardwareDevice(AndroidMediaCodecState& state,
 
     callSurfaceSizeUpdate(env, width, height);
 
-    jobject surfaceLocalRef = acquireSurfaceLocalRef(env);
+    jobject surfaceLocalRef = waitForSurfaceLocalRef(env);
     if (surfaceLocalRef == nullptr) {
         brls::Logger::error("FFmpeg: Dedicated Android MediaCodec surface is unavailable");
         return AVERROR(EINVAL);

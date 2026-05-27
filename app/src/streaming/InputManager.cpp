@@ -128,6 +128,11 @@ void MoonlightInputManager::handleRumble(unsigned short controller,
                                          unsigned short highFreqMotor) {
     brls::Logger::debug("Rumble {} {}", lowFreqMotor, highFreqMotor);
 
+    if (controller >= GAMEPADS_MAX) {
+        brls::Logger::warning("Ignoring rumble for out-of-range controller {}", controller);
+        return;
+    }
+
     float rumbleMultiplier = Settings::instance().get_rumble_force();
 
     rumbleCache[controller].lowFreqMotor = lowFreqMotor * rumbleMultiplier;
@@ -143,6 +148,11 @@ void MoonlightInputManager::handleRumbleTriggers(uint16_t controllerNumber,
                                                   uint16_t leftTriggerMotor, 
                                                   uint16_t rightTriggerMotor) {
     brls::Logger::debug("Rumble Trigger {} {}", leftTriggerMotor, rightTriggerMotor);
+
+    if (controllerNumber >= GAMEPADS_MAX) {
+        brls::Logger::warning("Ignoring trigger rumble for out-of-range controller {}", controllerNumber);
+        return;
+    }
 
     float rumbleMultiplier = Settings::instance().get_rumble_force();
 
@@ -169,6 +179,11 @@ void MoonlightInputManager::dropInput() {
     auto controllersCount = brls::Application::getPlatform()
                             ->getInputManager()
                             ->getControllersConnectedCount();
+
+    if (controllersCount > GAMEPADS_MAX) {
+        brls::Logger::warning("Clamping controller count from {} to {} while dropping input", controllersCount, GAMEPADS_MAX);
+        controllersCount = GAMEPADS_MAX;
+    }
 
     for (short i = 0; i < controllersCount; i++) {
         res &= LiSendMultiControllerEvent(
@@ -309,6 +324,11 @@ void MoonlightInputManager::handleControllers(bool specialKey) {
     auto controllersCount = brls::Application::getPlatform()
                             ->getInputManager()
                             ->getControllersConnectedCount();
+
+    if (controllersCount > GAMEPADS_MAX) {
+        brls::Logger::warning("Clamping controller count from {} to {} while handling input", controllersCount, GAMEPADS_MAX);
+        controllersCount = GAMEPADS_MAX;
+    }
 
     short mappedControllersCount = controllersToMap();
 
