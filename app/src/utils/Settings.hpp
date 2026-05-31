@@ -144,6 +144,15 @@ class Settings : public Singleton<Settings> {
     }
     void set_request_hdr(bool request_hdr) { m_enable_hdr = request_hdr; }
 
+        [[nodiscard]] bool upscaling() const {
+    #ifdef SUPPORT_UPSCALING
+        return m_enable_upscaling;
+    #else
+        return false;
+    #endif
+        }
+        void set_upscaling(bool upscaling) { m_enable_upscaling = upscaling; }
+
     [[nodiscard]] bool click_by_tap() const { return m_click_by_tap; }
     void set_click_by_tap(bool click_by_tap) { m_click_by_tap = click_by_tap; }
 
@@ -250,6 +259,7 @@ class Settings : public Singleton<Settings> {
 #endif
     int m_bitrate = 10000;
     bool m_enable_hdr = false;
+    bool m_enable_upscaling = false;
     bool m_click_by_tap = false;
     int m_decoder_threads = 4;
     int m_frames_queue_size = 3;

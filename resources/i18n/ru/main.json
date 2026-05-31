@@ -145,6 +145,7 @@
         "resolution": "Разрешение",
         "resolution_native": "Родное",
         "resolution_scale": "Масштаб",
+        "upscaling": "Upscale lower resolutions",
         "rumble_force": "Сила вибрации",
         "single_joycon": "Одиночный Joycon",
         "stream_settings": "Настройка трансляции",

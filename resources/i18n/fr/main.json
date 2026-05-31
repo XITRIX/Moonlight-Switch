@@ -145,6 +145,7 @@
         "resolution": "Résolution",
         "resolution_native": "Native",
         "resolution_scale": "Échelle",
+        "upscaling": "Upscale lower resolutions",
         "rumble_force": "Force de vibration",
         "single_joycon": "Mode Joycon unique",
         "stream_settings": "Paramètres de diffusion",

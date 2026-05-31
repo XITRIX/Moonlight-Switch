@@ -14,6 +14,7 @@ option(PLATFORM_ANDROID "build for Android" OFF)
 option(PLATFORM_PSV "build for psv" OFF)
 option(PLATFORM_PS4 "build for ps4" OFF)
 option(PLATFORM_SWITCH "build for switch" OFF)
+option(ENABLE_UPSCALING "Enable video upscaling on supported renderers" OFF)
 
 option(MOONLIGHT_DESKTOP_USE_SYSTEM_PACKAGES "Use system-installed desktop dependencies instead of the bundled vcpkg toolchain" OFF)
 set(MOONLIGHT_DESKTOP_SYSTEM_PREFIX "" CACHE PATH "Optional prefix to prepend when resolving desktop system packages")

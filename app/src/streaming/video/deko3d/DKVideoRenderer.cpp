@@ -3,6 +3,7 @@
 #define FF_API_AVPICTURE
 
 #include "DKVideoRenderer.hpp"
+#include "Settings.hpp"
 #include <borealis/platforms/switch/switch_platform.hpp>
 
 #include <libavcodec/avcodec.h>
@@ -150,6 +151,16 @@ DKVideoRenderer::~DKVideoRenderer() {
     transformUniformBuffer.destroy();
 }
 
+bool DKVideoRenderer::shouldUseUpscaling() const {
+#ifdef SUPPORT_UPSCALING
+    return Settings::instance().upscaling() && m_frame_width > 0 &&
+           m_frame_height > 0 && m_screen_width > 0 && m_screen_height > 0 &&
+           (m_screen_width > m_frame_width || m_screen_height > m_frame_height);
+#else
+    return false;
+#endif
+}
+
 void DKVideoRenderer::checkAndInitialize(int width, int height, AVFrame* frame) {
     if (m_is_initialized)
         return;
@@ -187,6 +198,13 @@ void DKVideoRenderer::checkAndInitialize(int width, int height, AVFrame* frame) 
     // Load the shaders
     vertexShader.load(*pool_code, "romfs:/shaders/basic_vsh.dksh");
     fragmentShader.load(*pool_code, "romfs:/shaders/texture_fsh.dksh");
+#ifdef SUPPORT_UPSCALING
+    if (!upscalingFragmentShader.load(*pool_code,
+                                      "romfs:/shaders/upscaling_fsh.dksh")) {
+        brls::Logger::warning("{}: Failed to load Switch upscaling shader",
+                              __PRETTY_FUNCTION__);
+    }
+#endif
 
     // Load the vertex buffer
     vertexBuffer = pool_data->allocate(sizeof(QuadVertexData), alignof(Vertex));
@@ -240,6 +258,7 @@ void DKVideoRenderer::recordStaticCommands(AVFrame* frame) {
     AVColorSpace colorSpace = AVCOL_SPC_UNSPECIFIED;
     bool colorFull = false;
     getFrameColorInfo(frame, colorSpace, colorFull);
+    const bool useUpscaling = shouldUseUpscaling();
 
     Transformation transformState = {};
     const glm::vec3 colorOffset = gl_color_offset(colorFull);
@@ -287,10 +306,18 @@ void DKVideoRenderer::recordStaticCommands(AVFrame* frame) {
     dk::RasterizerState rasterizerState;
     dk::ColorState colorState;
     dk::ColorWriteState colorWriteState;
+    const CShader* activeFragmentShader = &fragmentShader;
+
+#ifdef SUPPORT_UPSCALING
+    if (useUpscaling && upscalingFragmentShader) {
+        activeFragmentShader = &upscalingFragmentShader;
+    }
+#endif
 
     cmdbuf.clear();
     cmdbuf.clearColor(0, DkColorMask_RGBA, 0.0f, 0.0f, 0.0f, 0.0f);
-    cmdbuf.bindShaders(DkStageFlag_GraphicsMask, {vertexShader, fragmentShader});
+    cmdbuf.bindShaders(DkStageFlag_GraphicsMask,
+                       {vertexShader, *activeFragmentShader});
     cmdbuf.bindTextures(DkStage_Fragment, 0,
                         dkMakeTextureHandle(lumaTextureId, 0));
     cmdbuf.bindTextures(DkStage_Fragment, 1,
@@ -312,6 +339,7 @@ void DKVideoRenderer::recordStaticCommands(AVFrame* frame) {
 
     m_color_space = colorSpace;
     m_color_full = colorFull;
+    m_upscaling_enabled = useUpscaling;
 }
 
 void DKVideoRenderer::updateRenderState(int width, int height, AVFrame* frame) {
@@ -325,8 +353,11 @@ void DKVideoRenderer::updateRenderState(int width, int height, AVFrame* frame) {
         m_screen_width != width || m_screen_height != height;
     const bool colorChanged =
         m_color_space != static_cast<int>(colorSpace) || m_color_full != colorFull;
+    const bool upscalingChanged =
+        m_upscaling_enabled != shouldUseUpscaling();
 
-    if (!frameSizeChanged && !screenSizeChanged && !colorChanged) {
+    if (!frameSizeChanged && !screenSizeChanged && !colorChanged &&
+        !upscalingChanged) {
         return;
     }
 

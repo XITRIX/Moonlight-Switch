@@ -94,6 +94,9 @@
                 
             <brls:BooleanCell
                 id="debug"/>
+
+            <brls:BooleanCell
+                id="upscaling"/>
                 
             <brls:BooleanCell
                 id="onscreen_log"/>

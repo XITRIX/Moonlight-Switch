@@ -145,6 +145,7 @@
         "resolution": "Auflösung",
         "resolution_native": "Nativ",
         "resolution_scale": "Skalierung",
+        "upscaling": "Upscale lower resolutions",
         "rumble_force": "Rumble force",
         "single_joycon": "Single Joycon",
         "stream_settings": "Streameinstellungen",

@@ -28,6 +28,7 @@ class DKVideoRenderer : public IVideoRenderer {
     void updateFrameMapping(AVFrame* frame);
     void updateFrameLayouts();
     void recordStaticCommands(AVFrame* frame);
+    [[nodiscard]] bool shouldUseUpscaling() const;
     void releaseImageSlots();
 
     bool m_is_initialized = false;
@@ -52,6 +53,9 @@ class DKVideoRenderer : public IVideoRenderer {
 
     CShader vertexShader;
     CShader fragmentShader;
+  #ifdef SUPPORT_UPSCALING
+    CShader upscalingFragmentShader;
+  #endif
 
     CMemPool::Handle vertexBuffer;
     CMemPool::Handle transformUniformBuffer;
@@ -78,6 +82,7 @@ class DKVideoRenderer : public IVideoRenderer {
     int chromaTextureId = -1;
     int m_color_space = -1;
     bool m_color_full = false;
+    bool m_upscaling_enabled = false;
 
     VideoRenderStats m_video_render_stats = {};
 };

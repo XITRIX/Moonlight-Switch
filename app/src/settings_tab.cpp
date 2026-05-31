@@ -92,6 +92,13 @@ SettingsTab::SettingsTab() {
         }
     });
 
+    upscaling->init("settings/upscaling"_i18n, Settings::instance().upscaling(),
+                    [](bool value) { Settings::instance().set_upscaling(value); });
+
+#ifndef SUPPORT_UPSCALING
+    upscaling->removeFromSuperView(true);
+#endif
+
     auto updateNativeResolutionScaleVisibility = [this]() {
         resolutionScale->setVisibility(
             resolution->getSelection() == 0 ? brls::Visibility::VISIBLE

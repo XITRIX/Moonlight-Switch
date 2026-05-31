@@ -65,5 +65,6 @@ class OptionsTab : public brls::Box {
     BRLS_BIND(brls::Header, mouseHeader, "mouse_speed_header");
     BRLS_BIND(brls::Slider, mouseSlider, "mouse_speed_slider");
     BRLS_BIND(brls::BooleanCell, debugButton, "debug");
+    BRLS_BIND(brls::BooleanCell, upscalingButton, "upscaling");
     BRLS_BIND(brls::BooleanCell, onscreenLogButton, "onscreen_log");
 };

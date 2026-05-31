@@ -223,6 +223,14 @@ OptionsTab::OptionsTab(StreamingView* streamView) : streamView(streamView) {
     debugButton->init(
         "streaming/debug_info"_i18n, streamView->draw_stats,
         [streamView](bool value) { streamView->draw_stats = value; });
+
+#ifdef SUPPORT_UPSCALING
+    upscalingButton->init(
+        "settings/upscaling"_i18n, Settings::instance().upscaling(),
+        [](bool value) { Settings::instance().set_upscaling(value); });
+#else
+    upscalingButton->removeFromSuperView(true);
+#endif
 }
 
 OptionsTab::~OptionsTab() { Settings::instance().save(); }

@@ -145,6 +145,7 @@
         "resolution": "解析度",
         "resolution_native": "原生",
         "resolution_scale": "縮放",
+        "upscaling": "Upscale lower resolutions",
         "rumble_force": "震動力度",
         "single_joycon": "單個Joycon",
         "stream_settings": "串流設定",

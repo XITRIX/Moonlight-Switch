@@ -36,6 +36,15 @@ else ()
     set(USE_GL_RENDERER ON)
 endif ()
 
+set(SUPPORT_UPSCALING OFF)
+if (ENABLE_UPSCALING)
+    if (PLATFORM_SWITCH AND USE_DEKO3D_RENDERER)
+        set(SUPPORT_UPSCALING ON)
+    else ()
+        message(FATAL_ERROR "ENABLE_UPSCALING=ON is only supported with the Switch deko3d renderer")
+    endif ()
+endif ()
+
 set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "${EXTERN_PATH}/cmake")
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${EXTERN_PATH}/cmake")
 #find_package(PkgConfig REQUIRED)
@@ -519,6 +528,10 @@ endif ()
 
 if (SUPPORT_HDR)
     add_definitions(-DSUPPORT_HDR)
+endif ()
+
+if (SUPPORT_UPSCALING)
+    add_definitions(-DSUPPORT_UPSCALING)
 endif ()
 
 if (PLATFORM_IOS OR PLATFORM_TVOS OR PLATFORM_VISIONOS)
