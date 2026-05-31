@@ -33,6 +33,12 @@
 
 using namespace brls::literals;
 
+namespace {
+void updateRcasStrengthSubtitle(brls::Header* header, float strength) {
+    header->setSubtitle(std::to_string(int(strength * 100.0f)) + "%");
+}
+}
+
 #if defined(__SWITCH__)
 std::vector<std::string> audio_backends {
     "Audren",
@@ -90,11 +96,25 @@ SettingsTab::SettingsTab() {
         }
     });
 
+#ifdef SUPPORT_UPSCALING
     upscaling->init("settings/upscaling"_i18n, Settings::instance().upscaling(),
                     [](bool value) { Settings::instance().set_upscaling(value); });
+    rcas->init("settings/rcas_sharpening"_i18n, Settings::instance().rcas(),
+               [](bool value) { Settings::instance().set_rcas(value); });
 
-#ifndef SUPPORT_UPSCALING
+    const float rcasStrength = Settings::instance().rcas_strength();
+    updateRcasStrengthSubtitle(rcasStrengthHeader, rcasStrength);
+    rcasStrengthSlider->getProgressEvent()->subscribe([this](float value) {
+        Settings::instance().set_rcas_strength(value);
+        updateRcasStrengthSubtitle(rcasStrengthHeader, value);
+    });
+    rcasStrengthSlider->setProgress(rcasStrength);
+#else
+    imageAdjustmentsHeader->removeFromSuperView(true);
     upscaling->removeFromSuperView(true);
+    rcas->removeFromSuperView(true);
+    rcasStrengthHeader->removeFromSuperView(true);
+    rcasStrengthSlider->removeFromSuperView(true);
 #endif
 
     auto updateNativeResolutionScaleVisibility = [this]() {

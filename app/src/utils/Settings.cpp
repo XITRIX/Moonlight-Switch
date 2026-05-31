@@ -269,6 +269,16 @@ void Settings::load() {
                 m_enable_upscaling = json_typeof(enable_upscaling) == JSON_TRUE;
             }
 
+            if (json_t* enable_rcas = json_object_get(settings, "enable_rcas")) {
+                m_enable_rcas = json_typeof(enable_rcas) == JSON_TRUE;
+            }
+
+            if (json_t* rcas_strength = json_object_get(settings, "rcas_strength")) {
+                if (json_typeof(rcas_strength) == JSON_INTEGER) {
+                    m_rcas_strength = std::clamp((int)json_integer_value(rcas_strength), 0, 100);
+                }
+            }
+
             if (json_t* click_by_tap = json_object_get(settings, "click_by_tap")) {
                 m_click_by_tap = json_typeof(click_by_tap) == JSON_TRUE;
             }
@@ -515,6 +525,8 @@ void Settings::save() {
             json_object_set_new(settings, "frames_queue_size", json_integer(m_frames_queue_size));
             json_object_set_new(settings, "enable_hdr", m_enable_hdr ? json_true() : json_false());
             json_object_set_new(settings, "enable_upscaling", m_enable_upscaling ? json_true() : json_false());
+            json_object_set_new(settings, "enable_rcas", m_enable_rcas ? json_true() : json_false());
+            json_object_set_new(settings, "rcas_strength", json_integer(m_rcas_strength));
             json_object_set_new(settings, "click_by_tap", m_click_by_tap ? json_true() : json_false());
             json_object_set_new(settings, "use_hw_decoding", m_use_hw_decoding ? json_true() : json_false());
             json_object_set_new(settings, "sops", m_sops ? json_true() : json_false());

@@ -10,7 +10,9 @@
 #include <libavutil/hwcontext_nvtegra.h>
 #include <libavutil/imgutils.h>
 
+#include <algorithm>
 #include <array>
+#include <cmath>
 #include <cstddef>
 
 static const glm::vec3 gl_color_offset(bool color_full) {
@@ -65,7 +67,8 @@ namespace
     static constexpr unsigned StaticCmdSize = 0x10000;
     static constexpr unsigned UpdateCmdSliceSize = 0x1000;
 #ifdef SUPPORT_UPSCALING
-    static constexpr unsigned PresentCmdSliceSize = 0x4000;
+    static constexpr unsigned PresentCmdSliceSize = 0x8000;
+    static constexpr float DefaultRcasStrength = 0.2f;
 #endif
 
     struct Transformation
@@ -86,6 +89,16 @@ namespace
                   "Unexpected std140 offset for offset");
     static_assert(offsetof(Transformation, uv_data) == 64,
                   "Unexpected std140 offset for uv_data");
+
+#ifdef SUPPORT_UPSCALING
+    struct RcasConstants
+    {
+        alignas(16) float sharpness[4];
+    };
+
+    static_assert(sizeof(RcasConstants) == 16,
+                  "RcasConstants must match std140 layout");
+#endif
 
     struct Vertex
     {
@@ -151,6 +164,7 @@ DKVideoRenderer::~DKVideoRenderer() {
     frameMappings.clear();
 #ifdef SUPPORT_UPSCALING
     releaseUpscalingResources();
+    rcasUniformBuffer.destroy();
 #endif
     releaseImageSlots();
     vertexBuffer.destroy();
@@ -166,6 +180,30 @@ bool DKVideoRenderer::shouldUseUpscaling() const {
     return false;
 #endif
 }
+
+#ifdef SUPPORT_UPSCALING
+bool DKVideoRenderer::shouldUseRcas() const {
+    return Settings::instance().rcas() && m_frame_width > 0 &&
+           m_frame_height > 0 && m_screen_width > 0 && m_screen_height > 0;
+}
+
+void DKVideoRenderer::updateRcasConstants() {
+    if (!rcasUniformBuffer) {
+        return;
+    }
+
+    const float requestedStrength =
+        std::clamp(Settings::instance().rcas_strength(), 0.0f, 1.0f);
+    if (requestedStrength == m_rcas_strength) {
+        return;
+    }
+
+    RcasConstants rcasConstants = {};
+    rcasConstants.sharpness[0] = requestedStrength;
+    memcpy(rcasUniformBuffer.getCpuAddr(), &rcasConstants, sizeof(rcasConstants));
+    m_rcas_strength = requestedStrength;
+}
+#endif
 
 void DKVideoRenderer::checkAndInitialize(int width, int height, AVFrame* frame) {
     if (m_is_initialized)
@@ -218,6 +256,10 @@ void DKVideoRenderer::checkAndInitialize(int width, int height, AVFrame* frame) 
         brls::Logger::warning("{}: Failed to load Switch upscaling shader",
                               __PRETTY_FUNCTION__);
     }
+    if (!rcasFragmentShader.load(*pool_code, "romfs:/shaders/rcas_fsh.dksh")) {
+        brls::Logger::warning("{}: Failed to load Switch RCAS shader",
+                              __PRETTY_FUNCTION__);
+    }
     if (!upscalingPassFragmentShader.load(*pool_code,
                                           "romfs:/shaders/upscaling_pass_fsh.dksh")) {
         brls::Logger::warning("{}: Failed to load Switch upscaling pass shader",
@@ -232,17 +274,27 @@ void DKVideoRenderer::checkAndInitialize(int width, int height, AVFrame* frame) 
     // Load the transform buffer
     transformUniformBuffer =
         pool_data->allocate(sizeof(Transformation), DK_UNIFORM_BUF_ALIGNMENT);
+#ifdef SUPPORT_UPSCALING
+    rcasUniformBuffer =
+        pool_data->allocate(sizeof(RcasConstants), DK_UNIFORM_BUF_ALIGNMENT);
+
+    RcasConstants rcasConstants = {};
+    rcasConstants.sharpness[0] = DefaultRcasStrength;
+    memcpy(rcasUniformBuffer.getCpuAddr(), &rcasConstants, sizeof(rcasConstants));
+    m_rcas_strength = DefaultRcasStrength;
+#endif
 
     // Allocate image indexes for planes
     lumaTextureId = vctx->allocateImageIndex();
     chromaTextureId = vctx->allocateImageIndex();
 #ifdef SUPPORT_UPSCALING
     upscalingTextureId = vctx->allocateImageIndex();
+    rcasTextureId = vctx->allocateImageIndex();
 #endif
 
     if (lumaTextureId < 0 || chromaTextureId < 0
 #ifdef SUPPORT_UPSCALING
-        || upscalingTextureId < 0
+        || upscalingTextureId < 0 || rcasTextureId < 0
 #endif
     ) {
         brls::Logger::error("{}: Failed to reserve image descriptor slots",
@@ -258,6 +310,8 @@ void DKVideoRenderer::checkAndInitialize(int width, int height, AVFrame* frame) 
 #ifdef SUPPORT_UPSCALING
     brls::Logger::debug("{}: Upscaling texture ID {}", __PRETTY_FUNCTION__,
                         upscalingTextureId);
+    brls::Logger::debug("{}: RCAS texture ID {}", __PRETTY_FUNCTION__,
+                        rcasTextureId);
 #endif
 
     updateFrameLayouts();
@@ -286,15 +340,18 @@ void DKVideoRenderer::updateFrameLayouts() {
 
 #ifdef SUPPORT_UPSCALING
 bool DKVideoRenderer::ensureUpscalingResources() {
-    if (!pool_images || upscalingTextureId < 0 || !upscalingFragmentShader ||
-        !upscalingPassFragmentShader || m_screen_width <= 0 ||
-        m_screen_height <= 0) {
+    if (!pool_images || upscalingTextureId < 0 || !upscalingPassFragmentShader ||
+        m_screen_width <= 0 || m_screen_height <= 0) {
         return false;
     }
 
+    const bool wantRcas = shouldUseRcas() && rcasTextureId >= 0 &&
+                          rcasFragmentShader && rcasUniformBuffer;
+
     const bool sizeChanged = m_upscaling_target_width != m_screen_width ||
                              m_upscaling_target_height != m_screen_height;
-    if (!sizeChanged && upscalingTargetHandle) {
+    const bool rcasUsageChanged = wantRcas != static_cast<bool>(rcasTargetHandle);
+    if (!sizeChanged && !rcasUsageChanged && upscalingTargetHandle) {
         return true;
     }
 
@@ -321,11 +378,31 @@ bool DKVideoRenderer::ensureUpscalingResources() {
                                     upscalingTargetHandle.getOffset());
     upscalingTargetDesc.initialize(upscalingTargetImage);
 
+    if (wantRcas) {
+        rcasTargetLayout = upscalingTargetLayout;
+        rcasTargetHandle = pool_images->allocate(rcasTargetLayout.getSize(),
+                                                 rcasTargetLayout.getAlignment());
+        if (!rcasTargetHandle) {
+            brls::Logger::warning("{}: Failed to allocate RCAS render target, falling back to EASU-only post pass",
+                                  __PRETTY_FUNCTION__);
+        } else {
+            rcasTargetImage.initialize(rcasTargetLayout,
+                                       rcasTargetHandle.getMemBlock(),
+                                       rcasTargetHandle.getOffset());
+            rcasTargetDesc.initialize(rcasTargetImage);
+        }
+    }
+
     updateCmdMemRing.begin(updateCmdbuf);
     const bool updated = vctx->updateImageDescriptor(updateCmdbuf,
                                                      upscalingTextureId,
                                                      upscalingTargetDesc);
-    if (updated) {
+    bool updatedRcas = true;
+    if (wantRcas && rcasTargetHandle) {
+        updatedRcas = vctx->updateImageDescriptor(updateCmdbuf, rcasTextureId,
+                                                  rcasTargetDesc);
+    }
+    if (updated || (wantRcas && updatedRcas)) {
         vctx->invalidateImageDescriptors(updateCmdbuf);
     }
     queue.submitCommands(updateCmdMemRing.end(updateCmdbuf));
@@ -337,6 +414,14 @@ bool DKVideoRenderer::ensureUpscalingResources() {
         return false;
     }
 
+    if (wantRcas && rcasTargetHandle && !updatedRcas) {
+        brls::Logger::warning("{}: Failed to bind RCAS descriptor, falling back to EASU-only post pass",
+                              __PRETTY_FUNCTION__);
+        rcasTargetHandle.destroy();
+        rcasTargetImage = dk::Image{};
+        rcasTargetLayout = dk::ImageLayout{};
+        rcasTargetDesc = dk::ImageDescriptor{};
+    }
     m_upscaling_target_width = m_screen_width;
     m_upscaling_target_height = m_screen_height;
     return true;
@@ -347,14 +432,23 @@ void DKVideoRenderer::releaseUpscalingResources() {
     upscalingTargetImage = dk::Image{};
     upscalingTargetLayout = dk::ImageLayout{};
     upscalingTargetDesc = dk::ImageDescriptor{};
+    rcasTargetHandle.destroy();
+    rcasTargetImage = dk::Image{};
+    rcasTargetLayout = dk::ImageLayout{};
+    rcasTargetDesc = dk::ImageDescriptor{};
     m_upscaling_target_width = 0;
     m_upscaling_target_height = 0;
+    m_rcas_enabled = false;
 }
 
 void DKVideoRenderer::submitUpscalingPresentPass() {
-    if (!m_upscaling_enabled || upscalingTextureId < 0 ||
+    if ((!m_upscaling_enabled && !m_rcas_enabled) || upscalingTextureId < 0 ||
         !upscalingTargetHandle || !upscalingPassFragmentShader) {
         return;
+    }
+
+    if (m_rcas_enabled) {
+        updateRcasConstants();
     }
 
     dk::Image* framebuffer = vctx->getFramebuffer();
@@ -371,6 +465,41 @@ void DKVideoRenderer::submitUpscalingPresentPass() {
     dk::DepthStencilState depthStencilState;
     dk::ColorState colorState;
     dk::ColorWriteState colorWriteState;
+    int finalTextureId = upscalingTextureId;
+
+    presentCmdbuf.bindRasterizerState(rasterizerState);
+    presentCmdbuf.bindDepthStencilState(
+        depthStencilState.setDepthTestEnable(false)
+            .setDepthWriteEnable(false)
+            .setStencilTestEnable(false));
+    presentCmdbuf.bindColorState(colorState);
+    presentCmdbuf.bindColorWriteState(colorWriteState);
+    presentCmdbuf.bindVtxBuffer(0, vertexBuffer.getGpuAddr(),
+                                vertexBuffer.getSize());
+    presentCmdbuf.bindVtxAttribState(VertexAttribState);
+    presentCmdbuf.bindVtxBufferState(VertexBufferState);
+
+    if (m_rcas_enabled && rcasTextureId >= 0 && rcasTargetHandle &&
+        rcasFragmentShader && rcasUniformBuffer) {
+        dk::ImageView rcasTarget{rcasTargetImage};
+
+        presentCmdbuf.bindRenderTargets(&rcasTarget);
+        presentCmdbuf.setViewports(
+            0, {{{0.0f, 0.0f, static_cast<float>(m_screen_width),
+                  static_cast<float>(m_screen_height), 0.0f, 1.0f}}});
+        presentCmdbuf.setScissors(
+            0, {{{0, 0, static_cast<uint32_t>(m_screen_width),
+                  static_cast<uint32_t>(m_screen_height)}}});
+        presentCmdbuf.bindShaders(DkStageFlag_GraphicsMask,
+                                  {vertexShader, rcasFragmentShader});
+        presentCmdbuf.bindTextures(DkStage_Fragment, 0,
+                                   dkMakeTextureHandle(upscalingTextureId, 0));
+        presentCmdbuf.bindUniformBuffer(DkStage_Fragment, 0,
+                                        rcasUniformBuffer.getGpuAddr(),
+                                        rcasUniformBuffer.getSize());
+        presentCmdbuf.draw(DkPrimitive_Quads, QuadVertexData.size(), 1, 0, 0);
+        finalTextureId = rcasTextureId;
+    }
 
     presentCmdbuf.bindRenderTargets(&colorTarget, &depthTarget);
     presentCmdbuf.setViewports(
@@ -379,21 +508,10 @@ void DKVideoRenderer::submitUpscalingPresentPass() {
     presentCmdbuf.setScissors(
         0, {{{0, 0, static_cast<uint32_t>(m_screen_width),
               static_cast<uint32_t>(m_screen_height)}}});
-    presentCmdbuf.bindRasterizerState(rasterizerState);
-    presentCmdbuf.bindDepthStencilState(
-        depthStencilState.setDepthTestEnable(false)
-            .setDepthWriteEnable(false)
-            .setStencilTestEnable(false));
-    presentCmdbuf.bindColorState(colorState);
-    presentCmdbuf.bindColorWriteState(colorWriteState);
     presentCmdbuf.bindShaders(DkStageFlag_GraphicsMask,
                               {vertexShader, upscalingPassFragmentShader});
     presentCmdbuf.bindTextures(DkStage_Fragment, 0,
-                               dkMakeTextureHandle(upscalingTextureId, 0));
-    presentCmdbuf.bindVtxBuffer(0, vertexBuffer.getGpuAddr(),
-                                vertexBuffer.getSize());
-    presentCmdbuf.bindVtxAttribState(VertexAttribState);
-    presentCmdbuf.bindVtxBufferState(VertexBufferState);
+                               dkMakeTextureHandle(finalTextureId, 0));
     presentCmdbuf.draw(DkPrimitive_Quads, QuadVertexData.size(), 1, 0, 0);
 
     queue.submitCommands(presentCmdMemRing.end(presentCmdbuf));
@@ -404,12 +522,20 @@ void DKVideoRenderer::recordStaticCommands(AVFrame* frame) {
     AVColorSpace colorSpace = AVCOL_SPC_UNSPECIFIED;
     bool colorFull = false;
     getFrameColorInfo(frame, colorSpace, colorFull);
-    bool useUpscaling = shouldUseUpscaling();
+    const bool requestedUpscaling = shouldUseUpscaling();
 #ifdef SUPPORT_UPSCALING
-    if (useUpscaling && !ensureUpscalingResources()) {
+    const bool requestedRcas = shouldUseRcas();
+#else
+    const bool requestedRcas = false;
+#endif
+    bool useUpscaling = requestedUpscaling;
+    bool useRcas = requestedRcas;
+#ifdef SUPPORT_UPSCALING
+    if ((useUpscaling || useRcas) && !ensureUpscalingResources()) {
         brls::Logger::warning("{}: Falling back to direct presentation path",
                               __PRETTY_FUNCTION__);
         useUpscaling = false;
+        useRcas = false;
     }
 #endif
 
@@ -457,6 +583,7 @@ void DKVideoRenderer::recordStaticCommands(AVFrame* frame) {
     }
 
     dk::RasterizerState rasterizerState;
+    dk::DepthStencilState depthStencilState;
     dk::ColorState colorState;
     dk::ColorWriteState colorWriteState;
     const CShader* activeFragmentShader = &fragmentShader;
@@ -469,7 +596,7 @@ void DKVideoRenderer::recordStaticCommands(AVFrame* frame) {
 
     cmdbuf.clear();
 #ifdef SUPPORT_UPSCALING
-    if (useUpscaling) {
+    if (useUpscaling || useRcas) {
         dk::ImageView upscalingTarget{upscalingTargetImage};
         cmdbuf.bindRenderTargets(&upscalingTarget);
         cmdbuf.setViewports(
@@ -494,6 +621,10 @@ void DKVideoRenderer::recordStaticCommands(AVFrame* frame) {
                          transformUniformBuffer.getSize(), 0,
                          sizeof(transformState), &transformState);
     cmdbuf.bindRasterizerState(rasterizerState);
+    cmdbuf.bindDepthStencilState(
+        depthStencilState.setDepthTestEnable(false)
+            .setDepthWriteEnable(false)
+            .setStencilTestEnable(false));
     cmdbuf.bindColorState(colorState);
     cmdbuf.bindColorWriteState(colorWriteState);
     cmdbuf.bindVtxBuffer(0, vertexBuffer.getGpuAddr(), vertexBuffer.getSize());
@@ -505,6 +636,12 @@ void DKVideoRenderer::recordStaticCommands(AVFrame* frame) {
     m_color_space = colorSpace;
     m_color_full = colorFull;
     m_upscaling_enabled = useUpscaling;
+    m_upscaling_requested = requestedUpscaling;
+    m_rcas_requested = requestedRcas;
+#ifdef SUPPORT_UPSCALING
+    m_rcas_enabled = useRcas && rcasTargetHandle && rcasFragmentShader &&
+                     rcasUniformBuffer;
+#endif
 }
 
 void DKVideoRenderer::updateRenderState(int width, int height, AVFrame* frame) {
@@ -518,11 +655,18 @@ void DKVideoRenderer::updateRenderState(int width, int height, AVFrame* frame) {
         m_screen_width != width || m_screen_height != height;
     const bool colorChanged =
         m_color_space != static_cast<int>(colorSpace) || m_color_full != colorFull;
-    const bool upscalingChanged =
-        m_upscaling_enabled != shouldUseUpscaling();
+    const bool requestedUpscaling =
+        Settings::instance().upscaling() && frame->width > 0 && frame->height > 0 &&
+        width > 0 && height > 0 &&
+        (width > frame->width || height > frame->height);
+    const bool requestedRcas =
+        Settings::instance().rcas() && frame->width > 0 && frame->height > 0 &&
+        width > 0 && height > 0;
+    const bool upscalingChanged = m_upscaling_requested != requestedUpscaling;
+    const bool rcasChanged = m_rcas_requested != requestedRcas;
 
     if (!frameSizeChanged && !screenSizeChanged && !colorChanged &&
-        !upscalingChanged) {
+        !upscalingChanged && !rcasChanged) {
         return;
     }
 
@@ -639,6 +783,11 @@ void DKVideoRenderer::releaseImageSlots() {
         vctx->freeImageIndex(upscalingTextureId);
         upscalingTextureId = -1;
     }
+
+    if (rcasTextureId >= 0) {
+        vctx->freeImageIndex(rcasTextureId);
+        rcasTextureId = -1;
+    }
 #endif
 }
 
@@ -664,9 +813,11 @@ void DKVideoRenderer::draw(NVGcontext* vg, int width, int height, AVFrame* frame
     if (cmdlist != 0) {
         queue.submitCommands(cmdlist);
 #ifdef SUPPORT_UPSCALING
-        if (m_upscaling_enabled) {
-            queue.waitIdle();
+        if (m_upscaling_enabled || m_rcas_enabled) {
+            vctx->queueSignalFence(&upscalingFence);
+            vctx->queueWaitFence(&upscalingFence);
             submitUpscalingPresentPass();
+            vctx->queueFlush();
         }
 #endif
     }

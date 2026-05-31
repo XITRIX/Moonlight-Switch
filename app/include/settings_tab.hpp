@@ -16,7 +16,11 @@ class SettingsTab : public brls::Box {
 
     BRLS_BIND(brls::SelectorCell, resolution, "resolution");
     BRLS_BIND(brls::SelectorCell, resolutionScale, "resolution_scale");
+    BRLS_BIND(brls::Header, imageAdjustmentsHeader, "image_adjustments_header");
     BRLS_BIND(brls::BooleanCell, upscaling, "upscaling");
+    BRLS_BIND(brls::BooleanCell, rcas, "rcas");
+    BRLS_BIND(brls::Header, rcasStrengthHeader, "rcas_strength_header");
+    BRLS_BIND(brls::Slider, rcasStrengthSlider, "rcas_strength_slider");
     BRLS_BIND(brls::SelectorCell, fps, "fps");
     BRLS_BIND(brls::SelectorCell, codec, "codec");
     BRLS_BIND(brls::BooleanCell, requestHdr, "request_hdr");

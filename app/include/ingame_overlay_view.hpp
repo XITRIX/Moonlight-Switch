@@ -64,7 +64,11 @@ class OptionsTab : public brls::Box {
     BRLS_BIND(brls::BooleanCell, swapStickToDpad, "swap_stick_to_dpad");
     BRLS_BIND(brls::Header, mouseHeader, "mouse_speed_header");
     BRLS_BIND(brls::Slider, mouseSlider, "mouse_speed_slider");
+    BRLS_BIND(brls::Header, imageAdjustmentsHeader, "image_adjustments_header");
     BRLS_BIND(brls::BooleanCell, debugButton, "debug");
     BRLS_BIND(brls::BooleanCell, upscalingButton, "upscaling");
+    BRLS_BIND(brls::BooleanCell, rcasButton, "rcas");
+    BRLS_BIND(brls::Header, rcasStrengthHeader, "rcas_strength_header");
+    BRLS_BIND(brls::Slider, rcasStrengthSlider, "rcas_strength_slider");
     BRLS_BIND(brls::BooleanCell, onscreenLogButton, "onscreen_log");
 };

@@ -30,9 +30,6 @@
 
             <brls:SelectorCell
                 id="resolution_scale"/>
-
-            <brls:BooleanCell
-                id="upscaling"/>
                 
             <brls:SelectorCell
                 id="codec"/>
@@ -54,6 +51,30 @@
                 
             <brls:Slider
                 id="slider"
+                width="auto"
+                height="84"
+                grow="1"/>
+
+            <brls:Header
+                id="image_adjustments_header"
+                title="@i18n/settings/image_adjustments"
+                paddingTop="60"
+                lineTop="1px"/>
+
+            <brls:BooleanCell
+                id="upscaling"/>
+
+            <brls:BooleanCell
+                id="rcas"/>
+
+            <brls:Header
+                id="rcas_strength_header"
+                title="@i18n/settings/rcas_strength"
+                subtitle="20%"
+                paddingTop="60"/>
+
+            <brls:Slider
+                id="rcas_strength_slider"
                 width="auto"
                 height="84"
                 grow="1"/>

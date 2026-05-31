@@ -153,6 +153,31 @@ class Settings : public Singleton<Settings> {
         }
         void set_upscaling(bool upscaling) { m_enable_upscaling = upscaling; }
 
+        [[nodiscard]] bool rcas() const {
+        #ifdef SUPPORT_UPSCALING
+            return m_enable_rcas;
+        #else
+            return false;
+        #endif
+        }
+        void set_rcas(bool rcas) { m_enable_rcas = rcas; }
+
+        [[nodiscard]] float rcas_strength() const {
+        #ifdef SUPPORT_UPSCALING
+            return static_cast<float>(m_rcas_strength) / 100.0f;
+        #else
+            return 0.2f;
+        #endif
+        }
+        void set_rcas_strength(float strength) {
+            if (strength < 0.0f)
+                strength = 0.0f;
+            else if (strength > 1.0f)
+                strength = 1.0f;
+
+            m_rcas_strength = static_cast<int>(strength * 100.0f);
+        }
+
     [[nodiscard]] bool click_by_tap() const { return m_click_by_tap; }
     void set_click_by_tap(bool click_by_tap) { m_click_by_tap = click_by_tap; }
 
@@ -260,6 +285,8 @@ class Settings : public Singleton<Settings> {
     int m_bitrate = 10000;
     bool m_enable_hdr = false;
     bool m_enable_upscaling = false;
+    bool m_enable_rcas = true;
+    int m_rcas_strength = 20;
     bool m_click_by_tap = false;
     int m_decoder_threads = 4;
     int m_frames_queue_size = 3;

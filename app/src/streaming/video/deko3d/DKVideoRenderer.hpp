@@ -30,7 +30,9 @@ class DKVideoRenderer : public IVideoRenderer {
     void recordStaticCommands(AVFrame* frame);
     [[nodiscard]] bool shouldUseUpscaling() const;
 #ifdef SUPPORT_UPSCALING
+    [[nodiscard]] bool shouldUseRcas() const;
     [[nodiscard]] bool ensureUpscalingResources();
+    void updateRcasConstants();
     void releaseUpscalingResources();
     void submitUpscalingPresentPass();
 #endif
@@ -66,11 +68,16 @@ class DKVideoRenderer : public IVideoRenderer {
     CShader fragmentShader;
   #ifdef SUPPORT_UPSCALING
     CShader upscalingFragmentShader;
+    CShader rcasFragmentShader;
     CShader upscalingPassFragmentShader;
   #endif
 
     CMemPool::Handle vertexBuffer;
     CMemPool::Handle transformUniformBuffer;
+  #ifdef SUPPORT_UPSCALING
+    CMemPool::Handle rcasUniformBuffer;
+    DkFence upscalingFence = {};
+  #endif
 
     dk::ImageLayout lumaMappingLayout;
     dk::ImageLayout chromaMappingLayout;
@@ -98,12 +105,23 @@ class DKVideoRenderer : public IVideoRenderer {
     dk::Image upscalingTargetImage;
     dk::ImageDescriptor upscalingTargetDesc;
     int upscalingTextureId = -1;
+    CMemPool::Handle rcasTargetHandle;
+    dk::ImageLayout rcasTargetLayout;
+    dk::Image rcasTargetImage;
+    dk::ImageDescriptor rcasTargetDesc;
+    int rcasTextureId = -1;
     int m_upscaling_target_width = 0;
     int m_upscaling_target_height = 0;
   #endif
     int m_color_space = -1;
     bool m_color_full = false;
     bool m_upscaling_enabled = false;
+  #ifdef SUPPORT_UPSCALING
+    bool m_rcas_enabled = false;
+    bool m_upscaling_requested = false;
+    bool m_rcas_requested = false;
+    float m_rcas_strength = 0.2f;
+  #endif
 
     VideoRenderStats m_video_render_stats = {};
 };
