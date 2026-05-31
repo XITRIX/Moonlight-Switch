@@ -29,6 +29,11 @@ class DKVideoRenderer : public IVideoRenderer {
     void updateFrameLayouts();
     void recordStaticCommands(AVFrame* frame);
     [[nodiscard]] bool shouldUseUpscaling() const;
+#ifdef SUPPORT_UPSCALING
+    [[nodiscard]] bool ensureUpscalingResources();
+    void releaseUpscalingResources();
+    void submitUpscalingPresentPass();
+#endif
     void releaseImageSlots();
 
     bool m_is_initialized = false;
@@ -42,19 +47,26 @@ class DKVideoRenderer : public IVideoRenderer {
     dk::Device dev;
     dk::Queue queue;
 
-    // std::optional<CMemPool> pool_images;
     std::optional<CMemPool> pool_code;
     std::optional<CMemPool> pool_data;
+#ifdef SUPPORT_UPSCALING
+    std::optional<CMemPool> pool_images;
+#endif
 
     dk::UniqueCmdBuf cmdbuf;
     dk::UniqueCmdBuf updateCmdbuf;
     CCmdMemRing<brls::FRAMEBUFFERS_COUNT> updateCmdMemRing;
+#ifdef SUPPORT_UPSCALING
+    dk::UniqueCmdBuf presentCmdbuf;
+    CCmdMemRing<brls::FRAMEBUFFERS_COUNT> presentCmdMemRing;
+#endif
     DkCmdList cmdlist = 0;
 
     CShader vertexShader;
     CShader fragmentShader;
   #ifdef SUPPORT_UPSCALING
     CShader upscalingFragmentShader;
+    CShader upscalingPassFragmentShader;
   #endif
 
     CMemPool::Handle vertexBuffer;
@@ -80,6 +92,15 @@ class DKVideoRenderer : public IVideoRenderer {
 
     int lumaTextureId = -1;
     int chromaTextureId = -1;
+  #ifdef SUPPORT_UPSCALING
+    CMemPool::Handle upscalingTargetHandle;
+    dk::ImageLayout upscalingTargetLayout;
+    dk::Image upscalingTargetImage;
+    dk::ImageDescriptor upscalingTargetDesc;
+    int upscalingTextureId = -1;
+    int m_upscaling_target_width = 0;
+    int m_upscaling_target_height = 0;
+  #endif
     int m_color_space = -1;
     bool m_color_full = false;
     bool m_upscaling_enabled = false;

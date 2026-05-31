@@ -51,10 +51,7 @@ SettingsTab::SettingsTab() {
     this->inflateFromXMLRes("xml/tabs/settings.xml");
 
     std::vector<std::string> resolutions = {
-        "settings/resolution_native"_i18n, "360p", "480p", "720p", "1080p",
-// #if !defined(PLATFORM_SWITCH)
-        "1440p"
-// #endif
+        "settings/resolution_native"_i18n, "360p", "480p", "540p", "720p", "1080p", "1440p"
     };
     resolution->setText("settings/resolution"_i18n);
     resolution->setData(resolutions);
@@ -62,9 +59,10 @@ SettingsTab::SettingsTab() {
         GET_SETTINGS(resolution, -1, 0);
         GET_SETTINGS(resolution, 360, 1);
         GET_SETTINGS(resolution, 480, 2);
-        GET_SETTINGS(resolution, 720, 3);
-        GET_SETTINGS(resolution, 1080, 4);
-        GET_SETTINGS(resolution, 1440, 5);
+        GET_SETTINGS(resolution, 540, 3);
+        GET_SETTINGS(resolution, 720, 4);
+        GET_SETTINGS(resolution, 1080, 5);
+        GET_SETTINGS(resolution, 1440, 6);
         DEFAULT;
     }
 
@@ -111,9 +109,10 @@ SettingsTab::SettingsTab() {
             SET_SETTING(0, set_resolution(-1));
             SET_SETTING(1, set_resolution(360));
             SET_SETTING(2, set_resolution(480));
-            SET_SETTING(3, set_resolution(720));
-            SET_SETTING(4, set_resolution(1080));
-            SET_SETTING(5, set_resolution(1440));
+            SET_SETTING(3, set_resolution(540));
+            SET_SETTING(4, set_resolution(720));
+            SET_SETTING(5, set_resolution(1080));
+            SET_SETTING(6, set_resolution(1440));
             DEFAULT;
         }
         updateNativeResolutionScaleVisibility();

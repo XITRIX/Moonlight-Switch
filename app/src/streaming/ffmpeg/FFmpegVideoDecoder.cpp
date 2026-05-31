@@ -356,9 +356,9 @@ int FFmpegVideoDecoder::setup(int video_format, int width, int height,
     brls::Logger::info(
         "FFmpeg: Setup with format: {}, width: {}, height: {}, fps: {}", format, width, height, redraw_rate);
 
-    // av_log_set_level(AV_LOG_WARNING);
-    av_log_set_level(AV_LOG_INFO);
-    av_log_set_callback(&ffmpegLog); // Uncomment to see FFMpeg logs
+    av_log_set_level(AV_LOG_WARNING);
+    // av_log_set_level(AV_LOG_INFO);
+    // av_log_set_callback(&ffmpegLog); // Uncomment to see FFMpeg logs
 #if LIBAVCODEC_VERSION_INT < AV_VERSION_INT(58, 10, 100)
     avcodec_register_all();
 #endif

@@ -64,6 +64,9 @@ namespace
 {
     static constexpr unsigned StaticCmdSize = 0x10000;
     static constexpr unsigned UpdateCmdSliceSize = 0x1000;
+#ifdef SUPPORT_UPSCALING
+    static constexpr unsigned PresentCmdSliceSize = 0x4000;
+#endif
 
     struct Transformation
     {
@@ -146,6 +149,9 @@ DKVideoRenderer::~DKVideoRenderer() {
     }
 
     frameMappings.clear();
+#ifdef SUPPORT_UPSCALING
+    releaseUpscalingResources();
+#endif
     releaseImageSlots();
     vertexBuffer.destroy();
     transformUniformBuffer.destroy();
@@ -185,6 +191,10 @@ void DKVideoRenderer::checkAndInitialize(int width, int height, AVFrame* frame) 
     pool_data.emplace(dev,
                       DkMemBlockFlags_CpuUncached | DkMemBlockFlags_GpuCached,
                       1 * 1024 * 1024);
+#ifdef SUPPORT_UPSCALING
+    pool_images.emplace(dev,
+                        DkMemBlockFlags_GpuCached | DkMemBlockFlags_Image);
+#endif
 
     // Static draw command buffer
     cmdbuf = dk::CmdBufMaker{dev}.create();
@@ -194,6 +204,10 @@ void DKVideoRenderer::checkAndInitialize(int width, int height, AVFrame* frame) 
     // Dynamic descriptor update command buffer with a tiny ring
     updateCmdbuf = dk::CmdBufMaker{dev}.create();
     updateCmdMemRing.allocate(*pool_data, UpdateCmdSliceSize);
+#ifdef SUPPORT_UPSCALING
+    presentCmdbuf = dk::CmdBufMaker{dev}.create();
+    presentCmdMemRing.allocate(*pool_data, PresentCmdSliceSize);
+#endif
 
     // Load the shaders
     vertexShader.load(*pool_code, "romfs:/shaders/basic_vsh.dksh");
@@ -202,6 +216,11 @@ void DKVideoRenderer::checkAndInitialize(int width, int height, AVFrame* frame) 
     if (!upscalingFragmentShader.load(*pool_code,
                                       "romfs:/shaders/upscaling_fsh.dksh")) {
         brls::Logger::warning("{}: Failed to load Switch upscaling shader",
+                              __PRETTY_FUNCTION__);
+    }
+    if (!upscalingPassFragmentShader.load(*pool_code,
+                                          "romfs:/shaders/upscaling_pass_fsh.dksh")) {
+        brls::Logger::warning("{}: Failed to load Switch upscaling pass shader",
                               __PRETTY_FUNCTION__);
     }
 #endif
@@ -217,8 +236,15 @@ void DKVideoRenderer::checkAndInitialize(int width, int height, AVFrame* frame) 
     // Allocate image indexes for planes
     lumaTextureId = vctx->allocateImageIndex();
     chromaTextureId = vctx->allocateImageIndex();
+#ifdef SUPPORT_UPSCALING
+    upscalingTextureId = vctx->allocateImageIndex();
+#endif
 
-    if (lumaTextureId < 0 || chromaTextureId < 0) {
+    if (lumaTextureId < 0 || chromaTextureId < 0
+#ifdef SUPPORT_UPSCALING
+        || upscalingTextureId < 0
+#endif
+    ) {
         brls::Logger::error("{}: Failed to reserve image descriptor slots",
                             __PRETTY_FUNCTION__);
         releaseImageSlots();
@@ -229,6 +255,10 @@ void DKVideoRenderer::checkAndInitialize(int width, int height, AVFrame* frame) 
                         lumaTextureId);
     brls::Logger::debug("{}: Chroma texture ID {}", __PRETTY_FUNCTION__,
                         chromaTextureId);
+#ifdef SUPPORT_UPSCALING
+    brls::Logger::debug("{}: Upscaling texture ID {}", __PRETTY_FUNCTION__,
+                        upscalingTextureId);
+#endif
 
     updateFrameLayouts();
     recordStaticCommands(frame);
@@ -254,11 +284,134 @@ void DKVideoRenderer::updateFrameLayouts() {
         .initialize(chromaMappingLayout);
 }
 
+#ifdef SUPPORT_UPSCALING
+bool DKVideoRenderer::ensureUpscalingResources() {
+    if (!pool_images || upscalingTextureId < 0 || !upscalingFragmentShader ||
+        !upscalingPassFragmentShader || m_screen_width <= 0 ||
+        m_screen_height <= 0) {
+        return false;
+    }
+
+    const bool sizeChanged = m_upscaling_target_width != m_screen_width ||
+                             m_upscaling_target_height != m_screen_height;
+    if (!sizeChanged && upscalingTargetHandle) {
+        return true;
+    }
+
+    releaseUpscalingResources();
+
+    dk::ImageLayoutMaker{dev}
+        .setType(DkImageType_2D)
+        .setFormat(DkImageFormat_RGBA8_Unorm)
+        .setDimensions(m_screen_width, m_screen_height, 1)
+        .setFlags(DkImageFlags_UsageRender | DkImageFlags_UsageLoadStore |
+                  DkImageFlags_Usage2DEngine)
+        .initialize(upscalingTargetLayout);
+
+    upscalingTargetHandle = pool_images->allocate(
+        upscalingTargetLayout.getSize(), upscalingTargetLayout.getAlignment());
+    if (!upscalingTargetHandle) {
+        brls::Logger::error("{}: Failed to allocate upscaling render target",
+                            __PRETTY_FUNCTION__);
+        return false;
+    }
+
+    upscalingTargetImage.initialize(upscalingTargetLayout,
+                                    upscalingTargetHandle.getMemBlock(),
+                                    upscalingTargetHandle.getOffset());
+    upscalingTargetDesc.initialize(upscalingTargetImage);
+
+    updateCmdMemRing.begin(updateCmdbuf);
+    const bool updated = vctx->updateImageDescriptor(updateCmdbuf,
+                                                     upscalingTextureId,
+                                                     upscalingTargetDesc);
+    if (updated) {
+        vctx->invalidateImageDescriptors(updateCmdbuf);
+    }
+    queue.submitCommands(updateCmdMemRing.end(updateCmdbuf));
+
+    if (!updated) {
+        brls::Logger::error("{}: Failed to bind upscaling render target descriptor",
+                            __PRETTY_FUNCTION__);
+        releaseUpscalingResources();
+        return false;
+    }
+
+    m_upscaling_target_width = m_screen_width;
+    m_upscaling_target_height = m_screen_height;
+    return true;
+}
+
+void DKVideoRenderer::releaseUpscalingResources() {
+    upscalingTargetHandle.destroy();
+    upscalingTargetImage = dk::Image{};
+    upscalingTargetLayout = dk::ImageLayout{};
+    upscalingTargetDesc = dk::ImageDescriptor{};
+    m_upscaling_target_width = 0;
+    m_upscaling_target_height = 0;
+}
+
+void DKVideoRenderer::submitUpscalingPresentPass() {
+    if (!m_upscaling_enabled || upscalingTextureId < 0 ||
+        !upscalingTargetHandle || !upscalingPassFragmentShader) {
+        return;
+    }
+
+    dk::Image* framebuffer = vctx->getFramebuffer();
+    dk::Image* depthBuffer = vctx->getDepthBuffer();
+    if (!framebuffer || !depthBuffer) {
+        return;
+    }
+
+    presentCmdMemRing.begin(presentCmdbuf);
+
+    dk::ImageView colorTarget{*framebuffer};
+    dk::ImageView depthTarget{*depthBuffer};
+    dk::RasterizerState rasterizerState;
+    dk::DepthStencilState depthStencilState;
+    dk::ColorState colorState;
+    dk::ColorWriteState colorWriteState;
+
+    presentCmdbuf.bindRenderTargets(&colorTarget, &depthTarget);
+    presentCmdbuf.setViewports(
+        0, {{{0.0f, 0.0f, static_cast<float>(m_screen_width),
+              static_cast<float>(m_screen_height), 0.0f, 1.0f}}});
+    presentCmdbuf.setScissors(
+        0, {{{0, 0, static_cast<uint32_t>(m_screen_width),
+              static_cast<uint32_t>(m_screen_height)}}});
+    presentCmdbuf.bindRasterizerState(rasterizerState);
+    presentCmdbuf.bindDepthStencilState(
+        depthStencilState.setDepthTestEnable(false)
+            .setDepthWriteEnable(false)
+            .setStencilTestEnable(false));
+    presentCmdbuf.bindColorState(colorState);
+    presentCmdbuf.bindColorWriteState(colorWriteState);
+    presentCmdbuf.bindShaders(DkStageFlag_GraphicsMask,
+                              {vertexShader, upscalingPassFragmentShader});
+    presentCmdbuf.bindTextures(DkStage_Fragment, 0,
+                               dkMakeTextureHandle(upscalingTextureId, 0));
+    presentCmdbuf.bindVtxBuffer(0, vertexBuffer.getGpuAddr(),
+                                vertexBuffer.getSize());
+    presentCmdbuf.bindVtxAttribState(VertexAttribState);
+    presentCmdbuf.bindVtxBufferState(VertexBufferState);
+    presentCmdbuf.draw(DkPrimitive_Quads, QuadVertexData.size(), 1, 0, 0);
+
+    queue.submitCommands(presentCmdMemRing.end(presentCmdbuf));
+}
+#endif
+
 void DKVideoRenderer::recordStaticCommands(AVFrame* frame) {
     AVColorSpace colorSpace = AVCOL_SPC_UNSPECIFIED;
     bool colorFull = false;
     getFrameColorInfo(frame, colorSpace, colorFull);
-    const bool useUpscaling = shouldUseUpscaling();
+    bool useUpscaling = shouldUseUpscaling();
+#ifdef SUPPORT_UPSCALING
+    if (useUpscaling && !ensureUpscalingResources()) {
+        brls::Logger::warning("{}: Falling back to direct presentation path",
+                              __PRETTY_FUNCTION__);
+        useUpscaling = false;
+    }
+#endif
 
     Transformation transformState = {};
     const glm::vec3 colorOffset = gl_color_offset(colorFull);
@@ -315,6 +468,18 @@ void DKVideoRenderer::recordStaticCommands(AVFrame* frame) {
 #endif
 
     cmdbuf.clear();
+#ifdef SUPPORT_UPSCALING
+    if (useUpscaling) {
+        dk::ImageView upscalingTarget{upscalingTargetImage};
+        cmdbuf.bindRenderTargets(&upscalingTarget);
+        cmdbuf.setViewports(
+            0, {{{0.0f, 0.0f, static_cast<float>(m_upscaling_target_width),
+                  static_cast<float>(m_upscaling_target_height), 0.0f, 1.0f}}});
+        cmdbuf.setScissors(
+            0, {{{0, 0, static_cast<uint32_t>(m_upscaling_target_width),
+                  static_cast<uint32_t>(m_upscaling_target_height)}}});
+    }
+#endif
     cmdbuf.clearColor(0, DkColorMask_RGBA, 0.0f, 0.0f, 0.0f, 0.0f);
     cmdbuf.bindShaders(DkStageFlag_GraphicsMask,
                        {vertexShader, *activeFragmentShader});
@@ -468,6 +633,13 @@ void DKVideoRenderer::releaseImageSlots() {
         vctx->freeImageIndex(chromaTextureId);
         chromaTextureId = -1;
     }
+
+#ifdef SUPPORT_UPSCALING
+    if (upscalingTextureId >= 0) {
+        vctx->freeImageIndex(upscalingTextureId);
+        upscalingTextureId = -1;
+    }
+#endif
 }
 
 int frames = 0;
@@ -491,6 +663,12 @@ void DKVideoRenderer::draw(NVGcontext* vg, int width, int height, AVFrame* frame
 
     if (cmdlist != 0) {
         queue.submitCommands(cmdlist);
+#ifdef SUPPORT_UPSCALING
+        if (m_upscaling_enabled) {
+            queue.waitIdle();
+            submitUpscalingPresentPass();
+        }
+#endif
     }
 
     frames++;
