@@ -14,6 +14,7 @@
 #include "streaming_input_overlay.hpp"
 #include "button_selecting_dialog.hpp"
 
+#include <cmath>
 #include <iomanip>
 #include <sstream>
 
@@ -34,8 +35,32 @@
 using namespace brls;
 
 namespace {
-void updateRcasStrengthSubtitle(brls::Header* header, float strength) {
-    header->setSubtitle(std::to_string(int(strength * 100.0f)) + "%");
+void updateStrengthControl(BooleanSliderCell* cell,
+                           bool enabled, const std::string& detailText) {
+    cell->setSliderVisibility(enabled ? brls::Visibility::VISIBLE
+                                      : brls::Visibility::GONE);
+    cell->setValueText(enabled ? detailText : "");
+}
+
+float sliderProgressToDitheringStrength(float progress) {
+    return static_cast<float>(int(progress * 9.0f + 0.5f) + 1);
+}
+
+float ditheringStrengthToSliderProgress(float strength) {
+    if (strength < 1.0f)
+        strength = 1.0f;
+    else if (strength > 10.0f)
+        strength = 10.0f;
+
+    return (strength - 1.0f) / 9.0f;
+}
+
+std::string getDitheringStrengthText(float strength) {
+    return std::to_string(int(strength));
+}
+
+std::string getRcasStrengthText(float strength) {
+    return std::to_string(int(strength * 100.0f)) + "%";
 }
 }
 
@@ -231,26 +256,60 @@ OptionsTab::OptionsTab(StreamingView* streamView) : streamView(streamView) {
         [streamView](bool value) { streamView->draw_stats = value; });
 
 #ifdef SUPPORT_UPSCALING
+    auto updateDitheringControls = [this](bool enabled) {
+        updateStrengthControl(ditheringButton, enabled,
+                              getDitheringStrengthText(
+                                  Settings::instance().dithering_strength()));
+    };
+    auto updateRcasControls = [this](bool enabled) {
+        updateStrengthControl(rcasButton, enabled,
+                              getRcasStrengthText(
+                                  Settings::instance().rcas_strength()));
+    };
+
+    ditheringButton->init(
+        "settings/dithering"_i18n, Settings::instance().dithering(),
+        [updateDitheringControls](bool value) {
+            Settings::instance().set_dithering(value);
+            updateDitheringControls(value);
+        });
+
+    const float ditheringStrength = Settings::instance().dithering_strength();
+    ditheringButton->getProgressEvent()->subscribe([this](float value) {
+        const float strength = sliderProgressToDitheringStrength(value);
+        Settings::instance().set_dithering_strength(strength);
+        updateStrengthControl(ditheringButton,
+                              Settings::instance().dithering(),
+                              getDitheringStrengthText(strength));
+    });
+    ditheringButton->setProgress(
+        ditheringStrengthToSliderProgress(ditheringStrength));
+    updateDitheringControls(Settings::instance().dithering());
+
     upscalingButton->init(
         "settings/upscaling"_i18n, Settings::instance().upscaling(),
         [](bool value) { Settings::instance().set_upscaling(value); });
     rcasButton->init(
         "settings/rcas_sharpening"_i18n, Settings::instance().rcas(),
-        [](bool value) { Settings::instance().set_rcas(value); });
+        [updateRcasControls](bool value) {
+            Settings::instance().set_rcas(value);
+            updateRcasControls(value);
+        });
 
     const float rcasStrength = Settings::instance().rcas_strength();
-    updateRcasStrengthSubtitle(rcasStrengthHeader, rcasStrength);
-    rcasStrengthSlider->getProgressEvent()->subscribe([this](float value) {
+    rcasButton->getProgressEvent()->subscribe([this](float value) {
         Settings::instance().set_rcas_strength(value);
-        updateRcasStrengthSubtitle(rcasStrengthHeader, value);
+        updateStrengthControl(rcasButton,
+                              Settings::instance().rcas(),
+                              getRcasStrengthText(value));
     });
-    rcasStrengthSlider->setProgress(rcasStrength);
+    rcasButton->setProgress(rcasStrength);
+    updateRcasControls(Settings::instance().rcas());
 #else
     imageAdjustmentsHeader->removeFromSuperView(true);
+    ditheringButton->removeFromSuperView(true);
     upscalingButton->removeFromSuperView(true);
     rcasButton->removeFromSuperView(true);
-    rcasStrengthHeader->removeFromSuperView(true);
-    rcasStrengthSlider->removeFromSuperView(true);
 #endif
 }
 

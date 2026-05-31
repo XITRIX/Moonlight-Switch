@@ -68,6 +68,7 @@ namespace
     static constexpr unsigned UpdateCmdSliceSize = 0x1000;
 #ifdef SUPPORT_UPSCALING
     static constexpr unsigned PresentCmdSliceSize = 0x8000;
+    static constexpr float DefaultDitheringStrength = 3.0f;
     static constexpr float DefaultRcasStrength = 0.2f;
 #endif
 
@@ -96,8 +97,15 @@ namespace
         alignas(16) float sharpness[4];
     };
 
+    struct DitheringConstants
+    {
+        alignas(16) float control[4];
+    };
+
     static_assert(sizeof(RcasConstants) == 16,
                   "RcasConstants must match std140 layout");
+    static_assert(sizeof(DitheringConstants) == 16,
+                  "DitheringConstants must match std140 layout");
 #endif
 
     struct Vertex
@@ -164,6 +172,7 @@ DKVideoRenderer::~DKVideoRenderer() {
     frameMappings.clear();
 #ifdef SUPPORT_UPSCALING
     releaseUpscalingResources();
+    ditheringUniformBuffer.destroy();
     rcasUniformBuffer.destroy();
 #endif
     releaseImageSlots();
@@ -182,8 +191,28 @@ bool DKVideoRenderer::shouldUseUpscaling() const {
 }
 
 #ifdef SUPPORT_UPSCALING
+bool DKVideoRenderer::shouldUseDithering() const {
+    return Settings::instance().dithering() && Settings::instance().dithering_strength() > 0.0f && m_frame_width > 0 &&
+           m_frame_height > 0 && m_screen_width > 0 && m_screen_height > 0;
+}
+
+void DKVideoRenderer::updateDitheringConstants() {
+    if (!ditheringUniformBuffer) {
+        return;
+    }
+
+    const float requestedStrength =
+        std::clamp(Settings::instance().dithering_strength(), 1.0f, 10.0f);
+    DitheringConstants ditheringConstants = {};
+    ditheringConstants.control[0] = m_dithering_enabled ? 1.0f : 0.0f;
+    ditheringConstants.control[1] = requestedStrength;
+    memcpy(ditheringUniformBuffer.getCpuAddr(), &ditheringConstants,
+           sizeof(ditheringConstants));
+    m_dithering_strength = requestedStrength;
+}
+
 bool DKVideoRenderer::shouldUseRcas() const {
-    return Settings::instance().rcas() && m_frame_width > 0 &&
+    return Settings::instance().rcas() && Settings::instance().rcas_strength() > 0.0f && m_frame_width > 0 &&
            m_frame_height > 0 && m_screen_width > 0 && m_screen_height > 0;
 }
 
@@ -275,8 +304,17 @@ void DKVideoRenderer::checkAndInitialize(int width, int height, AVFrame* frame) 
     transformUniformBuffer =
         pool_data->allocate(sizeof(Transformation), DK_UNIFORM_BUF_ALIGNMENT);
 #ifdef SUPPORT_UPSCALING
+    ditheringUniformBuffer =
+        pool_data->allocate(sizeof(DitheringConstants), DK_UNIFORM_BUF_ALIGNMENT);
     rcasUniformBuffer =
         pool_data->allocate(sizeof(RcasConstants), DK_UNIFORM_BUF_ALIGNMENT);
+
+    DitheringConstants ditheringConstants = {};
+    ditheringConstants.control[0] = 0.0f;
+    ditheringConstants.control[1] = DefaultDitheringStrength;
+    memcpy(ditheringUniformBuffer.getCpuAddr(), &ditheringConstants,
+           sizeof(ditheringConstants));
+    m_dithering_strength = DefaultDitheringStrength;
 
     RcasConstants rcasConstants = {};
     rcasConstants.sharpness[0] = DefaultRcasStrength;
@@ -442,10 +480,13 @@ void DKVideoRenderer::releaseUpscalingResources() {
 }
 
 void DKVideoRenderer::submitUpscalingPresentPass() {
-    if ((!m_upscaling_enabled && !m_rcas_enabled) || upscalingTextureId < 0 ||
+    if ((!m_dithering_enabled && !m_upscaling_enabled && !m_rcas_enabled) ||
+        upscalingTextureId < 0 ||
         !upscalingTargetHandle || !upscalingPassFragmentShader) {
         return;
     }
+
+    updateDitheringConstants();
 
     if (m_rcas_enabled) {
         updateRcasConstants();
@@ -512,6 +553,9 @@ void DKVideoRenderer::submitUpscalingPresentPass() {
                               {vertexShader, upscalingPassFragmentShader});
     presentCmdbuf.bindTextures(DkStage_Fragment, 0,
                                dkMakeTextureHandle(finalTextureId, 0));
+    presentCmdbuf.bindUniformBuffer(DkStage_Fragment, 0,
+                                    ditheringUniformBuffer.getGpuAddr(),
+                                    ditheringUniformBuffer.getSize());
     presentCmdbuf.draw(DkPrimitive_Quads, QuadVertexData.size(), 1, 0, 0);
 
     queue.submitCommands(presentCmdMemRing.end(presentCmdbuf));
@@ -522,18 +566,25 @@ void DKVideoRenderer::recordStaticCommands(AVFrame* frame) {
     AVColorSpace colorSpace = AVCOL_SPC_UNSPECIFIED;
     bool colorFull = false;
     getFrameColorInfo(frame, colorSpace, colorFull);
+#ifdef SUPPORT_UPSCALING
+    const bool requestedDithering = shouldUseDithering();
+#else
+    const bool requestedDithering = false;
+#endif
     const bool requestedUpscaling = shouldUseUpscaling();
 #ifdef SUPPORT_UPSCALING
     const bool requestedRcas = shouldUseRcas();
 #else
     const bool requestedRcas = false;
 #endif
+    bool useDithering = requestedDithering;
     bool useUpscaling = requestedUpscaling;
     bool useRcas = requestedRcas;
 #ifdef SUPPORT_UPSCALING
-    if ((useUpscaling || useRcas) && !ensureUpscalingResources()) {
+    if ((useDithering || useUpscaling || useRcas) && !ensureUpscalingResources()) {
         brls::Logger::warning("{}: Falling back to direct presentation path",
                               __PRETTY_FUNCTION__);
+        useDithering = false;
         useUpscaling = false;
         useRcas = false;
     }
@@ -596,7 +647,7 @@ void DKVideoRenderer::recordStaticCommands(AVFrame* frame) {
 
     cmdbuf.clear();
 #ifdef SUPPORT_UPSCALING
-    if (useUpscaling || useRcas) {
+    if (useDithering || useUpscaling || useRcas) {
         dk::ImageView upscalingTarget{upscalingTargetImage};
         cmdbuf.bindRenderTargets(&upscalingTarget);
         cmdbuf.setViewports(
@@ -635,7 +686,9 @@ void DKVideoRenderer::recordStaticCommands(AVFrame* frame) {
 
     m_color_space = colorSpace;
     m_color_full = colorFull;
+    m_dithering_enabled = useDithering;
     m_upscaling_enabled = useUpscaling;
+    m_dithering_requested = requestedDithering;
     m_upscaling_requested = requestedUpscaling;
     m_rcas_requested = requestedRcas;
 #ifdef SUPPORT_UPSCALING
@@ -655,6 +708,13 @@ void DKVideoRenderer::updateRenderState(int width, int height, AVFrame* frame) {
         m_screen_width != width || m_screen_height != height;
     const bool colorChanged =
         m_color_space != static_cast<int>(colorSpace) || m_color_full != colorFull;
+#ifdef SUPPORT_UPSCALING
+    const bool requestedDithering =
+        Settings::instance().dithering() && frame->width > 0 && frame->height > 0 &&
+        width > 0 && height > 0;
+#else
+    const bool requestedDithering = false;
+#endif
     const bool requestedUpscaling =
         Settings::instance().upscaling() && frame->width > 0 && frame->height > 0 &&
         width > 0 && height > 0 &&
@@ -662,11 +722,12 @@ void DKVideoRenderer::updateRenderState(int width, int height, AVFrame* frame) {
     const bool requestedRcas =
         Settings::instance().rcas() && frame->width > 0 && frame->height > 0 &&
         width > 0 && height > 0;
+    const bool ditheringChanged = m_dithering_requested != requestedDithering;
     const bool upscalingChanged = m_upscaling_requested != requestedUpscaling;
     const bool rcasChanged = m_rcas_requested != requestedRcas;
 
     if (!frameSizeChanged && !screenSizeChanged && !colorChanged &&
-        !upscalingChanged && !rcasChanged) {
+        !ditheringChanged && !upscalingChanged && !rcasChanged) {
         return;
     }
 
@@ -813,7 +874,7 @@ void DKVideoRenderer::draw(NVGcontext* vg, int width, int height, AVFrame* frame
     if (cmdlist != 0) {
         queue.submitCommands(cmdlist);
 #ifdef SUPPORT_UPSCALING
-        if (m_upscaling_enabled || m_rcas_enabled) {
+        if (m_dithering_enabled || m_upscaling_enabled || m_rcas_enabled) {
             vctx->queueSignalFence(&upscalingFence);
             vctx->queueWaitFence(&upscalingFence);
             submitUpscalingPresentPass();

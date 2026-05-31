@@ -30,8 +30,10 @@ class DKVideoRenderer : public IVideoRenderer {
     void recordStaticCommands(AVFrame* frame);
     [[nodiscard]] bool shouldUseUpscaling() const;
 #ifdef SUPPORT_UPSCALING
+    [[nodiscard]] bool shouldUseDithering() const;
     [[nodiscard]] bool shouldUseRcas() const;
     [[nodiscard]] bool ensureUpscalingResources();
+    void updateDitheringConstants();
     void updateRcasConstants();
     void releaseUpscalingResources();
     void submitUpscalingPresentPass();
@@ -75,6 +77,7 @@ class DKVideoRenderer : public IVideoRenderer {
     CMemPool::Handle vertexBuffer;
     CMemPool::Handle transformUniformBuffer;
   #ifdef SUPPORT_UPSCALING
+    CMemPool::Handle ditheringUniformBuffer;
     CMemPool::Handle rcasUniformBuffer;
     DkFence upscalingFence = {};
   #endif
@@ -115,11 +118,14 @@ class DKVideoRenderer : public IVideoRenderer {
   #endif
     int m_color_space = -1;
     bool m_color_full = false;
+    bool m_dithering_enabled = false;
     bool m_upscaling_enabled = false;
   #ifdef SUPPORT_UPSCALING
     bool m_rcas_enabled = false;
+    bool m_dithering_requested = false;
     bool m_upscaling_requested = false;
     bool m_rcas_requested = false;
+    float m_dithering_strength = 3.0f;
     float m_rcas_strength = 0.2f;
   #endif
 

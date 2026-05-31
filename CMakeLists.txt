@@ -165,6 +165,7 @@ file(GLOB MAIN_SRC CONFIGURE_DEPENDS
     app/src/streaming/audio/*.cpp
     app/src/streaming/ffmpeg/*.cpp
     app/src/streaming/switch/*.cpp
+    app/src/views/*.cpp
     app/src/utils/*.cpp)
 
 if (MOONLIGHT_APPLE_MOBILE_USE_MULTI_SDK)

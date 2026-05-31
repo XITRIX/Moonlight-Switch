@@ -153,6 +153,31 @@ class Settings : public Singleton<Settings> {
         }
         void set_upscaling(bool upscaling) { m_enable_upscaling = upscaling; }
 
+        [[nodiscard]] bool dithering() const {
+        #ifdef SUPPORT_UPSCALING
+            return m_enable_dithering;
+        #else
+            return false;
+        #endif
+        }
+        void set_dithering(bool dithering) { m_enable_dithering = dithering; }
+
+        [[nodiscard]] float dithering_strength() const {
+        #ifdef SUPPORT_UPSCALING
+            return static_cast<float>(m_dithering_strength);
+        #else
+            return 3.0f;
+        #endif
+        }
+        void set_dithering_strength(float strength) {
+            if (strength < 1.0f)
+                strength = 1.0f;
+            else if (strength > 10.0f)
+                strength = 10.0f;
+
+            m_dithering_strength = static_cast<int>(strength + 0.5f);
+        }
+
         [[nodiscard]] bool rcas() const {
         #ifdef SUPPORT_UPSCALING
             return m_enable_rcas;
@@ -285,6 +310,8 @@ class Settings : public Singleton<Settings> {
     int m_bitrate = 10000;
     bool m_enable_hdr = false;
     bool m_enable_upscaling = false;
+    bool m_enable_dithering = false;
+    int m_dithering_strength = 3;
     bool m_enable_rcas = true;
     int m_rcas_strength = 20;
     bool m_click_by_tap = false;

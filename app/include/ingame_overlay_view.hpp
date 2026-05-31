@@ -8,6 +8,7 @@
 #pragma once
 
 #include "streaming_view.hpp"
+#include "views/boolean_slider_cell.hpp"
 #include <borealis.hpp>
 
 // MARK: - Ingame Overlay View
@@ -65,9 +66,8 @@ class OptionsTab : public brls::Box {
     BRLS_BIND(brls::Header, mouseHeader, "mouse_speed_header");
     BRLS_BIND(brls::Slider, mouseSlider, "mouse_speed_slider");
     BRLS_BIND(brls::Header, imageAdjustmentsHeader, "image_adjustments_header");
-    BRLS_BIND(brls::BooleanCell, rcasButton, "rcas");
-    BRLS_BIND(brls::Header, rcasStrengthHeader, "rcas_strength_header");
-    BRLS_BIND(brls::Slider, rcasStrengthSlider, "rcas_strength_slider");
+    BRLS_BIND(BooleanSliderCell, ditheringButton, "dithering");
+    BRLS_BIND(BooleanSliderCell, rcasButton, "rcas");
     BRLS_BIND(brls::BooleanCell, debugButton, "debug");
     BRLS_BIND(brls::BooleanCell, upscalingButton, "upscaling");
     BRLS_BIND(brls::BooleanCell, onscreenLogButton, "onscreen_log");

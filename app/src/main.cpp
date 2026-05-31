@@ -21,6 +21,7 @@
 #include "main_activity.hpp"
 #include "main_tabs_view.hpp"
 #include "settings_tab.hpp"
+#include "views/boolean_slider_cell.hpp"
 
 #include "DiscoverManager.hpp"
 #include "MoonlightSession.hpp"
@@ -130,6 +131,7 @@ int main(int argc, char* argv[]) {
     brls::Application::setFPSStatus(false);
 
     // Register custom views (including tabs, which are views)
+    brls::Application::registerXMLView("BooleanSliderCell", BooleanSliderCell::create);
     brls::Application::registerXMLView("LinkCell", LinkCell::create);
 
     brls::Application::registerXMLView("MainTabs", MainTabs::create);

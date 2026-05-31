@@ -61,28 +61,18 @@
                 paddingTop="60"
                 lineTop="1px"/>
 
+            <BooleanSliderCell
+                id="dithering"/>
+
             <brls:BooleanCell
                 id="upscaling"/>
 
-            <brls:BooleanCell
+            <BooleanSliderCell
                 id="rcas"/>
-
-            <brls:Header
-                id="rcas_strength_header"
-                title="@i18n/settings/rcas_strength"
-                subtitle="20%"
-                paddingTop="60"/>
-
-            <brls:Slider
-                id="rcas_strength_slider"
-                width="auto"
-                height="84"
-                grow="1"/>
             
             <brls:Header
                 title="@i18n/settings/stream_settings"
-                paddingTop="60"
-                lineTop="1px"/>
+                paddingTop="60"/>
 
             <brls:SelectorCell
                 id="audio_backend"/>
