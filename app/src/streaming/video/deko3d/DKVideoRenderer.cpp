@@ -720,7 +720,8 @@ void DKVideoRenderer::updateRenderState(int width, int height, AVFrame* frame) {
         width > 0 && height > 0 &&
         (width > frame->width || height > frame->height);
     const bool requestedRcas =
-        Settings::instance().rcas() && frame->width > 0 && frame->height > 0 &&
+        Settings::instance().rcas() && Settings::instance().rcas_strength() > 0.0f &&
+        frame->width > 0 && frame->height > 0 &&
         width > 0 && height > 0;
     const bool ditheringChanged = m_dithering_requested != requestedDithering;
     const bool upscalingChanged = m_upscaling_requested != requestedUpscaling;
