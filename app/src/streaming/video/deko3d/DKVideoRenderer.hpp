@@ -36,7 +36,7 @@ class DKVideoRenderer : public IVideoRenderer {
     void updateDitheringConstants();
     void updateRcasConstants();
     void releaseUpscalingResources();
-    void submitUpscalingPresentPass();
+    [[nodiscard]] bool submitUpscalingPresentPass();
 #endif
     void releaseImageSlots();
 

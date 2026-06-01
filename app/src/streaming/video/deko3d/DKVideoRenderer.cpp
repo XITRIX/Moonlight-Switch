@@ -12,6 +12,7 @@
 
 #include <algorithm>
 #include <array>
+#include <chrono>
 #include <cmath>
 #include <cstddef>
 
@@ -64,6 +65,8 @@ static enum AVColorSpace to_av_colorspace(int colorspace) {
 
 namespace
 {
+    using PostProcessClock = std::chrono::steady_clock;
+
     static constexpr unsigned StaticCmdSize = 0x10000;
     static constexpr unsigned UpdateCmdSliceSize = 0x1000;
 #ifdef SUPPORT_UPSCALING
@@ -159,6 +162,12 @@ namespace
             colorSpace = to_av_colorspace(COLORSPACE_REC_601);
             break;
         }
+    }
+
+    uint64_t toMicroseconds(PostProcessClock::duration duration) {
+        return static_cast<uint64_t>(
+            std::chrono::duration_cast<std::chrono::microseconds>(duration)
+                .count());
     }
 }
 
@@ -479,11 +488,11 @@ void DKVideoRenderer::releaseUpscalingResources() {
     m_rcas_enabled = false;
 }
 
-void DKVideoRenderer::submitUpscalingPresentPass() {
+bool DKVideoRenderer::submitUpscalingPresentPass() {
     if ((!m_dithering_enabled && !m_upscaling_enabled && !m_rcas_enabled) ||
         upscalingTextureId < 0 ||
         !upscalingTargetHandle || !upscalingPassFragmentShader) {
-        return;
+        return false;
     }
 
     updateDitheringConstants();
@@ -495,7 +504,7 @@ void DKVideoRenderer::submitUpscalingPresentPass() {
     dk::Image* framebuffer = vctx->getFramebuffer();
     dk::Image* depthBuffer = vctx->getDepthBuffer();
     if (!framebuffer || !depthBuffer) {
-        return;
+        return false;
     }
 
     presentCmdMemRing.begin(presentCmdbuf);
@@ -522,6 +531,7 @@ void DKVideoRenderer::submitUpscalingPresentPass() {
 
     if (m_rcas_enabled && rcasTextureId >= 0 && rcasTargetHandle &&
         rcasFragmentShader && rcasUniformBuffer) {
+        const auto sharpeningStageStart = PostProcessClock::now();
         dk::ImageView rcasTarget{rcasTargetImage};
 
         presentCmdbuf.bindRenderTargets(&rcasTarget);
@@ -540,8 +550,13 @@ void DKVideoRenderer::submitUpscalingPresentPass() {
                                         rcasUniformBuffer.getSize());
         presentCmdbuf.draw(DkPrimitive_Quads, QuadVertexData.size(), 1, 0, 0);
         finalTextureId = rcasTextureId;
+
+        m_video_render_stats.total_sharpening_time +=
+            toMicroseconds(PostProcessClock::now() - sharpeningStageStart);
+        m_video_render_stats.sharpened_frames++;
     }
 
+    const auto ditheringStageStart = PostProcessClock::now();
     presentCmdbuf.bindRenderTargets(&colorTarget, &depthTarget);
     presentCmdbuf.setViewports(
         0, {{{0.0f, 0.0f, static_cast<float>(m_screen_width),
@@ -558,7 +573,14 @@ void DKVideoRenderer::submitUpscalingPresentPass() {
                                     ditheringUniformBuffer.getSize());
     presentCmdbuf.draw(DkPrimitive_Quads, QuadVertexData.size(), 1, 0, 0);
 
+    if (m_dithering_enabled) {
+        m_video_render_stats.total_dithering_time +=
+            toMicroseconds(PostProcessClock::now() - ditheringStageStart);
+        m_video_render_stats.dithered_frames++;
+    }
+
     queue.submitCommands(presentCmdMemRing.end(presentCmdbuf));
+    return true;
 }
 #endif
 
@@ -873,14 +895,33 @@ void DKVideoRenderer::draw(NVGcontext* vg, int width, int height, AVFrame* frame
     updateFrameMapping(frame);
 
     if (cmdlist != 0) {
-        queue.submitCommands(cmdlist);
 #ifdef SUPPORT_UPSCALING
         if (m_dithering_enabled || m_upscaling_enabled || m_rcas_enabled) {
+            const auto postProcessStart = PostProcessClock::now();
+            const auto upscalingStageStart = PostProcessClock::now();
+            queue.submitCommands(cmdlist);
             vctx->queueSignalFence(&upscalingFence);
             vctx->queueWaitFence(&upscalingFence);
-            submitUpscalingPresentPass();
+
+            if (m_upscaling_enabled) {
+                m_video_render_stats.total_upscaling_time +=
+                    toMicroseconds(PostProcessClock::now() - upscalingStageStart);
+                m_video_render_stats.upscaled_frames++;
+            }
+
+            const bool submittedPostProcess = submitUpscalingPresentPass();
             vctx->queueFlush();
+
+            if (submittedPostProcess) {
+                m_video_render_stats.total_post_process_time +=
+                    toMicroseconds(PostProcessClock::now() - postProcessStart);
+                m_video_render_stats.post_processed_frames++;
+            }
+        } else {
+            queue.submitCommands(cmdlist);
         }
+#else
+        queue.submitCommands(cmdlist);
 #endif
     }
 
@@ -901,6 +942,10 @@ VideoRenderStats* DKVideoRenderer::video_render_stats() {
     if (!m_video_render_stats.rendered_frames) {
         m_video_render_stats.rendered_fps = 0.0f;
         m_video_render_stats.rendering_time = 0.0f;
+        m_video_render_stats.post_processing_time = 0.0f;
+        m_video_render_stats.dithering_time = 0.0f;
+        m_video_render_stats.upscaling_time = 0.0f;
+        m_video_render_stats.sharpening_time = 0.0f;
         return &m_video_render_stats;
     }
 
@@ -913,6 +958,34 @@ VideoRenderStats* DKVideoRenderer::video_render_stats() {
     m_video_render_stats.rendering_time =
         (float)m_video_render_stats.total_render_time /
         (float)m_video_render_stats.rendered_frames;
+
+    m_video_render_stats.post_processing_time =
+        m_video_render_stats.post_processed_frames
+            ? ((float)m_video_render_stats.total_post_process_time /
+               (float)m_video_render_stats.post_processed_frames) /
+                  1000.0f
+            : 0.0f;
+
+    m_video_render_stats.dithering_time =
+        m_video_render_stats.dithered_frames
+            ? ((float)m_video_render_stats.total_dithering_time /
+               (float)m_video_render_stats.dithered_frames) /
+                  1000.0f
+            : 0.0f;
+
+    m_video_render_stats.upscaling_time =
+        m_video_render_stats.upscaled_frames
+            ? ((float)m_video_render_stats.total_upscaling_time /
+               (float)m_video_render_stats.upscaled_frames) /
+                  1000.0f
+            : 0.0f;
+
+    m_video_render_stats.sharpening_time =
+        m_video_render_stats.sharpened_frames
+            ? ((float)m_video_render_stats.total_sharpening_time /
+               (float)m_video_render_stats.sharpened_frames) /
+                  1000.0f
+            : 0.0f;
 
     return &m_video_render_stats;
 }

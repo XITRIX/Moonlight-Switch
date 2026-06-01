@@ -12,9 +12,21 @@ struct VideoRenderStats {
     // NOT TO USE, INTERMEDIATE VALUES
     uint32_t rendered_frames;
     uint64_t total_render_time;
+    uint32_t post_processed_frames;
+    uint64_t total_post_process_time;
+    uint32_t dithered_frames;
+    uint64_t total_dithering_time;
+    uint32_t upscaled_frames;
+    uint64_t total_upscaling_time;
+    uint32_t sharpened_frames;
+    uint64_t total_sharpening_time;
 
     float rendered_fps;
     float rendering_time;
+    float post_processing_time;
+    float dithering_time;
+    float upscaling_time;
+    float sharpening_time;
 
     uint64_t measurement_start_timestamp;
 };
