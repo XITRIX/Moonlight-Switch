@@ -348,14 +348,14 @@ void StreamingView::draw(NVGcontext* vg, float x, float y, float width,
 
         if (stats->video_render_stats.post_processed_frames > 0) {
             statistics += fmt::format(
-                "Average post-processing pass time: {:.{}f} ms (D:{:.{}f} | U:{:.{}f} | S:{:.{}f})\n"
-                "Post-processed frames: {} / {}\n",
+                "Average post-processing pass time: {:.{}f} ms (D:{:.{}f} | U:{:.{}f} | S:{:.{}f})\n",
+                /* "Post-processed frames: {} / {}\n", */
                 stats->video_render_stats.post_processing_time, 2,
                 stats->video_render_stats.dithering_time, 2,
                 stats->video_render_stats.upscaling_time, 2,
-                stats->video_render_stats.sharpening_time, 2,
-                stats->video_render_stats.post_processed_frames,
-                stats->video_render_stats.rendered_frames);
+                stats->video_render_stats.sharpening_time, 2
+                /*stats->video_render_stats.post_processed_frames, */
+                /*stats->video_render_stats.rendered_frames*/);
         }
 
         statistics += fmt::format("Frame holder push/get rate: {}\n"
