@@ -3,195 +3,209 @@
 layout (location = 0) in vec2 vTextureCoord;
 layout (location = 0) out vec4 outColor;
 
-layout (binding = 0) uniform sampler2D plane0;
-layout (binding = 1) uniform sampler2D plane1;
+layout (binding = 0) uniform sampler2D inputTexture;
 
-layout (std140, binding = 0) uniform Transformation
+layout (std140, binding = 0) uniform EasuConstants
 {
-    mat3 yuvmat;
-    vec3 offset;
-    vec4 uv_data;
+    uvec4 con0;
+    uvec4 con1;
+    uvec4 con2;
+    uvec4 con3;
 } u;
 
-float fastApproxReciprocal(float value)
+float APrxLoRcpF1(float a)
 {
-    return uintBitsToFloat(0x7ef07ebbu - floatBitsToUint(value));
+    return uintBitsToFloat(0x7ef07ebbu - floatBitsToUint(a));
 }
 
-float fastApproxRsqrt(float value)
+float APrxLoRsqF1(float a)
 {
-    return uintBitsToFloat(0x5f347d74u - (floatBitsToUint(value) >> 1u));
+    return uintBitsToFloat(0x5f347d74u - (floatBitsToUint(a) >> 1u));
 }
 
-void accumulateGradient(
-    inout vec2 direction,
-    inout float lengthAccumulator,
-    float weight,
-    float sampleA,
-    float sampleB,
-    float sampleC,
-    float sampleD,
-    float sampleE)
+float ARcpF1(float x)
 {
-    float gradientX0 = sampleD - sampleC;
-    float gradientX1 = sampleC - sampleB;
-    float gradientScaleX = max(abs(gradientX0), abs(gradientX1));
-    gradientScaleX = fastApproxReciprocal(max(gradientScaleX, 1e-4));
-
-    float directionX = sampleD - sampleB;
-    direction.x += directionX * weight;
-
-    float gradientLengthX = clamp(abs(directionX) * gradientScaleX, 0.0, 1.0);
-    lengthAccumulator += gradientLengthX * gradientLengthX * weight;
-
-    float gradientY0 = sampleE - sampleC;
-    float gradientY1 = sampleC - sampleA;
-    float gradientScaleY = max(abs(gradientY0), abs(gradientY1));
-    gradientScaleY = fastApproxReciprocal(max(gradientScaleY, 1e-4));
-
-    float directionY = sampleE - sampleA;
-    direction.y += directionY * weight;
-
-    float gradientLengthY = clamp(abs(directionY) * gradientScaleY, 0.0, 1.0);
-    lengthAccumulator += gradientLengthY * gradientLengthY * weight;
+    return 1.0 / x;
 }
 
-void accumulateTap(
-    inout float accumulatedColor,
-    inout float accumulatedWeight,
-    vec2 offsetFromPixel,
-    vec2 direction,
-    vec2 anisotropy,
-    float lobe,
-    float clipRadius,
-    float sampleValue)
+float ASatF1(float x)
 {
-    vec2 rotatedOffset;
-    rotatedOffset.x = offsetFromPixel.x * direction.x + offsetFromPixel.y * direction.y;
-    rotatedOffset.y = offsetFromPixel.x * (-direction.y) + offsetFromPixel.y * direction.x;
-    rotatedOffset *= anisotropy;
-
-    float distanceSquared = min(dot(rotatedOffset, rotatedOffset), clipRadius);
-    float lanczosCore = ((2.0 / 5.0) * distanceSquared) - 1.0;
-    float lanczosLobe = lobe * distanceSquared - 1.0;
-
-    lanczosCore *= lanczosCore;
-    lanczosLobe *= lanczosLobe;
-
-    float kernelWeight = ((25.0 / 16.0) * lanczosCore - (25.0 / 16.0 - 1.0)) * lanczosLobe;
-    accumulatedColor += sampleValue * kernelWeight;
-    accumulatedWeight += kernelWeight;
+    return clamp(x, 0.0, 1.0);
 }
 
-float reconstructLuma(vec2 uv)
+vec3 AMax3F3(vec3 x, vec3 y, vec3 z)
 {
-    vec2 sourceSize = vec2(textureSize(plane0, 0));
-    vec2 invSourceSize = 1.0 / sourceSize;
-    vec2 sourcePos = uv * sourceSize - vec2(0.5);
-    vec2 basePos = floor(sourcePos);
-    vec2 fracPos = sourcePos - basePos;
+    return max(x, max(y, z));
+}
 
-    vec4 gatherA = textureGather(plane0, basePos * invSourceSize);
-    vec4 gatherB = textureGather(plane0, (basePos + vec2(2.0, 0.0)) * invSourceSize);
-    vec4 gatherC = textureGather(plane0, (basePos + vec2(0.0, 2.0)) * invSourceSize);
-    vec4 gatherD = textureGather(plane0, (basePos + vec2(2.0, 2.0)) * invSourceSize);
+vec3 AMin3F3(vec3 x, vec3 y, vec3 z)
+{
+    return min(x, min(y, z));
+}
 
-    float sampleB = gatherA.z;
-    float sampleC = gatherB.w;
-    float sampleE = gatherA.x;
-    float sampleF = gatherA.y;
-    float sampleG = gatherB.x;
-    float sampleH = gatherB.y;
-    float sampleI = gatherC.w;
-    float sampleJ = gatherC.z;
-    float sampleK = gatherD.w;
-    float sampleL = gatherD.z;
-    float sampleN = gatherC.y;
-    float sampleO = gatherD.x;
+ivec2 FsrEasuClampCoord(ivec2 p)
+{
+    ivec2 size = textureSize(inputTexture, 0);
+    return clamp(p, ivec2(0), size - ivec2(1));
+}
 
-    float minCenter = min(min(sampleF, sampleG), min(sampleJ, sampleK));
-    float maxCenter = max(max(sampleF, sampleG), max(sampleJ, sampleK));
-    float centerRange = maxCenter - minCenter;
+vec3 FsrEasuLoadF(ivec2 p)
+{
+    return texelFetch(inputTexture, FsrEasuClampCoord(p), 0).rgb;
+}
 
-    if (centerRange < (8.0 / 255.0)) {
-        float top = mix(sampleF, sampleG, fracPos.x);
-        float bottom = mix(sampleJ, sampleK, fracPos.x);
-        return mix(top, bottom, fracPos.y);
+void FsrEasuTapF(
+    inout vec3 aC,
+    inout float aW,
+    vec2 off,
+    vec2 dir,
+    vec2 len,
+    float lob,
+    float clp,
+    vec3 c)
+{
+    vec2 v;
+    v.x = (off.x * dir.x) + (off.y * dir.y);
+    v.y = (off.x * (-dir.y)) + (off.y * dir.x);
+    v *= len;
+    float d2 = v.x * v.x + v.y * v.y;
+    d2 = min(d2, clp);
+    float wB = (2.0 / 5.0) * d2 - 1.0;
+    float wA = lob * d2 - 1.0;
+    wB *= wB;
+    wA *= wA;
+    wB = (25.0 / 16.0) * wB - (25.0 / 16.0 - 1.0);
+    float w = wB * wA;
+    aC += c * w;
+    aW += w;
+}
+
+void FsrEasuSetF(
+    inout vec2 dir,
+    inout float len,
+    vec2 pp,
+    bool biS,
+    bool biT,
+    bool biU,
+    bool biV,
+    float lA,
+    float lB,
+    float lC,
+    float lD,
+    float lE)
+{
+    float w = 0.0;
+    if (biS) {
+        w = (1.0 - pp.x) * (1.0 - pp.y);
+    }
+    if (biT) {
+        w = pp.x * (1.0 - pp.y);
+    }
+    if (biU) {
+        w = (1.0 - pp.x) * pp.y;
+    }
+    if (biV) {
+        w = pp.x * pp.y;
     }
 
-    vec2 direction = vec2(0.0);
-    float lengthAccumulator = 0.0;
+    float dc = lD - lC;
+    float cb = lC - lB;
+    float lenX = max(abs(dc), abs(cb));
+    lenX = APrxLoRcpF1(lenX);
+    float dirX = lD - lB;
+    dir.x += dirX * w;
+    lenX = ASatF1(abs(dirX) * lenX);
+    lenX *= lenX;
+    len += lenX * w;
 
-    accumulateGradient(direction, lengthAccumulator,
-                       (1.0 - fracPos.x) * (1.0 - fracPos.y),
-                       sampleB, sampleE, sampleF, sampleG, sampleJ);
-    accumulateGradient(direction, lengthAccumulator,
-                       fracPos.x * (1.0 - fracPos.y),
-                       sampleC, sampleF, sampleG, sampleH, sampleK);
-    accumulateGradient(direction, lengthAccumulator,
-                       (1.0 - fracPos.x) * fracPos.y,
-                       sampleF, sampleI, sampleJ, sampleK, sampleN);
-    accumulateGradient(direction, lengthAccumulator,
-                       fracPos.x * fracPos.y,
-                       sampleG, sampleJ, sampleK, sampleL, sampleO);
+    float ec = lE - lC;
+    float ca = lC - lA;
+    float lenY = max(abs(ec), abs(ca));
+    lenY = APrxLoRcpF1(lenY);
+    float dirY = lE - lA;
+    dir.y += dirY * w;
+    lenY = ASatF1(abs(dirY) * lenY);
+    lenY *= lenY;
+    len += lenY * w;
+}
 
-    float directionMagnitudeSquared = dot(direction, direction);
-    bool useFallbackDirection = directionMagnitudeSquared < (1.0 / 32768.0);
-    float invDirectionMagnitude = useFallbackDirection ? 1.0 : fastApproxRsqrt(directionMagnitudeSquared);
-    vec2 normalizedDirection = useFallbackDirection ? vec2(1.0, 0.0)
-                                                    : direction * invDirectionMagnitude;
+void FsrEasuF(out vec3 pix, uvec2 ip, uvec4 con0, uvec4 con1, uvec4 con2, uvec4 con3)
+{
+    vec2 pp = vec2(ip) * uintBitsToFloat(con0.xy) + uintBitsToFloat(con0.zw);
+    ivec2 f = ivec2(floor(pp));
+    pp -= floor(pp);
 
-    float edgeConfidence = 0.5 * lengthAccumulator;
-    edgeConfidence *= edgeConfidence;
+    vec3 b = FsrEasuLoadF(f + ivec2(0, -1));
+    vec3 c = FsrEasuLoadF(f + ivec2(1, -1));
+    vec3 e = FsrEasuLoadF(f + ivec2(-1, 0));
+    vec3 ff = FsrEasuLoadF(f + ivec2(0, 0));
+    vec3 g = FsrEasuLoadF(f + ivec2(1, 0));
+    vec3 h = FsrEasuLoadF(f + ivec2(2, 0));
+    vec3 i = FsrEasuLoadF(f + ivec2(-1, 1));
+    vec3 j = FsrEasuLoadF(f + ivec2(0, 1));
+    vec3 k = FsrEasuLoadF(f + ivec2(1, 1));
+    vec3 l = FsrEasuLoadF(f + ivec2(2, 1));
+    vec3 n = FsrEasuLoadF(f + ivec2(0, 2));
+    vec3 o = FsrEasuLoadF(f + ivec2(1, 2));
 
-    float stretch = dot(normalizedDirection, normalizedDirection) *
-                    fastApproxReciprocal(max(max(abs(normalizedDirection.x), abs(normalizedDirection.y)), 1e-4));
-    vec2 anisotropy = vec2(1.0 + (stretch - 1.0) * edgeConfidence,
-                           1.0 - 0.5 * edgeConfidence);
+    float bL = b.b * 0.5 + (b.r * 0.5 + b.g);
+    float cL = c.b * 0.5 + (c.r * 0.5 + c.g);
+    float iL = i.b * 0.5 + (i.r * 0.5 + i.g);
+    float jL = j.b * 0.5 + (j.r * 0.5 + j.g);
+    float fL = ff.b * 0.5 + (ff.r * 0.5 + ff.g);
+    float eL = e.b * 0.5 + (e.r * 0.5 + e.g);
+    float kL = k.b * 0.5 + (k.r * 0.5 + k.g);
+    float lL = l.b * 0.5 + (l.r * 0.5 + l.g);
+    float hL = h.b * 0.5 + (h.r * 0.5 + h.g);
+    float gL = g.b * 0.5 + (g.r * 0.5 + g.g);
+    float oL = o.b * 0.5 + (o.r * 0.5 + o.g);
+    float nL = n.b * 0.5 + (n.r * 0.5 + n.g);
 
-    float lobe = 0.5 + ((0.25 - 0.04) - 0.5) * edgeConfidence;
-    float clipRadius = fastApproxReciprocal(max(lobe, 1e-4));
+    vec2 dir = vec2(0.0);
+    float len = 0.0;
+    FsrEasuSetF(dir, len, pp, true, false, false, false, bL, eL, fL, gL, jL);
+    FsrEasuSetF(dir, len, pp, false, true, false, false, cL, fL, gL, hL, kL);
+    FsrEasuSetF(dir, len, pp, false, false, true, false, fL, iL, jL, kL, nL);
+    FsrEasuSetF(dir, len, pp, false, false, false, true, gL, jL, kL, lL, oL);
 
-    float accumulatedColor = 0.0;
-    float accumulatedWeight = 0.0;
+    vec2 dir2 = dir * dir;
+    float dirR = dir2.x + dir2.y;
+    bool zro = dirR < (1.0 / 32768.0);
+    dirR = APrxLoRsqF1(dirR);
+    dirR = zro ? 1.0 : dirR;
+    dir.x = zro ? 1.0 : dir.x;
+    dir *= vec2(dirR);
+    len = len * 0.5;
+    len *= len;
+    float stretch = (dir.x * dir.x + dir.y * dir.y) *
+                    APrxLoRcpF1(max(abs(dir.x), abs(dir.y)));
+    vec2 len2 = vec2(1.0 + (stretch - 1.0) * len, 1.0 - 0.5 * len);
+    float lob = 0.5 + ((1.0 / 4.0 - 0.04) - 0.5) * len;
+    float clp = APrxLoRcpF1(lob);
 
-    accumulateTap(accumulatedColor, accumulatedWeight, vec2(0.0, -1.0) - fracPos,
-                  normalizedDirection, anisotropy, lobe, clipRadius, sampleB);
-    accumulateTap(accumulatedColor, accumulatedWeight, vec2(1.0, -1.0) - fracPos,
-                  normalizedDirection, anisotropy, lobe, clipRadius, sampleC);
-    accumulateTap(accumulatedColor, accumulatedWeight, vec2(-1.0, 1.0) - fracPos,
-                  normalizedDirection, anisotropy, lobe, clipRadius, sampleI);
-    accumulateTap(accumulatedColor, accumulatedWeight, vec2(0.0, 1.0) - fracPos,
-                  normalizedDirection, anisotropy, lobe, clipRadius, sampleJ);
-    accumulateTap(accumulatedColor, accumulatedWeight, vec2(0.0, 0.0) - fracPos,
-                  normalizedDirection, anisotropy, lobe, clipRadius, sampleF);
-    accumulateTap(accumulatedColor, accumulatedWeight, vec2(-1.0, 0.0) - fracPos,
-                  normalizedDirection, anisotropy, lobe, clipRadius, sampleE);
-    accumulateTap(accumulatedColor, accumulatedWeight, vec2(1.0, 1.0) - fracPos,
-                  normalizedDirection, anisotropy, lobe, clipRadius, sampleK);
-    accumulateTap(accumulatedColor, accumulatedWeight, vec2(2.0, 1.0) - fracPos,
-                  normalizedDirection, anisotropy, lobe, clipRadius, sampleL);
-    accumulateTap(accumulatedColor, accumulatedWeight, vec2(2.0, 0.0) - fracPos,
-                  normalizedDirection, anisotropy, lobe, clipRadius, sampleH);
-    accumulateTap(accumulatedColor, accumulatedWeight, vec2(1.0, 0.0) - fracPos,
-                  normalizedDirection, anisotropy, lobe, clipRadius, sampleG);
-    accumulateTap(accumulatedColor, accumulatedWeight, vec2(1.0, 2.0) - fracPos,
-                  normalizedDirection, anisotropy, lobe, clipRadius, sampleO);
-    accumulateTap(accumulatedColor, accumulatedWeight, vec2(0.0, 2.0) - fracPos,
-                  normalizedDirection, anisotropy, lobe, clipRadius, sampleN);
+    vec3 min4 = min(AMin3F3(ff, g, j), k);
+    vec3 max4 = max(AMax3F3(ff, g, j), k);
+    vec3 aC = vec3(0.0);
+    float aW = 0.0;
+    FsrEasuTapF(aC, aW, vec2(0.0, -1.0) - pp, dir, len2, lob, clp, b);
+    FsrEasuTapF(aC, aW, vec2(1.0, -1.0) - pp, dir, len2, lob, clp, c);
+    FsrEasuTapF(aC, aW, vec2(-1.0, 1.0) - pp, dir, len2, lob, clp, i);
+    FsrEasuTapF(aC, aW, vec2(0.0, 1.0) - pp, dir, len2, lob, clp, j);
+    FsrEasuTapF(aC, aW, vec2(0.0, 0.0) - pp, dir, len2, lob, clp, ff);
+    FsrEasuTapF(aC, aW, vec2(-1.0, 0.0) - pp, dir, len2, lob, clp, e);
+    FsrEasuTapF(aC, aW, vec2(1.0, 1.0) - pp, dir, len2, lob, clp, k);
+    FsrEasuTapF(aC, aW, vec2(2.0, 1.0) - pp, dir, len2, lob, clp, l);
+    FsrEasuTapF(aC, aW, vec2(2.0, 0.0) - pp, dir, len2, lob, clp, h);
+    FsrEasuTapF(aC, aW, vec2(1.0, 0.0) - pp, dir, len2, lob, clp, g);
+    FsrEasuTapF(aC, aW, vec2(1.0, 2.0) - pp, dir, len2, lob, clp, o);
+    FsrEasuTapF(aC, aW, vec2(0.0, 2.0) - pp, dir, len2, lob, clp, n);
 
-    float reconstructed = accumulatedColor / max(accumulatedWeight, 1e-5);
-    return clamp(reconstructed, minCenter, maxCenter);
+    pix = min(max4, max(min4, aC * vec3(ARcpF1(aW))));
 }
 
 void main()
 {
-    vec2 uv = (vTextureCoord - u.uv_data.xy) * u.uv_data.zw;
-
-    float luma = reconstructLuma(uv);
-    vec2 chroma = texture(plane1, uv).rg;
-    vec3 yuv = vec3(luma, chroma) - u.offset;
-    vec3 rgb = u.yuvmat * yuv;
-
-    outColor = vec4(clamp(rgb, 0.0, 1.0), 1.0);
+    vec3 rgb;
+    FsrEasuF(rgb, uvec2(gl_FragCoord.xy), u.con0, u.con1, u.con2, u.con3);
+    outColor = vec4(rgb, 1.0);
 }

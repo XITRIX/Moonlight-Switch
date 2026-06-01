@@ -77,6 +77,7 @@ class DKVideoRenderer : public IVideoRenderer {
     CMemPool::Handle vertexBuffer;
     CMemPool::Handle transformUniformBuffer;
   #ifdef SUPPORT_UPSCALING
+    CMemPool::Handle easuUniformBuffer;
     CMemPool::Handle ditheringUniformBuffer;
     CMemPool::Handle rcasUniformBuffer;
     DkFence upscalingFence = {};
@@ -103,6 +104,11 @@ class DKVideoRenderer : public IVideoRenderer {
     int lumaTextureId = -1;
     int chromaTextureId = -1;
   #ifdef SUPPORT_UPSCALING
+    CMemPool::Handle sourceTargetHandle;
+    dk::ImageLayout sourceTargetLayout;
+    dk::Image sourceTargetImage;
+    dk::ImageDescriptor sourceTargetDesc;
+    int sourceTextureId = -1;
     CMemPool::Handle upscalingTargetHandle;
     dk::ImageLayout upscalingTargetLayout;
     dk::Image upscalingTargetImage;
@@ -113,6 +119,8 @@ class DKVideoRenderer : public IVideoRenderer {
     dk::Image rcasTargetImage;
     dk::ImageDescriptor rcasTargetDesc;
     int rcasTextureId = -1;
+    int m_source_target_width = 0;
+    int m_source_target_height = 0;
     int m_upscaling_target_width = 0;
     int m_upscaling_target_height = 0;
   #endif
