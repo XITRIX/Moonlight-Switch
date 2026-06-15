@@ -166,6 +166,7 @@
         "connection": "接続",
         "debug_info": "デバッグ情報",
         "disconnect": "切断する",
+        "display": "ディスプレイ",
         "esc": "エスケープボタン",
         "input": "入力",
         "keys": "キー",
@@ -174,6 +175,7 @@
         "mouse_speed": "マウスの加速",
         "options": "設定",
         "show_logs": "ログを表示する",
+        "switch_display": "ディスプレイを切り替える",
         "terminate": "アプリを終了します",
         "volume": "音量"
     },

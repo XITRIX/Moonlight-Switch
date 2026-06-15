@@ -550,6 +550,38 @@ void MoonlightInputManager::rightMouseClick() {
     LiSendMouseButtonEvent(BUTTON_ACTION_RELEASE, BUTTON_MOUSE_RIGHT);
 }
 
+void MoonlightInputManager::switchDisplay(int displayNumber) {
+    if (displayNumber < 1 || displayNumber > 12) {
+        brls::Logger::warning("Ignoring out-of-range display switch request {}", displayNumber);
+        return;
+    }
+
+    // Virtual key codes
+    const short VK_LSHIFT = 0xA0;
+    const short VK_LCONTROL = 0xA2;
+    const short VK_LMENU = 0xA4; // Left Alt
+    const short vkFKey = 0x70 + (displayNumber - 1); // VK_F1 .. VK_F12
+
+    const char modifiers = MODIFIER_CTRL | MODIFIER_ALT | MODIFIER_SHIFT;
+
+    brls::Logger::info("Switching streamed display to {} (Ctrl+Alt+Shift+F{})",
+                       displayNumber, displayNumber);
+
+    // Press modifiers in order, accumulating the modifier flags.
+    LiSendKeyboardEvent(VK_LCONTROL, KEY_ACTION_DOWN, MODIFIER_CTRL);
+    LiSendKeyboardEvent(VK_LMENU, KEY_ACTION_DOWN, MODIFIER_CTRL | MODIFIER_ALT);
+    LiSendKeyboardEvent(VK_LSHIFT, KEY_ACTION_DOWN, modifiers);
+
+    // Tap the function key with all modifiers held.
+    LiSendKeyboardEvent(vkFKey, KEY_ACTION_DOWN, modifiers);
+    LiSendKeyboardEvent(vkFKey, KEY_ACTION_UP, modifiers);
+
+    // Release modifiers in reverse order.
+    LiSendKeyboardEvent(VK_LSHIFT, KEY_ACTION_UP, MODIFIER_CTRL | MODIFIER_ALT);
+    LiSendKeyboardEvent(VK_LMENU, KEY_ACTION_UP, MODIFIER_CTRL);
+    LiSendKeyboardEvent(VK_LCONTROL, KEY_ACTION_UP, 0);
+}
+
 short MoonlightInputManager::glfwKeyToVKKey(BrlsKeyboardScancode key) {
     if (BRLS_KBD_KEY_F1 <= key && key <= BRLS_KBD_KEY_F12)
         return key - BRLS_KBD_KEY_F1 + 0x70;

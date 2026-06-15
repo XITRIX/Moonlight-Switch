@@ -166,6 +166,7 @@
         "connection": "Connessione",
         "debug_info": "Info di Debug",
         "disconnect": "Disconnetti",
+        "display": "Schermo",
         "esc": "Pulsante ESC",
         "input": "Input",
         "keys": "Tasti",
@@ -174,6 +175,7 @@
         "mouse_speed": "Accelerazione Mouse",
         "options": "Opzioni",
         "show_logs": "Mostra log",
+        "switch_display": "Cambia schermo",
         "terminate": "Termina app",
         "volume": "Volume"
     },

@@ -13,6 +13,7 @@
 #include "ingame_overlay_view.hpp"
 #include "streaming_input_overlay.hpp"
 #include "button_selecting_dialog.hpp"
+#include "InputManager.hpp"
 
 #include <iomanip>
 #include <sstream>
@@ -166,6 +167,24 @@ OptionsTab::OptionsTab(StreamingView* streamView) : streamView(streamView) {
         });
         return true;
     });
+
+    // Display switching via Ctrl+Alt+Shift+F<n> is only supported by Sunshine
+    // hosts, so only show the option when connected to such a host.
+    if (streamView->isSunshineHost()) {
+        std::vector<std::string> switchDisplayOptions;
+        for (int i = 1; i <= 12; i++) {
+            switchDisplayOptions.push_back("streaming/display"_i18n + " " +
+                                           std::to_string(i));
+        }
+        switchDisplay->setText("streaming/switch_display"_i18n);
+        switchDisplay->setData(switchDisplayOptions);
+        switchDisplay->setSelection(0, true);
+        switchDisplay->getEvent()->subscribe([](int selected) {
+            MoonlightInputManager::switchDisplay(selected + 1);
+        });
+    } else {
+        switchDisplay->removeFromSuperView();
+    }
 
     std::vector<std::string> keyboardTypes = {
         "settings/keyboard_compact"_i18n, "settings/keyboard_fullsized"_i18n};

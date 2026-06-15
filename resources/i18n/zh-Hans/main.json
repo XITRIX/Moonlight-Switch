@@ -166,6 +166,7 @@
         "connection": "连接选项",
         "debug_info": "调试信息",
         "disconnect": "断开连接",
+        "display": "显示器",
         "esc": "ESC按键",
         "input": "输入",
         "keys": "按键",
@@ -174,6 +175,7 @@
         "mouse_speed": "鼠标速度",
         "options": "选项",
         "show_logs": "显示日志",
+        "switch_display": "切换显示器",
         "terminate": "终止应用程序",
         "volume": "音量"
     },

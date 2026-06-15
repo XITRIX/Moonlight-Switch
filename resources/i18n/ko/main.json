@@ -166,6 +166,7 @@
         "connection": "연결",
         "debug_info": "디버그 정보",
         "disconnect": "연결 해제",
+        "display": "디스플레이",
         "esc": "ESC 버튼",
         "input": "입력",
         "keys": "키",
@@ -174,6 +175,7 @@
         "mouse_speed": "마우스 가속",
         "options": "옵션",
         "show_logs": "정보 표시",
+        "switch_display": "디스플레이 전환",
         "terminate": "앱 종료",
         "volume": "볼륨"
     },

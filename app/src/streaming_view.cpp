@@ -96,6 +96,8 @@ StreamingView::StreamingView(const Host& host, const AppInfo& app) : host(host),
             session->set_address(
                 GameStreamClient::instance().active_address(this->host));
 
+            this->sunshineHost = result.value().isSunshine();
+
             ASYNC_RETAIN
             session->start([ASYNC_TOKEN](GSResult<bool> result) {
                 ASYNC_RELEASE
