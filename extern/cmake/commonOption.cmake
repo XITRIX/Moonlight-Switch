@@ -40,6 +40,8 @@ set(IOS_CODE_SIGN_IDENTITY "" CACHE STRING "The code sign identity to use when b
 set(IOS_GUI_IDENTIFIER "" CACHE STRING "Package name.")
 set(APPLE_MOBILE_SDK_VARIANT "BOTH" CACHE STRING "Apple mobile SDK selection for iOS/tvOS/visionOS builds: DEVICE, SIMULATOR, or BOTH.")
 set_property(CACHE APPLE_MOBILE_SDK_VARIANT PROPERTY STRINGS DEVICE SIMULATOR BOTH)
+set(APPLE_MOBILE_SIMULATOR_ARCH "arm64" CACHE STRING "Apple mobile simulator architecture: arm64 for current Xcode, x64 for older Intel simulator workflows.")
+set_property(CACHE APPLE_MOBILE_SIMULATOR_ARCH PROPERTY STRINGS arm64 x64)
 
 # Nintendo Switch Only
 cmake_dependent_option(USE_DEKO3D "Using deko3d instead of OpenGL." OFF "PLATFORM_SWITCH" OFF)

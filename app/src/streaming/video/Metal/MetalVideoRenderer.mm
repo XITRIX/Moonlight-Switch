@@ -146,6 +146,10 @@ static CGSize drawableSizeForMetalView(MTKView* metalView)
 
 static AppView* getOriginalMetalView(SDL_Window* window)
 {
+    if (window == nullptr) {
+        return nil;
+    }
+
     SDL_SysWMinfo info;
     SDL_VERSION(&info.version);
 
@@ -169,7 +173,12 @@ static AppView* getOriginalMetalView(SDL_Window* window)
         return nil;
     }
 
-    return info.info.uikit.window.rootViewController.view;
+    UIWindow* uiWindow = info.info.uikit.window;
+    if (uiWindow == nil || uiWindow.rootViewController == nil) {
+        return nil;
+    }
+
+    return uiWindow.rootViewController.view;
 #endif
 }
 
