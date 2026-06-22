@@ -76,7 +76,12 @@
 	<key>GCSupportsControllerUserInteraction</key>
 	<true/>
 	<key>GCRequiresControllerUserInteraction</key>
-	<true/>
+	<dict>
+		<key>iOS</key>
+		<true/>
+		<key>visionOS</key>
+		<true/>
+	</dict>
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.games</string>
 	<key>GCSupportsGameMode</key>
