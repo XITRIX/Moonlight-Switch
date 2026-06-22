@@ -18,6 +18,11 @@ private:
     bool updateColorSpaceForFrame(AVFrame* frame);
     bool updateVideoRegionSizeForFrame(AVFrame* frame);
     bool initialize(int imageFormat);
+#ifdef SUPPORT_UPSCALING
+    bool shouldUseUpscaling() const;
+    bool ensureUpscalingResources(AVFrame* frame);
+    void releaseUpscalingResources();
+#endif
 
     VideoRenderStats m_video_render_stats = {};
     SDL_Window* m_Window;
@@ -30,6 +35,8 @@ private:
     int m_LastFrameHeight = -1;
     int m_LastDrawableWidth = -1;
     int m_LastDrawableHeight = -1;
+    int m_LastVideoRegionWidth = -1;
+    int m_LastVideoRegionHeight = -1;
     MetalRendererState* m_State = nullptr;
 };
 

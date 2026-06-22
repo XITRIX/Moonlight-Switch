@@ -15,12 +15,17 @@ extern "C" {
 #include "MTShaders.hpp"
 #include "streamutils.hpp"
 #include "MetalVideoRenderer.hpp"
+#include "Settings.hpp"
+#include "UpscalingSupport.hpp"
 #include <array>
 
 #import <CoreVideo/CoreVideo.h>
 #import <Metal/Metal.h>
 #import <MetalKit/MetalKit.h>
 #import <TargetConditionals.h>
+#if defined(SUPPORT_UPSCALING)
+#import <MetalFX/MetalFX.h>
+#endif
 
 #if TARGET_OS_OSX
 #import <AppKit/AppKit.h>
@@ -46,6 +51,23 @@ struct MetalVideoRenderer::MetalRendererState {
     id<MTLRenderPipelineState> overlayPipelineState = nil;
     id<MTLLibrary> shaderLibrary = nil;
     id<MTLCommandQueue> commandQueue = nil;
+#if defined(SUPPORT_UPSCALING)
+    id<MTLBuffer> fullFrameVertexBuffer = nil;
+    id<MTLTexture> upscalingInputTexture = nil;
+    id<MTLTexture> upscalingOutputTexture = nil;
+    id<MTLTexture> upscalingMotionTexture = nil;
+    id<MTLTexture> upscalingDepthTexture = nil;
+#if !TARGET_OS_VISION
+    id<MTLFXTemporalScaler> temporalScaler = nil;
+#endif
+    bool metalFxSupported = false;
+    bool loggedMetalFxUnsupported = false;
+    int upscalingInputWidth = 0;
+    int upscalingInputHeight = 0;
+    int upscalingOutputWidth = 0;
+    int upscalingOutputHeight = 0;
+    MTLPixelFormat upscalingPixelFormat = MTLPixelFormatInvalid;
+#endif
     SDL_mutex* presentationMutex = SDL_CreateMutex();
     SDL_cond* presentationCond = SDL_CreateCond();
     int pendingPresentationCount = 0;
@@ -73,9 +95,34 @@ struct MetalVideoRenderer::MetalRendererState {
 #define m_OverlayPipelineState m_State->overlayPipelineState
 #define m_ShaderLibrary m_State->shaderLibrary
 #define m_CommandQueue m_State->commandQueue
+#if defined(SUPPORT_UPSCALING)
+#define m_FullFrameVertexBuffer m_State->fullFrameVertexBuffer
+#define m_UpscalingInputTexture m_State->upscalingInputTexture
+#define m_UpscalingOutputTexture m_State->upscalingOutputTexture
+#define m_UpscalingMotionTexture m_State->upscalingMotionTexture
+#define m_UpscalingDepthTexture m_State->upscalingDepthTexture
+#if !TARGET_OS_VISION
+#define m_TemporalScaler m_State->temporalScaler
+#endif
+#define m_MetalFxSupported m_State->metalFxSupported
+#define m_LoggedMetalFxUnsupported m_State->loggedMetalFxUnsupported
+#define m_UpscalingInputWidth m_State->upscalingInputWidth
+#define m_UpscalingInputHeight m_State->upscalingInputHeight
+#define m_UpscalingOutputWidth m_State->upscalingOutputWidth
+#define m_UpscalingOutputHeight m_State->upscalingOutputHeight
+#define m_UpscalingPixelFormat m_State->upscalingPixelFormat
+#endif
 #define m_PresentationMutex m_State->presentationMutex
 #define m_PresentationCond m_State->presentationCond
 #define m_PendingPresentationCount m_State->pendingPresentationCount
+
+#if defined(SUPPORT_UPSCALING)
+#if __has_feature(objc_arc)
+#define releaseObjCReference(obj) do { (obj) = nil; } while (0)
+#else
+#define releaseObjCReference(obj) do { [(obj) release]; (obj) = nil; } while (0)
+#endif
+#endif
 
 static CGColorRef clearLayerColor()
 {
@@ -267,6 +314,13 @@ struct Vertex
     vector_float2 texCoord;
 };
 
+static const std::array<Vertex, 4> FullFrameVertexData = {{
+    {{-1.0f, -1.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
+    {{-1.0f, +1.0f, 0.0f, 1.0f}, {0.0f, 0.0f}},
+    {{+1.0f, -1.0f, 0.0f, 1.0f}, {1.0f, 1.0f}},
+    {{+1.0f, +1.0f, 0.0f, 1.0f}, {1.0f, 0.0f}},
+}};
+
 int getFramePlaneCount(AVFrame* frame)
 {
     return CVPixelBufferGetPlaneCount((CVPixelBufferRef)frame->data[3]);
@@ -359,6 +413,10 @@ bool MetalVideoRenderer::updateColorSpaceForFrame(AVFrame* frame) {
             return false;
         }
 
+#if defined(SUPPORT_UPSCALING)
+        releaseUpscalingResources();
+#endif
+
         m_LastColorSpace = colorspace;
         m_LastFullRange = fullRange;
     }
@@ -420,9 +478,216 @@ bool MetalVideoRenderer::updateVideoRegionSizeForFrame(AVFrame* frame) {
     m_LastFrameHeight = frame->height;
     m_LastDrawableWidth = drawableWidth;
     m_LastDrawableHeight = drawableHeight;
+    m_LastVideoRegionWidth = dst.w;
+    m_LastVideoRegionHeight = dst.h;
 
     return true;
 }
+
+#if defined(SUPPORT_UPSCALING)
+static const char* metalPixelFormatName(MTLPixelFormat pixelFormat) {
+    switch (pixelFormat) {
+    case MTLPixelFormatBGRA8Unorm:
+        return "BGRA8Unorm";
+    case MTLPixelFormatBGR10A2Unorm:
+        return "BGR10A2Unorm";
+    case MTLPixelFormatRGBA16Float:
+        return "RGBA16Float";
+    default:
+        return "unknown";
+    }
+}
+
+static bool metalFxSupportsDevice(id<MTLDevice> device) {
+    if (device == nil) {
+        return false;
+    }
+
+#if TARGET_OS_VISION
+    return false;
+#else
+#if TARGET_OS_OSX
+    if (@available(macOS 13.0, *)) {
+#else
+    if (@available(iOS 16.0, tvOS 16.0, visionOS 1.0, *)) {
+#endif
+        return [MTLFXTemporalScalerDescriptor supportsDevice:device];
+    }
+
+    return false;
+#endif
+}
+
+bool MetalVideoRenderer::shouldUseUpscaling() const {
+    return Settings::instance().upscaling() && m_MetalFxSupported &&
+           m_LastFrameWidth > 0 && m_LastFrameHeight > 0 &&
+           m_LastVideoRegionWidth > 0 && m_LastVideoRegionHeight > 0 &&
+           m_LastVideoRegionWidth >= m_LastFrameWidth &&
+           m_LastVideoRegionHeight >= m_LastFrameHeight &&
+           (m_LastVideoRegionWidth > m_LastFrameWidth ||
+            m_LastVideoRegionHeight > m_LastFrameHeight);
+}
+
+void MetalVideoRenderer::releaseUpscalingResources() {
+#if !TARGET_OS_VISION
+    releaseObjCReference(m_TemporalScaler);
+#endif
+    releaseObjCReference(m_UpscalingInputTexture);
+    releaseObjCReference(m_UpscalingOutputTexture);
+    releaseObjCReference(m_UpscalingMotionTexture);
+    releaseObjCReference(m_UpscalingDepthTexture);
+    m_UpscalingInputWidth = 0;
+    m_UpscalingInputHeight = 0;
+    m_UpscalingOutputWidth = 0;
+    m_UpscalingOutputHeight = 0;
+    m_UpscalingPixelFormat = MTLPixelFormatInvalid;
+}
+
+bool MetalVideoRenderer::ensureUpscalingResources(AVFrame* frame) {
+    if (!shouldUseUpscaling() || frame == nullptr || m_MetalLayer.device == nil) {
+        return false;
+    }
+
+    const int inputWidth = frame->width;
+    const int inputHeight = frame->height;
+    const int outputWidth = m_LastVideoRegionWidth;
+    const int outputHeight = m_LastVideoRegionHeight;
+    const MTLPixelFormat pixelFormat = m_MetalLayer.pixelFormat;
+
+    if (
+#if !TARGET_OS_VISION
+        m_TemporalScaler &&
+#endif
+        m_UpscalingInputTexture && m_UpscalingOutputTexture &&
+        m_UpscalingMotionTexture && m_UpscalingDepthTexture &&
+        m_UpscalingInputWidth == inputWidth &&
+        m_UpscalingInputHeight == inputHeight &&
+        m_UpscalingOutputWidth == outputWidth &&
+        m_UpscalingOutputHeight == outputHeight &&
+        m_UpscalingPixelFormat == pixelFormat) {
+        return true;
+    }
+
+    releaseUpscalingResources();
+
+#if TARGET_OS_VISION
+    return false;
+#else
+#if TARGET_OS_OSX
+    if (@available(macOS 13.0, *)) {
+#else
+    if (@available(iOS 16.0, tvOS 16.0, visionOS 1.0, *)) {
+#endif
+        MTLFXTemporalScalerDescriptor* descriptor =
+            [[MTLFXTemporalScalerDescriptor alloc] init];
+        descriptor.colorTextureFormat = pixelFormat;
+        descriptor.depthTextureFormat = MTLPixelFormatDepth32Float;
+        descriptor.motionTextureFormat = MTLPixelFormatRG16Float;
+        descriptor.outputTextureFormat = pixelFormat;
+        descriptor.inputWidth = inputWidth;
+        descriptor.inputHeight = inputHeight;
+        descriptor.outputWidth = outputWidth;
+        descriptor.outputHeight = outputHeight;
+        descriptor.autoExposureEnabled = YES;
+        descriptor.requiresSynchronousInitialization = YES;
+
+        m_TemporalScaler =
+            [descriptor newTemporalScalerWithDevice:m_MetalLayer.device];
+        releaseObjCReference(descriptor);
+    } else {
+        return false;
+    }
+
+    if (!m_TemporalScaler) {
+        if (!m_LoggedMetalFxUnsupported) {
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "MetalFX temporal scaler is unavailable for %dx%d -> %dx%d format %lu",
+                        inputWidth, inputHeight, outputWidth, outputHeight,
+                        static_cast<unsigned long>(pixelFormat));
+            m_LoggedMetalFxUnsupported = true;
+        }
+        releaseUpscalingResources();
+        return false;
+    }
+
+    if (![m_TemporalScaler conformsToProtocol:@protocol(MTLFXTemporalScaler)]) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "MetalFX returned non-temporal scaler class: %s",
+                     NSStringFromClass([m_TemporalScaler class]).UTF8String);
+        releaseUpscalingResources();
+        return false;
+    }
+
+    MTLTextureDescriptor* inputDesc =
+        [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:pixelFormat
+                                                           width:inputWidth
+                                                          height:inputHeight
+                                                       mipmapped:NO];
+    inputDesc.storageMode = MTLStorageModePrivate;
+    inputDesc.usage = MTLTextureUsageRenderTarget |
+                      MTLTextureUsageShaderRead |
+                      [m_TemporalScaler colorTextureUsage];
+
+    MTLTextureDescriptor* outputDesc =
+        [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:pixelFormat
+                                                           width:outputWidth
+                                                          height:outputHeight
+                                                       mipmapped:NO];
+    outputDesc.storageMode = MTLStorageModePrivate;
+    outputDesc.usage = MTLTextureUsageShaderRead |
+                       [m_TemporalScaler outputTextureUsage];
+
+    MTLTextureDescriptor* motionDesc =
+        [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatRG16Float
+                                                           width:inputWidth
+                                                          height:inputHeight
+                                                       mipmapped:NO];
+    motionDesc.storageMode = MTLStorageModePrivate;
+    motionDesc.usage = MTLTextureUsageRenderTarget |
+                       [m_TemporalScaler motionTextureUsage];
+
+    MTLTextureDescriptor* depthDesc =
+        [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatDepth32Float
+                                                           width:inputWidth
+                                                          height:inputHeight
+                                                       mipmapped:NO];
+    depthDesc.storageMode = MTLStorageModePrivate;
+    depthDesc.usage = MTLTextureUsageRenderTarget |
+                      [m_TemporalScaler depthTextureUsage];
+
+    m_UpscalingInputTexture = [m_MetalLayer.device newTextureWithDescriptor:inputDesc];
+    m_UpscalingOutputTexture = [m_MetalLayer.device newTextureWithDescriptor:outputDesc];
+    m_UpscalingMotionTexture = [m_MetalLayer.device newTextureWithDescriptor:motionDesc];
+    m_UpscalingDepthTexture = [m_MetalLayer.device newTextureWithDescriptor:depthDesc];
+
+    if (!m_UpscalingInputTexture || !m_UpscalingOutputTexture ||
+        !m_UpscalingMotionTexture || !m_UpscalingDepthTexture) {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "Failed to allocate MetalFX upscaling textures");
+        releaseUpscalingResources();
+        return false;
+    }
+
+    m_UpscalingInputWidth = inputWidth;
+    m_UpscalingInputHeight = inputHeight;
+    m_UpscalingOutputWidth = outputWidth;
+    m_UpscalingOutputHeight = outputHeight;
+    m_UpscalingPixelFormat = pixelFormat;
+    m_LoggedMetalFxUnsupported = false;
+
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                "Using MetalFX temporal scaler: %s %dx%d -> %dx%d format %s colorUsage=0x%lx depthUsage=0x%lx motionUsage=0x%lx outputUsage=0x%lx",
+                NSStringFromClass([m_TemporalScaler class]).UTF8String,
+                inputWidth, inputHeight, outputWidth, outputHeight,
+                metalPixelFormatName(pixelFormat),
+                static_cast<unsigned long>([m_TemporalScaler colorTextureUsage]),
+                static_cast<unsigned long>([m_TemporalScaler depthTextureUsage]),
+                static_cast<unsigned long>([m_TemporalScaler motionTextureUsage]),
+                static_cast<unsigned long>([m_TemporalScaler outputTextureUsage]));
+    return true;
+#endif
+}
+#endif
 
 MetalVideoRenderer::MetalVideoRenderer()
     : m_State(new MetalRendererState())
@@ -430,6 +695,10 @@ MetalVideoRenderer::MetalVideoRenderer()
 
 MetalVideoRenderer::~MetalVideoRenderer()
 {@autoreleasepool {
+#if defined(SUPPORT_UPSCALING)
+    releaseUpscalingResources();
+    releaseObjCReference(m_FullFrameVertexBuffer);
+#endif
     if (m_MetalView != nil) {
         [m_MetalView removeFromSuperview];
     }
@@ -550,15 +819,6 @@ void MetalVideoRenderer::draw(NVGcontext* vg, int width, int height, AVFrame* fr
         }
     }
 
-    auto renderPassDescriptor = [MTLRenderPassDescriptor renderPassDescriptor];
-    MTLRenderPassColorAttachmentDescriptor* colorAttachment =
-        [renderPassDescriptor.colorAttachments objectAtIndexedSubscript:0];
-    if (colorAttachment == nil) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "Failed to acquire Metal color attachment descriptor");
-        return;
-    }
-
     id<MTLTexture> drawableTexture = [nextDrawable texture];
     if (drawableTexture == nil) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -566,19 +826,12 @@ void MetalVideoRenderer::draw(NVGcontext* vg, int width, int height, AVFrame* fr
         return;
     }
 
-    [colorAttachment setTexture:drawableTexture];
-    [colorAttachment setLoadAction:MTLLoadActionClear];
-    [colorAttachment setClearColor:MTLClearColorMake(0.0, 0.0, 0.0, 0.0)];
-    [colorAttachment setStoreAction:MTLStoreActionStore];
+    uint64_t before_render = LiGetMillis();
+    if (!m_video_render_stats.rendered_frames) {
+        m_video_render_stats.measurement_start_timestamp = before_render;
+    }
 
     auto commandBuffer = [m_CommandQueue commandBuffer];
-    auto renderEncoder = [commandBuffer renderCommandEncoderWithDescriptor:renderPassDescriptor];
-
-    // Bind textures and buffers then draw the video region
-    [renderEncoder setRenderPipelineState:m_VideoPipelineState];
-    for (size_t i = 0; i < planes; i++) {
-        [renderEncoder setFragmentTexture:CVMetalTextureGetTexture(cvMetalTextures[i]) atIndex:i];
-    }
     [commandBuffer addCompletedHandler:^(id<MTLCommandBuffer>) {
         // Free textures after completion of rendering per CVMetalTextureCache requirements
         for (size_t i = 0; i < planes; i++) {
@@ -586,14 +839,152 @@ void MetalVideoRenderer::draw(NVGcontext* vg, int width, int height, AVFrame* fr
         }
     }];
 
-    [renderEncoder setFragmentBuffer:m_CscParamsBuffer offset:0 atIndex:0];
-    [renderEncoder setVertexBuffer:m_VideoVertexBuffer offset:0 atIndex:0];
-    [renderEncoder drawPrimitives:MTLPrimitiveTypeTriangleStrip vertexStart:0 vertexCount:4];
+#if defined(SUPPORT_UPSCALING) && !TARGET_OS_VISION
+    const bool useUpscaling = ensureUpscalingResources(frame);
+    const uint64_t postProcessStart = LiGetMillis();
 
-    // Now draw any overlays that are enabled
-    //
+    if (useUpscaling) {
+        auto sourcePassDescriptor = [MTLRenderPassDescriptor renderPassDescriptor];
+        MTLRenderPassColorAttachmentDescriptor* sourceAttachment =
+            [sourcePassDescriptor.colorAttachments objectAtIndexedSubscript:0];
+        if (sourceAttachment == nil) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "Failed to acquire MetalFX source attachment descriptor");
+            return;
+        }
+        [sourceAttachment setTexture:m_UpscalingInputTexture];
+        [sourceAttachment setLoadAction:MTLLoadActionClear];
+        [sourceAttachment setClearColor:MTLClearColorMake(0.0, 0.0, 0.0, 0.0)];
+        [sourceAttachment setStoreAction:MTLStoreActionStore];
 
-    [renderEncoder endEncoding];
+        auto sourceEncoder =
+            [commandBuffer renderCommandEncoderWithDescriptor:sourcePassDescriptor];
+        [sourceEncoder setRenderPipelineState:m_VideoPipelineState];
+        for (size_t i = 0; i < planes; i++) {
+            [sourceEncoder setFragmentTexture:CVMetalTextureGetTexture(cvMetalTextures[i])
+                                      atIndex:i];
+        }
+        [sourceEncoder setFragmentBuffer:m_CscParamsBuffer offset:0 atIndex:0];
+        [sourceEncoder setVertexBuffer:m_FullFrameVertexBuffer offset:0 atIndex:0];
+        [sourceEncoder drawPrimitives:MTLPrimitiveTypeTriangleStrip
+                           vertexStart:0
+                           vertexCount:4];
+        [sourceEncoder endEncoding];
+
+        auto motionPassDescriptor = [MTLRenderPassDescriptor renderPassDescriptor];
+        MTLRenderPassColorAttachmentDescriptor* motionAttachment =
+            [motionPassDescriptor.colorAttachments objectAtIndexedSubscript:0];
+        if (motionAttachment == nil) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "Failed to acquire MetalFX motion attachment descriptor");
+            return;
+        }
+        [motionAttachment setTexture:m_UpscalingMotionTexture];
+        [motionAttachment setLoadAction:MTLLoadActionClear];
+        [motionAttachment setClearColor:MTLClearColorMake(0.0, 0.0, 0.0, 0.0)];
+        [motionAttachment setStoreAction:MTLStoreActionStore];
+        auto motionEncoder =
+            [commandBuffer renderCommandEncoderWithDescriptor:motionPassDescriptor];
+        [motionEncoder endEncoding];
+
+        auto depthPassDescriptor = [MTLRenderPassDescriptor renderPassDescriptor];
+        MTLRenderPassDepthAttachmentDescriptor* depthAttachment =
+            [depthPassDescriptor depthAttachment];
+        if (depthAttachment == nil) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "Failed to acquire MetalFX depth attachment descriptor");
+            return;
+        }
+        [depthAttachment setTexture:m_UpscalingDepthTexture];
+        [depthAttachment setLoadAction:MTLLoadActionClear];
+        [depthAttachment setClearDepth:1.0];
+        [depthAttachment setStoreAction:MTLStoreActionStore];
+        auto depthEncoder =
+            [commandBuffer renderCommandEncoderWithDescriptor:depthPassDescriptor];
+        [depthEncoder endEncoding];
+
+        [m_TemporalScaler setColorTexture:m_UpscalingInputTexture];
+        [m_TemporalScaler setDepthTexture:m_UpscalingDepthTexture];
+        [m_TemporalScaler setMotionTexture:m_UpscalingMotionTexture];
+        [m_TemporalScaler setInputContentWidth:frame->width];
+        [m_TemporalScaler setInputContentHeight:frame->height];
+        [m_TemporalScaler setOutputTexture:m_UpscalingOutputTexture];
+        [m_TemporalScaler setJitterOffsetX:0.0f];
+        [m_TemporalScaler setJitterOffsetY:0.0f];
+        [m_TemporalScaler setMotionVectorScaleX:1.0f];
+        [m_TemporalScaler setMotionVectorScaleY:1.0f];
+        [m_TemporalScaler setDepthReversed:NO];
+        [m_TemporalScaler setPreExposure:1.0f];
+        [m_TemporalScaler setReset:YES];
+        [m_TemporalScaler encodeToCommandBuffer:commandBuffer];
+
+        auto presentPassDescriptor = [MTLRenderPassDescriptor renderPassDescriptor];
+        MTLRenderPassColorAttachmentDescriptor* presentAttachment =
+            [presentPassDescriptor.colorAttachments objectAtIndexedSubscript:0];
+        if (presentAttachment == nil) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "Failed to acquire MetalFX present attachment descriptor");
+            return;
+        }
+        [presentAttachment setTexture:drawableTexture];
+        [presentAttachment setLoadAction:MTLLoadActionClear];
+        [presentAttachment setClearColor:MTLClearColorMake(0.0, 0.0, 0.0, 0.0)];
+        [presentAttachment setStoreAction:MTLStoreActionStore];
+
+        auto presentEncoder =
+            [commandBuffer renderCommandEncoderWithDescriptor:presentPassDescriptor];
+        [presentEncoder setRenderPipelineState:m_OverlayPipelineState];
+        [presentEncoder setFragmentTexture:m_UpscalingOutputTexture atIndex:0];
+        [presentEncoder setVertexBuffer:m_VideoVertexBuffer offset:0 atIndex:0];
+        [presentEncoder drawPrimitives:MTLPrimitiveTypeTriangleStrip
+                            vertexStart:0
+                            vertexCount:4];
+        [presentEncoder endEncoding];
+
+        m_video_render_stats.total_upscaling_time +=
+            LiGetMillis() - postProcessStart;
+        m_video_render_stats.upscaled_frames++;
+        m_video_render_stats.total_post_process_time +=
+            LiGetMillis() - postProcessStart;
+        m_video_render_stats.post_processed_frames++;
+    } else
+#endif
+    {
+        auto renderPassDescriptor = [MTLRenderPassDescriptor renderPassDescriptor];
+        MTLRenderPassColorAttachmentDescriptor* colorAttachment =
+            [renderPassDescriptor.colorAttachments objectAtIndexedSubscript:0];
+        if (colorAttachment == nil) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "Failed to acquire Metal color attachment descriptor");
+            return;
+        }
+
+        [colorAttachment setTexture:drawableTexture];
+        [colorAttachment setLoadAction:MTLLoadActionClear];
+        [colorAttachment setClearColor:MTLClearColorMake(0.0, 0.0, 0.0, 0.0)];
+        [colorAttachment setStoreAction:MTLStoreActionStore];
+
+        auto renderEncoder =
+            [commandBuffer renderCommandEncoderWithDescriptor:renderPassDescriptor];
+
+        // Bind textures and buffers then draw the video region
+        [renderEncoder setRenderPipelineState:m_VideoPipelineState];
+        for (size_t i = 0; i < planes; i++) {
+            [renderEncoder setFragmentTexture:CVMetalTextureGetTexture(cvMetalTextures[i])
+                                      atIndex:i];
+        }
+
+        [renderEncoder setFragmentBuffer:m_CscParamsBuffer offset:0 atIndex:0];
+        [renderEncoder setVertexBuffer:m_VideoVertexBuffer offset:0 atIndex:0];
+        [renderEncoder drawPrimitives:MTLPrimitiveTypeTriangleStrip
+                           vertexStart:0
+                           vertexCount:4];
+
+        // Now draw any overlays that are enabled
+        //
+
+        [renderEncoder endEncoding];
+    }
 
 //    if (m_MetalLayer.displaySyncEnabled) {
     // Queue a completion callback on the drawable to pace our rendering
@@ -618,6 +1009,9 @@ void MetalVideoRenderer::draw(NVGcontext* vg, int width, int height, AVFrame* fr
 #if !TARGET_OS_OSX && !TARGET_OS_TV
     [commandBuffer waitUntilCompleted];
 #endif
+
+    m_video_render_stats.total_render_time += LiGetMillis() - before_render;
+    m_video_render_stats.rendered_frames++;
 }
 
 id<MTLDevice> getMetalDevice() {
@@ -662,6 +1056,14 @@ bool MetalVideoRenderer::initialize(int imageFormat)
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                 "Selected Metal device: %s",
                 device.name.UTF8String);
+
+#if defined(SUPPORT_UPSCALING)
+    m_MetalFxSupported = metalFxSupportsDevice(device);
+    if (!m_MetalFxSupported) {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "MetalFX temporal upscaling is unavailable on this OS or device");
+    }
+#endif
 
 //    if (!checkDecoderCapabilities(device, params)) {
 //        return false;
@@ -744,16 +1146,51 @@ bool MetalVideoRenderer::initialize(int imageFormat)
         return false;
     }
 
+#if defined(SUPPORT_UPSCALING)
+    MTLResourceOptions bufferOptions = static_cast<MTLResourceOptions>(
+        static_cast<NSUInteger>(MTLCPUCacheModeWriteCombined) |
+        static_cast<NSUInteger>(MTLResourceStorageModeShared));
+    m_FullFrameVertexBuffer =
+        [m_MetalLayer.device newBufferWithBytes:FullFrameVertexData.data()
+                                         length:sizeof(Vertex) * FullFrameVertexData.size()
+                                        options:bufferOptions];
+    if (!m_FullFrameVertexBuffer) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "Failed to create MetalFX source vertex buffer");
+        return false;
+    }
+#endif
+
     initialized = true;
     return true;
 }}
 
 VideoRenderStats* MetalVideoRenderer::video_render_stats() {
+    if (!m_video_render_stats.rendered_frames) {
+        m_video_render_stats.rendered_fps = 0.0f;
+        m_video_render_stats.rendering_time = 0.0f;
+        m_video_render_stats.post_processing_time = 0.0f;
+        m_video_render_stats.upscaling_time = 0.0f;
+        return (VideoRenderStats*)&m_video_render_stats;
+    }
+
     m_video_render_stats.rendered_fps = (float)m_video_render_stats.rendered_frames /
             ((float) (LiGetMillis() - m_video_render_stats.measurement_start_timestamp) / 1000);
 
     m_video_render_stats.rendering_time = (float)m_video_render_stats.total_render_time /
             (float) m_video_render_stats.rendered_frames;
+
+    m_video_render_stats.post_processing_time =
+        m_video_render_stats.post_processed_frames
+            ? (float)m_video_render_stats.total_post_process_time /
+                  (float)m_video_render_stats.post_processed_frames
+            : 0.0f;
+
+    m_video_render_stats.upscaling_time =
+        m_video_render_stats.upscaled_frames
+            ? (float)m_video_render_stats.total_upscaling_time /
+                  (float)m_video_render_stats.upscaled_frames
+            : 0.0f;
 
     return (VideoRenderStats*)&m_video_render_stats;
 }

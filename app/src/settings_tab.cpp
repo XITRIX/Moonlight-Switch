@@ -14,6 +14,7 @@
 #include "helper.hpp"
 #include "button_selecting_dialog.hpp"
 #include "mapping_layout_editor.hpp"
+#include "UpscalingSupport.hpp"
 #include <cmath>
 #include <iomanip>
 #include <sstream>
@@ -122,6 +123,18 @@ SettingsTab::SettingsTab() {
     });
 
 #ifdef SUPPORT_UPSCALING
+    if (!isVideoUpscalingSupported()) {
+        imageAdjustmentsHeader->removeFromSuperView(true);
+        dithering->removeFromSuperView(true);
+        upscaling->removeFromSuperView(true);
+        rcas->removeFromSuperView(true);
+    } else {
+#if defined(PLATFORM_APPLE)
+        dithering->removeFromSuperView(true);
+        rcas->removeFromSuperView(true);
+        upscaling->init("settings/upscaling"_i18n, Settings::instance().upscaling(),
+                        [](bool value) { Settings::instance().set_upscaling(value); });
+#else
     auto updateDitheringControls = [this](bool enabled) {
         updateStrengthControl(dithering, enabled,
                               getDitheringStrengthText(
@@ -167,6 +180,8 @@ SettingsTab::SettingsTab() {
     });
     rcas->setProgress(rcasStrength);
     updateRcasControls(Settings::instance().rcas());
+#endif
+    }
 #else
     imageAdjustmentsHeader->removeFromSuperView(true);
     dithering->removeFromSuperView(true);

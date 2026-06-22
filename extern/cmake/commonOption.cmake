@@ -16,7 +16,8 @@ option(PLATFORM_PS4 "build for ps4" OFF)
 option(PLATFORM_SWITCH "build for switch" OFF)
 
 set(_moonlight_enable_upscaling_default OFF)
-if (PLATFORM_SWITCH)
+if (PLATFORM_SWITCH OR PLATFORM_IOS OR PLATFORM_TVOS OR PLATFORM_VISIONOS OR
+        (PLATFORM_DESKTOP AND (APPLE OR CMAKE_HOST_APPLE OR CMAKE_HOST_SYSTEM_NAME STREQUAL "Darwin")))
     set(_moonlight_enable_upscaling_default ON)
 endif ()
 option(ENABLE_UPSCALING "Enable video upscaling on supported renderers" ${_moonlight_enable_upscaling_default})

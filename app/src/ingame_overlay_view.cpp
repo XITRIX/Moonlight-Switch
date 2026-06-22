@@ -13,6 +13,7 @@
 #include "ingame_overlay_view.hpp"
 #include "streaming_input_overlay.hpp"
 #include "button_selecting_dialog.hpp"
+#include "UpscalingSupport.hpp"
 
 #include <cmath>
 #include <iomanip>
@@ -256,6 +257,19 @@ OptionsTab::OptionsTab(StreamingView* streamView) : streamView(streamView) {
         [streamView](bool value) { streamView->draw_stats = value; });
 
 #ifdef SUPPORT_UPSCALING
+    if (!isVideoUpscalingSupported()) {
+        imageAdjustmentsHeader->removeFromSuperView(true);
+        ditheringButton->removeFromSuperView(true);
+        upscalingButton->removeFromSuperView(true);
+        rcasButton->removeFromSuperView(true);
+    } else {
+#if defined(PLATFORM_APPLE)
+        ditheringButton->removeFromSuperView(true);
+        rcasButton->removeFromSuperView(true);
+        upscalingButton->init(
+            "settings/upscaling"_i18n, Settings::instance().upscaling(),
+            [](bool value) { Settings::instance().set_upscaling(value); });
+#else
     auto updateDitheringControls = [this](bool enabled) {
         updateStrengthControl(ditheringButton, enabled,
                               getDitheringStrengthText(
@@ -305,6 +319,8 @@ OptionsTab::OptionsTab(StreamingView* streamView) : streamView(streamView) {
     });
     rcasButton->setProgress(rcasStrength);
     updateRcasControls(Settings::instance().rcas());
+#endif
+    }
 #else
     imageAdjustmentsHeader->removeFromSuperView(true);
     ditheringButton->removeFromSuperView(true);
