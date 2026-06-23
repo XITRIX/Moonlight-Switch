@@ -8,4 +8,11 @@
 
 #pragma once
 
+#include <string>
+
+void registerDeepLinkHandler();
+void unregisterDeepLinkHandler();
+void processPendingDeepLinks();
+
 bool startFromArgs(int argc, char** argv);
+bool startFromUrl(const std::string& url, bool resetActivityStack = true);

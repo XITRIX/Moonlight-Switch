@@ -55,6 +55,11 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${EXTERN_PATH}/cmake")
 
 # project info
 project(Moonlight)
+if (PLATFORM_IOS)
+    enable_language(Swift)
+    set(CMAKE_Swift_LANGUAGE_VERSION 5)
+endif ()
+
 if (PLATFORM_IOS OR PLATFORM_TVOS OR PLATFORM_VISIONOS)
     moonlight_prepare_apple_mobile_vcpkg()
 endif ()
@@ -156,6 +161,27 @@ unset(_moonlight_vcpkg_triplet_dir)
 
 set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
 add_subdirectory(extern)
+if (PLATFORM_IOS AND TARGET borealis)
+    get_target_property(_borealis_interface_options borealis INTERFACE_COMPILE_OPTIONS)
+    if (_borealis_interface_options)
+        set(_moonlight_borealis_interface_options)
+        foreach (_option IN LISTS _borealis_interface_options)
+            if (_option MATCHES "^-DBRLS_RESOURCES=" OR
+                    _option STREQUAL "-DYG_ENABLE_EVENTS" OR
+                    _option STREQUAL "-ffunction-sections" OR
+                    _option STREQUAL "-fdata-sections")
+                list(APPEND _moonlight_borealis_interface_options
+                        "$<$<COMPILE_LANGUAGE:C,CXX,OBJC,OBJCXX>:${_option}>")
+            else ()
+                list(APPEND _moonlight_borealis_interface_options "${_option}")
+            endif ()
+        endforeach ()
+        set_target_properties(borealis PROPERTIES
+                INTERFACE_COMPILE_OPTIONS "${_moonlight_borealis_interface_options}")
+    endif ()
+    unset(_moonlight_borealis_interface_options)
+    unset(_borealis_interface_options)
+endif ()
 
 # setting src and include
 #file(GLOB_RECURSE MAIN_SRC app/src/*.cpp )
@@ -207,6 +233,9 @@ elseif (PLATFORM_ANDROID)
 elseif (PLATFORM_IOS OR PLATFORM_TVOS OR PLATFORM_VISIONOS)
     list(APPEND MAIN_SRC app/platforms/ios/apple_mdns.mm)
     list(APPEND MAIN_SRC app/platforms/ios/apple_display.mm)
+    if (PLATFORM_IOS)
+        list(APPEND MAIN_SRC app/platforms/ios/MoonlightShortcuts.swift)
+    endif ()
 endif ()
 
 if (USE_METAL_RENDERER)
@@ -331,6 +360,7 @@ elseif (PLATFORM_IOS)
         INSTALL_RPATH @executable_path/Frameworks
         XCODE_EMBED_FRAMEWORKS_CODE_SIGN_ON_COPY ON
         MACOSX_BUNDLE_COPYRIGHT "Copyright 2026 ${PROJECT_AUTHOR}"
+        XCODE_ATTRIBUTE_ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES YES
         XCODE_ATTRIBUTE_CURRENT_PROJECT_VERSION "${VERSION_BUILD}"
         XCODE_ATTRIBUTE_INFOPLIST_KEY_GCSupportsGameMode YES
         XCODE_ATTRIBUTE_INFOPLIST_KEY_GCSupportsControllerUserInteraction YES
@@ -403,7 +433,10 @@ target_include_directories(${PROJECT_NAME} PUBLIC
         extern/CImg
         ${MBEDTLS_INCLUDE_DIRS}
         ${APP_PLATFORM_INCLUDE})
-target_compile_options(${PROJECT_NAME} PRIVATE -ffunction-sections -fdata-sections ${APP_PLATFORM_OPTION})
+target_compile_options(${PROJECT_NAME} PRIVATE
+        $<$<COMPILE_LANGUAGE:C,CXX,OBJC,OBJCXX>:-ffunction-sections>
+        $<$<COMPILE_LANGUAGE:C,CXX,OBJC,OBJCXX>:-fdata-sections>
+        ${APP_PLATFORM_OPTION})
 
 if(PLATFORM_SWITCH)
     target_include_directories(${PROJECT_NAME} PRIVATE
@@ -548,6 +581,9 @@ endif()
 if (APPLE)
     set(XCODE_ATTRIBUTE_CLANG_ENABLE_OBJC_ARC OFF)
     target_link_libraries(${PROJECT_NAME} PRIVATE "-framework CoreMedia" "-framework VideoToolbox" "-framework AVKit" "-framework MetalKit")
+    if (PLATFORM_IOS)
+        target_link_libraries(${PROJECT_NAME} PRIVATE "-weak_framework AppIntents")
+    endif ()
     if (SUPPORT_UPSCALING AND USE_METAL_RENDERER)
         target_link_libraries(${PROJECT_NAME} PRIVATE "-weak_framework MetalFX")
     endif ()

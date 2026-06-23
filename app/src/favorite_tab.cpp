@@ -9,6 +9,7 @@
 #include "app_cell.hpp"
 #include "main_tabs_view.hpp"
 #include "forwarder_maker.hpp"
+#include <cstdlib>
 #include <cstdio>
 
 using namespace brls;
@@ -52,10 +53,13 @@ void FavoriteTab::updateAppList() {
             auto* cell = new AppCell(host, info, 0);
             gridView->addView(cell);
 
-            #ifdef PLATFORM_SWITCH
+#if defined(PLATFORM_SWITCH) || defined(PLATFORM_IOS)
             cell->registerAction(
                 "Make forwarder", BUTTON_X,
                 [host, app](View* view) {
+#ifdef PLATFORM_IOS
+                    makeForwarder(host, app, false);
+#else
                     const int rc = makeForwarder(host, app, false);
                     char message[160];
                     if (rc == EXIT_SUCCESS) {
@@ -67,9 +71,10 @@ void FavoriteTab::updateAppList() {
                     auto dialog = new Dialog(message);
                     dialog->addButton("common/cancel"_i18n, [](){});
                     dialog->open();
+#endif
                     return true;
             });
-            #endif
+#endif
 
             cell->registerAction(
                 "app_list/unstar"_i18n, BUTTON_Y,

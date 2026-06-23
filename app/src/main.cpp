@@ -111,6 +111,8 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
+    registerDeepLinkHandler();
+
 #if defined(PLATFORM_VISIONOS)
     brls::Application::setMaximumUIScale(1.0f);
 #endif
@@ -154,13 +156,16 @@ int main(int argc, char* argv[]) {
     if (!startFromArgs(argc, argv)) {
         brls::Application::pushActivity(new MainActivity());
     }
+    processPendingDeepLinks();
 
     brls::Application::enableDebuggingView(Settings::instance().write_log());
     brls::Application::setSwapInputKeys(Settings::instance().swap_ui_keys());
 
     // Run the app
     while (brls::Application::mainLoop())
-        ;
+        processPendingDeepLinks();
+
+    unregisterDeepLinkHandler();
 
     // Exit
 #if defined(PLATFORM_TVOS)
