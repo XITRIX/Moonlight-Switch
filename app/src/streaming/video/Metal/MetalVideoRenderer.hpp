@@ -31,7 +31,9 @@ private:
     void releaseUpscalingResources();
 #endif
 
-    VideoRenderStats m_video_render_stats = {};
+    VideoRenderStats m_video_render_stats_progress = {};
+    VideoRenderStats m_video_render_stats_cache = {};
+    uint64_t m_stats_time_accumulator = 0;
     SDL_Window* m_Window;
 //    SDL_MetalView m_MetalView;
 

@@ -728,9 +728,9 @@ bool DKVideoRenderer::submitUpscalingPresentPass() {
         presentCmdbuf.barrier(DkBarrier_Tiles, DkInvalidateFlags_Image);
         finalTextureId = rcasTextureId;
 
-        m_video_render_stats.total_sharpening_time +=
+        m_video_render_stats_progress.total_sharpening_time +=
             toMicroseconds(PostProcessClock::now() - sharpeningStageStart);
-        m_video_render_stats.sharpened_frames++;
+        m_video_render_stats_progress.sharpened_frames++;
     }
 
     const auto ditheringStageStart = PostProcessClock::now();
@@ -751,9 +751,9 @@ bool DKVideoRenderer::submitUpscalingPresentPass() {
     presentCmdbuf.draw(DkPrimitive_Quads, QuadVertexData.size(), 1, 0, 0);
 
     if (m_dithering_enabled) {
-        m_video_render_stats.total_dithering_time +=
+        m_video_render_stats_progress.total_dithering_time +=
             toMicroseconds(PostProcessClock::now() - ditheringStageStart);
-        m_video_render_stats.dithered_frames++;
+        m_video_render_stats_progress.dithered_frames++;
     }
 
     queue.submitCommands(presentCmdMemRing.end(presentCmdbuf));
@@ -1102,8 +1102,8 @@ void DKVideoRenderer::draw(NVGcontext* vg, int width, int height, AVFrame* frame
 
     uint64_t before_render = LiGetMillis();
 
-    if (!m_video_render_stats.rendered_frames) {
-        m_video_render_stats.measurement_start_timestamp = before_render;
+    if (!m_video_render_stats_progress.rendered_frames) {
+        m_video_render_stats_progress.measurement_start_timestamp = before_render;
     }
 
     updateRenderState(width, height, frame);
@@ -1119,18 +1119,18 @@ void DKVideoRenderer::draw(NVGcontext* vg, int width, int height, AVFrame* frame
             vctx->queueWaitFence(&upscalingFence);
 
             if (m_upscaling_enabled) {
-                m_video_render_stats.total_upscaling_time +=
+                m_video_render_stats_progress.total_upscaling_time +=
                     toMicroseconds(PostProcessClock::now() - upscalingStageStart);
-                m_video_render_stats.upscaled_frames++;
+                m_video_render_stats_progress.upscaled_frames++;
             }
 
             const bool submittedPostProcess = submitUpscalingPresentPass();
             vctx->queueFlush();
 
             if (submittedPostProcess) {
-                m_video_render_stats.total_post_process_time +=
+                m_video_render_stats_progress.total_post_process_time +=
                     toMicroseconds(PostProcessClock::now() - postProcessStart);
-                m_video_render_stats.post_processed_frames++;
+                m_video_render_stats_progress.post_processed_frames++;
             }
         } else {
             queue.submitCommands(cmdlist);
@@ -1140,8 +1140,9 @@ void DKVideoRenderer::draw(NVGcontext* vg, int width, int height, AVFrame* frame
 #endif
     }
 
+    const uint64_t render_time = LiGetMillis() - before_render;
     frames++;
-    timeCount += LiGetMillis() - before_render;
+    timeCount += render_time;
 
     if (timeCount >= 5000) {
         brls::Logger::debug("FPS: {}", frames / 5.0f);
@@ -1149,60 +1150,64 @@ void DKVideoRenderer::draw(NVGcontext* vg, int width, int height, AVFrame* frame
         timeCount -= 5000;
     }
 
-    m_video_render_stats.total_render_time += LiGetMillis() - before_render;
-    m_video_render_stats.rendered_frames++;
+    m_video_render_stats_progress.total_render_time += render_time;
+    m_video_render_stats_progress.rendered_frames++;
+    m_stats_time_accumulator += render_time;
+
+    const uint64_t stats_interval_ms = 200;
+    if (m_stats_time_accumulator >= stats_interval_ms) {
+        m_video_render_stats_cache = m_video_render_stats_progress;
+        m_video_render_stats_progress = {};
+
+        const uint64_t now = LiGetMillis();
+        const uint64_t elapsed_time =
+            now - m_video_render_stats_cache.measurement_start_timestamp;
+        m_video_render_stats_cache.rendered_fps =
+            elapsed_time
+                ? (float)m_video_render_stats_cache.rendered_frames /
+                      ((float)elapsed_time / 1000.0f)
+                : 0.0f;
+
+        m_video_render_stats_cache.rendering_time =
+            m_video_render_stats_cache.rendered_frames
+                ? (float)m_video_render_stats_cache.total_render_time /
+                      (float)m_video_render_stats_cache.rendered_frames
+                : 0.0f;
+
+        m_video_render_stats_cache.post_processing_time =
+            m_video_render_stats_cache.post_processed_frames
+                ? ((float)m_video_render_stats_cache.total_post_process_time /
+                   (float)m_video_render_stats_cache.post_processed_frames) /
+                      1000.0f
+                : 0.0f;
+
+        m_video_render_stats_cache.dithering_time =
+            m_video_render_stats_cache.dithered_frames
+                ? ((float)m_video_render_stats_cache.total_dithering_time /
+                   (float)m_video_render_stats_cache.dithered_frames) /
+                      1000.0f
+                : 0.0f;
+
+        m_video_render_stats_cache.upscaling_time =
+            m_video_render_stats_cache.upscaled_frames
+                ? ((float)m_video_render_stats_cache.total_upscaling_time /
+                   (float)m_video_render_stats_cache.upscaled_frames) /
+                      1000.0f
+                : 0.0f;
+
+        m_video_render_stats_cache.sharpening_time =
+            m_video_render_stats_cache.sharpened_frames
+                ? ((float)m_video_render_stats_cache.total_sharpening_time /
+                   (float)m_video_render_stats_cache.sharpened_frames) /
+                      1000.0f
+                : 0.0f;
+
+        m_stats_time_accumulator -= stats_interval_ms;
+    }
 }
 
 VideoRenderStats* DKVideoRenderer::video_render_stats() {
-    if (!m_video_render_stats.rendered_frames) {
-        m_video_render_stats.rendered_fps = 0.0f;
-        m_video_render_stats.rendering_time = 0.0f;
-        m_video_render_stats.post_processing_time = 0.0f;
-        m_video_render_stats.dithering_time = 0.0f;
-        m_video_render_stats.upscaling_time = 0.0f;
-        m_video_render_stats.sharpening_time = 0.0f;
-        return &m_video_render_stats;
-    }
-
-    m_video_render_stats.rendered_fps =
-        (float)m_video_render_stats.rendered_frames /
-        ((float)(LiGetMillis() -
-                 m_video_render_stats.measurement_start_timestamp) /
-         1000.0f);
-
-    m_video_render_stats.rendering_time =
-        (float)m_video_render_stats.total_render_time /
-        (float)m_video_render_stats.rendered_frames;
-
-    m_video_render_stats.post_processing_time =
-        m_video_render_stats.post_processed_frames
-            ? ((float)m_video_render_stats.total_post_process_time /
-               (float)m_video_render_stats.post_processed_frames) /
-                  1000.0f
-            : 0.0f;
-
-    m_video_render_stats.dithering_time =
-        m_video_render_stats.dithered_frames
-            ? ((float)m_video_render_stats.total_dithering_time /
-               (float)m_video_render_stats.dithered_frames) /
-                  1000.0f
-            : 0.0f;
-
-    m_video_render_stats.upscaling_time =
-        m_video_render_stats.upscaled_frames
-            ? ((float)m_video_render_stats.total_upscaling_time /
-               (float)m_video_render_stats.upscaled_frames) /
-                  1000.0f
-            : 0.0f;
-
-    m_video_render_stats.sharpening_time =
-        m_video_render_stats.sharpened_frames
-            ? ((float)m_video_render_stats.total_sharpening_time /
-               (float)m_video_render_stats.sharpened_frames) /
-                  1000.0f
-            : 0.0f;
-
-    return &m_video_render_stats;
+    return &m_video_render_stats_cache;
 }
 
 #endif
