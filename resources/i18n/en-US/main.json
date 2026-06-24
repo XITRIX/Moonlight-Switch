@@ -57,6 +57,13 @@
         "stream_start": "Failed to start stream...",
         "unknown_error": "Unknown problem has been occured..."
     },
+    "forwarder": {
+        "install_failed": "Forwarder install failed\n0x{:X}",
+        "installed": "Forwarder installed",
+        "make": "Make forwarder",
+        "open_shortcuts": "Open Shortcuts",
+        "shortcuts_message": "This app can use the Shortcuts app to create launch actions."
+    },
     "hints": {
         "back": "Back",
         "off": "Off",

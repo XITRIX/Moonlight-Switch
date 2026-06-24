@@ -57,6 +57,13 @@
         "stream_start": "Errore nell'avvio dello stream...",
         "unknown_error": "Si è verificato un problema sconosciuto..."
     },
+    "forwarder": {
+        "install_failed": "Installazione forwarder non riuscita\n0x{:X}",
+        "installed": "Forwarder installato",
+        "make": "Crea forwarder",
+        "open_shortcuts": "Apri Comandi Rapidi",
+        "shortcuts_message": "Questa app può usare l'app Comandi Rapidi per creare azioni di avvio."
+    },
     "hints": {
         "back": "Indietro",
         "off": "Off",

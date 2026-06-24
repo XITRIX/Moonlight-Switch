@@ -57,6 +57,13 @@
         "stream_start": "开始串流失败……",
         "unknown_error": "发生了未知的错误……"
     },
+    "forwarder": {
+        "install_failed": "转发器安装失败\n0x{:X}",
+        "installed": "转发器已安装",
+        "make": "创建转发器",
+        "open_shortcuts": "打开快捷指令",
+        "shortcuts_message": "此应用可使用“快捷指令”App 创建启动操作。"
+    },
     "hints": {
         "back": "返回",
         "off": "关闭",

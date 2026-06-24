@@ -10,6 +10,8 @@
 
 #include <cstdlib>
 
+using namespace brls::literals;
+
 #ifdef __SWITCH__
 #include <Settings.hpp>
 
@@ -65,10 +67,9 @@ std::string buildForwarderArgs(const Host& host, const App& app) {
 namespace {
 
 void showShortcutsAlert() {
-    auto* dialog = new brls::Dialog(
-        "This app can use the Shortcuts app to create launch actions.");
-    dialog->addButton("Close", [] {});
-    dialog->addButton("Open Shortcuts", [] {
+    auto* dialog = new brls::Dialog("forwarder/shortcuts_message"_i18n);
+    dialog->addButton("common/close"_i18n, [] {});
+    dialog->addButton("forwarder/open_shortcuts"_i18n, [] {
         brls::Application::getPlatform()->openBrowser("shortcuts://create-shortcut");
     });
     dialog->open();

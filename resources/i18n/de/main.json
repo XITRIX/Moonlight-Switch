@@ -57,6 +57,13 @@
         "stream_start": "Stream konnten nicht gestartet werden...",
         "unknown_error": "Unbekannter Fehler aufgetreten..."
     },
+    "forwarder": {
+        "install_failed": "Forwarder-Installation fehlgeschlagen\n0x{:X}",
+        "installed": "Forwarder installiert",
+        "make": "Forwarder erstellen",
+        "open_shortcuts": "Kurzbefehle öffnen",
+        "shortcuts_message": "Diese App kann die Kurzbefehle-App verwenden, um Startaktionen zu erstellen."
+    },
     "hints": {
         "back": "Zurück",
         "off": "Aus",

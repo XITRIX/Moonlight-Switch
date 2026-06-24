@@ -57,6 +57,13 @@
         "stream_start": "Failed to start stream...",
         "unknown_error": "Unknown problem has been occured..."
     },
+    "forwarder": {
+        "install_failed": "フォワーダーのインストールに失敗しました\n0x{:X}",
+        "installed": "フォワーダーをインストールしました",
+        "make": "フォワーダーを作成",
+        "open_shortcuts": "ショートカットを開く",
+        "shortcuts_message": "このアプリはショートカットアプリを使用して起動アクションを作成できます。"
+    },
     "hints": {
         "back": "戻る",
         "off": "オフ",

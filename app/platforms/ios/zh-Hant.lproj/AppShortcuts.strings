@@ -1,0 +1,17 @@
+"Launch a game in ${applicationName}" = "在 ${applicationName} 中啟動遊戲";
+"Start streaming with ${applicationName}" = "使用 ${applicationName} 開始串流";
+"Create a game in ${applicationName}" = "在 ${applicationName} 中建立遊戲";
+"Make a game in ${applicationName}" = "使用 ${applicationName} 建立遊戲";
+"Get favorite games from ${applicationName}" = "從 ${applicationName} 取得收藏遊戲";
+"Show favorite games from ${applicationName}" = "從 ${applicationName} 顯示收藏遊戲";
+"Get game detail from ${applicationName}" = "從 ${applicationName} 取得遊戲詳細資訊";
+"Read game detail from ${applicationName}" = "從 ${applicationName} 讀取遊戲詳細資訊";
+"Get game deep link from ${applicationName}" = "從 ${applicationName} 取得遊戲深層連結";
+"Create game deep link with ${applicationName}" = "使用 ${applicationName} 建立遊戲深層連結";
+"Launch Game" = "啟動遊戲";
+"Create Game" = "建立遊戲";
+"Get Favorite Games" = "取得收藏遊戲";
+"Get Favorites" = "取得收藏";
+"Get Game Detail" = "取得遊戲詳細資訊";
+"Get Game Deep Link" = "取得遊戲深層連結";
+"Get Deep Link" = "取得深層連結";

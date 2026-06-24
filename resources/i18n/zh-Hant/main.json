@@ -57,6 +57,13 @@
         "stream_start": "開始串流失敗……",
         "unknown_error": "發生了未知的錯誤……"
     },
+    "forwarder": {
+        "install_failed": "轉發器安裝失敗\n0x{:X}",
+        "installed": "轉發器已安裝",
+        "make": "建立轉發器",
+        "open_shortcuts": "打開捷徑",
+        "shortcuts_message": "此 App 可使用「捷徑」App 建立啟動動作。"
+    },
     "hints": {
         "back": "返回",
         "off": "關閉",

@@ -369,6 +369,21 @@ elseif (PLATFORM_IOS)
         XCODE_ATTRIBUTE_LD_RUNPATH_SEARCH_PATHS "@executable_path/Frameworks"
         XCODE_ATTRIBUTE_FRAMEWORK_SEARCH_PATHS "${CMAKE_CURRENT_SOURCE_DIR}/extern/borealis/library/lib/extern/angle/ios/"
         XCODE_ATTRIBUTE_INSTALL_PATH $(LOCAL_APPS_DIR))
+
+    file(GLOB MOONLIGHT_IOS_LOCALIZATION_FILES CONFIGURE_DEPENDS
+        "${CMAKE_CURRENT_SOURCE_DIR}/app/platforms/ios/*.xcstrings"
+        "${CMAKE_CURRENT_SOURCE_DIR}/app/platforms/ios/*.lproj/AppShortcuts.strings")
+    set_source_files_properties(${MOONLIGHT_IOS_LOCALIZATION_FILES} PROPERTIES
+        MACOSX_PACKAGE_LOCATION "Resources")
+    foreach (_localization_file IN LISTS MOONLIGHT_IOS_LOCALIZATION_FILES)
+        if (_localization_file MATCHES "\\.lproj/")
+            get_filename_component(_localization_dir "${_localization_file}" DIRECTORY)
+            get_filename_component(_localization_name "${_localization_dir}" NAME)
+            set_source_files_properties("${_localization_file}" PROPERTIES
+                MACOSX_PACKAGE_LOCATION "Resources/${_localization_name}")
+        endif ()
+    endforeach ()
+    target_sources(${PROJECT_NAME} PRIVATE ${MOONLIGHT_IOS_LOCALIZATION_FILES})
 elseif (PLATFORM_VISIONOS)
     ios_bundle(
             "${CMAKE_CURRENT_SOURCE_DIR}/app/platforms/ios/iphoneos/Splash.storyboard"

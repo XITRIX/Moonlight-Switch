@@ -10,7 +10,7 @@
 #include "main_tabs_view.hpp"
 #include "forwarder_maker.hpp"
 #include <cstdlib>
-#include <cstdio>
+#include <string>
 
 using namespace brls;
 using namespace brls::literals;
@@ -55,18 +55,16 @@ void FavoriteTab::updateAppList() {
 
 #if defined(PLATFORM_SWITCH) || defined(PLATFORM_IOS)
             cell->registerAction(
-                "Make forwarder", BUTTON_X,
+                "forwarder/make"_i18n, BUTTON_X,
                 [host, app](View* view) {
 #ifdef PLATFORM_IOS
                     makeForwarder(host, app, false);
 #else
                     const int rc = makeForwarder(host, app, false);
-                    char message[160];
-                    if (rc == EXIT_SUCCESS) {
-                        std::snprintf(message, sizeof(message), "Forwarder installed");
-                    } else {
-                        std::snprintf(message, sizeof(message), "Forwarder install failed\n0x%X", rc);
-                    }
+                    const std::string message =
+                        rc == EXIT_SUCCESS
+                            ? "forwarder/installed"_i18n
+                            : brls::getStr("forwarder/install_failed", rc);
 
                     auto dialog = new Dialog(message);
                     dialog->addButton("common/cancel"_i18n, [](){});

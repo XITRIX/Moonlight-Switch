@@ -57,6 +57,13 @@
         "stream_start": "Fallo al iniciar stream...",
         "unknown_error": "Ha ocurrido un problema desconocido..."
     },
+    "forwarder": {
+        "install_failed": "Error al instalar el forwarder\n0x{:X}",
+        "installed": "Forwarder instalado",
+        "make": "Crear forwarder",
+        "open_shortcuts": "Abrir Atajos",
+        "shortcuts_message": "Esta app puede usar la app Atajos para crear acciones de inicio."
+    },
     "hints": {
         "back": "Atrás",
         "off": "Off",

@@ -1,0 +1,17 @@
+"Launch a game in ${applicationName}" = "Запустить игру в ${applicationName}";
+"Start streaming with ${applicationName}" = "Начать трансляцию с ${applicationName}";
+"Create a game in ${applicationName}" = "Создать игру в ${applicationName}";
+"Make a game in ${applicationName}" = "Сделать игру в ${applicationName}";
+"Get favorite games from ${applicationName}" = "Получить избранные игры из ${applicationName}";
+"Show favorite games from ${applicationName}" = "Показать избранные игры из ${applicationName}";
+"Get game detail from ${applicationName}" = "Получить сведения об игре из ${applicationName}";
+"Read game detail from ${applicationName}" = "Прочитать сведения об игре из ${applicationName}";
+"Get game deep link from ${applicationName}" = "Получить диплинк игры из ${applicationName}";
+"Create game deep link with ${applicationName}" = "Создать диплинк игры с ${applicationName}";
+"Launch Game" = "Запустить игру";
+"Create Game" = "Создать игру";
+"Get Favorite Games" = "Получить избранные игры";
+"Get Favorites" = "Получить избранное";
+"Get Game Detail" = "Получить сведения об игре";
+"Get Game Deep Link" = "Получить диплинк игры";
+"Get Deep Link" = "Получить диплинк";
