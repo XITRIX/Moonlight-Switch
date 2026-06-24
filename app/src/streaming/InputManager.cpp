@@ -13,6 +13,15 @@
 
 using namespace brls;
 
+namespace {
+constexpr float STICK_SCROLL_DEADZONE = 0.2f;
+
+float applyStickScrollDeadzone(float axis, float configuredDeadzone) {
+    float deadzone = std::fmax(STICK_SCROLL_DEADZONE, configuredDeadzone);
+    return std::fabs(axis) < deadzone ? 0.f : axis;
+}
+}
+
 float fsqrt_(float f) {
     int i = *(int *)&f;
     i = (i >> 1) + 0x1fbb67ae;
@@ -378,10 +387,14 @@ void MoonlightInputManager::handleInput(bool ignoreTouch) {
 
     handleControllers(specialKey);
 
-    float stickScrolling =
-            specialKey
-            ? (controller.axes[brls::LEFT_Y] + controller.axes[brls::RIGHT_Y])
-            : 0;
+    float stickScrolling = 0;
+    if (specialKey) {
+        stickScrolling =
+                applyStickScrollDeadzone(controller.axes[brls::LEFT_Y],
+                                         Settings::instance().get_deadzone_stick_left()) +
+                applyStickScrollDeadzone(controller.axes[brls::RIGHT_Y],
+                                         Settings::instance().get_deadzone_stick_right());
+    }
 
     static MouseStateS lastMouseState;
 
