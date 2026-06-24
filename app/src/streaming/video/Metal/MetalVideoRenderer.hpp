@@ -20,7 +20,14 @@ private:
     bool initialize(int imageFormat);
 #ifdef SUPPORT_UPSCALING
     bool shouldUseUpscaling() const;
+    bool shouldUseMetalFxUpscaling() const;
+    bool shouldUseFsrUpscaling() const;
+    bool shouldUseDithering() const;
+    bool shouldUseRcas() const;
     bool ensureUpscalingResources(AVFrame* frame);
+    void updateEasuParams(int inputWidth, int inputHeight, int outputWidth, int outputHeight);
+    void updatePostProcessParams(bool ditheringEnabled);
+    void updateRcasParams();
     void releaseUpscalingResources();
 #endif
 

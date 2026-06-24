@@ -127,65 +127,70 @@ SettingsTab::SettingsTab() {
         imageAdjustmentsHeader->removeFromSuperView(true);
         dithering->removeFromSuperView(true);
         upscaling->removeFromSuperView(true);
+        upscalingMode->removeFromSuperView(true);
         rcas->removeFromSuperView(true);
     } else {
+        auto updateDitheringControls = [this](bool enabled) {
+            updateStrengthControl(dithering, enabled,
+                                  getDitheringStrengthText(
+                                      Settings::instance().dithering_strength()));
+        };
+        auto updateRcasControls = [this](bool enabled) {
+            updateStrengthControl(rcas, enabled,
+                                  getRcasStrengthText(
+                                      Settings::instance().rcas_strength()));
+        };
+
+        dithering->init("settings/dithering"_i18n, Settings::instance().dithering(),
+                        [updateDitheringControls](bool value) {
+                            Settings::instance().set_dithering(value);
+                            updateDitheringControls(value);
+                        });
+        const float ditheringStrength = Settings::instance().dithering_strength();
+        dithering->getProgressEvent()->subscribe([this](float value) {
+            const float strength = sliderProgressToDitheringStrength(value);
+            Settings::instance().set_dithering_strength(strength);
+            updateStrengthControl(dithering,
+                                  Settings::instance().dithering(),
+                                  getDitheringStrengthText(strength));
+        });
+        dithering->setProgress(
+            ditheringStrengthToSliderProgress(ditheringStrength));
+        updateDitheringControls(Settings::instance().dithering());
+
 #if defined(PLATFORM_APPLE)
-        dithering->removeFromSuperView(true);
-        rcas->removeFromSuperView(true);
+        upscaling->removeFromSuperView(true);
+        upscalingMode->init(
+            "settings/upscaling"_i18n,
+            {"hints/off"_i18n, "MetalFX", "FSR1"},
+            (int)Settings::instance().upscaling_mode(),
+            [](int value) { Settings::instance().set_upscaling_mode((UpscalingMode)value); });
+#else
+        upscalingMode->removeFromSuperView(true);
         upscaling->init("settings/upscaling"_i18n, Settings::instance().upscaling(),
                         [](bool value) { Settings::instance().set_upscaling(value); });
-#else
-    auto updateDitheringControls = [this](bool enabled) {
-        updateStrengthControl(dithering, enabled,
-                              getDitheringStrengthText(
-                                  Settings::instance().dithering_strength()));
-    };
-    auto updateRcasControls = [this](bool enabled) {
-        updateStrengthControl(rcas, enabled,
-                              getRcasStrengthText(
-                                  Settings::instance().rcas_strength()));
-    };
-
-    dithering->init("settings/dithering"_i18n, Settings::instance().dithering(),
-                    [updateDitheringControls](bool value) {
-                        Settings::instance().set_dithering(value);
-                        updateDitheringControls(value);
-                    });
-    const float ditheringStrength = Settings::instance().dithering_strength();
-    dithering->getProgressEvent()->subscribe([this](float value) {
-        const float strength = sliderProgressToDitheringStrength(value);
-        Settings::instance().set_dithering_strength(strength);
-        updateStrengthControl(dithering,
-                              Settings::instance().dithering(),
-                              getDitheringStrengthText(strength));
-    });
-    dithering->setProgress(
-        ditheringStrengthToSliderProgress(ditheringStrength));
-    updateDitheringControls(Settings::instance().dithering());
-
-    upscaling->init("settings/upscaling"_i18n, Settings::instance().upscaling(),
-                    [](bool value) { Settings::instance().set_upscaling(value); });
-    rcas->init("settings/rcas_sharpening"_i18n, Settings::instance().rcas(),
-               [updateRcasControls](bool value) {
-                   Settings::instance().set_rcas(value);
-                   updateRcasControls(value);
-               });
-
-    const float rcasStrength = Settings::instance().rcas_strength();
-    rcas->getProgressEvent()->subscribe([this](float value) {
-        Settings::instance().set_rcas_strength(value);
-        updateStrengthControl(rcas,
-                              Settings::instance().rcas(),
-                              getRcasStrengthText(value));
-    });
-    rcas->setProgress(rcasStrength);
-    updateRcasControls(Settings::instance().rcas());
 #endif
+        rcas->init("settings/rcas_sharpening"_i18n, Settings::instance().rcas(),
+                   [updateRcasControls](bool value) {
+                       Settings::instance().set_rcas(value);
+                       updateRcasControls(value);
+                   });
+
+        const float rcasStrength = Settings::instance().rcas_strength();
+        rcas->getProgressEvent()->subscribe([this](float value) {
+            Settings::instance().set_rcas_strength(value);
+            updateStrengthControl(rcas,
+                                  Settings::instance().rcas(),
+                                  getRcasStrengthText(value));
+        });
+        rcas->setProgress(rcasStrength);
+        updateRcasControls(Settings::instance().rcas());
     }
 #else
     imageAdjustmentsHeader->removeFromSuperView(true);
     dithering->removeFromSuperView(true);
     upscaling->removeFromSuperView(true);
+    upscalingMode->removeFromSuperView(true);
     rcas->removeFromSuperView(true);
 #endif
 

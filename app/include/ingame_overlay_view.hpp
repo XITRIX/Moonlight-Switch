@@ -70,5 +70,6 @@ class OptionsTab : public brls::Box {
     BRLS_BIND(BooleanSliderCell, rcasButton, "rcas");
     BRLS_BIND(brls::BooleanCell, debugButton, "debug");
     BRLS_BIND(brls::BooleanCell, upscalingButton, "upscaling");
+    BRLS_BIND(brls::SelectorCell, upscalingModeButton, "upscaling_mode");
     BRLS_BIND(brls::BooleanCell, onscreenLogButton, "onscreen_log");
 };

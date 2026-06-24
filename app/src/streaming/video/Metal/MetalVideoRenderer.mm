@@ -17,7 +17,10 @@ extern "C" {
 #include "MetalVideoRenderer.hpp"
 #include "Settings.hpp"
 #include "UpscalingSupport.hpp"
+#include <algorithm>
 #include <array>
+#include <cmath>
+#include <cstring>
 
 #import <CoreVideo/CoreVideo.h>
 #import <Metal/Metal.h>
@@ -53,15 +56,23 @@ struct MetalVideoRenderer::MetalRendererState {
     id<MTLCommandQueue> commandQueue = nil;
 #if defined(SUPPORT_UPSCALING)
     id<MTLBuffer> fullFrameVertexBuffer = nil;
+    id<MTLBuffer> easuParamsBuffer = nil;
+    id<MTLBuffer> postProcessParamsBuffer = nil;
+    id<MTLBuffer> rcasParamsBuffer = nil;
+    id<MTLRenderPipelineState> easuPipelineState = nil;
+    id<MTLRenderPipelineState> postProcessPipelineState = nil;
+    id<MTLRenderPipelineState> rcasPipelineState = nil;
     id<MTLTexture> upscalingInputTexture = nil;
     id<MTLTexture> upscalingOutputTexture = nil;
     id<MTLTexture> upscalingMotionTexture = nil;
     id<MTLTexture> upscalingDepthTexture = nil;
+    id<MTLTexture> rcasOutputTexture = nil;
 #if !TARGET_OS_VISION
     id<MTLFXTemporalScaler> temporalScaler = nil;
 #endif
     bool metalFxSupported = false;
     bool loggedMetalFxUnsupported = false;
+    UpscalingMode upscalingResourcesMode = UPSCALING_OFF;
     int upscalingInputWidth = 0;
     int upscalingInputHeight = 0;
     int upscalingOutputWidth = 0;
@@ -97,15 +108,23 @@ struct MetalVideoRenderer::MetalRendererState {
 #define m_CommandQueue m_State->commandQueue
 #if defined(SUPPORT_UPSCALING)
 #define m_FullFrameVertexBuffer m_State->fullFrameVertexBuffer
+#define m_EasuParamsBuffer m_State->easuParamsBuffer
+#define m_PostProcessParamsBuffer m_State->postProcessParamsBuffer
+#define m_RcasParamsBuffer m_State->rcasParamsBuffer
+#define m_EasuPipelineState m_State->easuPipelineState
+#define m_PostProcessPipelineState m_State->postProcessPipelineState
+#define m_RcasPipelineState m_State->rcasPipelineState
 #define m_UpscalingInputTexture m_State->upscalingInputTexture
 #define m_UpscalingOutputTexture m_State->upscalingOutputTexture
 #define m_UpscalingMotionTexture m_State->upscalingMotionTexture
 #define m_UpscalingDepthTexture m_State->upscalingDepthTexture
+#define m_RcasOutputTexture m_State->rcasOutputTexture
 #if !TARGET_OS_VISION
 #define m_TemporalScaler m_State->temporalScaler
 #endif
 #define m_MetalFxSupported m_State->metalFxSupported
 #define m_LoggedMetalFxUnsupported m_State->loggedMetalFxUnsupported
+#define m_UpscalingResourcesMode m_State->upscalingResourcesMode
 #define m_UpscalingInputWidth m_State->upscalingInputWidth
 #define m_UpscalingInputHeight m_State->upscalingInputHeight
 #define m_UpscalingOutputWidth m_State->upscalingOutputWidth
@@ -240,6 +259,31 @@ struct ParamBuffer
     CscParams cscParams;
     float bitnessScaleFactor;
 };
+
+struct PostProcessParams
+{
+    float control[4];
+};
+
+struct EasuParams
+{
+    float con0[4];
+    float con1[4];
+    float con2[4];
+    float con3[4];
+};
+
+struct RcasParams
+{
+    float control[4];
+};
+
+static_assert(sizeof(EasuParams) == 64,
+              "EasuParams must match the Metal shader layout");
+static_assert(sizeof(PostProcessParams) == 16,
+              "PostProcessParams must match the Metal shader layout");
+static_assert(sizeof(RcasParams) == 16,
+              "RcasParams must match the Metal shader layout");
 
 static const CscParams k_CscParams_Bt601Lim = {
     // CSC Matrix
@@ -407,13 +451,52 @@ bool MetalVideoRenderer::updateColorSpaceForFrame(AVFrame* frame) {
         pipelineDesc.colorAttachments[0].destinationAlphaBlendFactor = MTLBlendFactorOneMinusSourceAlpha;
 //        [m_OverlayPipelineState release];
         m_OverlayPipelineState = [m_MetalLayer.device newRenderPipelineStateWithDescriptor:pipelineDesc error:nullptr];
-        if (!m_VideoPipelineState) {
+        if (!m_OverlayPipelineState) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "Failed to create overlay pipeline state");
             return false;
         }
 
 #if defined(SUPPORT_UPSCALING)
+        pipelineDesc = [MTLRenderPipelineDescriptor new];
+        pipelineDesc.vertexFunction = [m_ShaderLibrary newFunctionWithName:@"vs_draw"];
+        pipelineDesc.fragmentFunction = [m_ShaderLibrary newFunctionWithName:@"ps_draw_easu"];
+        pipelineDesc.colorAttachments[0].pixelFormat = m_MetalLayer.pixelFormat;
+        m_EasuPipelineState =
+            [m_MetalLayer.device newRenderPipelineStateWithDescriptor:pipelineDesc
+                                                                error:nullptr];
+        if (!m_EasuPipelineState) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "Failed to create FSR1 EASU pipeline state");
+            return false;
+        }
+
+        pipelineDesc = [MTLRenderPipelineDescriptor new];
+        pipelineDesc.vertexFunction = [m_ShaderLibrary newFunctionWithName:@"vs_draw"];
+        pipelineDesc.fragmentFunction = [m_ShaderLibrary newFunctionWithName:@"ps_draw_postprocess"];
+        pipelineDesc.colorAttachments[0].pixelFormat = m_MetalLayer.pixelFormat;
+        m_PostProcessPipelineState =
+            [m_MetalLayer.device newRenderPipelineStateWithDescriptor:pipelineDesc
+                                                                error:nullptr];
+        if (!m_PostProcessPipelineState) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "Failed to create post-process pipeline state");
+            return false;
+        }
+
+        pipelineDesc = [MTLRenderPipelineDescriptor new];
+        pipelineDesc.vertexFunction = [m_ShaderLibrary newFunctionWithName:@"vs_draw"];
+        pipelineDesc.fragmentFunction = [m_ShaderLibrary newFunctionWithName:@"ps_draw_rcas"];
+        pipelineDesc.colorAttachments[0].pixelFormat = m_MetalLayer.pixelFormat;
+        m_RcasPipelineState =
+            [m_MetalLayer.device newRenderPipelineStateWithDescriptor:pipelineDesc
+                                                                error:nullptr];
+        if (!m_RcasPipelineState) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "Failed to create RCAS pipeline state");
+            return false;
+        }
+
         releaseUpscalingResources();
 #endif
 
@@ -519,13 +602,107 @@ static bool metalFxSupportsDevice(id<MTLDevice> device) {
 }
 
 bool MetalVideoRenderer::shouldUseUpscaling() const {
-    return Settings::instance().upscaling() && m_MetalFxSupported &&
+    return shouldUseMetalFxUpscaling() || shouldUseFsrUpscaling();
+}
+
+bool MetalVideoRenderer::shouldUseMetalFxUpscaling() const {
+    return Settings::instance().upscaling_mode() == UPSCALING_METALFX &&
+           m_MetalFxSupported &&
            m_LastFrameWidth > 0 && m_LastFrameHeight > 0 &&
            m_LastVideoRegionWidth > 0 && m_LastVideoRegionHeight > 0 &&
            m_LastVideoRegionWidth >= m_LastFrameWidth &&
            m_LastVideoRegionHeight >= m_LastFrameHeight &&
            (m_LastVideoRegionWidth > m_LastFrameWidth ||
             m_LastVideoRegionHeight > m_LastFrameHeight);
+}
+
+bool MetalVideoRenderer::shouldUseFsrUpscaling() const {
+    return Settings::instance().upscaling_mode() == UPSCALING_FSR1 &&
+           m_LastFrameWidth > 0 && m_LastFrameHeight > 0 &&
+           m_LastVideoRegionWidth > 0 && m_LastVideoRegionHeight > 0 &&
+           m_LastVideoRegionWidth >= m_LastFrameWidth &&
+           m_LastVideoRegionHeight >= m_LastFrameHeight &&
+           (m_LastVideoRegionWidth > m_LastFrameWidth ||
+            m_LastVideoRegionHeight > m_LastFrameHeight);
+}
+
+bool MetalVideoRenderer::shouldUseDithering() const {
+    return Settings::instance().dithering() &&
+           Settings::instance().dithering_strength() > 0.0f &&
+           m_LastFrameWidth > 0 && m_LastFrameHeight > 0 &&
+           m_LastVideoRegionWidth > 0 && m_LastVideoRegionHeight > 0;
+}
+
+bool MetalVideoRenderer::shouldUseRcas() const {
+    return Settings::instance().rcas() &&
+           Settings::instance().rcas_strength() > 0.0f &&
+           m_LastFrameWidth > 0 && m_LastFrameHeight > 0 &&
+           m_LastVideoRegionWidth > 0 && m_LastVideoRegionHeight > 0;
+}
+
+void MetalVideoRenderer::updateEasuParams(int inputWidth,
+                                          int inputHeight,
+                                          int outputWidth,
+                                          int outputHeight) {
+    if (!m_EasuParamsBuffer || inputWidth <= 0 || inputHeight <= 0 ||
+        outputWidth <= 0 || outputHeight <= 0) {
+        return;
+    }
+
+    const float inputWidthRcp = 1.0f / static_cast<float>(inputWidth);
+    const float inputHeightRcp = 1.0f / static_cast<float>(inputHeight);
+    const float outputWidthRcp = 1.0f / static_cast<float>(outputWidth);
+    const float outputHeightRcp = 1.0f / static_cast<float>(outputHeight);
+
+    EasuParams params = {};
+    params.con0[0] = static_cast<float>(inputWidth) * outputWidthRcp;
+    params.con0[1] = static_cast<float>(inputHeight) * outputHeightRcp;
+    params.con0[2] =
+        0.5f * static_cast<float>(inputWidth) * outputWidthRcp - 0.5f;
+    params.con0[3] =
+        0.5f * static_cast<float>(inputHeight) * outputHeightRcp - 0.5f;
+
+    params.con1[0] = inputWidthRcp;
+    params.con1[1] = inputHeightRcp;
+    params.con1[2] = inputWidthRcp;
+    params.con1[3] = -inputHeightRcp;
+
+    params.con2[0] = -inputWidthRcp;
+    params.con2[1] = 2.0f * inputHeightRcp;
+    params.con2[2] = inputWidthRcp;
+    params.con2[3] = 2.0f * inputHeightRcp;
+
+    params.con3[1] = 4.0f * inputHeightRcp;
+
+    memcpy([m_EasuParamsBuffer contents], &params, sizeof(params));
+}
+
+void MetalVideoRenderer::updatePostProcessParams(bool ditheringEnabled) {
+    if (!m_PostProcessParamsBuffer) {
+        return;
+    }
+
+    PostProcessParams params = {};
+    params.control[0] = ditheringEnabled ? 1.0f : 0.0f;
+    params.control[1] =
+        std::clamp(Settings::instance().dithering_strength(), 1.0f, 10.0f);
+    memcpy([m_PostProcessParamsBuffer contents], &params, sizeof(params));
+}
+
+void MetalVideoRenderer::updateRcasParams() {
+    if (!m_RcasParamsBuffer) {
+        return;
+    }
+
+    const float strength =
+        std::clamp(Settings::instance().rcas_strength(), 0.0f, 1.0f);
+    const float sharpnessStops = 2.0f * (1.0f - strength);
+    const float sharpnessLinear =
+        static_cast<float>(std::exp2(-sharpnessStops));
+
+    RcasParams params = {};
+    params.control[0] = sharpnessLinear;
+    memcpy([m_RcasParamsBuffer contents], &params, sizeof(params));
 }
 
 void MetalVideoRenderer::releaseUpscalingResources() {
@@ -536,6 +713,8 @@ void MetalVideoRenderer::releaseUpscalingResources() {
     releaseObjCReference(m_UpscalingOutputTexture);
     releaseObjCReference(m_UpscalingMotionTexture);
     releaseObjCReference(m_UpscalingDepthTexture);
+    releaseObjCReference(m_RcasOutputTexture);
+    m_UpscalingResourcesMode = UPSCALING_OFF;
     m_UpscalingInputWidth = 0;
     m_UpscalingInputHeight = 0;
     m_UpscalingOutputWidth = 0;
@@ -544,7 +723,21 @@ void MetalVideoRenderer::releaseUpscalingResources() {
 }
 
 bool MetalVideoRenderer::ensureUpscalingResources(AVFrame* frame) {
-    if (!shouldUseUpscaling() || frame == nullptr || m_MetalLayer.device == nil) {
+    const bool wantMetalFxUpscaling = shouldUseMetalFxUpscaling();
+    const bool wantFsrUpscaling = shouldUseFsrUpscaling();
+    const bool wantUpscaling = wantMetalFxUpscaling || wantFsrUpscaling;
+    const bool wantDithering = shouldUseDithering();
+    const bool wantRcas = shouldUseRcas();
+    const UpscalingMode requestedMode =
+        wantMetalFxUpscaling ? UPSCALING_METALFX :
+        wantFsrUpscaling ? UPSCALING_FSR1 : UPSCALING_OFF;
+
+    if ((!wantUpscaling && !wantDithering && !wantRcas) || frame == nullptr ||
+        m_MetalLayer.device == nil || !m_PostProcessPipelineState ||
+        !m_PostProcessParamsBuffer) {
+        return false;
+    }
+    if (wantFsrUpscaling && (!m_EasuPipelineState || !m_EasuParamsBuffer)) {
         return false;
     }
 
@@ -554,12 +747,18 @@ bool MetalVideoRenderer::ensureUpscalingResources(AVFrame* frame) {
     const int outputHeight = m_LastVideoRegionHeight;
     const MTLPixelFormat pixelFormat = m_MetalLayer.pixelFormat;
 
-    if (
+    if (m_UpscalingOutputTexture &&
+        (!wantMetalFxUpscaling ||
 #if !TARGET_OS_VISION
-        m_TemporalScaler &&
+         (m_TemporalScaler &&
+#else
+         (false &&
 #endif
-        m_UpscalingInputTexture && m_UpscalingOutputTexture &&
-        m_UpscalingMotionTexture && m_UpscalingDepthTexture &&
+         m_UpscalingInputTexture &&
+         m_UpscalingMotionTexture && m_UpscalingDepthTexture)) &&
+        (!wantFsrUpscaling || m_UpscalingInputTexture) &&
+        (!wantRcas || m_RcasOutputTexture) &&
+        m_UpscalingResourcesMode == requestedMode &&
         m_UpscalingInputWidth == inputWidth &&
         m_UpscalingInputHeight == inputHeight &&
         m_UpscalingOutputWidth == outputWidth &&
@@ -570,63 +769,116 @@ bool MetalVideoRenderer::ensureUpscalingResources(AVFrame* frame) {
 
     releaseUpscalingResources();
 
+    if (wantMetalFxUpscaling) {
 #if TARGET_OS_VISION
-    return false;
+        return false;
 #else
 #if TARGET_OS_OSX
-    if (@available(macOS 13.0, *)) {
+        if (@available(macOS 13.0, *)) {
 #else
-    if (@available(iOS 16.0, tvOS 16.0, visionOS 1.0, *)) {
+        if (@available(iOS 16.0, tvOS 16.0, visionOS 1.0, *)) {
 #endif
-        MTLFXTemporalScalerDescriptor* descriptor =
-            [[MTLFXTemporalScalerDescriptor alloc] init];
-        descriptor.colorTextureFormat = pixelFormat;
-        descriptor.depthTextureFormat = MTLPixelFormatDepth32Float;
-        descriptor.motionTextureFormat = MTLPixelFormatRG16Float;
-        descriptor.outputTextureFormat = pixelFormat;
-        descriptor.inputWidth = inputWidth;
-        descriptor.inputHeight = inputHeight;
-        descriptor.outputWidth = outputWidth;
-        descriptor.outputHeight = outputHeight;
-        descriptor.autoExposureEnabled = YES;
-        descriptor.requiresSynchronousInitialization = YES;
+            MTLFXTemporalScalerDescriptor* descriptor =
+                [[MTLFXTemporalScalerDescriptor alloc] init];
+            descriptor.colorTextureFormat = pixelFormat;
+            descriptor.depthTextureFormat = MTLPixelFormatDepth32Float;
+            descriptor.motionTextureFormat = MTLPixelFormatRG16Float;
+            descriptor.outputTextureFormat = pixelFormat;
+            descriptor.inputWidth = inputWidth;
+            descriptor.inputHeight = inputHeight;
+            descriptor.outputWidth = outputWidth;
+            descriptor.outputHeight = outputHeight;
+            descriptor.autoExposureEnabled = YES;
+            descriptor.requiresSynchronousInitialization = YES;
 
-        m_TemporalScaler =
-            [descriptor newTemporalScalerWithDevice:m_MetalLayer.device];
-        releaseObjCReference(descriptor);
-    } else {
-        return false;
-    }
-
-    if (!m_TemporalScaler) {
-        if (!m_LoggedMetalFxUnsupported) {
-            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                        "MetalFX temporal scaler is unavailable for %dx%d -> %dx%d format %lu",
-                        inputWidth, inputHeight, outputWidth, outputHeight,
-                        static_cast<unsigned long>(pixelFormat));
-            m_LoggedMetalFxUnsupported = true;
+            m_TemporalScaler =
+                [descriptor newTemporalScalerWithDevice:m_MetalLayer.device];
+            releaseObjCReference(descriptor);
+        } else {
+            return false;
         }
-        releaseUpscalingResources();
-        return false;
-    }
 
-    if (![m_TemporalScaler conformsToProtocol:@protocol(MTLFXTemporalScaler)]) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "MetalFX returned non-temporal scaler class: %s",
-                     NSStringFromClass([m_TemporalScaler class]).UTF8String);
-        releaseUpscalingResources();
-        return false;
-    }
+        if (!m_TemporalScaler) {
+            if (!m_LoggedMetalFxUnsupported) {
+                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                            "MetalFX temporal scaler is unavailable for %dx%d -> %dx%d format %lu",
+                            inputWidth, inputHeight, outputWidth, outputHeight,
+                            static_cast<unsigned long>(pixelFormat));
+                m_LoggedMetalFxUnsupported = true;
+            }
+            releaseUpscalingResources();
+            return false;
+        }
 
-    MTLTextureDescriptor* inputDesc =
-        [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:pixelFormat
-                                                           width:inputWidth
-                                                          height:inputHeight
-                                                       mipmapped:NO];
-    inputDesc.storageMode = MTLStorageModePrivate;
-    inputDesc.usage = MTLTextureUsageRenderTarget |
-                      MTLTextureUsageShaderRead |
-                      [m_TemporalScaler colorTextureUsage];
+        if (![m_TemporalScaler conformsToProtocol:@protocol(MTLFXTemporalScaler)]) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "MetalFX returned non-temporal scaler class: %s",
+                         NSStringFromClass([m_TemporalScaler class]).UTF8String);
+            releaseUpscalingResources();
+            return false;
+        }
+
+        MTLTextureDescriptor* inputDesc =
+            [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:pixelFormat
+                                                               width:inputWidth
+                                                              height:inputHeight
+                                                           mipmapped:NO];
+        inputDesc.storageMode = MTLStorageModePrivate;
+        inputDesc.usage = MTLTextureUsageRenderTarget |
+                          MTLTextureUsageShaderRead |
+                          [m_TemporalScaler colorTextureUsage];
+
+        MTLTextureDescriptor* motionDesc =
+            [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatRG16Float
+                                                               width:inputWidth
+                                                              height:inputHeight
+                                                           mipmapped:NO];
+        motionDesc.storageMode = MTLStorageModePrivate;
+        motionDesc.usage = MTLTextureUsageRenderTarget |
+                           [m_TemporalScaler motionTextureUsage];
+
+        MTLTextureDescriptor* depthDesc =
+            [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatDepth32Float
+                                                               width:inputWidth
+                                                              height:inputHeight
+                                                           mipmapped:NO];
+        depthDesc.storageMode = MTLStorageModePrivate;
+        depthDesc.usage = MTLTextureUsageRenderTarget |
+                          [m_TemporalScaler depthTextureUsage];
+
+        m_UpscalingInputTexture =
+            [m_MetalLayer.device newTextureWithDescriptor:inputDesc];
+        m_UpscalingMotionTexture =
+            [m_MetalLayer.device newTextureWithDescriptor:motionDesc];
+        m_UpscalingDepthTexture =
+            [m_MetalLayer.device newTextureWithDescriptor:depthDesc];
+
+        if (!m_UpscalingInputTexture || !m_UpscalingMotionTexture ||
+            !m_UpscalingDepthTexture) {
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "Failed to allocate MetalFX upscaling textures");
+            releaseUpscalingResources();
+            return false;
+        }
+#endif
+    } else if (wantFsrUpscaling) {
+        MTLTextureDescriptor* inputDesc =
+            [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:pixelFormat
+                                                               width:inputWidth
+                                                              height:inputHeight
+                                                           mipmapped:NO];
+        inputDesc.storageMode = MTLStorageModePrivate;
+        inputDesc.usage =
+            MTLTextureUsageRenderTarget | MTLTextureUsageShaderRead;
+        m_UpscalingInputTexture =
+            [m_MetalLayer.device newTextureWithDescriptor:inputDesc];
+        if (!m_UpscalingInputTexture) {
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "Failed to allocate FSR1 upscaling input texture");
+            releaseUpscalingResources();
+            return false;
+        }
+    }
 
     MTLTextureDescriptor* outputDesc =
         [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:pixelFormat
@@ -634,38 +886,38 @@ bool MetalVideoRenderer::ensureUpscalingResources(AVFrame* frame) {
                                                           height:outputHeight
                                                        mipmapped:NO];
     outputDesc.storageMode = MTLStorageModePrivate;
-    outputDesc.usage = MTLTextureUsageShaderRead |
-                       [m_TemporalScaler outputTextureUsage];
+    outputDesc.usage = MTLTextureUsageShaderRead;
+    if (wantMetalFxUpscaling) {
+#if !TARGET_OS_VISION
+        outputDesc.usage |= [m_TemporalScaler outputTextureUsage];
+#endif
+    } else {
+        outputDesc.usage |= MTLTextureUsageRenderTarget;
+    }
+    m_UpscalingOutputTexture =
+        [m_MetalLayer.device newTextureWithDescriptor:outputDesc];
 
-    MTLTextureDescriptor* motionDesc =
-        [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatRG16Float
-                                                           width:inputWidth
-                                                          height:inputHeight
-                                                       mipmapped:NO];
-    motionDesc.storageMode = MTLStorageModePrivate;
-    motionDesc.usage = MTLTextureUsageRenderTarget |
-                       [m_TemporalScaler motionTextureUsage];
-
-    MTLTextureDescriptor* depthDesc =
-        [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatDepth32Float
-                                                           width:inputWidth
-                                                          height:inputHeight
-                                                       mipmapped:NO];
-    depthDesc.storageMode = MTLStorageModePrivate;
-    depthDesc.usage = MTLTextureUsageRenderTarget |
-                      [m_TemporalScaler depthTextureUsage];
-
-    m_UpscalingInputTexture = [m_MetalLayer.device newTextureWithDescriptor:inputDesc];
-    m_UpscalingOutputTexture = [m_MetalLayer.device newTextureWithDescriptor:outputDesc];
-    m_UpscalingMotionTexture = [m_MetalLayer.device newTextureWithDescriptor:motionDesc];
-    m_UpscalingDepthTexture = [m_MetalLayer.device newTextureWithDescriptor:depthDesc];
-
-    if (!m_UpscalingInputTexture || !m_UpscalingOutputTexture ||
-        !m_UpscalingMotionTexture || !m_UpscalingDepthTexture) {
+    if (!m_UpscalingOutputTexture) {
         SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                    "Failed to allocate MetalFX upscaling textures");
+                    "Failed to allocate Metal post-process texture");
         releaseUpscalingResources();
         return false;
+    }
+
+    if (wantRcas) {
+        MTLTextureDescriptor* rcasDesc =
+            [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:pixelFormat
+                                                               width:outputWidth
+                                                              height:outputHeight
+                                                           mipmapped:NO];
+        rcasDesc.storageMode = MTLStorageModePrivate;
+        rcasDesc.usage = MTLTextureUsageRenderTarget | MTLTextureUsageShaderRead;
+        m_RcasOutputTexture =
+            [m_MetalLayer.device newTextureWithDescriptor:rcasDesc];
+        if (!m_RcasOutputTexture) {
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "Failed to allocate Metal RCAS texture, skipping RCAS");
+        }
     }
 
     m_UpscalingInputWidth = inputWidth;
@@ -673,19 +925,29 @@ bool MetalVideoRenderer::ensureUpscalingResources(AVFrame* frame) {
     m_UpscalingOutputWidth = outputWidth;
     m_UpscalingOutputHeight = outputHeight;
     m_UpscalingPixelFormat = pixelFormat;
+    m_UpscalingResourcesMode = requestedMode;
     m_LoggedMetalFxUnsupported = false;
 
-    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                "Using MetalFX temporal scaler: %s %dx%d -> %dx%d format %s colorUsage=0x%lx depthUsage=0x%lx motionUsage=0x%lx outputUsage=0x%lx",
-                NSStringFromClass([m_TemporalScaler class]).UTF8String,
-                inputWidth, inputHeight, outputWidth, outputHeight,
-                metalPixelFormatName(pixelFormat),
-                static_cast<unsigned long>([m_TemporalScaler colorTextureUsage]),
-                static_cast<unsigned long>([m_TemporalScaler depthTextureUsage]),
-                static_cast<unsigned long>([m_TemporalScaler motionTextureUsage]),
-                static_cast<unsigned long>([m_TemporalScaler outputTextureUsage]));
-    return true;
+    if (wantMetalFxUpscaling) {
+#if !TARGET_OS_VISION
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Using MetalFX temporal scaler: %s %dx%d -> %dx%d format %s colorUsage=0x%lx depthUsage=0x%lx motionUsage=0x%lx outputUsage=0x%lx",
+                    NSStringFromClass([m_TemporalScaler class]).UTF8String,
+                    inputWidth, inputHeight, outputWidth, outputHeight,
+                    metalPixelFormatName(pixelFormat),
+                    static_cast<unsigned long>([m_TemporalScaler colorTextureUsage]),
+                    static_cast<unsigned long>([m_TemporalScaler depthTextureUsage]),
+                    static_cast<unsigned long>([m_TemporalScaler motionTextureUsage]),
+                    static_cast<unsigned long>([m_TemporalScaler outputTextureUsage]));
 #endif
+    } else if (wantFsrUpscaling) {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Using FSR1 EASU scaler: %dx%d -> %dx%d format %s",
+                    inputWidth, inputHeight, outputWidth, outputHeight,
+                    metalPixelFormatName(pixelFormat));
+    }
+
+    return true;
 }
 #endif
 
@@ -698,6 +960,12 @@ MetalVideoRenderer::~MetalVideoRenderer()
 #if defined(SUPPORT_UPSCALING)
     releaseUpscalingResources();
     releaseObjCReference(m_FullFrameVertexBuffer);
+    releaseObjCReference(m_EasuParamsBuffer);
+    releaseObjCReference(m_PostProcessParamsBuffer);
+    releaseObjCReference(m_RcasParamsBuffer);
+    releaseObjCReference(m_EasuPipelineState);
+    releaseObjCReference(m_PostProcessPipelineState);
+    releaseObjCReference(m_RcasPipelineState);
 #endif
     if (m_MetalView != nil) {
         [m_MetalView removeFromSuperview];
@@ -839,91 +1107,216 @@ void MetalVideoRenderer::draw(NVGcontext* vg, int width, int height, AVFrame* fr
         }
     }];
 
-#if defined(SUPPORT_UPSCALING) && !TARGET_OS_VISION
-    const bool useUpscaling = ensureUpscalingResources(frame);
-    const uint64_t postProcessStart = LiGetMillis();
+#if defined(SUPPORT_UPSCALING)
+    const bool requestedMetalFxUpscaling = shouldUseMetalFxUpscaling();
+    const bool requestedFsrUpscaling = shouldUseFsrUpscaling();
+    const bool requestedUpscaling =
+        requestedMetalFxUpscaling || requestedFsrUpscaling;
+    const bool requestedDithering = shouldUseDithering();
+    const bool requestedRcas = shouldUseRcas();
+    const bool postProcessReady =
+        (requestedUpscaling || requestedDithering || requestedRcas) &&
+        ensureUpscalingResources(frame);
+    bool useMetalFxUpscaling = false;
+    bool useFsrUpscaling = false;
+    bool useDithering = false;
+    bool useRcas = false;
 
-    if (useUpscaling) {
-        auto sourcePassDescriptor = [MTLRenderPassDescriptor renderPassDescriptor];
-        MTLRenderPassColorAttachmentDescriptor* sourceAttachment =
-            [sourcePassDescriptor.colorAttachments objectAtIndexedSubscript:0];
-        if (sourceAttachment == nil) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "Failed to acquire MetalFX source attachment descriptor");
+    if (postProcessReady) {
+#if !TARGET_OS_VISION
+        useMetalFxUpscaling =
+            requestedMetalFxUpscaling && m_TemporalScaler &&
+            m_UpscalingInputTexture && m_UpscalingMotionTexture &&
+            m_UpscalingDepthTexture && m_UpscalingOutputTexture;
+#endif
+        useFsrUpscaling = requestedFsrUpscaling && m_EasuPipelineState &&
+                          m_EasuParamsBuffer && m_UpscalingInputTexture &&
+                          m_UpscalingOutputTexture;
+        useDithering = requestedDithering && m_PostProcessPipelineState &&
+                       m_PostProcessParamsBuffer;
+        useRcas = requestedRcas && m_RcasPipelineState && m_RcasParamsBuffer &&
+                  m_RcasOutputTexture;
+    }
+
+    if (useMetalFxUpscaling || useFsrUpscaling || useDithering || useRcas) {
+        const uint64_t postProcessStart = LiGetMillis();
+        id<MTLTexture> finalTexture = m_UpscalingOutputTexture;
+
+        auto renderVideoToTexture = [&](id<MTLTexture> targetTexture) -> bool {
+            auto sourcePassDescriptor =
+                [MTLRenderPassDescriptor renderPassDescriptor];
+            MTLRenderPassColorAttachmentDescriptor* sourceAttachment =
+                [sourcePassDescriptor.colorAttachments objectAtIndexedSubscript:0];
+            if (sourceAttachment == nil) {
+                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                             "Failed to acquire Metal source attachment descriptor");
+                return false;
+            }
+            [sourceAttachment setTexture:targetTexture];
+            [sourceAttachment setLoadAction:MTLLoadActionClear];
+            [sourceAttachment setClearColor:MTLClearColorMake(0.0, 0.0, 0.0, 0.0)];
+            [sourceAttachment setStoreAction:MTLStoreActionStore];
+
+            auto sourceEncoder =
+                [commandBuffer renderCommandEncoderWithDescriptor:sourcePassDescriptor];
+            [sourceEncoder setRenderPipelineState:m_VideoPipelineState];
+            for (size_t i = 0; i < planes; i++) {
+                [sourceEncoder setFragmentTexture:CVMetalTextureGetTexture(cvMetalTextures[i])
+                                          atIndex:i];
+            }
+            [sourceEncoder setFragmentBuffer:m_CscParamsBuffer offset:0 atIndex:0];
+            [sourceEncoder setVertexBuffer:m_FullFrameVertexBuffer offset:0 atIndex:0];
+            [sourceEncoder drawPrimitives:MTLPrimitiveTypeTriangleStrip
+                              vertexStart:0
+                              vertexCount:4];
+            [sourceEncoder endEncoding];
+            return true;
+        };
+
+        if (useMetalFxUpscaling) {
+#if !TARGET_OS_VISION
+            const uint64_t upscalingStart = LiGetMillis();
+            if (!renderVideoToTexture(m_UpscalingInputTexture)) {
+                return;
+            }
+
+            auto motionPassDescriptor =
+                [MTLRenderPassDescriptor renderPassDescriptor];
+            MTLRenderPassColorAttachmentDescriptor* motionAttachment =
+                [motionPassDescriptor.colorAttachments objectAtIndexedSubscript:0];
+            if (motionAttachment == nil) {
+                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                             "Failed to acquire MetalFX motion attachment descriptor");
+                return;
+            }
+            [motionAttachment setTexture:m_UpscalingMotionTexture];
+            [motionAttachment setLoadAction:MTLLoadActionClear];
+            [motionAttachment setClearColor:MTLClearColorMake(0.0, 0.0, 0.0, 0.0)];
+            [motionAttachment setStoreAction:MTLStoreActionStore];
+            auto motionEncoder =
+                [commandBuffer renderCommandEncoderWithDescriptor:motionPassDescriptor];
+            [motionEncoder endEncoding];
+
+            auto depthPassDescriptor =
+                [MTLRenderPassDescriptor renderPassDescriptor];
+            MTLRenderPassDepthAttachmentDescriptor* depthAttachment =
+                [depthPassDescriptor depthAttachment];
+            if (depthAttachment == nil) {
+                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                             "Failed to acquire MetalFX depth attachment descriptor");
+                return;
+            }
+            [depthAttachment setTexture:m_UpscalingDepthTexture];
+            [depthAttachment setLoadAction:MTLLoadActionClear];
+            [depthAttachment setClearDepth:1.0];
+            [depthAttachment setStoreAction:MTLStoreActionStore];
+            auto depthEncoder =
+                [commandBuffer renderCommandEncoderWithDescriptor:depthPassDescriptor];
+            [depthEncoder endEncoding];
+
+            [m_TemporalScaler setColorTexture:m_UpscalingInputTexture];
+            [m_TemporalScaler setDepthTexture:m_UpscalingDepthTexture];
+            [m_TemporalScaler setMotionTexture:m_UpscalingMotionTexture];
+            [m_TemporalScaler setInputContentWidth:frame->width];
+            [m_TemporalScaler setInputContentHeight:frame->height];
+            [m_TemporalScaler setOutputTexture:m_UpscalingOutputTexture];
+            [m_TemporalScaler setJitterOffsetX:0.0f];
+            [m_TemporalScaler setJitterOffsetY:0.0f];
+            [m_TemporalScaler setMotionVectorScaleX:1.0f];
+            [m_TemporalScaler setMotionVectorScaleY:1.0f];
+            [m_TemporalScaler setDepthReversed:NO];
+            [m_TemporalScaler setPreExposure:1.0f];
+            [m_TemporalScaler setReset:YES];
+            [m_TemporalScaler encodeToCommandBuffer:commandBuffer];
+
+            m_video_render_stats.total_upscaling_time +=
+                LiGetMillis() - upscalingStart;
+            m_video_render_stats.upscaled_frames++;
+#endif
+        } else if (useFsrUpscaling) {
+            const uint64_t upscalingStart = LiGetMillis();
+            if (!renderVideoToTexture(m_UpscalingInputTexture)) {
+                return;
+            }
+
+            updateEasuParams(frame->width, frame->height,
+                             static_cast<int>([m_UpscalingOutputTexture width]),
+                             static_cast<int>([m_UpscalingOutputTexture height]));
+
+            auto easuPassDescriptor = [MTLRenderPassDescriptor renderPassDescriptor];
+            MTLRenderPassColorAttachmentDescriptor* easuAttachment =
+                [easuPassDescriptor.colorAttachments objectAtIndexedSubscript:0];
+            if (easuAttachment == nil) {
+                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                             "Failed to acquire Metal FSR1 attachment descriptor");
+                return;
+            }
+            [easuAttachment setTexture:m_UpscalingOutputTexture];
+            [easuAttachment setLoadAction:MTLLoadActionClear];
+            [easuAttachment setClearColor:MTLClearColorMake(0.0, 0.0, 0.0, 0.0)];
+            [easuAttachment setStoreAction:MTLStoreActionStore];
+
+            auto easuEncoder =
+                [commandBuffer renderCommandEncoderWithDescriptor:easuPassDescriptor];
+            [easuEncoder setRenderPipelineState:m_EasuPipelineState];
+            [easuEncoder setFragmentTexture:m_UpscalingInputTexture atIndex:0];
+            [easuEncoder setFragmentBuffer:m_EasuParamsBuffer offset:0 atIndex:0];
+            [easuEncoder setVertexBuffer:m_FullFrameVertexBuffer offset:0 atIndex:0];
+            [easuEncoder drawPrimitives:MTLPrimitiveTypeTriangleStrip
+                            vertexStart:0
+                            vertexCount:4];
+            [easuEncoder endEncoding];
+
+            m_video_render_stats.total_upscaling_time +=
+                LiGetMillis() - upscalingStart;
+            m_video_render_stats.upscaled_frames++;
+        } else if (!renderVideoToTexture(m_UpscalingOutputTexture)) {
             return;
         }
-        [sourceAttachment setTexture:m_UpscalingInputTexture];
-        [sourceAttachment setLoadAction:MTLLoadActionClear];
-        [sourceAttachment setClearColor:MTLClearColorMake(0.0, 0.0, 0.0, 0.0)];
-        [sourceAttachment setStoreAction:MTLStoreActionStore];
 
-        auto sourceEncoder =
-            [commandBuffer renderCommandEncoderWithDescriptor:sourcePassDescriptor];
-        [sourceEncoder setRenderPipelineState:m_VideoPipelineState];
-        for (size_t i = 0; i < planes; i++) {
-            [sourceEncoder setFragmentTexture:CVMetalTextureGetTexture(cvMetalTextures[i])
-                                      atIndex:i];
+        if (useRcas) {
+            const uint64_t sharpeningStart = LiGetMillis();
+            updateRcasParams();
+
+            auto rcasPassDescriptor = [MTLRenderPassDescriptor renderPassDescriptor];
+            MTLRenderPassColorAttachmentDescriptor* rcasAttachment =
+                [rcasPassDescriptor.colorAttachments objectAtIndexedSubscript:0];
+            if (rcasAttachment == nil) {
+                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                             "Failed to acquire Metal RCAS attachment descriptor");
+                return;
+            }
+            [rcasAttachment setTexture:m_RcasOutputTexture];
+            [rcasAttachment setLoadAction:MTLLoadActionClear];
+            [rcasAttachment setClearColor:MTLClearColorMake(0.0, 0.0, 0.0, 0.0)];
+            [rcasAttachment setStoreAction:MTLStoreActionStore];
+
+            auto rcasEncoder =
+                [commandBuffer renderCommandEncoderWithDescriptor:rcasPassDescriptor];
+            [rcasEncoder setRenderPipelineState:m_RcasPipelineState];
+            [rcasEncoder setFragmentTexture:finalTexture atIndex:0];
+            [rcasEncoder setFragmentBuffer:m_RcasParamsBuffer offset:0 atIndex:0];
+            [rcasEncoder setVertexBuffer:m_FullFrameVertexBuffer offset:0 atIndex:0];
+            [rcasEncoder drawPrimitives:MTLPrimitiveTypeTriangleStrip
+                            vertexStart:0
+                            vertexCount:4];
+            [rcasEncoder endEncoding];
+            finalTexture = m_RcasOutputTexture;
+
+            m_video_render_stats.total_sharpening_time +=
+                LiGetMillis() - sharpeningStart;
+            m_video_render_stats.sharpened_frames++;
         }
-        [sourceEncoder setFragmentBuffer:m_CscParamsBuffer offset:0 atIndex:0];
-        [sourceEncoder setVertexBuffer:m_FullFrameVertexBuffer offset:0 atIndex:0];
-        [sourceEncoder drawPrimitives:MTLPrimitiveTypeTriangleStrip
-                           vertexStart:0
-                           vertexCount:4];
-        [sourceEncoder endEncoding];
 
-        auto motionPassDescriptor = [MTLRenderPassDescriptor renderPassDescriptor];
-        MTLRenderPassColorAttachmentDescriptor* motionAttachment =
-            [motionPassDescriptor.colorAttachments objectAtIndexedSubscript:0];
-        if (motionAttachment == nil) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "Failed to acquire MetalFX motion attachment descriptor");
-            return;
-        }
-        [motionAttachment setTexture:m_UpscalingMotionTexture];
-        [motionAttachment setLoadAction:MTLLoadActionClear];
-        [motionAttachment setClearColor:MTLClearColorMake(0.0, 0.0, 0.0, 0.0)];
-        [motionAttachment setStoreAction:MTLStoreActionStore];
-        auto motionEncoder =
-            [commandBuffer renderCommandEncoderWithDescriptor:motionPassDescriptor];
-        [motionEncoder endEncoding];
-
-        auto depthPassDescriptor = [MTLRenderPassDescriptor renderPassDescriptor];
-        MTLRenderPassDepthAttachmentDescriptor* depthAttachment =
-            [depthPassDescriptor depthAttachment];
-        if (depthAttachment == nil) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "Failed to acquire MetalFX depth attachment descriptor");
-            return;
-        }
-        [depthAttachment setTexture:m_UpscalingDepthTexture];
-        [depthAttachment setLoadAction:MTLLoadActionClear];
-        [depthAttachment setClearDepth:1.0];
-        [depthAttachment setStoreAction:MTLStoreActionStore];
-        auto depthEncoder =
-            [commandBuffer renderCommandEncoderWithDescriptor:depthPassDescriptor];
-        [depthEncoder endEncoding];
-
-        [m_TemporalScaler setColorTexture:m_UpscalingInputTexture];
-        [m_TemporalScaler setDepthTexture:m_UpscalingDepthTexture];
-        [m_TemporalScaler setMotionTexture:m_UpscalingMotionTexture];
-        [m_TemporalScaler setInputContentWidth:frame->width];
-        [m_TemporalScaler setInputContentHeight:frame->height];
-        [m_TemporalScaler setOutputTexture:m_UpscalingOutputTexture];
-        [m_TemporalScaler setJitterOffsetX:0.0f];
-        [m_TemporalScaler setJitterOffsetY:0.0f];
-        [m_TemporalScaler setMotionVectorScaleX:1.0f];
-        [m_TemporalScaler setMotionVectorScaleY:1.0f];
-        [m_TemporalScaler setDepthReversed:NO];
-        [m_TemporalScaler setPreExposure:1.0f];
-        [m_TemporalScaler setReset:YES];
-        [m_TemporalScaler encodeToCommandBuffer:commandBuffer];
+        const uint64_t ditheringStart = LiGetMillis();
+        updatePostProcessParams(useDithering);
 
         auto presentPassDescriptor = [MTLRenderPassDescriptor renderPassDescriptor];
         MTLRenderPassColorAttachmentDescriptor* presentAttachment =
             [presentPassDescriptor.colorAttachments objectAtIndexedSubscript:0];
         if (presentAttachment == nil) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "Failed to acquire MetalFX present attachment descriptor");
+                         "Failed to acquire Metal post-process present attachment descriptor");
             return;
         }
         [presentAttachment setTexture:drawableTexture];
@@ -933,17 +1326,21 @@ void MetalVideoRenderer::draw(NVGcontext* vg, int width, int height, AVFrame* fr
 
         auto presentEncoder =
             [commandBuffer renderCommandEncoderWithDescriptor:presentPassDescriptor];
-        [presentEncoder setRenderPipelineState:m_OverlayPipelineState];
-        [presentEncoder setFragmentTexture:m_UpscalingOutputTexture atIndex:0];
+        [presentEncoder setRenderPipelineState:m_PostProcessPipelineState];
+        [presentEncoder setFragmentTexture:finalTexture atIndex:0];
+        [presentEncoder setFragmentBuffer:m_PostProcessParamsBuffer offset:0 atIndex:0];
         [presentEncoder setVertexBuffer:m_VideoVertexBuffer offset:0 atIndex:0];
         [presentEncoder drawPrimitives:MTLPrimitiveTypeTriangleStrip
                             vertexStart:0
                             vertexCount:4];
         [presentEncoder endEncoding];
 
-        m_video_render_stats.total_upscaling_time +=
-            LiGetMillis() - postProcessStart;
-        m_video_render_stats.upscaled_frames++;
+        if (useDithering) {
+            m_video_render_stats.total_dithering_time +=
+                LiGetMillis() - ditheringStart;
+            m_video_render_stats.dithered_frames++;
+        }
+
         m_video_render_stats.total_post_process_time +=
             LiGetMillis() - postProcessStart;
         m_video_render_stats.post_processed_frames++;
@@ -1159,6 +1556,42 @@ bool MetalVideoRenderer::initialize(int imageFormat)
                      "Failed to create MetalFX source vertex buffer");
         return false;
     }
+
+    EasuParams easuParams = {};
+    m_EasuParamsBuffer =
+        [m_MetalLayer.device newBufferWithBytes:&easuParams
+                                         length:sizeof(easuParams)
+                                        options:bufferOptions];
+    if (!m_EasuParamsBuffer) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "Failed to create Metal FSR1 EASU parameters buffer");
+        return false;
+    }
+
+    PostProcessParams postProcessParams = {};
+    postProcessParams.control[1] = 3.0f;
+    m_PostProcessParamsBuffer =
+        [m_MetalLayer.device newBufferWithBytes:&postProcessParams
+                                         length:sizeof(postProcessParams)
+                                        options:bufferOptions];
+    if (!m_PostProcessParamsBuffer) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "Failed to create Metal post-process parameters buffer");
+        return false;
+    }
+
+    RcasParams rcasParams = {};
+    rcasParams.control[0] =
+        static_cast<float>(std::exp2(-2.0f * (1.0f - 0.2f)));
+    m_RcasParamsBuffer =
+        [m_MetalLayer.device newBufferWithBytes:&rcasParams
+                                         length:sizeof(rcasParams)
+                                        options:bufferOptions];
+    if (!m_RcasParamsBuffer) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "Failed to create Metal RCAS parameters buffer");
+        return false;
+    }
 #endif
 
     initialized = true;
@@ -1170,7 +1603,9 @@ VideoRenderStats* MetalVideoRenderer::video_render_stats() {
         m_video_render_stats.rendered_fps = 0.0f;
         m_video_render_stats.rendering_time = 0.0f;
         m_video_render_stats.post_processing_time = 0.0f;
+        m_video_render_stats.dithering_time = 0.0f;
         m_video_render_stats.upscaling_time = 0.0f;
+        m_video_render_stats.sharpening_time = 0.0f;
         return (VideoRenderStats*)&m_video_render_stats;
     }
 
@@ -1190,6 +1625,18 @@ VideoRenderStats* MetalVideoRenderer::video_render_stats() {
         m_video_render_stats.upscaled_frames
             ? (float)m_video_render_stats.total_upscaling_time /
                   (float)m_video_render_stats.upscaled_frames
+            : 0.0f;
+
+    m_video_render_stats.dithering_time =
+        m_video_render_stats.dithered_frames
+            ? (float)m_video_render_stats.total_dithering_time /
+                  (float)m_video_render_stats.dithered_frames
+            : 0.0f;
+
+    m_video_render_stats.sharpening_time =
+        m_video_render_stats.sharpened_frames
+            ? (float)m_video_render_stats.total_sharpening_time /
+                  (float)m_video_render_stats.sharpened_frames
             : 0.0f;
 
     return (VideoRenderStats*)&m_video_render_stats;

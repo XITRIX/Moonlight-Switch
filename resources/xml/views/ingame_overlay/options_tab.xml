@@ -99,6 +99,9 @@
             <brls:BooleanCell
                 id="upscaling"/>
 
+            <brls:SelectorCell
+                id="upscaling_mode"/>
+
             <BooleanSliderCell
                 id="rcas"/>
             

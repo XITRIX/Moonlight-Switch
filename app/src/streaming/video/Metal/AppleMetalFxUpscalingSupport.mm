@@ -3,7 +3,6 @@
 #include "UpscalingSupport.hpp"
 
 #import <Metal/Metal.h>
-#import <MetalFX/MetalFX.h>
 #import <TargetConditionals.h>
 
 bool isVideoUpscalingSupported() {
@@ -16,19 +15,7 @@ bool isVideoUpscalingSupported() {
 
     didCheck = true;
 
-#if TARGET_OS_VISION
-    supported = false;
-#else
-#if TARGET_OS_OSX
-    if (@available(macOS 13.0, *)) {
-#else
-    if (@available(iOS 16.0, tvOS 16.0, visionOS 1.0, *)) {
-#endif
-        id<MTLDevice> device = MTLCreateSystemDefaultDevice();
-        supported = device != nil &&
-                    [MTLFXTemporalScalerDescriptor supportsDevice:device];
-    }
-#endif
+    supported = MTLCreateSystemDefaultDevice() != nil;
 
     return supported;
 }

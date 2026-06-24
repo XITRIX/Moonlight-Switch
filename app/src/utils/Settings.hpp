@@ -11,6 +11,8 @@
 enum VideoCodec : int { H264, H265, AV1 };
 std::string getVideoCodecName(VideoCodec codec);
 
+enum UpscalingMode : int { UPSCALING_OFF, UPSCALING_METALFX, UPSCALING_FSR1 };
+
 enum AudioBackend : int {
     SDL,
 #ifdef __SWITCH__
@@ -144,14 +146,37 @@ class Settings : public Singleton<Settings> {
     }
     void set_request_hdr(bool request_hdr) { m_enable_hdr = request_hdr; }
 
-        [[nodiscard]] bool upscaling() const {
-    #ifdef SUPPORT_UPSCALING
-        return m_enable_upscaling;
-    #else
+    [[nodiscard]] bool upscaling() const {
+#ifdef SUPPORT_UPSCALING
+        return m_upscaling_mode != UPSCALING_OFF;
+#else
         return false;
-    #endif
-        }
-        void set_upscaling(bool upscaling) { m_enable_upscaling = upscaling; }
+#endif
+    }
+    void set_upscaling(bool upscaling) {
+#if defined(PLATFORM_APPLE)
+        m_upscaling_mode = upscaling ? UPSCALING_METALFX : UPSCALING_OFF;
+#else
+        m_upscaling_mode = upscaling ? UPSCALING_FSR1 : UPSCALING_OFF;
+#endif
+    }
+    [[nodiscard]] UpscalingMode upscaling_mode() const {
+#ifdef SUPPORT_UPSCALING
+        return m_upscaling_mode;
+#else
+        return UPSCALING_OFF;
+#endif
+    }
+    void set_upscaling_mode(UpscalingMode mode) {
+#if defined(PLATFORM_APPLE)
+        if (mode == UPSCALING_METALFX || mode == UPSCALING_FSR1)
+            m_upscaling_mode = mode;
+        else
+            m_upscaling_mode = UPSCALING_OFF;
+#else
+        m_upscaling_mode = mode == UPSCALING_OFF ? UPSCALING_OFF : UPSCALING_FSR1;
+#endif
+    }
 
         [[nodiscard]] bool dithering() const {
         #ifdef SUPPORT_UPSCALING
@@ -309,7 +334,7 @@ class Settings : public Singleton<Settings> {
 #endif
     int m_bitrate = 10000;
     bool m_enable_hdr = false;
-    bool m_enable_upscaling = false;
+    UpscalingMode m_upscaling_mode = UPSCALING_OFF;
     bool m_enable_dithering = false;
     int m_dithering_strength = 3;
     bool m_enable_rcas = true;

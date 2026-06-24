@@ -21,6 +21,7 @@ class SettingsTab : public brls::Box {
     BRLS_BIND(brls::Header, imageAdjustmentsHeader, "image_adjustments_header");
     BRLS_BIND(BooleanSliderCell, dithering, "dithering");
     BRLS_BIND(brls::BooleanCell, upscaling, "upscaling");
+    BRLS_BIND(brls::SelectorCell, upscalingMode, "upscaling_mode");
     BRLS_BIND(BooleanSliderCell, rcas, "rcas");
     BRLS_BIND(brls::SelectorCell, fps, "fps");
     BRLS_BIND(brls::SelectorCell, codec, "codec");

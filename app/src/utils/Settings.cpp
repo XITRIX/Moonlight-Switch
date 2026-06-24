@@ -266,7 +266,13 @@ void Settings::load() {
             }
 
             if (json_t* enable_upscaling = json_object_get(settings, "enable_upscaling")) {
-                m_enable_upscaling = json_typeof(enable_upscaling) == JSON_TRUE;
+                set_upscaling(json_typeof(enable_upscaling) == JSON_TRUE);
+            }
+
+            if (json_t* upscaling_mode = json_object_get(settings, "upscaling_mode")) {
+                if (json_typeof(upscaling_mode) == JSON_INTEGER) {
+                    set_upscaling_mode((UpscalingMode)json_integer_value(upscaling_mode));
+                }
             }
 
             if (json_t* enable_dithering = json_object_get(settings, "enable_dithering")) {
@@ -534,7 +540,8 @@ void Settings::save() {
             json_object_set_new(settings, "decoder_threads", json_integer(m_decoder_threads));
             json_object_set_new(settings, "frames_queue_size", json_integer(m_frames_queue_size));
             json_object_set_new(settings, "enable_hdr", m_enable_hdr ? json_true() : json_false());
-            json_object_set_new(settings, "enable_upscaling", m_enable_upscaling ? json_true() : json_false());
+            json_object_set_new(settings, "enable_upscaling", upscaling() ? json_true() : json_false());
+            json_object_set_new(settings, "upscaling_mode", json_integer(upscaling_mode()));
             json_object_set_new(settings, "enable_dithering", m_enable_dithering ? json_true() : json_false());
             json_object_set_new(settings, "dithering_strength", json_integer(m_dithering_strength));
             json_object_set_new(settings, "enable_rcas", m_enable_rcas ? json_true() : json_false());
