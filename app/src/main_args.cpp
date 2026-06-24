@@ -12,17 +12,12 @@
 #include <algorithm>
 #include <charconv>
 #include <cctype>
-#include <mutex>
 #include <optional>
 #include <string_view>
 #include <vector>
 
 #ifdef __SWITCH__
 #include <switch.h>
-#endif
-
-#ifdef __SDL2__
-#include <SDL.h>
 #endif
 
 using namespace brls;
@@ -39,12 +34,6 @@ struct LaunchRequest {
     std::string appId;
     std::string appName;
 };
-
-#ifdef __SDL2__
-std::mutex pendingDeepLinksMutex;
-std::vector<std::string> pendingDeepLinks;
-bool deepLinkHandlerRegistered = false;
-#endif
 
 std::string toLower(std::string value) {
     std::transform(value.begin(), value.end(), value.begin(), [](unsigned char ch) {
@@ -353,26 +342,6 @@ bool startFromLaunchRequest(LaunchRequest request, bool resetActivityStack) {
     return false;
 }
 
-#ifdef __SDL2__
-int deepLinkEventWatch(void*, SDL_Event* event) {
-    if (event == nullptr || event->type != SDL_DROPFILE || event->drop.file == nullptr) {
-        return 1;
-    }
-
-    const std::string url(event->drop.file);
-    if (!isDeepLinkUrl(url)) {
-        return 1;
-    }
-
-    {
-        std::lock_guard lock(pendingDeepLinksMutex);
-        pendingDeepLinks.push_back(url);
-    }
-
-    return 1;
-}
-#endif
-
 } // namespace
 
 bool canStartApp(int argc, char** argv) {
@@ -389,39 +358,9 @@ bool canStartApp(int argc, char** argv) {
 }
 
 void registerDeepLinkHandler() {
-#ifdef __SDL2__
-    if (deepLinkHandlerRegistered) {
-        return;
-    }
-
-    SDL_AddEventWatch(deepLinkEventWatch, nullptr);
-    deepLinkHandlerRegistered = true;
-#endif
-}
-
-void unregisterDeepLinkHandler() {
-#ifdef __SDL2__
-    if (!deepLinkHandlerRegistered) {
-        return;
-    }
-
-    SDL_DelEventWatch(deepLinkEventWatch, nullptr);
-    deepLinkHandlerRegistered = false;
-#endif
-}
-
-void processPendingDeepLinks() {
-#ifdef __SDL2__
-    std::vector<std::string> urls;
-    {
-        std::lock_guard lock(pendingDeepLinksMutex);
-        urls.swap(pendingDeepLinks);
-    }
-
-    for (const std::string& url : urls) {
-        startFromUrl(url, true);
-    }
-#endif
+    Application::registerUrlOpenHandler(std::string(DEEP_LINK_SCHEME), [](const std::string& url) {
+        return startFromUrl(url, true);
+    });
 }
 
 bool startFromArgs(int argc, char** argv) {
