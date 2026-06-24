@@ -158,7 +158,7 @@ SettingsTab::SettingsTab() {
             ditheringStrengthToSliderProgress(ditheringStrength));
         updateDitheringControls(Settings::instance().dithering());
 
-#if defined(PLATFORM_APPLE)
+#if defined(PLATFORM_APPLE) && !defined(PLATFORM_TVOS)
         upscaling->removeFromSuperView(true);
         upscalingMode->init(
             "settings/upscaling"_i18n,

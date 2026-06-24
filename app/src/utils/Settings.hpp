@@ -154,7 +154,7 @@ class Settings : public Singleton<Settings> {
 #endif
     }
     void set_upscaling(bool upscaling) {
-#if defined(PLATFORM_APPLE)
+#if defined(PLATFORM_APPLE) && !defined(PLATFORM_TVOS)
         m_upscaling_mode = upscaling ? UPSCALING_METALFX : UPSCALING_OFF;
 #else
         m_upscaling_mode = upscaling ? UPSCALING_FSR1 : UPSCALING_OFF;
@@ -162,13 +162,17 @@ class Settings : public Singleton<Settings> {
     }
     [[nodiscard]] UpscalingMode upscaling_mode() const {
 #ifdef SUPPORT_UPSCALING
+#if defined(PLATFORM_TVOS)
+        return m_upscaling_mode == UPSCALING_OFF ? UPSCALING_OFF : UPSCALING_FSR1;
+#else
         return m_upscaling_mode;
+#endif
 #else
         return UPSCALING_OFF;
 #endif
     }
     void set_upscaling_mode(UpscalingMode mode) {
-#if defined(PLATFORM_APPLE)
+#if defined(PLATFORM_APPLE) && !defined(PLATFORM_TVOS)
         if (mode == UPSCALING_METALFX || mode == UPSCALING_FSR1)
             m_upscaling_mode = mode;
         else

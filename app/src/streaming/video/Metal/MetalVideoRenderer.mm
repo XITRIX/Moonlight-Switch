@@ -26,7 +26,14 @@ extern "C" {
 #import <Metal/Metal.h>
 #import <MetalKit/MetalKit.h>
 #import <TargetConditionals.h>
-#if defined(SUPPORT_UPSCALING)
+
+#if defined(SUPPORT_UPSCALING) && !TARGET_OS_TV && !TARGET_OS_VISION
+#define MOONLIGHT_ENABLE_METALFX_UPSCALING 1
+#else
+#define MOONLIGHT_ENABLE_METALFX_UPSCALING 0
+#endif
+
+#if MOONLIGHT_ENABLE_METALFX_UPSCALING
 #import <MetalFX/MetalFX.h>
 #endif
 
@@ -67,7 +74,7 @@ struct MetalVideoRenderer::MetalRendererState {
     id<MTLTexture> upscalingMotionTexture = nil;
     id<MTLTexture> upscalingDepthTexture = nil;
     id<MTLTexture> rcasOutputTexture = nil;
-#if !TARGET_OS_VISION
+#if MOONLIGHT_ENABLE_METALFX_UPSCALING
     id<MTLFXTemporalScaler> temporalScaler = nil;
 #endif
     bool metalFxSupported = false;
@@ -119,7 +126,7 @@ struct MetalVideoRenderer::MetalRendererState {
 #define m_UpscalingMotionTexture m_State->upscalingMotionTexture
 #define m_UpscalingDepthTexture m_State->upscalingDepthTexture
 #define m_RcasOutputTexture m_State->rcasOutputTexture
-#if !TARGET_OS_VISION
+#if MOONLIGHT_ENABLE_METALFX_UPSCALING
 #define m_TemporalScaler m_State->temporalScaler
 #endif
 #define m_MetalFxSupported m_State->metalFxSupported
@@ -586,13 +593,13 @@ static bool metalFxSupportsDevice(id<MTLDevice> device) {
         return false;
     }
 
-#if TARGET_OS_VISION
+#if !MOONLIGHT_ENABLE_METALFX_UPSCALING
     return false;
 #else
 #if TARGET_OS_OSX
     if (@available(macOS 13.0, *)) {
 #else
-    if (@available(iOS 16.0, tvOS 16.0, visionOS 1.0, *)) {
+    if (@available(iOS 16.0, *)) {
 #endif
         return [MTLFXTemporalScalerDescriptor supportsDevice:device];
     }
@@ -606,6 +613,9 @@ bool MetalVideoRenderer::shouldUseUpscaling() const {
 }
 
 bool MetalVideoRenderer::shouldUseMetalFxUpscaling() const {
+#if !MOONLIGHT_ENABLE_METALFX_UPSCALING
+    return false;
+#else
     return Settings::instance().upscaling_mode() == UPSCALING_METALFX &&
            m_MetalFxSupported &&
            m_LastFrameWidth > 0 && m_LastFrameHeight > 0 &&
@@ -614,6 +624,7 @@ bool MetalVideoRenderer::shouldUseMetalFxUpscaling() const {
            m_LastVideoRegionHeight >= m_LastFrameHeight &&
            (m_LastVideoRegionWidth > m_LastFrameWidth ||
             m_LastVideoRegionHeight > m_LastFrameHeight);
+#endif
 }
 
 bool MetalVideoRenderer::shouldUseFsrUpscaling() const {
@@ -706,7 +717,7 @@ void MetalVideoRenderer::updateRcasParams() {
 }
 
 void MetalVideoRenderer::releaseUpscalingResources() {
-#if !TARGET_OS_VISION
+#if MOONLIGHT_ENABLE_METALFX_UPSCALING
     releaseObjCReference(m_TemporalScaler);
 #endif
     releaseObjCReference(m_UpscalingInputTexture);
@@ -749,7 +760,7 @@ bool MetalVideoRenderer::ensureUpscalingResources(AVFrame* frame) {
 
     if (m_UpscalingOutputTexture &&
         (!wantMetalFxUpscaling ||
-#if !TARGET_OS_VISION
+#if MOONLIGHT_ENABLE_METALFX_UPSCALING
          (m_TemporalScaler &&
 #else
          (false &&
@@ -770,13 +781,13 @@ bool MetalVideoRenderer::ensureUpscalingResources(AVFrame* frame) {
     releaseUpscalingResources();
 
     if (wantMetalFxUpscaling) {
-#if TARGET_OS_VISION
+#if !MOONLIGHT_ENABLE_METALFX_UPSCALING
         return false;
 #else
 #if TARGET_OS_OSX
         if (@available(macOS 13.0, *)) {
 #else
-        if (@available(iOS 16.0, tvOS 16.0, visionOS 1.0, *)) {
+        if (@available(iOS 16.0, *)) {
 #endif
             MTLFXTemporalScalerDescriptor* descriptor =
                 [[MTLFXTemporalScalerDescriptor alloc] init];
@@ -888,7 +899,7 @@ bool MetalVideoRenderer::ensureUpscalingResources(AVFrame* frame) {
     outputDesc.storageMode = MTLStorageModePrivate;
     outputDesc.usage = MTLTextureUsageShaderRead;
     if (wantMetalFxUpscaling) {
-#if !TARGET_OS_VISION
+#if MOONLIGHT_ENABLE_METALFX_UPSCALING
         outputDesc.usage |= [m_TemporalScaler outputTextureUsage];
 #endif
     } else {
@@ -929,7 +940,7 @@ bool MetalVideoRenderer::ensureUpscalingResources(AVFrame* frame) {
     m_LoggedMetalFxUnsupported = false;
 
     if (wantMetalFxUpscaling) {
-#if !TARGET_OS_VISION
+#if MOONLIGHT_ENABLE_METALFX_UPSCALING
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                     "Using MetalFX temporal scaler: %s %dx%d -> %dx%d format %s colorUsage=0x%lx depthUsage=0x%lx motionUsage=0x%lx outputUsage=0x%lx",
                     NSStringFromClass([m_TemporalScaler class]).UTF8String,
@@ -1123,7 +1134,7 @@ void MetalVideoRenderer::draw(NVGcontext* vg, int width, int height, AVFrame* fr
     bool useRcas = false;
 
     if (postProcessReady) {
-#if !TARGET_OS_VISION
+#if MOONLIGHT_ENABLE_METALFX_UPSCALING
         useMetalFxUpscaling =
             requestedMetalFxUpscaling && m_TemporalScaler &&
             m_UpscalingInputTexture && m_UpscalingMotionTexture &&
@@ -1174,7 +1185,7 @@ void MetalVideoRenderer::draw(NVGcontext* vg, int width, int height, AVFrame* fr
         };
 
         if (useMetalFxUpscaling) {
-#if !TARGET_OS_VISION
+#if MOONLIGHT_ENABLE_METALFX_UPSCALING
             const uint64_t upscalingStart = LiGetMillis();
             if (!renderVideoToTexture(m_UpscalingInputTexture)) {
                 return;
@@ -1456,10 +1467,12 @@ bool MetalVideoRenderer::initialize(int imageFormat)
 
 #if defined(SUPPORT_UPSCALING)
     m_MetalFxSupported = metalFxSupportsDevice(device);
+#if MOONLIGHT_ENABLE_METALFX_UPSCALING
     if (!m_MetalFxSupported) {
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                     "MetalFX temporal upscaling is unavailable on this OS or device");
     }
+#endif
 #endif
 
 //    if (!checkDecoderCapabilities(device, params)) {
@@ -1553,7 +1566,7 @@ bool MetalVideoRenderer::initialize(int imageFormat)
                                         options:bufferOptions];
     if (!m_FullFrameVertexBuffer) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "Failed to create MetalFX source vertex buffer");
+                     "Failed to create Metal upscaling source vertex buffer");
         return false;
     }
 

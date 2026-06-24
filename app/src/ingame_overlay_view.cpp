@@ -294,7 +294,7 @@ OptionsTab::OptionsTab(StreamingView* streamView) : streamView(streamView) {
             ditheringStrengthToSliderProgress(ditheringStrength));
         updateDitheringControls(Settings::instance().dithering());
 
-#if defined(PLATFORM_APPLE)
+#if defined(PLATFORM_APPLE) && !defined(PLATFORM_TVOS)
         upscalingButton->removeFromSuperView(true);
         upscalingModeButton->init(
             "settings/upscaling"_i18n,
