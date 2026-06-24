@@ -1132,8 +1132,14 @@ void MetalVideoRenderer::draw(NVGcontext* vg, int width, int height, AVFrame* fr
     bool useFsrUpscaling = false;
     bool useDithering = false;
     bool useRcas = false;
+    bool canRenderFsrDirectToDrawable = false;
 
     if (postProcessReady) {
+        canRenderFsrDirectToDrawable =
+            requestedFsrUpscaling && !requestedDithering && !requestedRcas &&
+            drawableTexture != nil &&
+            m_LastVideoRegionWidth == static_cast<int>([drawableTexture width]) &&
+            m_LastVideoRegionHeight == static_cast<int>([drawableTexture height]);
 #if MOONLIGHT_ENABLE_METALFX_UPSCALING
         useMetalFxUpscaling =
             requestedMetalFxUpscaling && m_TemporalScaler &&
@@ -1152,6 +1158,7 @@ void MetalVideoRenderer::draw(NVGcontext* vg, int width, int height, AVFrame* fr
     if (useMetalFxUpscaling || useFsrUpscaling || useDithering || useRcas) {
         const uint64_t postProcessStart = LiGetMillis();
         id<MTLTexture> finalTexture = m_UpscalingOutputTexture;
+        bool renderedDirectToDrawable = false;
 
         auto renderVideoToTexture = [&](id<MTLTexture> targetTexture) -> bool {
             auto sourcePassDescriptor =
@@ -1250,9 +1257,11 @@ void MetalVideoRenderer::draw(NVGcontext* vg, int width, int height, AVFrame* fr
                 return;
             }
 
+            id<MTLTexture> easuTargetTexture =
+                canRenderFsrDirectToDrawable ? drawableTexture : m_UpscalingOutputTexture;
             updateEasuParams(frame->width, frame->height,
-                             static_cast<int>([m_UpscalingOutputTexture width]),
-                             static_cast<int>([m_UpscalingOutputTexture height]));
+                             static_cast<int>([easuTargetTexture width]),
+                             static_cast<int>([easuTargetTexture height]));
 
             auto easuPassDescriptor = [MTLRenderPassDescriptor renderPassDescriptor];
             MTLRenderPassColorAttachmentDescriptor* easuAttachment =
@@ -1262,7 +1271,7 @@ void MetalVideoRenderer::draw(NVGcontext* vg, int width, int height, AVFrame* fr
                              "Failed to acquire Metal FSR1 attachment descriptor");
                 return;
             }
-            [easuAttachment setTexture:m_UpscalingOutputTexture];
+            [easuAttachment setTexture:easuTargetTexture];
             [easuAttachment setLoadAction:MTLLoadActionClear];
             [easuAttachment setClearColor:MTLClearColorMake(0.0, 0.0, 0.0, 0.0)];
             [easuAttachment setStoreAction:MTLStoreActionStore];
@@ -1281,6 +1290,7 @@ void MetalVideoRenderer::draw(NVGcontext* vg, int width, int height, AVFrame* fr
             m_video_render_stats_progress.total_upscaling_time +=
                 LiGetMillis() - upscalingStart;
             m_video_render_stats_progress.upscaled_frames++;
+            renderedDirectToDrawable = easuTargetTexture == drawableTexture;
         } else if (!renderVideoToTexture(m_UpscalingOutputTexture)) {
             return;
         }
@@ -1319,37 +1329,39 @@ void MetalVideoRenderer::draw(NVGcontext* vg, int width, int height, AVFrame* fr
             m_video_render_stats_progress.sharpened_frames++;
         }
 
-        const uint64_t ditheringStart = LiGetMillis();
-        updatePostProcessParams(useDithering);
+        if (!renderedDirectToDrawable) {
+            const uint64_t ditheringStart = LiGetMillis();
+            updatePostProcessParams(useDithering);
 
-        auto presentPassDescriptor = [MTLRenderPassDescriptor renderPassDescriptor];
-        MTLRenderPassColorAttachmentDescriptor* presentAttachment =
-            [presentPassDescriptor.colorAttachments objectAtIndexedSubscript:0];
-        if (presentAttachment == nil) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "Failed to acquire Metal post-process present attachment descriptor");
-            return;
-        }
-        [presentAttachment setTexture:drawableTexture];
-        [presentAttachment setLoadAction:MTLLoadActionClear];
-        [presentAttachment setClearColor:MTLClearColorMake(0.0, 0.0, 0.0, 0.0)];
-        [presentAttachment setStoreAction:MTLStoreActionStore];
+            auto presentPassDescriptor = [MTLRenderPassDescriptor renderPassDescriptor];
+            MTLRenderPassColorAttachmentDescriptor* presentAttachment =
+                [presentPassDescriptor.colorAttachments objectAtIndexedSubscript:0];
+            if (presentAttachment == nil) {
+                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                             "Failed to acquire Metal post-process present attachment descriptor");
+                return;
+            }
+            [presentAttachment setTexture:drawableTexture];
+            [presentAttachment setLoadAction:MTLLoadActionClear];
+            [presentAttachment setClearColor:MTLClearColorMake(0.0, 0.0, 0.0, 0.0)];
+            [presentAttachment setStoreAction:MTLStoreActionStore];
 
-        auto presentEncoder =
-            [commandBuffer renderCommandEncoderWithDescriptor:presentPassDescriptor];
-        [presentEncoder setRenderPipelineState:m_PostProcessPipelineState];
-        [presentEncoder setFragmentTexture:finalTexture atIndex:0];
-        [presentEncoder setFragmentBuffer:m_PostProcessParamsBuffer offset:0 atIndex:0];
-        [presentEncoder setVertexBuffer:m_VideoVertexBuffer offset:0 atIndex:0];
-        [presentEncoder drawPrimitives:MTLPrimitiveTypeTriangleStrip
-                            vertexStart:0
-                            vertexCount:4];
-        [presentEncoder endEncoding];
+            auto presentEncoder =
+                [commandBuffer renderCommandEncoderWithDescriptor:presentPassDescriptor];
+            [presentEncoder setRenderPipelineState:m_PostProcessPipelineState];
+            [presentEncoder setFragmentTexture:finalTexture atIndex:0];
+            [presentEncoder setFragmentBuffer:m_PostProcessParamsBuffer offset:0 atIndex:0];
+            [presentEncoder setVertexBuffer:m_VideoVertexBuffer offset:0 atIndex:0];
+            [presentEncoder drawPrimitives:MTLPrimitiveTypeTriangleStrip
+                                vertexStart:0
+                                vertexCount:4];
+            [presentEncoder endEncoding];
 
-        if (useDithering) {
-            m_video_render_stats_progress.total_dithering_time +=
-                LiGetMillis() - ditheringStart;
-            m_video_render_stats_progress.dithered_frames++;
+            if (useDithering) {
+                m_video_render_stats_progress.total_dithering_time +=
+                    LiGetMillis() - ditheringStart;
+                m_video_render_stats_progress.dithered_frames++;
+            }
         }
 
         m_video_render_stats_progress.total_post_process_time +=
