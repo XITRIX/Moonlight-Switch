@@ -27,7 +27,7 @@ static UIWindow* AppleSelectWindow(NSArray<UIWindow*>* windows) {
 static UIWindow* AppleGetActiveWindow() {
     UIApplication* application = [UIApplication sharedApplication];
 
-    if (@available(iOS 13.0, tvOS 13.0, *)) {
+    if (@available(iOS 13.0, tvOS 13.0, visionOS 1.0, *)) {
         UIWindow* inactiveWindow = nil;
         UIWindow* fallbackWindow = nil;
 
@@ -62,6 +62,7 @@ static UIWindow* AppleGetActiveWindow() {
         }
     }
 
+#if !defined(PLATFORM_VISIONOS)
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
     UIWindow* keyWindow = application.keyWindow;
@@ -74,6 +75,7 @@ static UIWindow* AppleGetActiveWindow() {
     if ([delegate respondsToSelector:@selector(window)]) {
         return delegate.window;
     }
+#endif
 
     return nil;
 }
@@ -133,15 +135,23 @@ void getWindowSize(int* w, int* h) {
     if (window != nil) {
         logicalSize = window.bounds.size;
         scale = window.traitCollection.displayScale;
+#if !defined(PLATFORM_VISIONOS)
         if (scale <= 0.0) {
             scale = window.screen.scale;
         }
+#endif
     }
 
+#if !defined(PLATFORM_VISIONOS)
     if (logicalSize.width <= 0.0 || logicalSize.height <= 0.0 || scale <= 0.0) {
         UIScreen* screen = [UIScreen mainScreen];
         logicalSize = screen.bounds.size;
         scale = screen.scale;
+    }
+#endif
+
+    if (scale <= 0.0) {
+        scale = 1.0;
     }
 
     if (w != nullptr) {

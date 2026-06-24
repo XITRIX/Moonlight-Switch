@@ -3,7 +3,7 @@ import AppIntents
 import Foundation
 import UIKit
 
-@available(iOS 16.0, *)
+@available(iOS 16.0, visionOS 1.0, *)
 private enum MoonlightShortcutURL {
     static func launchURL(host: String, appID: String, appName: String) -> URL? {
         let trimmedHost = host.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -39,12 +39,12 @@ private enum MoonlightShortcutURL {
     }
 }
 
-@available(iOS 16.0, *)
+@available(iOS 16.0, visionOS 1.0, *)
 private func moonlightLocalizedResource(_ value: String) -> LocalizedStringResource {
     LocalizedStringResource(String.LocalizationValue(value))
 }
 
-@available(iOS 16.0, *)
+@available(iOS 16.0, visionOS 1.0, *)
 private enum MoonlightShortcutError: Error, CustomLocalizedStringResourceConvertible {
     case invalidLaunchURL
 
@@ -56,12 +56,12 @@ private enum MoonlightShortcutError: Error, CustomLocalizedStringResourceConvert
     }
 }
 
-@available(iOS 16.0, *)
+@available(iOS 16.0, visionOS 1.0, *)
 private struct MoonlightSettingsFile: Decodable {
     let hosts: [MoonlightSavedHost]?
 }
 
-@available(iOS 16.0, *)
+@available(iOS 16.0, visionOS 1.0, *)
 private struct MoonlightSavedHost: Decodable {
     let address: String
     let remoteAddress: String
@@ -108,7 +108,7 @@ private struct MoonlightSavedHost: Decodable {
     }
 }
 
-@available(iOS 16.0, *)
+@available(iOS 16.0, visionOS 1.0, *)
 private struct MoonlightSavedApp: Decodable {
     let name: String
     let id: Int
@@ -125,7 +125,7 @@ private struct MoonlightSavedApp: Decodable {
     }
 }
 
-@available(iOS 16.0, *)
+@available(iOS 16.0, visionOS 1.0, *)
 private enum MoonlightGameStore {
     static var workingDirectoryURL: URL? {
         FileManager.default.urls(
@@ -200,14 +200,14 @@ private enum MoonlightGameStore {
     }
 }
 
-@available(iOS 16.0, *)
+@available(iOS 16.0, visionOS 1.0, *)
 private extension String {
     var nonEmpty: String? {
         isEmpty ? nil : self
     }
 }
 
-@available(iOS 16.0, *)
+@available(iOS 16.0, visionOS 1.0, *)
 struct MoonlightGameEntity: AppEntity, Sendable {
     static var typeDisplayRepresentation: TypeDisplayRepresentation = "Game"
     static var defaultQuery = MoonlightGameQuery()
@@ -265,7 +265,7 @@ struct MoonlightGameEntity: AppEntity, Sendable {
     }
 }
 
-@available(iOS 16.0, *)
+@available(iOS 16.0, visionOS 1.0, *)
 struct MoonlightGameQuery: EntityStringQuery {
     init() {}
 
@@ -293,7 +293,7 @@ struct MoonlightGameQuery: EntityStringQuery {
     }
 }
 
-@available(iOS 16.0, *)
+@available(iOS 16.0, visionOS 1.0, *)
 struct MoonlightGetFavoriteGamesIntent: AppIntent {
     static var title: LocalizedStringResource = "Get Favorite Games"
     static var description = IntentDescription("Get games saved in Moonlight's Favorites list.")
@@ -305,7 +305,7 @@ struct MoonlightGetFavoriteGamesIntent: AppIntent {
     }
 }
 
-@available(iOS 16.0, *)
+@available(iOS 16.0, visionOS 1.0, *)
 enum MoonlightGameDetail: String, AppEnum, Sendable {
     case appID
     case appName
@@ -321,7 +321,7 @@ enum MoonlightGameDetail: String, AppEnum, Sendable {
     ]
 }
 
-@available(iOS 16.0, *)
+@available(iOS 16.0, visionOS 1.0, *)
 struct MoonlightGetGameDetailIntent: AppIntent {
     static var title: LocalizedStringResource = "Get Game Detail"
     static var description = IntentDescription("Get a field from a Moonlight game.")
@@ -355,7 +355,7 @@ struct MoonlightGetGameDetailIntent: AppIntent {
     }
 }
 
-@available(iOS 16.0, *)
+@available(iOS 16.0, visionOS 1.0, *)
 struct MoonlightGetGameDeepLinkIntent: AppIntent {
     static var title: LocalizedStringResource = "Get Game Deep Link"
     static var description = IntentDescription("Get a moonlightswitch:// launch URL for a Moonlight game.")
@@ -378,7 +378,7 @@ struct MoonlightGetGameDeepLinkIntent: AppIntent {
     }
 }
 
-@available(iOS 16.0, *)
+@available(iOS 16.0, visionOS 1.0, *)
 struct MoonlightCreateGameIntent: AppIntent {
     static var title: LocalizedStringResource = "Create Game"
     static var description = IntentDescription("Create a game value from host, app ID, and app name.")
@@ -407,7 +407,7 @@ struct MoonlightCreateGameIntent: AppIntent {
     }
 }
 
-@available(iOS 16.0, *)
+@available(iOS 16.0, visionOS 1.0, *)
 struct MoonlightLaunchGameIntent: AppIntent {
     static var title: LocalizedStringResource = "Launch Game"
     static var description = IntentDescription("Open Moonlight and start streaming a game.")
@@ -432,7 +432,7 @@ struct MoonlightLaunchGameIntent: AppIntent {
     }
 }
 
-@available(iOS 16.0, *)
+@available(iOS 16.0, visionOS 1.0, *)
 struct MoonlightShortcutsProvider: AppShortcutsProvider {
     static var appShortcuts: [AppShortcut] {
         AppShortcut(

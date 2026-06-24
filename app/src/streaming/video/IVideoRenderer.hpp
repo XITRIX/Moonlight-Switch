@@ -20,6 +20,8 @@ struct VideoRenderStats {
     uint64_t total_upscaling_time;
     uint32_t sharpened_frames;
     uint64_t total_sharpening_time;
+    uint32_t gpu_timed_frames;
+    uint64_t total_gpu_render_time_us;
 
     float rendered_fps;
     float rendering_time;
@@ -27,6 +29,7 @@ struct VideoRenderStats {
     float dithering_time;
     float upscaling_time;
     float sharpening_time;
+    float gpu_rendering_time;
 
     uint64_t measurement_start_timestamp;
 };

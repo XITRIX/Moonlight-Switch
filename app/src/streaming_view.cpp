@@ -346,6 +346,11 @@ void StreamingView::draw(NVGcontext* vg, float x, float y, float width,
                                   stats->video_decode_stats.session_decoder_delay, 2,
                                   stats->video_render_stats.rendering_time, 2);
 
+        if (stats->video_render_stats.gpu_timed_frames > 0) {
+            statistics += fmt::format("Average GPU render time: {:.{}f} ms\n",
+                                      stats->video_render_stats.gpu_rendering_time, 2);
+        }
+
         if (stats->video_render_stats.post_processed_frames > 0) {
             statistics += fmt::format(
                 "Average post-processing pass time: {:.{}f} ms (D:{:.{}f} | U:{:.{}f} | S:{:.{}f})\n",

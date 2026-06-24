@@ -55,7 +55,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${EXTERN_PATH}/cmake")
 
 # project info
 project(Moonlight)
-if (PLATFORM_IOS)
+if (PLATFORM_IOS OR PLATFORM_VISIONOS)
     enable_language(Swift)
     set(CMAKE_Swift_LANGUAGE_VERSION 5)
 endif ()
@@ -161,7 +161,7 @@ unset(_moonlight_vcpkg_triplet_dir)
 
 set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
 add_subdirectory(extern)
-if (PLATFORM_IOS AND TARGET borealis)
+if ((PLATFORM_IOS OR PLATFORM_VISIONOS) AND TARGET borealis)
     get_target_property(_borealis_interface_options borealis INTERFACE_COMPILE_OPTIONS)
     if (_borealis_interface_options)
         set(_moonlight_borealis_interface_options)
@@ -233,7 +233,7 @@ elseif (PLATFORM_ANDROID)
 elseif (PLATFORM_IOS OR PLATFORM_TVOS OR PLATFORM_VISIONOS)
     list(APPEND MAIN_SRC app/platforms/ios/apple_mdns.mm)
     list(APPEND MAIN_SRC app/platforms/ios/apple_display.mm)
-    if (PLATFORM_IOS)
+    if (PLATFORM_IOS OR PLATFORM_VISIONOS)
         list(APPEND MAIN_SRC app/platforms/ios/MoonlightShortcuts.swift)
     endif ()
 endif ()
@@ -261,6 +261,15 @@ if (MOONLIGHT_APPLE_MOBILE_USE_MULTI_SDK)
         XCODE_ATTRIBUTE_LIBRARY_SEARCH_PATHS[sdk=${MOONLIGHT_APPLE_MOBILE_XCODE_SIMULATOR_SDK}*] "$(inherited) ${MOONLIGHT_APPLE_MOBILE_VCPKG_STAGING_ROOT}/${MOONLIGHT_APPLE_MOBILE_XCODE_SIMULATOR_SDK}/$(CONFIGURATION)")
     target_compile_definitions(${PROJECT_NAME} PRIVATE CURL_STATICLIB)
 endif ()
+
+function(moonlight_add_apple_shortcut_resources target)
+    file(GLOB MOONLIGHT_APPLE_SHORTCUT_LOCALIZATION_FILES CONFIGURE_DEPENDS
+        "${CMAKE_CURRENT_SOURCE_DIR}/app/platforms/ios/*.xcstrings"
+        "${CMAKE_CURRENT_SOURCE_DIR}/app/platforms/ios/*.lproj/AppShortcuts.strings")
+    set_source_files_properties(${MOONLIGHT_APPLE_SHORTCUT_LOCALIZATION_FILES} PROPERTIES
+        MACOSX_PACKAGE_LOCATION "Resources")
+    target_sources(${target} PRIVATE ${MOONLIGHT_APPLE_SHORTCUT_LOCALIZATION_FILES})
+endfunction()
 
 
 # building release file
@@ -370,20 +379,7 @@ elseif (PLATFORM_IOS)
         XCODE_ATTRIBUTE_FRAMEWORK_SEARCH_PATHS "${CMAKE_CURRENT_SOURCE_DIR}/extern/borealis/library/lib/extern/angle/ios/"
         XCODE_ATTRIBUTE_INSTALL_PATH $(LOCAL_APPS_DIR))
 
-    file(GLOB MOONLIGHT_IOS_LOCALIZATION_FILES CONFIGURE_DEPENDS
-        "${CMAKE_CURRENT_SOURCE_DIR}/app/platforms/ios/*.xcstrings"
-        "${CMAKE_CURRENT_SOURCE_DIR}/app/platforms/ios/*.lproj/AppShortcuts.strings")
-    set_source_files_properties(${MOONLIGHT_IOS_LOCALIZATION_FILES} PROPERTIES
-        MACOSX_PACKAGE_LOCATION "Resources")
-    foreach (_localization_file IN LISTS MOONLIGHT_IOS_LOCALIZATION_FILES)
-        if (_localization_file MATCHES "\\.lproj/")
-            get_filename_component(_localization_dir "${_localization_file}" DIRECTORY)
-            get_filename_component(_localization_name "${_localization_dir}" NAME)
-            set_source_files_properties("${_localization_file}" PROPERTIES
-                MACOSX_PACKAGE_LOCATION "Resources/${_localization_name}")
-        endif ()
-    endforeach ()
-    target_sources(${PROJECT_NAME} PRIVATE ${MOONLIGHT_IOS_LOCALIZATION_FILES})
+    moonlight_add_apple_shortcut_resources(${PROJECT_NAME})
 elseif (PLATFORM_VISIONOS)
     ios_bundle(
             "${CMAKE_CURRENT_SOURCE_DIR}/app/platforms/ios/iphoneos/Splash.storyboard"
@@ -397,6 +393,7 @@ elseif (PLATFORM_VISIONOS)
         INSTALL_RPATH @executable_path/Frameworks
         XCODE_EMBED_FRAMEWORKS_CODE_SIGN_ON_COPY ON
         MACOSX_BUNDLE_COPYRIGHT "Copyright 2026 ${PROJECT_AUTHOR}"
+        XCODE_ATTRIBUTE_ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES YES
         XCODE_ATTRIBUTE_CURRENT_PROJECT_VERSION "${VERSION_BUILD}"
         XCODE_ATTRIBUTE_INFOPLIST_KEY_GCSupportsGameMode YES
         XCODE_ATTRIBUTE_INFOPLIST_KEY_GCSupportsControllerUserInteraction YES
@@ -405,6 +402,8 @@ elseif (PLATFORM_VISIONOS)
         XCODE_ATTRIBUTE_LD_RUNPATH_SEARCH_PATHS "@executable_path/Frameworks"
         XCODE_ATTRIBUTE_FRAMEWORK_SEARCH_PATHS "${CMAKE_CURRENT_SOURCE_DIR}/extern/borealis/library/lib/extern/angle/vision/"
         XCODE_ATTRIBUTE_INSTALL_PATH $(LOCAL_APPS_DIR))
+
+    moonlight_add_apple_shortcut_resources(${PROJECT_NAME})
 elseif (PLATFORM_TVOS)
     ios_bundle(
             "${CMAKE_CURRENT_SOURCE_DIR}/app/platforms/ios/tvos/Splash.storyboard"
@@ -596,7 +595,7 @@ endif()
 if (APPLE)
     set(XCODE_ATTRIBUTE_CLANG_ENABLE_OBJC_ARC OFF)
     target_link_libraries(${PROJECT_NAME} PRIVATE "-framework CoreMedia" "-framework VideoToolbox" "-framework AVKit" "-framework MetalKit")
-    if (PLATFORM_IOS)
+    if (PLATFORM_IOS OR PLATFORM_VISIONOS)
         target_link_libraries(${PROJECT_NAME} PRIVATE "-weak_framework AppIntents")
     endif ()
     if (SUPPORT_UPSCALING AND USE_METAL_RENDERER AND NOT PLATFORM_TVOS)

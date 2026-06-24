@@ -19,6 +19,7 @@ extern "C" {
 #include "UpscalingSupport.hpp"
 #include <algorithm>
 #include <array>
+#include <atomic>
 #include <cmath>
 #include <cstring>
 
@@ -1411,7 +1412,21 @@ void MetalVideoRenderer::draw(NVGcontext* vg, int width, int height, AVFrame* fr
     SDL_LockMutex(m_PresentationMutex);
     m_PendingPresentationCount++;
     SDL_UnlockMutex(m_PresentationMutex);
-    [commandBuffer addCompletedHandler:^(id<MTLCommandBuffer>) {
+    [commandBuffer addCompletedHandler:^(id<MTLCommandBuffer> completedCommandBuffer) {
+        if (@available(macOS 10.15, iOS 10.3, tvOS 10.3, *)) {
+            if (completedCommandBuffer.status == MTLCommandBufferStatusCompleted &&
+                completedCommandBuffer.GPUEndTime > completedCommandBuffer.GPUStartTime) {
+                const double gpuTimeUs =
+                    (completedCommandBuffer.GPUEndTime -
+                     completedCommandBuffer.GPUStartTime) *
+                    1000000.0;
+                m_gpu_render_time_total_us.fetch_add(
+                    static_cast<uint64_t>(gpuTimeUs + 0.5),
+                    std::memory_order_relaxed);
+                m_gpu_timed_frames.fetch_add(1, std::memory_order_relaxed);
+            }
+        }
+
         SDL_LockMutex(m_PresentationMutex);
         m_PendingPresentationCount--;
         SDL_CondSignal(m_PresentationCond);
@@ -1439,6 +1454,10 @@ void MetalVideoRenderer::draw(NVGcontext* vg, int width, int height, AVFrame* fr
     if (m_stats_time_accumulator >= stats_interval_ms) {
         m_video_render_stats_cache = m_video_render_stats_progress;
         m_video_render_stats_progress = {};
+        m_video_render_stats_cache.gpu_timed_frames =
+            m_gpu_timed_frames.exchange(0, std::memory_order_relaxed);
+        m_video_render_stats_cache.total_gpu_render_time_us =
+            m_gpu_render_time_total_us.exchange(0, std::memory_order_relaxed);
 
         const uint64_t now = LiGetMillis();
         const uint64_t elapsed_time =
@@ -1477,6 +1496,13 @@ void MetalVideoRenderer::draw(NVGcontext* vg, int width, int height, AVFrame* fr
             m_video_render_stats_cache.sharpened_frames
                 ? (float)m_video_render_stats_cache.total_sharpening_time /
                       (float)m_video_render_stats_cache.sharpened_frames
+                : 0.0f;
+
+        m_video_render_stats_cache.gpu_rendering_time =
+            m_video_render_stats_cache.gpu_timed_frames
+                ? ((float)m_video_render_stats_cache.total_gpu_render_time_us /
+                   1000.0f) /
+                      (float)m_video_render_stats_cache.gpu_timed_frames
                 : 0.0f;
 
         m_stats_time_accumulator -= stats_interval_ms;

@@ -3,6 +3,7 @@
 
 #include "IVideoRenderer.hpp"
 #include <SDL2/SDL.h>
+#include <atomic>
 
 class MetalVideoRenderer : public IVideoRenderer {
 public:
@@ -34,6 +35,8 @@ private:
     VideoRenderStats m_video_render_stats_progress = {};
     VideoRenderStats m_video_render_stats_cache = {};
     uint64_t m_stats_time_accumulator = 0;
+    std::atomic<uint64_t> m_gpu_render_time_total_us{0};
+    std::atomic<uint32_t> m_gpu_timed_frames{0};
     SDL_Window* m_Window;
 //    SDL_MetalView m_MetalView;
 
