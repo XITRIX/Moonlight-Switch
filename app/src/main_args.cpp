@@ -368,7 +368,6 @@ bool startFromArgs(int argc, char** argv) {
 
     if (argc <= 1) return false;
 
-    Application::enableDebuggingView(true);
     return startFromLaunchRequest(parseArgv(argc, argv), false);
 }
 
@@ -377,6 +376,5 @@ bool startFromUrl(const std::string& url, bool resetActivityStack) {
         return false;
     }
 
-    Application::enableDebuggingView(true);
     return startFromLaunchRequest(parseDeepLinkUrl(url), resetActivityStack);
 }
