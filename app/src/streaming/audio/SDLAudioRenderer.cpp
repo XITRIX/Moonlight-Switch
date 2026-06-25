@@ -28,6 +28,14 @@
 
 namespace {
 
+int audioBytesForDurationMs(int sampleRate, int channels, int milliseconds) {
+    if (sampleRate <= 0 || channels <= 0 || milliseconds <= 0) {
+        return 0;
+    }
+
+    return (sampleRate * channels * static_cast<int>(sizeof(short)) * milliseconds) / 1000;
+}
+
 void applyVolume(short* buffer, size_t sampleCount, int volume) {
     if (volume >= 100) {
         return;
@@ -75,6 +83,24 @@ int SDLAudioRenderer::init(int audio_configuration,
     } else {
         if (have.format != want.format) // we let this one thing change.
             brls::Logger::error("We didn't get requested audio format.\n");
+
+    #if defined(PLATFORM_SWITCH)
+        audioOverflowBytes = 24000;
+    #elif defined(PLATFORM_APPLE)
+        // CoreAudio backends can batch callbacks enough that a fixed 16 KB
+        // threshold is only a tiny latency window.
+        audioOverflowBytes =
+            std::max(48000, audioBytesForDurationMs(have.freq, have.channels, 250));
+    #else
+        audioOverflowBytes = 16000;
+    #endif
+
+        brls::Logger::info(
+            "SDL audio: want {} Hz, {} ch, {} samples; got {} Hz, {} ch, {} samples; overflow threshold {} bytes",
+            want.freq, (int)want.channels, want.samples,
+            have.freq, (int)have.channels, have.samples,
+            audioOverflowBytes);
+
         SDL_PauseAudioDevice(dev, 0); // start audio playing.
     }
 
@@ -107,19 +133,14 @@ void SDLAudioRenderer::decode_and_play_sample(char* sample_data,
                 static_cast<size_t>(decodeLen) * channelCount,
                 Settings::instance().get_volume());
 
-#if defined(PLATFORM_SWITCH)
-    int bufferOverflow = 24000;
-#else
-    int bufferOverflow = 16000;
-#endif
-
-    if (SDL_GetQueuedAudioSize(dev) > bufferOverflow) {
+    const int frameBytes = decodeLen * channelCount * static_cast<int>(sizeof(short));
+    const Uint32 queuedAudioSize = SDL_GetQueuedAudioSize(dev);
+    if (queuedAudioSize > static_cast<Uint32>(audioOverflowBytes)) {
         // clear audio queue to avoid big audio delay
         // average values are close to bufferOverflow bytes
         SDL_ClearQueuedAudio(this->dev);
     }
-    SDL_QueueAudio(dev, pcmBuffer,
-                    decodeLen * channelCount * sizeof(short));
+    SDL_QueueAudio(dev, pcmBuffer, frameBytes);
 }
 
 int SDLAudioRenderer::capabilities() {

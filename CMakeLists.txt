@@ -263,12 +263,30 @@ if (MOONLIGHT_APPLE_MOBILE_USE_MULTI_SDK)
 endif ()
 
 function(moonlight_add_apple_shortcut_resources target)
-    file(GLOB MOONLIGHT_APPLE_SHORTCUT_LOCALIZATION_FILES CONFIGURE_DEPENDS
-        "${CMAKE_CURRENT_SOURCE_DIR}/app/platforms/ios/*.xcstrings"
+    file(GLOB MOONLIGHT_APPLE_SHORTCUT_STRING_CATALOGS CONFIGURE_DEPENDS
+        "${CMAKE_CURRENT_SOURCE_DIR}/app/platforms/ios/*.xcstrings")
+    file(GLOB MOONLIGHT_APPLE_SHORTCUT_STRINGS CONFIGURE_DEPENDS
         "${CMAKE_CURRENT_SOURCE_DIR}/app/platforms/ios/*.lproj/AppShortcuts.strings")
-    set_source_files_properties(${MOONLIGHT_APPLE_SHORTCUT_LOCALIZATION_FILES} PROPERTIES
+
+    set(MOONLIGHT_APPLE_SHORTCUT_RESOURCES ${MOONLIGHT_APPLE_SHORTCUT_STRING_CATALOGS})
+    set_source_files_properties(${MOONLIGHT_APPLE_SHORTCUT_STRING_CATALOGS} PROPERTIES
         MACOSX_PACKAGE_LOCATION "Resources")
-    target_sources(${target} PRIVATE ${MOONLIGHT_APPLE_SHORTCUT_LOCALIZATION_FILES})
+
+    set(MOONLIGHT_APPLE_SHORTCUT_STAGING_DIR "${CMAKE_CURRENT_BINARY_DIR}/apple-shortcut-resources")
+    foreach (_shortcut_strings_file IN LISTS MOONLIGHT_APPLE_SHORTCUT_STRINGS)
+        get_filename_component(_shortcut_lproj_dir "${_shortcut_strings_file}" DIRECTORY)
+        get_filename_component(_shortcut_lproj_name "${_shortcut_lproj_dir}" NAME)
+        string(REGEX REPLACE "\\.lproj$" "" _shortcut_locale "${_shortcut_lproj_name}")
+
+        set(_staged_shortcut_strings "${MOONLIGHT_APPLE_SHORTCUT_STAGING_DIR}/${_shortcut_locale}/AppShortcuts.strings")
+        file(MAKE_DIRECTORY "${MOONLIGHT_APPLE_SHORTCUT_STAGING_DIR}/${_shortcut_locale}")
+        configure_file("${_shortcut_strings_file}" "${_staged_shortcut_strings}" COPYONLY)
+        set_source_files_properties("${_staged_shortcut_strings}" PROPERTIES
+            MACOSX_PACKAGE_LOCATION "Resources/${_shortcut_lproj_name}")
+        list(APPEND MOONLIGHT_APPLE_SHORTCUT_RESOURCES "${_staged_shortcut_strings}")
+    endforeach ()
+
+    target_sources(${target} PRIVATE ${MOONLIGHT_APPLE_SHORTCUT_RESOURCES})
 endfunction()
 
 
