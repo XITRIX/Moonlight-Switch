@@ -275,13 +275,21 @@ static uint32_t get_my_ip_address() {
 
     address = get_first_non_loopback_ipv4_address(fd, nullptr, 0);
     close(fd);
-#elif defined(__APPLE__)
+#elif defined(PLATFORM_IOS) || defined(PLATFORM_TVOS) || defined(PLATFORM_VISIONOS)
     int fd = socket(AF_INET, SOCK_DGRAM, 0);
     if (fd < 0) {
         return 0;
     }
 
     address = get_ipv4_address_for_interface(fd, "en0");
+    close(fd);
+#elif defined(__APPLE__)
+    int fd = socket(AF_INET, SOCK_DGRAM, 0);
+    if (fd < 0) {
+        return 0;
+    }
+
+    address = get_first_non_loopback_ipv4_address(fd, nullptr, 0);
     close(fd);
 #elif defined(__SWITCH__)
     nifmGetCurrentIpAddress(&address);
@@ -345,7 +353,13 @@ std::string GameStreamClient::external_address_for_mdns(const std::string& addre
     return externalAddress;
 }
 
-bool GameStreamClient::can_find_host() { return get_my_ip_address() != 0; }
+bool GameStreamClient::can_find_host() {
+#if defined(PLATFORM_IOS) || defined(PLATFORM_TVOS) || defined(PLATFORM_VISIONOS)
+    return true;
+#else
+    return get_my_ip_address() != 0;
+#endif
+}
 
 #ifndef MULTICAST_DISABLED
 static std::atomic_uint64_t findHostsGeneration = 0;

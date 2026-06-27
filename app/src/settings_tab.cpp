@@ -14,6 +14,8 @@
 #include "helper.hpp"
 #include "button_selecting_dialog.hpp"
 #include "mapping_layout_editor.hpp"
+#include "UpscalingSupport.hpp"
+#include <cmath>
 #include <iomanip>
 #include <sstream>
 
@@ -33,6 +35,36 @@
 
 using namespace brls::literals;
 
+namespace {
+void updateStrengthControl(BooleanSliderCell* cell,
+                           bool enabled, const std::string& detailText) {
+    cell->setSliderVisibility(enabled ? brls::Visibility::VISIBLE
+                                      : brls::Visibility::GONE);
+    cell->setValueText(enabled ? detailText : "");
+}
+
+float sliderProgressToDitheringStrength(float progress) {
+    return static_cast<float>(int(progress * 9.0f + 0.5f) + 1);
+}
+
+float ditheringStrengthToSliderProgress(float strength) {
+    if (strength < 1.0f)
+        strength = 1.0f;
+    else if (strength > 10.0f)
+        strength = 10.0f;
+
+    return (strength - 1.0f) / 9.0f;
+}
+
+std::string getDitheringStrengthText(float strength) {
+    return std::to_string(int(strength));
+}
+
+std::string getRcasStrengthText(float strength) {
+    return std::to_string(int(strength * 100.0f)) + "%";
+}
+}
+
 #if defined(__SWITCH__)
 std::vector<std::string> audio_backends {
     "Audren",
@@ -51,10 +83,7 @@ SettingsTab::SettingsTab() {
     this->inflateFromXMLRes("xml/tabs/settings.xml");
 
     std::vector<std::string> resolutions = {
-        "settings/resolution_native"_i18n, "360p", "480p", "720p", "1080p",
-// #if !defined(PLATFORM_SWITCH)
-        "1440p"
-// #endif
+        "settings/resolution_native"_i18n, "360p", "480p", "540p", "720p", "1080p", "1440p"
     };
     resolution->setText("settings/resolution"_i18n);
     resolution->setData(resolutions);
@@ -62,9 +91,10 @@ SettingsTab::SettingsTab() {
         GET_SETTINGS(resolution, -1, 0);
         GET_SETTINGS(resolution, 360, 1);
         GET_SETTINGS(resolution, 480, 2);
-        GET_SETTINGS(resolution, 720, 3);
-        GET_SETTINGS(resolution, 1080, 4);
-        GET_SETTINGS(resolution, 1440, 5);
+        GET_SETTINGS(resolution, 540, 3);
+        GET_SETTINGS(resolution, 720, 4);
+        GET_SETTINGS(resolution, 1080, 5);
+        GET_SETTINGS(resolution, 1440, 6);
         DEFAULT;
     }
 
@@ -92,6 +122,78 @@ SettingsTab::SettingsTab() {
         }
     });
 
+#ifdef SUPPORT_UPSCALING
+    if (!isVideoUpscalingSupported()) {
+        imageAdjustmentsHeader->removeFromSuperView(true);
+        dithering->removeFromSuperView(true);
+        upscaling->removeFromSuperView(true);
+        upscalingMode->removeFromSuperView(true);
+        rcas->removeFromSuperView(true);
+    } else {
+        auto updateDitheringControls = [this](bool enabled) {
+            updateStrengthControl(dithering, enabled,
+                                  getDitheringStrengthText(
+                                      Settings::instance().dithering_strength()));
+        };
+        auto updateRcasControls = [this](bool enabled) {
+            updateStrengthControl(rcas, enabled,
+                                  getRcasStrengthText(
+                                      Settings::instance().rcas_strength()));
+        };
+
+        dithering->init("settings/dithering"_i18n, Settings::instance().dithering(),
+                        [updateDitheringControls](bool value) {
+                            Settings::instance().set_dithering(value);
+                            updateDitheringControls(value);
+                        });
+        const float ditheringStrength = Settings::instance().dithering_strength();
+        dithering->getProgressEvent()->subscribe([this](float value) {
+            const float strength = sliderProgressToDitheringStrength(value);
+            Settings::instance().set_dithering_strength(strength);
+            updateStrengthControl(dithering,
+                                  Settings::instance().dithering(),
+                                  getDitheringStrengthText(strength));
+        });
+        dithering->setProgress(
+            ditheringStrengthToSliderProgress(ditheringStrength));
+        updateDitheringControls(Settings::instance().dithering());
+
+#if defined(PLATFORM_APPLE) && !defined(PLATFORM_TVOS)
+        upscaling->removeFromSuperView(true);
+        upscalingMode->init(
+            "settings/upscaling"_i18n,
+            {"hints/off"_i18n, "MetalFX", "FSR1"},
+            (int)Settings::instance().upscaling_mode(),
+            [](int value) { Settings::instance().set_upscaling_mode((UpscalingMode)value); });
+#else
+        upscalingMode->removeFromSuperView(true);
+        upscaling->init("settings/upscaling"_i18n, Settings::instance().upscaling(),
+                        [](bool value) { Settings::instance().set_upscaling(value); });
+#endif
+        rcas->init("settings/rcas_sharpening"_i18n, Settings::instance().rcas(),
+                   [updateRcasControls](bool value) {
+                       Settings::instance().set_rcas(value);
+                       updateRcasControls(value);
+                   });
+
+        const float rcasStrength = Settings::instance().rcas_strength();
+        rcas->getProgressEvent()->subscribe([this](float value) {
+            Settings::instance().set_rcas_strength(value);
+            updateStrengthControl(rcas,
+                                  Settings::instance().rcas(),
+                                  getRcasStrengthText(value));
+        });
+        rcas->setProgress(rcasStrength);
+        updateRcasControls(Settings::instance().rcas());
+    }
+#else
+    imageAdjustmentsHeader->removeFromSuperView(true);
+    dithering->removeFromSuperView(true);
+    upscaling->removeFromSuperView(true);
+    upscalingMode->removeFromSuperView(true);
+    rcas->removeFromSuperView(true);
+#endif
+
     auto updateNativeResolutionScaleVisibility = [this]() {
         resolutionScale->setVisibility(
             resolution->getSelection() == 0 ? brls::Visibility::VISIBLE
@@ -104,9 +206,10 @@ SettingsTab::SettingsTab() {
             SET_SETTING(0, set_resolution(-1));
             SET_SETTING(1, set_resolution(360));
             SET_SETTING(2, set_resolution(480));
-            SET_SETTING(3, set_resolution(720));
-            SET_SETTING(4, set_resolution(1080));
-            SET_SETTING(5, set_resolution(1440));
+            SET_SETTING(3, set_resolution(540));
+            SET_SETTING(4, set_resolution(720));
+            SET_SETTING(5, set_resolution(1080));
+            SET_SETTING(6, set_resolution(1440));
             DEFAULT;
         }
         updateNativeResolutionScaleVisibility();

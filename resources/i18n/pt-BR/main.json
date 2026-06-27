@@ -57,6 +57,13 @@
         "stream_start": "Falha ao iniciar stream...",
         "unknown_error": "Ocorreu um problema desconhecido..."
     },
+    "forwarder": {
+        "install_failed": "Falha ao instalar o forwarder\n0x{:X}",
+        "installed": "Forwarder instalado",
+        "make": "Criar forwarder",
+        "open_shortcuts": "Abrir Atalhos",
+        "shortcuts_message": "Este app pode usar o app Atalhos para criar ações de inicialização."
+    },
     "hints": {
         "back": "Voltar",
         "off": "Desligado",
@@ -145,6 +152,10 @@
         "resolution": "Resolução",
         "resolution_native": "Nativa",
         "resolution_scale": "Escala",
+        "image_adjustments": "Ajustes de imagem",
+        "dithering": "Dithering",
+        "upscaling": "Melhorar resoluções baixas",
+        "rcas_sharpening": "Nitidez RCAS",
         "rumble_force": "Rumble force",
         "single_joycon": "Single Joycon",
         "stream_settings": "Configurações de stream",

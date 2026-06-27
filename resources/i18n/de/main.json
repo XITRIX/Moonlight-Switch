@@ -57,6 +57,13 @@
         "stream_start": "Stream konnten nicht gestartet werden...",
         "unknown_error": "Unbekannter Fehler aufgetreten..."
     },
+    "forwarder": {
+        "install_failed": "Forwarder-Installation fehlgeschlagen\n0x{:X}",
+        "installed": "Forwarder installiert",
+        "make": "Forwarder erstellen",
+        "open_shortcuts": "Kurzbefehle öffnen",
+        "shortcuts_message": "Diese App kann die Kurzbefehle-App verwenden, um Startaktionen zu erstellen."
+    },
     "hints": {
         "back": "Zurück",
         "off": "Aus",
@@ -145,6 +152,10 @@
         "resolution": "Auflösung",
         "resolution_native": "Nativ",
         "resolution_scale": "Skalierung",
+        "image_adjustments": "Bildanpassungen",
+        "dithering": "Dithering",
+        "upscaling": "Niedrige Auflösungen hochskalieren",
+        "rcas_sharpening": "RCAS-Schärfung",
         "rumble_force": "Rumble force",
         "single_joycon": "Single Joycon",
         "stream_settings": "Streameinstellungen",

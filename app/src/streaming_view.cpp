@@ -338,10 +338,7 @@ void StreamingView::draw(NVGcontext* vg, float x, float y, float width,
                                   "Average receive time: {:.{}f} | {:.{}f} ms\n"
                                   "Average decode time: {:.{}f} | {:.{}f} ms\n"
                                   "Average decoder delay: {:.{}f} | {:.{}f} ms\n"
-                                  "Average rendering time: {:.{}f} ms\n"
-                                  "Frame holder push/get rate: {}\n"
-                                  "Frames queue reuses | drops: {} | {}\n"
-                                  "Frames queue: {}",
+                                  "Average rendering time: {:.{}f} ms\n",
                                   stats->video_decode_stats.network_dropped_frames,
                                   stats->video_decode_stats.current_receive_time, 2,
                                   stats->video_decode_stats.session_receive_time, 2,
@@ -349,7 +346,28 @@ void StreamingView::draw(NVGcontext* vg, float x, float y, float width,
                                   stats->video_decode_stats.session_decoding_time, 2,
                                   stats->video_decode_stats.current_decoder_delay, 2,
                                   stats->video_decode_stats.session_decoder_delay, 2,
-                                  stats->video_render_stats.rendering_time, 2,
+                                  stats->video_render_stats.rendering_time, 2);
+
+        if (stats->video_render_stats.gpu_timed_frames > 0) {
+            statistics += fmt::format("Average GPU render time: {:.{}f} ms\n",
+                                      stats->video_render_stats.gpu_rendering_time, 2);
+        }
+
+        if (stats->video_render_stats.post_processed_frames > 0) {
+            statistics += fmt::format(
+                "Average post-processing pass time: {:.{}f} ms (D:{:.{}f} | U:{:.{}f} | S:{:.{}f})\n",
+                /* "Post-processed frames: {} / {}\n", */
+                stats->video_render_stats.post_processing_time, 2,
+                stats->video_render_stats.dithering_time, 2,
+                stats->video_render_stats.upscaling_time, 2,
+                stats->video_render_stats.sharpening_time, 2
+                /*stats->video_render_stats.post_processed_frames, */
+                /*stats->video_render_stats.rendered_frames*/);
+        }
+
+        statistics += fmt::format("Frame holder push/get rate: {}\n"
+                                  "Frames queue reuses | drops: {} | {}\n"
+                                  "Frames queue: {}",
                                   AVFrameHolder::instance().getStat(),
                                   AVFrameHolder::instance().getFakeFrameStat(),
                                   AVFrameHolder::instance().getFrameDropStat(),

@@ -6,10 +6,77 @@
 //
 
 #include <forwarder_maker.hpp>
+#include <borealis.hpp>
+
+#include <cstdlib>
+
+using namespace brls::literals;
+
+#ifdef __SWITCH__
 #include <Settings.hpp>
 
 #include "BoxArtManager.hpp"
 #include "Data.hpp"
+
+#include <string>
+
+namespace {
+
+std::string encodeAppName(const std::string& name) {
+    std::string encoded;
+    encoded.reserve(name.size());
+
+    for (const char ch : name) {
+        if (ch == ' ') {
+            encoded += "&#160;";
+        } else {
+            encoded.push_back(ch);
+        }
+    }
+
+    return encoded;
+}
+
+std::string buildForwarderArgs(const Host& host, const App& app) {
+    std::string args;
+    auto append = [&](const std::string& value) {
+        if (!args.empty()) {
+            args.push_back(' ');
+        }
+        args += value;
+    };
+
+    if (!host.mac.empty()) {
+        append("--host=" + host.mac);
+    } else {
+        const auto preferredAddress = host.preferred_address();
+        if (!preferredAddress.empty()) {
+            append("--ip=" + preferredAddress);
+        }
+    }
+
+    append("--appid=" + std::to_string(app.app_id));
+    append("--appname=" + encodeAppName(app.name));
+    return args;
+}
+
+} // namespace
+#endif
+
+#if defined(PLATFORM_IOS)
+namespace {
+
+void showShortcutsAlert() {
+    auto* dialog = new brls::Dialog("forwarder/shortcuts_message"_i18n);
+    dialog->addButton("common/close"_i18n, [] {});
+    dialog->addButton("forwarder/open_shortcuts"_i18n, [] {
+        brls::Application::getPlatform()->openBrowser("shortcuts://create-shortcut");
+    });
+    dialog->open();
+}
+
+} // namespace
+#endif
 
 #ifdef __SWITCH__
 
@@ -1131,21 +1198,6 @@ std::vector<u8> readFileBytes(const std::string& path) {
     return {data.bytes(), data.bytes() + data.size()};
 }
 
-std::string encodeAppName(const std::string& name) {
-    std::string encoded;
-    encoded.reserve(name.size());
-
-    for (const char ch : name) {
-        if (ch == ' ') {
-            encoded += "&#160;";
-        } else {
-            encoded.push_back(ch);
-        }
-    }
-
-    return encoded;
-}
-
 std::string formatNroPathForForwarder(std::string path) {
     if (!path.starts_with("sdmc:")) {
         path = "sdmc:" + path;
@@ -1360,29 +1412,6 @@ std::vector<u8> normalizeForwarderIcon(std::span<const u8> bytes, bool add_moonl
     return {bytes.begin(), bytes.end()};
 }
 
-std::string buildForwarderArgs(const Host& host, const App& app) {
-    std::string args;
-    auto append = [&](const std::string& value) {
-        if (!args.empty()) {
-            args.push_back(' ');
-        }
-        args += value;
-    };
-
-    if (!host.mac.empty()) {
-        append("--host=" + host.mac);
-    } else {
-        const auto preferredAddress = host.preferred_address();
-        if (!preferredAddress.empty()) {
-            append("--ip=" + preferredAddress);
-        }
-    }
-
-    append("--appid=" + std::to_string(app.app_id));
-    append("--appname=" + encodeAppName(app.name));
-    return args;
-}
-
 std::vector<u8> resolveForwarderIcon(const App& app, bool add_moonlight_logo) {
     auto icon = readFileBytes(BoxArtManager::get_texture_path(app.app_id));
     if (!icon.empty()) {
@@ -1593,6 +1622,16 @@ Result installForwarder(const Host& host, const App& app, bool add_moonlight_log
 
 int makeForwarder(const Host& host, const App& app, bool add_moonlight_logo) {
     return static_cast<int>(installForwarder(host, app, add_moonlight_logo));
+}
+
+#elif defined(PLATFORM_IOS)
+
+int makeForwarder(const Host& host, const App& app, bool add_moonlight_logo) {
+    (void)host;
+    (void)app;
+    (void)add_moonlight_logo;
+    showShortcutsAlert();
+    return EXIT_SUCCESS;
 }
 
 #else

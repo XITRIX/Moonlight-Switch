@@ -57,6 +57,13 @@
         "stream_start": "Не удалось запустить трансляцию...",
         "unknown_error": "Произошла неизвестная проблема..."
     },
+    "forwarder": {
+        "install_failed": "Не удалось установить форвардер\n0x{:X}",
+        "installed": "Форвардер установлен",
+        "make": "Создать форвардер",
+        "open_shortcuts": "Открыть Команды",
+        "shortcuts_message": "Приложение может использовать Команды для создания действий запуска."
+    },
     "hints": {
         "back": "Назад",
         "off": "Выкл.",
@@ -145,6 +152,10 @@
         "resolution": "Разрешение",
         "resolution_native": "Родное",
         "resolution_scale": "Масштаб",
+        "image_adjustments": "Коррекция изображения",
+        "dithering": "Дизеринг",
+        "upscaling": "Масштабировать низкие разрешения",
+        "rcas_sharpening": "Повышение резкости RCAS",
         "rumble_force": "Сила вибрации",
         "single_joycon": "Одиночный Joycon",
         "stream_settings": "Настройка трансляции",

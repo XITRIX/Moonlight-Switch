@@ -21,6 +21,7 @@
 #include "main_activity.hpp"
 #include "main_tabs_view.hpp"
 #include "settings_tab.hpp"
+#include "views/boolean_slider_cell.hpp"
 
 #include "DiscoverManager.hpp"
 #include "MoonlightSession.hpp"
@@ -110,6 +111,8 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
+    registerDeepLinkHandler();
+
 #if defined(PLATFORM_VISIONOS)
     brls::Application::setMaximumUIScale(1.0f);
 #endif
@@ -130,6 +133,7 @@ int main(int argc, char* argv[]) {
     brls::Application::setFPSStatus(false);
 
     // Register custom views (including tabs, which are views)
+    brls::Application::registerXMLView("BooleanSliderCell", BooleanSliderCell::create);
     brls::Application::registerXMLView("LinkCell", LinkCell::create);
 
     brls::Application::registerXMLView("MainTabs", MainTabs::create);
@@ -157,8 +161,7 @@ int main(int argc, char* argv[]) {
     brls::Application::setSwapInputKeys(Settings::instance().swap_ui_keys());
 
     // Run the app
-    while (brls::Application::mainLoop())
-        ;
+    while (brls::Application::mainLoop()) {}
 
     // Exit
 #if defined(PLATFORM_TVOS)

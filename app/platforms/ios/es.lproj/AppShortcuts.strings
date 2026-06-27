@@ -1,0 +1,17 @@
+"Launch a game in ${applicationName}" = "Iniciar un juego en ${applicationName}";
+"Start streaming with ${applicationName}" = "Empezar streaming con ${applicationName}";
+"Create a game in ${applicationName}" = "Crear un juego en ${applicationName}";
+"Make a game in ${applicationName}" = "Crear un juego con ${applicationName}";
+"Get favorite games from ${applicationName}" = "Obtener juegos favoritos de ${applicationName}";
+"Show favorite games from ${applicationName}" = "Mostrar juegos favoritos de ${applicationName}";
+"Get game detail from ${applicationName}" = "Obtener detalle del juego de ${applicationName}";
+"Read game detail from ${applicationName}" = "Leer detalle del juego de ${applicationName}";
+"Get game deep link from ${applicationName}" = "Obtener enlace profundo del juego de ${applicationName}";
+"Create game deep link with ${applicationName}" = "Crear enlace profundo del juego con ${applicationName}";
+"Launch Game" = "Iniciar juego";
+"Create Game" = "Crear juego";
+"Get Favorite Games" = "Obtener juegos favoritos";
+"Get Favorites" = "Obtener favoritos";
+"Get Game Detail" = "Obtener detalle del juego";
+"Get Game Deep Link" = "Obtener enlace profundo del juego";
+"Get Deep Link" = "Obtener enlace profundo";

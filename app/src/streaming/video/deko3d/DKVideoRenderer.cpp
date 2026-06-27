@@ -3,13 +3,17 @@
 #define FF_API_AVPICTURE
 
 #include "DKVideoRenderer.hpp"
+#include "Settings.hpp"
 #include <borealis/platforms/switch/switch_platform.hpp>
 
 #include <libavcodec/avcodec.h>
 #include <libavutil/hwcontext_nvtegra.h>
 #include <libavutil/imgutils.h>
 
+#include <algorithm>
 #include <array>
+#include <chrono>
+#include <cmath>
 #include <cstddef>
 
 static const glm::vec3 gl_color_offset(bool color_full) {
@@ -61,8 +65,15 @@ static enum AVColorSpace to_av_colorspace(int colorspace) {
 
 namespace
 {
+    using PostProcessClock = std::chrono::steady_clock;
+
     static constexpr unsigned StaticCmdSize = 0x10000;
     static constexpr unsigned UpdateCmdSliceSize = 0x1000;
+#ifdef SUPPORT_UPSCALING
+    static constexpr unsigned PresentCmdSliceSize = 0x8000;
+    static constexpr float DefaultDitheringStrength = 3.0f;
+    static constexpr float DefaultRcasStrength = 0.2f;
+#endif
 
     struct Transformation
     {
@@ -82,6 +93,134 @@ namespace
                   "Unexpected std140 offset for offset");
     static_assert(offsetof(Transformation, uv_data) == 64,
                   "Unexpected std140 offset for uv_data");
+
+#ifdef SUPPORT_UPSCALING
+    struct EasuConstants
+    {
+        alignas(16) uint32_t con0[4];
+        alignas(16) uint32_t con1[4];
+        alignas(16) uint32_t con2[4];
+        alignas(16) uint32_t con3[4];
+    };
+
+    struct RcasConstants
+    {
+        alignas(16) uint32_t control[4];
+    };
+
+    struct DitheringConstants
+    {
+        alignas(16) float control[4];
+    };
+
+    static_assert(sizeof(EasuConstants) == 64,
+                  "EasuConstants must match std140 layout");
+    static_assert(sizeof(RcasConstants) == 16,
+                  "RcasConstants must match std140 layout");
+    static_assert(sizeof(DitheringConstants) == 16,
+                  "DitheringConstants must match std140 layout");
+
+    struct SourceViewport
+    {
+        float offsetX = 0.0f;
+        float offsetY = 0.0f;
+        float width = 0.0f;
+        float height = 0.0f;
+    };
+
+    uint32_t floatToBits(float value) {
+        uint32_t bits = 0;
+        memcpy(&bits, &value, sizeof(bits));
+        return bits;
+    }
+
+    SourceViewport getSourceViewport(int frameWidth, int frameHeight,
+                                     int screenWidth, int screenHeight) {
+        SourceViewport viewport = {
+            0.0f,
+            0.0f,
+            static_cast<float>(frameWidth),
+            static_cast<float>(frameHeight),
+        };
+
+        if (frameWidth <= 0 || frameHeight <= 0 || screenWidth <= 0 ||
+            screenHeight <= 0) {
+            return viewport;
+        }
+
+        const float frameAspect = static_cast<float>(frameHeight) /
+                                  static_cast<float>(frameWidth);
+        const float screenAspect = static_cast<float>(screenHeight) /
+                                   static_cast<float>(screenWidth);
+
+        if (frameAspect > screenAspect) {
+            const float multiplier = frameAspect / screenAspect;
+            viewport.width = static_cast<float>(frameWidth) / multiplier;
+            viewport.offsetX =
+                0.5f * (static_cast<float>(frameWidth) - viewport.width);
+        } else {
+            const float multiplier = screenAspect / frameAspect;
+            viewport.height = static_cast<float>(frameHeight) / multiplier;
+            viewport.offsetY =
+                0.5f * (static_cast<float>(frameHeight) - viewport.height);
+        }
+
+        return viewport;
+    }
+
+    void setTransformUvData(Transformation& transform,
+                            const SourceViewport& viewport,
+                            int frameWidth,
+                            int frameHeight) {
+        transform.uv_data[0] = viewport.offsetX / static_cast<float>(frameWidth);
+        transform.uv_data[1] = viewport.offsetY / static_cast<float>(frameHeight);
+        transform.uv_data[2] = static_cast<float>(frameWidth) / viewport.width;
+        transform.uv_data[3] = static_cast<float>(frameHeight) / viewport.height;
+    }
+
+    void populateEasuConstants(EasuConstants& constants,
+                               const SourceViewport& viewport,
+                               int inputWidth,
+                               int inputHeight,
+                               int outputWidth,
+                               int outputHeight) {
+        const float inputWidthRcp = 1.0f / static_cast<float>(inputWidth);
+        const float inputHeightRcp = 1.0f / static_cast<float>(inputHeight);
+        const float outputWidthRcp = 1.0f / static_cast<float>(outputWidth);
+        const float outputHeightRcp = 1.0f / static_cast<float>(outputHeight);
+
+        constants.con0[0] = floatToBits(viewport.width * outputWidthRcp);
+        constants.con0[1] = floatToBits(viewport.height * outputHeightRcp);
+        constants.con0[2] = floatToBits(
+            0.5f * viewport.width * outputWidthRcp - 0.5f + viewport.offsetX);
+        constants.con0[3] = floatToBits(
+            0.5f * viewport.height * outputHeightRcp - 0.5f + viewport.offsetY);
+
+        constants.con1[0] = floatToBits(inputWidthRcp);
+        constants.con1[1] = floatToBits(inputHeightRcp);
+        constants.con1[2] = floatToBits(1.0f * inputWidthRcp);
+        constants.con1[3] = floatToBits(-1.0f * inputHeightRcp);
+
+        constants.con2[0] = floatToBits(-1.0f * inputWidthRcp);
+        constants.con2[1] = floatToBits(2.0f * inputHeightRcp);
+        constants.con2[2] = floatToBits(1.0f * inputWidthRcp);
+        constants.con2[3] = floatToBits(2.0f * inputHeightRcp);
+
+        constants.con3[0] = 0;
+        constants.con3[1] = floatToBits(4.0f * inputHeightRcp);
+        constants.con3[2] = 0;
+        constants.con3[3] = 0;
+    }
+
+    void populateRcasConstants(RcasConstants& constants, float strength) {
+        const float sharpnessStops = 2.0f * (1.0f - strength);
+        const float sharpnessLinear = std::exp2(-sharpnessStops);
+        constants.control[0] = floatToBits(sharpnessLinear);
+        constants.control[1] = 0;
+        constants.control[2] = 0;
+        constants.control[3] = 0;
+    }
+#endif
 
     struct Vertex
     {
@@ -135,6 +274,12 @@ namespace
             break;
         }
     }
+
+    uint64_t toMicroseconds(PostProcessClock::duration duration) {
+        return static_cast<uint64_t>(
+            std::chrono::duration_cast<std::chrono::microseconds>(duration)
+                .count());
+    }
 }
 
 DKVideoRenderer::DKVideoRenderer() {}
@@ -145,10 +290,70 @@ DKVideoRenderer::~DKVideoRenderer() {
     }
 
     frameMappings.clear();
+#ifdef SUPPORT_UPSCALING
+    releaseUpscalingResources();
+    easuUniformBuffer.destroy();
+    ditheringUniformBuffer.destroy();
+    rcasUniformBuffer.destroy();
+#endif
     releaseImageSlots();
     vertexBuffer.destroy();
     transformUniformBuffer.destroy();
 }
+
+bool DKVideoRenderer::shouldUseUpscaling() const {
+#ifdef SUPPORT_UPSCALING
+    return Settings::instance().upscaling() && m_frame_width > 0 &&
+           m_frame_height > 0 && m_screen_width > 0 && m_screen_height > 0 &&
+           (m_screen_width > m_frame_width || m_screen_height > m_frame_height);
+#else
+    return false;
+#endif
+}
+
+#ifdef SUPPORT_UPSCALING
+bool DKVideoRenderer::shouldUseDithering() const {
+    return Settings::instance().dithering() && Settings::instance().dithering_strength() > 0.0f && m_frame_width > 0 &&
+           m_frame_height > 0 && m_screen_width > 0 && m_screen_height > 0;
+}
+
+void DKVideoRenderer::updateDitheringConstants() {
+    if (!ditheringUniformBuffer) {
+        return;
+    }
+
+    const float requestedStrength =
+        std::clamp(Settings::instance().dithering_strength(), 1.0f, 10.0f);
+    DitheringConstants ditheringConstants = {};
+    ditheringConstants.control[0] = m_dithering_enabled ? 1.0f : 0.0f;
+    ditheringConstants.control[1] = requestedStrength;
+    memcpy(ditheringUniformBuffer.getCpuAddr(), &ditheringConstants,
+           sizeof(ditheringConstants));
+    m_dithering_strength = requestedStrength;
+}
+
+bool DKVideoRenderer::shouldUseRcas() const {
+    return Settings::instance().rcas() && Settings::instance().rcas_strength() > 0.0f && m_frame_width > 0 &&
+           m_frame_height > 0 && m_screen_width > 0 && m_screen_height > 0;
+}
+
+void DKVideoRenderer::updateRcasConstants() {
+    if (!rcasUniformBuffer) {
+        return;
+    }
+
+    const float requestedStrength =
+        std::clamp(Settings::instance().rcas_strength(), 0.0f, 1.0f);
+    if (requestedStrength == m_rcas_strength) {
+        return;
+    }
+
+    RcasConstants rcasConstants = {};
+    populateRcasConstants(rcasConstants, requestedStrength);
+    memcpy(rcasUniformBuffer.getCpuAddr(), &rcasConstants, sizeof(rcasConstants));
+    m_rcas_strength = requestedStrength;
+}
+#endif
 
 void DKVideoRenderer::checkAndInitialize(int width, int height, AVFrame* frame) {
     if (m_is_initialized)
@@ -174,6 +379,10 @@ void DKVideoRenderer::checkAndInitialize(int width, int height, AVFrame* frame) 
     pool_data.emplace(dev,
                       DkMemBlockFlags_CpuUncached | DkMemBlockFlags_GpuCached,
                       1 * 1024 * 1024);
+#ifdef SUPPORT_UPSCALING
+    pool_images.emplace(dev,
+                        DkMemBlockFlags_GpuCached | DkMemBlockFlags_Image);
+#endif
 
     // Static draw command buffer
     cmdbuf = dk::CmdBufMaker{dev}.create();
@@ -183,10 +392,30 @@ void DKVideoRenderer::checkAndInitialize(int width, int height, AVFrame* frame) 
     // Dynamic descriptor update command buffer with a tiny ring
     updateCmdbuf = dk::CmdBufMaker{dev}.create();
     updateCmdMemRing.allocate(*pool_data, UpdateCmdSliceSize);
+#ifdef SUPPORT_UPSCALING
+    presentCmdbuf = dk::CmdBufMaker{dev}.create();
+    presentCmdMemRing.allocate(*pool_data, PresentCmdSliceSize);
+#endif
 
     // Load the shaders
     vertexShader.load(*pool_code, "romfs:/shaders/basic_vsh.dksh");
     fragmentShader.load(*pool_code, "romfs:/shaders/texture_fsh.dksh");
+#ifdef SUPPORT_UPSCALING
+    if (!upscalingFragmentShader.load(*pool_code,
+                                      "romfs:/shaders/upscaling_fsh.dksh")) {
+        brls::Logger::warning("{}: Failed to load Switch upscaling shader",
+                              __PRETTY_FUNCTION__);
+    }
+    if (!rcasFragmentShader.load(*pool_code, "romfs:/shaders/rcas_fsh.dksh")) {
+        brls::Logger::warning("{}: Failed to load Switch RCAS shader",
+                              __PRETTY_FUNCTION__);
+    }
+    if (!upscalingPassFragmentShader.load(*pool_code,
+                                          "romfs:/shaders/upscaling_pass_fsh.dksh")) {
+        brls::Logger::warning("{}: Failed to load Switch upscaling pass shader",
+                              __PRETTY_FUNCTION__);
+    }
+#endif
 
     // Load the vertex buffer
     vertexBuffer = pool_data->allocate(sizeof(QuadVertexData), alignof(Vertex));
@@ -195,12 +424,44 @@ void DKVideoRenderer::checkAndInitialize(int width, int height, AVFrame* frame) 
     // Load the transform buffer
     transformUniformBuffer =
         pool_data->allocate(sizeof(Transformation), DK_UNIFORM_BUF_ALIGNMENT);
+#ifdef SUPPORT_UPSCALING
+    easuUniformBuffer =
+        pool_data->allocate(sizeof(EasuConstants), DK_UNIFORM_BUF_ALIGNMENT);
+    ditheringUniformBuffer =
+        pool_data->allocate(sizeof(DitheringConstants), DK_UNIFORM_BUF_ALIGNMENT);
+    rcasUniformBuffer =
+        pool_data->allocate(sizeof(RcasConstants), DK_UNIFORM_BUF_ALIGNMENT);
+
+    EasuConstants easuConstants = {};
+    memcpy(easuUniformBuffer.getCpuAddr(), &easuConstants, sizeof(easuConstants));
+
+    DitheringConstants ditheringConstants = {};
+    ditheringConstants.control[0] = 0.0f;
+    ditheringConstants.control[1] = DefaultDitheringStrength;
+    memcpy(ditheringUniformBuffer.getCpuAddr(), &ditheringConstants,
+           sizeof(ditheringConstants));
+    m_dithering_strength = DefaultDitheringStrength;
+
+    RcasConstants rcasConstants = {};
+    populateRcasConstants(rcasConstants, DefaultRcasStrength);
+    memcpy(rcasUniformBuffer.getCpuAddr(), &rcasConstants, sizeof(rcasConstants));
+    m_rcas_strength = DefaultRcasStrength;
+#endif
 
     // Allocate image indexes for planes
     lumaTextureId = vctx->allocateImageIndex();
     chromaTextureId = vctx->allocateImageIndex();
+#ifdef SUPPORT_UPSCALING
+    sourceTextureId = vctx->allocateImageIndex();
+    upscalingTextureId = vctx->allocateImageIndex();
+    rcasTextureId = vctx->allocateImageIndex();
+#endif
 
-    if (lumaTextureId < 0 || chromaTextureId < 0) {
+    if (lumaTextureId < 0 || chromaTextureId < 0
+#ifdef SUPPORT_UPSCALING
+        || sourceTextureId < 0 || upscalingTextureId < 0 || rcasTextureId < 0
+#endif
+    ) {
         brls::Logger::error("{}: Failed to reserve image descriptor slots",
                             __PRETTY_FUNCTION__);
         releaseImageSlots();
@@ -211,6 +472,14 @@ void DKVideoRenderer::checkAndInitialize(int width, int height, AVFrame* frame) 
                         lumaTextureId);
     brls::Logger::debug("{}: Chroma texture ID {}", __PRETTY_FUNCTION__,
                         chromaTextureId);
+#ifdef SUPPORT_UPSCALING
+    brls::Logger::debug("{}: Source texture ID {}", __PRETTY_FUNCTION__,
+                        sourceTextureId);
+    brls::Logger::debug("{}: Upscaling texture ID {}", __PRETTY_FUNCTION__,
+                        upscalingTextureId);
+    brls::Logger::debug("{}: RCAS texture ID {}", __PRETTY_FUNCTION__,
+                        rcasTextureId);
+#endif
 
     updateFrameLayouts();
     recordStaticCommands(frame);
@@ -236,82 +505,428 @@ void DKVideoRenderer::updateFrameLayouts() {
         .initialize(chromaMappingLayout);
 }
 
+#ifdef SUPPORT_UPSCALING
+bool DKVideoRenderer::ensureUpscalingResources() {
+    if (!pool_images || upscalingTextureId < 0 || !upscalingPassFragmentShader ||
+        m_screen_width <= 0 || m_screen_height <= 0) {
+        return false;
+    }
+
+    const bool wantUpscaling = shouldUseUpscaling();
+    if (wantUpscaling &&
+        (sourceTextureId < 0 || !upscalingFragmentShader || !easuUniformBuffer)) {
+        return false;
+    }
+
+    const bool wantRcas = shouldUseRcas() && rcasTextureId >= 0 &&
+                          rcasFragmentShader && rcasUniformBuffer;
+
+    const bool sourceSizeChanged =
+        wantUpscaling &&
+        (m_source_target_width != m_frame_width ||
+         m_source_target_height != m_frame_height);
+    const bool sizeChanged = m_upscaling_target_width != m_screen_width ||
+                             m_upscaling_target_height != m_screen_height;
+    const bool upscalingUsageChanged =
+        wantUpscaling != static_cast<bool>(sourceTargetHandle);
+    const bool rcasUsageChanged = wantRcas != static_cast<bool>(rcasTargetHandle);
+    if (!sizeChanged && !sourceSizeChanged && !upscalingUsageChanged &&
+        !rcasUsageChanged && upscalingTargetHandle) {
+        return true;
+    }
+
+    releaseUpscalingResources();
+
+    if (wantUpscaling) {
+        dk::ImageLayoutMaker{dev}
+            .setType(DkImageType_2D)
+            .setFormat(DkImageFormat_RGBA8_Unorm)
+            .setDimensions(m_frame_width, m_frame_height, 1)
+            .setFlags(DkImageFlags_UsageRender | DkImageFlags_UsageLoadStore |
+                      DkImageFlags_Usage2DEngine)
+            .initialize(sourceTargetLayout);
+
+        sourceTargetHandle = pool_images->allocate(
+            sourceTargetLayout.getSize(), sourceTargetLayout.getAlignment());
+        if (!sourceTargetHandle) {
+            brls::Logger::error("{}: Failed to allocate FSR input target",
+                                __PRETTY_FUNCTION__);
+            return false;
+        }
+
+        sourceTargetImage.initialize(sourceTargetLayout,
+                                     sourceTargetHandle.getMemBlock(),
+                                     sourceTargetHandle.getOffset());
+        sourceTargetDesc.initialize(sourceTargetImage);
+    }
+
+    dk::ImageLayoutMaker{dev}
+        .setType(DkImageType_2D)
+        .setFormat(DkImageFormat_RGBA8_Unorm)
+        .setDimensions(m_screen_width, m_screen_height, 1)
+        .setFlags(DkImageFlags_UsageRender | DkImageFlags_UsageLoadStore |
+                  DkImageFlags_Usage2DEngine)
+        .initialize(upscalingTargetLayout);
+
+    upscalingTargetHandle = pool_images->allocate(
+        upscalingTargetLayout.getSize(), upscalingTargetLayout.getAlignment());
+    if (!upscalingTargetHandle) {
+        brls::Logger::error("{}: Failed to allocate upscaling render target",
+                            __PRETTY_FUNCTION__);
+        return false;
+    }
+
+    upscalingTargetImage.initialize(upscalingTargetLayout,
+                                    upscalingTargetHandle.getMemBlock(),
+                                    upscalingTargetHandle.getOffset());
+    upscalingTargetDesc.initialize(upscalingTargetImage);
+
+    if (wantRcas) {
+        rcasTargetLayout = upscalingTargetLayout;
+        rcasTargetHandle = pool_images->allocate(rcasTargetLayout.getSize(),
+                                                 rcasTargetLayout.getAlignment());
+        if (!rcasTargetHandle) {
+            brls::Logger::warning("{}: Failed to allocate RCAS render target, falling back to EASU-only post pass",
+                                  __PRETTY_FUNCTION__);
+        } else {
+            rcasTargetImage.initialize(rcasTargetLayout,
+                                       rcasTargetHandle.getMemBlock(),
+                                       rcasTargetHandle.getOffset());
+            rcasTargetDesc.initialize(rcasTargetImage);
+        }
+    }
+
+    updateCmdMemRing.begin(updateCmdbuf);
+    bool updatedSource = true;
+    if (wantUpscaling && sourceTargetHandle) {
+        updatedSource = vctx->updateImageDescriptor(updateCmdbuf, sourceTextureId,
+                                                    sourceTargetDesc);
+    }
+    const bool updated = vctx->updateImageDescriptor(updateCmdbuf,
+                                                     upscalingTextureId,
+                                                     upscalingTargetDesc);
+    bool updatedRcas = true;
+    if (wantRcas && rcasTargetHandle) {
+        updatedRcas = vctx->updateImageDescriptor(updateCmdbuf, rcasTextureId,
+                                                  rcasTargetDesc);
+    }
+    if ((wantUpscaling && updatedSource) || updated || (wantRcas && updatedRcas)) {
+        vctx->invalidateImageDescriptors(updateCmdbuf);
+    }
+    queue.submitCommands(updateCmdMemRing.end(updateCmdbuf));
+
+    if (wantUpscaling && sourceTargetHandle && !updatedSource) {
+        brls::Logger::error("{}: Failed to bind FSR input descriptor",
+                            __PRETTY_FUNCTION__);
+        releaseUpscalingResources();
+        return false;
+    }
+
+    if (!updated) {
+        brls::Logger::error("{}: Failed to bind upscaling render target descriptor",
+                            __PRETTY_FUNCTION__);
+        releaseUpscalingResources();
+        return false;
+    }
+
+    if (wantRcas && rcasTargetHandle && !updatedRcas) {
+        brls::Logger::warning("{}: Failed to bind RCAS descriptor, falling back to EASU-only post pass",
+                              __PRETTY_FUNCTION__);
+        rcasTargetHandle.destroy();
+        rcasTargetImage = dk::Image{};
+        rcasTargetLayout = dk::ImageLayout{};
+        rcasTargetDesc = dk::ImageDescriptor{};
+    }
+    m_source_target_width = wantUpscaling ? m_frame_width : 0;
+    m_source_target_height = wantUpscaling ? m_frame_height : 0;
+    m_upscaling_target_width = m_screen_width;
+    m_upscaling_target_height = m_screen_height;
+    return true;
+}
+
+void DKVideoRenderer::releaseUpscalingResources() {
+    sourceTargetHandle.destroy();
+    sourceTargetImage = dk::Image{};
+    sourceTargetLayout = dk::ImageLayout{};
+    sourceTargetDesc = dk::ImageDescriptor{};
+    upscalingTargetHandle.destroy();
+    upscalingTargetImage = dk::Image{};
+    upscalingTargetLayout = dk::ImageLayout{};
+    upscalingTargetDesc = dk::ImageDescriptor{};
+    rcasTargetHandle.destroy();
+    rcasTargetImage = dk::Image{};
+    rcasTargetLayout = dk::ImageLayout{};
+    rcasTargetDesc = dk::ImageDescriptor{};
+    m_source_target_width = 0;
+    m_source_target_height = 0;
+    m_upscaling_target_width = 0;
+    m_upscaling_target_height = 0;
+    m_rcas_enabled = false;
+}
+
+bool DKVideoRenderer::submitUpscalingPresentPass() {
+    if ((!m_dithering_enabled && !m_upscaling_enabled && !m_rcas_enabled) ||
+        upscalingTextureId < 0 ||
+        !upscalingTargetHandle || !upscalingPassFragmentShader) {
+        return false;
+    }
+
+    updateDitheringConstants();
+
+    if (m_rcas_enabled) {
+        updateRcasConstants();
+    }
+
+    dk::Image* framebuffer = vctx->getFramebuffer();
+    dk::Image* depthBuffer = vctx->getDepthBuffer();
+    if (!framebuffer || !depthBuffer) {
+        return false;
+    }
+
+    presentCmdMemRing.begin(presentCmdbuf);
+
+    dk::ImageView colorTarget{*framebuffer};
+    dk::ImageView depthTarget{*depthBuffer};
+    dk::RasterizerState rasterizerState;
+    dk::DepthStencilState depthStencilState;
+    dk::ColorState colorState;
+    dk::ColorWriteState colorWriteState;
+    int finalTextureId = upscalingTextureId;
+
+    presentCmdbuf.bindRasterizerState(rasterizerState);
+    presentCmdbuf.bindDepthStencilState(
+        depthStencilState.setDepthTestEnable(false)
+            .setDepthWriteEnable(false)
+            .setStencilTestEnable(false));
+    presentCmdbuf.bindColorState(colorState);
+    presentCmdbuf.bindColorWriteState(colorWriteState);
+    presentCmdbuf.bindVtxBuffer(0, vertexBuffer.getGpuAddr(),
+                                vertexBuffer.getSize());
+    presentCmdbuf.bindVtxAttribState(VertexAttribState);
+    presentCmdbuf.bindVtxBufferState(VertexBufferState);
+
+    if (m_rcas_enabled && rcasTextureId >= 0 && rcasTargetHandle &&
+        rcasFragmentShader && rcasUniformBuffer) {
+        const auto sharpeningStageStart = PostProcessClock::now();
+        dk::ImageView rcasTarget{rcasTargetImage};
+
+        presentCmdbuf.bindRenderTargets(&rcasTarget);
+        presentCmdbuf.setViewports(
+            0, {{{0.0f, 0.0f, static_cast<float>(m_screen_width),
+                  static_cast<float>(m_screen_height), 0.0f, 1.0f}}});
+        presentCmdbuf.setScissors(
+            0, {{{0, 0, static_cast<uint32_t>(m_screen_width),
+                  static_cast<uint32_t>(m_screen_height)}}});
+        presentCmdbuf.bindShaders(DkStageFlag_GraphicsMask,
+                                  {vertexShader, rcasFragmentShader});
+        presentCmdbuf.bindTextures(DkStage_Fragment, 0,
+                                   dkMakeTextureHandle(upscalingTextureId, 0));
+        presentCmdbuf.bindUniformBuffer(DkStage_Fragment, 0,
+                                        rcasUniformBuffer.getGpuAddr(),
+                                        rcasUniformBuffer.getSize());
+        presentCmdbuf.draw(DkPrimitive_Quads, QuadVertexData.size(), 1, 0, 0);
+        presentCmdbuf.barrier(DkBarrier_Tiles, DkInvalidateFlags_Image);
+        finalTextureId = rcasTextureId;
+
+        m_video_render_stats_progress.total_sharpening_time +=
+            toMicroseconds(PostProcessClock::now() - sharpeningStageStart);
+        m_video_render_stats_progress.sharpened_frames++;
+    }
+
+    const auto ditheringStageStart = PostProcessClock::now();
+    presentCmdbuf.bindRenderTargets(&colorTarget, &depthTarget);
+    presentCmdbuf.setViewports(
+        0, {{{0.0f, 0.0f, static_cast<float>(m_screen_width),
+              static_cast<float>(m_screen_height), 0.0f, 1.0f}}});
+    presentCmdbuf.setScissors(
+        0, {{{0, 0, static_cast<uint32_t>(m_screen_width),
+              static_cast<uint32_t>(m_screen_height)}}});
+    presentCmdbuf.bindShaders(DkStageFlag_GraphicsMask,
+                              {vertexShader, upscalingPassFragmentShader});
+    presentCmdbuf.bindTextures(DkStage_Fragment, 0,
+                               dkMakeTextureHandle(finalTextureId, 0));
+    presentCmdbuf.bindUniformBuffer(DkStage_Fragment, 0,
+                                    ditheringUniformBuffer.getGpuAddr(),
+                                    ditheringUniformBuffer.getSize());
+    presentCmdbuf.draw(DkPrimitive_Quads, QuadVertexData.size(), 1, 0, 0);
+
+    if (m_dithering_enabled) {
+        m_video_render_stats_progress.total_dithering_time +=
+            toMicroseconds(PostProcessClock::now() - ditheringStageStart);
+        m_video_render_stats_progress.dithered_frames++;
+    }
+
+    queue.submitCommands(presentCmdMemRing.end(presentCmdbuf));
+    return true;
+}
+#endif
+
 void DKVideoRenderer::recordStaticCommands(AVFrame* frame) {
     AVColorSpace colorSpace = AVCOL_SPC_UNSPECIFIED;
     bool colorFull = false;
     getFrameColorInfo(frame, colorSpace, colorFull);
+#ifdef SUPPORT_UPSCALING
+    const bool requestedDithering = shouldUseDithering();
+#else
+    const bool requestedDithering = false;
+#endif
+    const bool requestedUpscaling = shouldUseUpscaling();
+#ifdef SUPPORT_UPSCALING
+    const bool requestedRcas = shouldUseRcas();
+#else
+    const bool requestedRcas = false;
+#endif
+    bool useDithering = requestedDithering;
+    bool useUpscaling = requestedUpscaling;
+    bool useRcas = requestedRcas;
+#ifdef SUPPORT_UPSCALING
+    if ((useDithering || useUpscaling || useRcas) && !ensureUpscalingResources()) {
+        brls::Logger::warning("{}: Falling back to direct presentation path",
+                              __PRETTY_FUNCTION__);
+        useDithering = false;
+        useUpscaling = false;
+        useRcas = false;
+    }
+#endif
 
-    Transformation transformState = {};
+    Transformation displayTransformState = {};
     const glm::vec3 colorOffset = gl_color_offset(colorFull);
     const glm::mat3 colorMatrix = gl_color_matrix(colorSpace, colorFull);
 
-    transformState.yuvmat_col0[0] = colorMatrix[0][0];
-    transformState.yuvmat_col0[1] = colorMatrix[0][1];
-    transformState.yuvmat_col0[2] = colorMatrix[0][2];
-    transformState.yuvmat_col0[3] = 0.0f;
+    displayTransformState.yuvmat_col0[0] = colorMatrix[0][0];
+    displayTransformState.yuvmat_col0[1] = colorMatrix[0][1];
+    displayTransformState.yuvmat_col0[2] = colorMatrix[0][2];
+    displayTransformState.yuvmat_col0[3] = 0.0f;
 
-    transformState.yuvmat_col1[0] = colorMatrix[1][0];
-    transformState.yuvmat_col1[1] = colorMatrix[1][1];
-    transformState.yuvmat_col1[2] = colorMatrix[1][2];
-    transformState.yuvmat_col1[3] = 0.0f;
+    displayTransformState.yuvmat_col1[0] = colorMatrix[1][0];
+    displayTransformState.yuvmat_col1[1] = colorMatrix[1][1];
+    displayTransformState.yuvmat_col1[2] = colorMatrix[1][2];
+    displayTransformState.yuvmat_col1[3] = 0.0f;
 
-    transformState.yuvmat_col2[0] = colorMatrix[2][0];
-    transformState.yuvmat_col2[1] = colorMatrix[2][1];
-    transformState.yuvmat_col2[2] = colorMatrix[2][2];
-    transformState.yuvmat_col2[3] = 0.0f;
+    displayTransformState.yuvmat_col2[0] = colorMatrix[2][0];
+    displayTransformState.yuvmat_col2[1] = colorMatrix[2][1];
+    displayTransformState.yuvmat_col2[2] = colorMatrix[2][2];
+    displayTransformState.yuvmat_col2[3] = 0.0f;
 
-    transformState.offset[0] = colorOffset[0];
-    transformState.offset[1] = colorOffset[1];
-    transformState.offset[2] = colorOffset[2];
-    transformState.offset[3] = 0.0f;
+    displayTransformState.offset[0] = colorOffset[0];
+    displayTransformState.offset[1] = colorOffset[1];
+    displayTransformState.offset[2] = colorOffset[2];
+    displayTransformState.offset[3] = 0.0f;
 
-    const float frameAspect = static_cast<float>(m_frame_height) /
-                              static_cast<float>(m_frame_width);
-    const float screenAspect = static_cast<float>(m_screen_height) /
-                               static_cast<float>(m_screen_width);
+    const SourceViewport sourceViewport = getSourceViewport(
+        m_frame_width, m_frame_height, m_screen_width, m_screen_height);
+    setTransformUvData(displayTransformState, sourceViewport, m_frame_width,
+                       m_frame_height);
 
-    if (frameAspect > screenAspect) {
-        const float multiplier = frameAspect / screenAspect;
-        transformState.uv_data[0] = 0.5f - 0.5f * (1.0f / multiplier);
-        transformState.uv_data[1] = 0.0f;
-        transformState.uv_data[2] = multiplier;
-        transformState.uv_data[3] = 1.0f;
-    } else {
-        const float multiplier = screenAspect / frameAspect;
-        transformState.uv_data[0] = 0.0f;
-        transformState.uv_data[1] = 0.5f - 0.5f * (1.0f / multiplier);
-        transformState.uv_data[2] = 1.0f;
-        transformState.uv_data[3] = multiplier;
+    Transformation sourceTransformState = displayTransformState;
+    setTransformUvData(
+        sourceTransformState,
+        SourceViewport{0.0f, 0.0f, static_cast<float>(m_frame_width),
+                       static_cast<float>(m_frame_height)},
+        m_frame_width, m_frame_height);
+
+    if (useUpscaling && easuUniformBuffer) {
+        EasuConstants easuConstants = {};
+        populateEasuConstants(easuConstants, sourceViewport, m_frame_width,
+                              m_frame_height, m_screen_width, m_screen_height);
+        memcpy(easuUniformBuffer.getCpuAddr(), &easuConstants,
+               sizeof(easuConstants));
     }
 
     dk::RasterizerState rasterizerState;
+    dk::DepthStencilState depthStencilState;
     dk::ColorState colorState;
     dk::ColorWriteState colorWriteState;
 
     cmdbuf.clear();
-    cmdbuf.clearColor(0, DkColorMask_RGBA, 0.0f, 0.0f, 0.0f, 0.0f);
-    cmdbuf.bindShaders(DkStageFlag_GraphicsMask, {vertexShader, fragmentShader});
-    cmdbuf.bindTextures(DkStage_Fragment, 0,
-                        dkMakeTextureHandle(lumaTextureId, 0));
-    cmdbuf.bindTextures(DkStage_Fragment, 1,
-                        dkMakeTextureHandle(chromaTextureId, 0));
-    cmdbuf.bindUniformBuffer(DkStage_Fragment, 0,
-                             transformUniformBuffer.getGpuAddr(),
-                             transformUniformBuffer.getSize());
-    cmdbuf.pushConstants(transformUniformBuffer.getGpuAddr(),
-                         transformUniformBuffer.getSize(), 0,
-                         sizeof(transformState), &transformState);
-    cmdbuf.bindRasterizerState(rasterizerState);
-    cmdbuf.bindColorState(colorState);
-    cmdbuf.bindColorWriteState(colorWriteState);
-    cmdbuf.bindVtxBuffer(0, vertexBuffer.getGpuAddr(), vertexBuffer.getSize());
-    cmdbuf.bindVtxAttribState(VertexAttribState);
-    cmdbuf.bindVtxBufferState(VertexBufferState);
-    cmdbuf.draw(DkPrimitive_Quads, QuadVertexData.size(), 1, 0, 0);
+
+    auto bindFullscreenState = [&](const CShader& fragmentShaderRef) {
+        cmdbuf.bindShaders(DkStageFlag_GraphicsMask,
+                           {vertexShader, fragmentShaderRef});
+        cmdbuf.bindRasterizerState(rasterizerState);
+        cmdbuf.bindDepthStencilState(
+            depthStencilState.setDepthTestEnable(false)
+                .setDepthWriteEnable(false)
+                .setStencilTestEnable(false));
+        cmdbuf.bindColorState(colorState);
+        cmdbuf.bindColorWriteState(colorWriteState);
+        cmdbuf.bindVtxBuffer(0, vertexBuffer.getGpuAddr(), vertexBuffer.getSize());
+        cmdbuf.bindVtxAttribState(VertexAttribState);
+        cmdbuf.bindVtxBufferState(VertexBufferState);
+    };
+
+    auto bindRenderTarget = [&](dk::Image& image, int width, int height) {
+        dk::ImageView target{image};
+        cmdbuf.bindRenderTargets(&target);
+        cmdbuf.setViewports(
+            0, {{{0.0f, 0.0f, static_cast<float>(width),
+                  static_cast<float>(height), 0.0f, 1.0f}}});
+        cmdbuf.setScissors(
+            0, {{{0, 0, static_cast<uint32_t>(width),
+                  static_cast<uint32_t>(height)}}});
+    };
+
+    auto drawDecodePass = [&](const Transformation& transformState) {
+        cmdbuf.clearColor(0, DkColorMask_RGBA, 0.0f, 0.0f, 0.0f, 0.0f);
+        bindFullscreenState(fragmentShader);
+        cmdbuf.bindTextures(DkStage_Fragment, 0,
+                            dkMakeTextureHandle(lumaTextureId, 0));
+        cmdbuf.bindTextures(DkStage_Fragment, 1,
+                            dkMakeTextureHandle(chromaTextureId, 0));
+        cmdbuf.bindUniformBuffer(DkStage_Fragment, 0,
+                                 transformUniformBuffer.getGpuAddr(),
+                                 transformUniformBuffer.getSize());
+        cmdbuf.pushConstants(transformUniformBuffer.getGpuAddr(),
+                             transformUniformBuffer.getSize(), 0,
+                             sizeof(transformState), &transformState);
+        cmdbuf.draw(DkPrimitive_Quads, QuadVertexData.size(), 1, 0, 0);
+    };
+
+#ifdef SUPPORT_UPSCALING
+    if (useUpscaling && sourceTargetHandle && upscalingTargetHandle &&
+        sourceTextureId >= 0 && upscalingFragmentShader && easuUniformBuffer) {
+        bindRenderTarget(sourceTargetImage, m_source_target_width,
+                         m_source_target_height);
+        drawDecodePass(sourceTransformState);
+        cmdbuf.barrier(DkBarrier_Tiles, DkInvalidateFlags_Image);
+
+        bindRenderTarget(upscalingTargetImage, m_upscaling_target_width,
+                         m_upscaling_target_height);
+        cmdbuf.clearColor(0, DkColorMask_RGBA, 0.0f, 0.0f, 0.0f, 0.0f);
+        bindFullscreenState(upscalingFragmentShader);
+        cmdbuf.bindTextures(DkStage_Fragment, 0,
+                            dkMakeTextureHandle(sourceTextureId, 0));
+        cmdbuf.bindUniformBuffer(DkStage_Fragment, 0,
+                                 easuUniformBuffer.getGpuAddr(),
+                                 easuUniformBuffer.getSize());
+        cmdbuf.draw(DkPrimitive_Quads, QuadVertexData.size(), 1, 0, 0);
+    } else if (useDithering || useRcas) {
+        bindRenderTarget(upscalingTargetImage, m_upscaling_target_width,
+                         m_upscaling_target_height);
+        drawDecodePass(displayTransformState);
+    } else {
+        drawDecodePass(displayTransformState);
+    }
+
+    if (useUpscaling || useDithering || useRcas) {
+        cmdbuf.barrier(DkBarrier_Tiles, DkInvalidateFlags_Image);
+    }
+#else
+    drawDecodePass(displayTransformState);
+#endif
     cmdlist = cmdbuf.finishList();
 
     m_color_space = colorSpace;
     m_color_full = colorFull;
+    m_dithering_enabled = useDithering;
+    m_upscaling_enabled = useUpscaling;
+    m_dithering_requested = requestedDithering;
+    m_upscaling_requested = requestedUpscaling;
+    m_rcas_requested = requestedRcas;
+#ifdef SUPPORT_UPSCALING
+    m_rcas_enabled = useRcas && rcasTargetHandle && rcasFragmentShader &&
+                     rcasUniformBuffer;
+#endif
 }
 
 void DKVideoRenderer::updateRenderState(int width, int height, AVFrame* frame) {
@@ -325,8 +940,27 @@ void DKVideoRenderer::updateRenderState(int width, int height, AVFrame* frame) {
         m_screen_width != width || m_screen_height != height;
     const bool colorChanged =
         m_color_space != static_cast<int>(colorSpace) || m_color_full != colorFull;
+#ifdef SUPPORT_UPSCALING
+    const bool requestedDithering =
+        Settings::instance().dithering() && frame->width > 0 && frame->height > 0 &&
+        width > 0 && height > 0;
+#else
+    const bool requestedDithering = false;
+#endif
+    const bool requestedUpscaling =
+        Settings::instance().upscaling() && frame->width > 0 && frame->height > 0 &&
+        width > 0 && height > 0 &&
+        (width > frame->width || height > frame->height);
+    const bool requestedRcas =
+        Settings::instance().rcas() && Settings::instance().rcas_strength() > 0.0f &&
+        frame->width > 0 && frame->height > 0 &&
+        width > 0 && height > 0;
+    const bool ditheringChanged = m_dithering_requested != requestedDithering;
+    const bool upscalingChanged = m_upscaling_requested != requestedUpscaling;
+    const bool rcasChanged = m_rcas_requested != requestedRcas;
 
-    if (!frameSizeChanged && !screenSizeChanged && !colorChanged) {
+    if (!frameSizeChanged && !screenSizeChanged && !colorChanged &&
+        !ditheringChanged && !upscalingChanged && !rcasChanged) {
         return;
     }
 
@@ -437,6 +1071,23 @@ void DKVideoRenderer::releaseImageSlots() {
         vctx->freeImageIndex(chromaTextureId);
         chromaTextureId = -1;
     }
+
+#ifdef SUPPORT_UPSCALING
+    if (sourceTextureId >= 0) {
+        vctx->freeImageIndex(sourceTextureId);
+        sourceTextureId = -1;
+    }
+
+    if (upscalingTextureId >= 0) {
+        vctx->freeImageIndex(upscalingTextureId);
+        upscalingTextureId = -1;
+    }
+
+    if (rcasTextureId >= 0) {
+        vctx->freeImageIndex(rcasTextureId);
+        rcasTextureId = -1;
+    }
+#endif
 }
 
 int frames = 0;
@@ -451,19 +1102,47 @@ void DKVideoRenderer::draw(NVGcontext* vg, int width, int height, AVFrame* frame
 
     uint64_t before_render = LiGetMillis();
 
-    if (!m_video_render_stats.rendered_frames) {
-        m_video_render_stats.measurement_start_timestamp = before_render;
+    if (!m_video_render_stats_progress.rendered_frames) {
+        m_video_render_stats_progress.measurement_start_timestamp = before_render;
     }
 
     updateRenderState(width, height, frame);
     updateFrameMapping(frame);
 
     if (cmdlist != 0) {
+#ifdef SUPPORT_UPSCALING
+        if (m_dithering_enabled || m_upscaling_enabled || m_rcas_enabled) {
+            const auto postProcessStart = PostProcessClock::now();
+            const auto upscalingStageStart = PostProcessClock::now();
+            queue.submitCommands(cmdlist);
+            vctx->queueSignalFence(&upscalingFence);
+            vctx->queueWaitFence(&upscalingFence);
+
+            if (m_upscaling_enabled) {
+                m_video_render_stats_progress.total_upscaling_time +=
+                    toMicroseconds(PostProcessClock::now() - upscalingStageStart);
+                m_video_render_stats_progress.upscaled_frames++;
+            }
+
+            const bool submittedPostProcess = submitUpscalingPresentPass();
+            vctx->queueFlush();
+
+            if (submittedPostProcess) {
+                m_video_render_stats_progress.total_post_process_time +=
+                    toMicroseconds(PostProcessClock::now() - postProcessStart);
+                m_video_render_stats_progress.post_processed_frames++;
+            }
+        } else {
+            queue.submitCommands(cmdlist);
+        }
+#else
         queue.submitCommands(cmdlist);
+#endif
     }
 
+    const uint64_t render_time = LiGetMillis() - before_render;
     frames++;
-    timeCount += LiGetMillis() - before_render;
+    timeCount += render_time;
 
     if (timeCount >= 5000) {
         brls::Logger::debug("FPS: {}", frames / 5.0f);
@@ -471,28 +1150,64 @@ void DKVideoRenderer::draw(NVGcontext* vg, int width, int height, AVFrame* frame
         timeCount -= 5000;
     }
 
-    m_video_render_stats.total_render_time += LiGetMillis() - before_render;
-    m_video_render_stats.rendered_frames++;
+    m_video_render_stats_progress.total_render_time += render_time;
+    m_video_render_stats_progress.rendered_frames++;
+    m_stats_time_accumulator += render_time;
+
+    const uint64_t stats_interval_ms = 200;
+    if (m_stats_time_accumulator >= stats_interval_ms) {
+        m_video_render_stats_cache = m_video_render_stats_progress;
+        m_video_render_stats_progress = {};
+
+        const uint64_t now = LiGetMillis();
+        const uint64_t elapsed_time =
+            now - m_video_render_stats_cache.measurement_start_timestamp;
+        m_video_render_stats_cache.rendered_fps =
+            elapsed_time
+                ? (float)m_video_render_stats_cache.rendered_frames /
+                      ((float)elapsed_time / 1000.0f)
+                : 0.0f;
+
+        m_video_render_stats_cache.rendering_time =
+            m_video_render_stats_cache.rendered_frames
+                ? (float)m_video_render_stats_cache.total_render_time /
+                      (float)m_video_render_stats_cache.rendered_frames
+                : 0.0f;
+
+        m_video_render_stats_cache.post_processing_time =
+            m_video_render_stats_cache.post_processed_frames
+                ? ((float)m_video_render_stats_cache.total_post_process_time /
+                   (float)m_video_render_stats_cache.post_processed_frames) /
+                      1000.0f
+                : 0.0f;
+
+        m_video_render_stats_cache.dithering_time =
+            m_video_render_stats_cache.dithered_frames
+                ? ((float)m_video_render_stats_cache.total_dithering_time /
+                   (float)m_video_render_stats_cache.dithered_frames) /
+                      1000.0f
+                : 0.0f;
+
+        m_video_render_stats_cache.upscaling_time =
+            m_video_render_stats_cache.upscaled_frames
+                ? ((float)m_video_render_stats_cache.total_upscaling_time /
+                   (float)m_video_render_stats_cache.upscaled_frames) /
+                      1000.0f
+                : 0.0f;
+
+        m_video_render_stats_cache.sharpening_time =
+            m_video_render_stats_cache.sharpened_frames
+                ? ((float)m_video_render_stats_cache.total_sharpening_time /
+                   (float)m_video_render_stats_cache.sharpened_frames) /
+                      1000.0f
+                : 0.0f;
+
+        m_stats_time_accumulator -= stats_interval_ms;
+    }
 }
 
 VideoRenderStats* DKVideoRenderer::video_render_stats() {
-    if (!m_video_render_stats.rendered_frames) {
-        m_video_render_stats.rendered_fps = 0.0f;
-        m_video_render_stats.rendering_time = 0.0f;
-        return &m_video_render_stats;
-    }
-
-    m_video_render_stats.rendered_fps =
-        (float)m_video_render_stats.rendered_frames /
-        ((float)(LiGetMillis() -
-                 m_video_render_stats.measurement_start_timestamp) /
-         1000.0f);
-
-    m_video_render_stats.rendering_time =
-        (float)m_video_render_stats.total_render_time /
-        (float)m_video_render_stats.rendered_frames;
-
-    return &m_video_render_stats;
+    return &m_video_render_stats_cache;
 }
 
 #endif

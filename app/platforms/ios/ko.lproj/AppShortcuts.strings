@@ -1,0 +1,17 @@
+"Launch a game in ${applicationName}" = "${applicationName}에서 게임 실행";
+"Start streaming with ${applicationName}" = "${applicationName}로 스트리밍 시작";
+"Create a game in ${applicationName}" = "${applicationName}에서 게임 만들기";
+"Make a game in ${applicationName}" = "${applicationName}로 게임 만들기";
+"Get favorite games from ${applicationName}" = "${applicationName}에서 즐겨찾기 게임 가져오기";
+"Show favorite games from ${applicationName}" = "${applicationName}에서 즐겨찾기 게임 보기";
+"Get game detail from ${applicationName}" = "${applicationName}에서 게임 세부 정보 가져오기";
+"Read game detail from ${applicationName}" = "${applicationName}에서 게임 세부 정보 읽기";
+"Get game deep link from ${applicationName}" = "${applicationName}에서 게임 딥 링크 가져오기";
+"Create game deep link with ${applicationName}" = "${applicationName}로 게임 딥 링크 만들기";
+"Launch Game" = "게임 실행";
+"Create Game" = "게임 만들기";
+"Get Favorite Games" = "즐겨찾기 게임 가져오기";
+"Get Favorites" = "즐겨찾기 가져오기";
+"Get Game Detail" = "게임 세부 정보 가져오기";
+"Get Game Deep Link" = "게임 딥 링크 가져오기";
+"Get Deep Link" = "딥 링크 가져오기";

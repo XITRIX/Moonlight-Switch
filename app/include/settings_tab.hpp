@@ -9,6 +9,8 @@
 
 #include <borealis.hpp>
 
+#include "views/boolean_slider_cell.hpp"
+
 class SettingsTab : public brls::Box {
   public:
     SettingsTab();
@@ -16,6 +18,11 @@ class SettingsTab : public brls::Box {
 
     BRLS_BIND(brls::SelectorCell, resolution, "resolution");
     BRLS_BIND(brls::SelectorCell, resolutionScale, "resolution_scale");
+    BRLS_BIND(brls::Header, imageAdjustmentsHeader, "image_adjustments_header");
+    BRLS_BIND(BooleanSliderCell, dithering, "dithering");
+    BRLS_BIND(brls::BooleanCell, upscaling, "upscaling");
+    BRLS_BIND(brls::SelectorCell, upscalingMode, "upscaling_mode");
+    BRLS_BIND(BooleanSliderCell, rcas, "rcas");
     BRLS_BIND(brls::SelectorCell, fps, "fps");
     BRLS_BIND(brls::SelectorCell, codec, "codec");
     BRLS_BIND(brls::BooleanCell, requestHdr, "request_hdr");

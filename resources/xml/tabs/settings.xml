@@ -54,11 +54,28 @@
                 width="auto"
                 height="84"
                 grow="1"/>
+
+            <brls:Header
+                id="image_adjustments_header"
+                title="@i18n/settings/image_adjustments"
+                paddingTop="60"
+                lineTop="1px"/>
+
+            <BooleanSliderCell
+                id="dithering"/>
+
+            <brls:BooleanCell
+                id="upscaling"/>
+
+            <brls:SelectorCell
+                id="upscaling_mode"/>
+
+            <BooleanSliderCell
+                id="rcas"/>
             
             <brls:Header
                 title="@i18n/settings/stream_settings"
-                paddingTop="60"
-                lineTop="1px"/>
+                paddingTop="60"/>
 
             <brls:SelectorCell
                 id="audio_backend"/>

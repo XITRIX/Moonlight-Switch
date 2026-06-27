@@ -28,6 +28,16 @@ class DKVideoRenderer : public IVideoRenderer {
     void updateFrameMapping(AVFrame* frame);
     void updateFrameLayouts();
     void recordStaticCommands(AVFrame* frame);
+    [[nodiscard]] bool shouldUseUpscaling() const;
+#ifdef SUPPORT_UPSCALING
+    [[nodiscard]] bool shouldUseDithering() const;
+    [[nodiscard]] bool shouldUseRcas() const;
+    [[nodiscard]] bool ensureUpscalingResources();
+    void updateDitheringConstants();
+    void updateRcasConstants();
+    void releaseUpscalingResources();
+    [[nodiscard]] bool submitUpscalingPresentPass();
+#endif
     void releaseImageSlots();
 
     bool m_is_initialized = false;
@@ -41,20 +51,37 @@ class DKVideoRenderer : public IVideoRenderer {
     dk::Device dev;
     dk::Queue queue;
 
-    // std::optional<CMemPool> pool_images;
     std::optional<CMemPool> pool_code;
     std::optional<CMemPool> pool_data;
+#ifdef SUPPORT_UPSCALING
+    std::optional<CMemPool> pool_images;
+#endif
 
     dk::UniqueCmdBuf cmdbuf;
     dk::UniqueCmdBuf updateCmdbuf;
     CCmdMemRing<brls::FRAMEBUFFERS_COUNT> updateCmdMemRing;
+#ifdef SUPPORT_UPSCALING
+    dk::UniqueCmdBuf presentCmdbuf;
+    CCmdMemRing<brls::FRAMEBUFFERS_COUNT> presentCmdMemRing;
+#endif
     DkCmdList cmdlist = 0;
 
     CShader vertexShader;
     CShader fragmentShader;
+  #ifdef SUPPORT_UPSCALING
+    CShader upscalingFragmentShader;
+    CShader rcasFragmentShader;
+    CShader upscalingPassFragmentShader;
+  #endif
 
     CMemPool::Handle vertexBuffer;
     CMemPool::Handle transformUniformBuffer;
+  #ifdef SUPPORT_UPSCALING
+    CMemPool::Handle easuUniformBuffer;
+    CMemPool::Handle ditheringUniformBuffer;
+    CMemPool::Handle rcasUniformBuffer;
+    DkFence upscalingFence = {};
+  #endif
 
     dk::ImageLayout lumaMappingLayout;
     dk::ImageLayout chromaMappingLayout;
@@ -76,10 +103,43 @@ class DKVideoRenderer : public IVideoRenderer {
 
     int lumaTextureId = -1;
     int chromaTextureId = -1;
+  #ifdef SUPPORT_UPSCALING
+    CMemPool::Handle sourceTargetHandle;
+    dk::ImageLayout sourceTargetLayout;
+    dk::Image sourceTargetImage;
+    dk::ImageDescriptor sourceTargetDesc;
+    int sourceTextureId = -1;
+    CMemPool::Handle upscalingTargetHandle;
+    dk::ImageLayout upscalingTargetLayout;
+    dk::Image upscalingTargetImage;
+    dk::ImageDescriptor upscalingTargetDesc;
+    int upscalingTextureId = -1;
+    CMemPool::Handle rcasTargetHandle;
+    dk::ImageLayout rcasTargetLayout;
+    dk::Image rcasTargetImage;
+    dk::ImageDescriptor rcasTargetDesc;
+    int rcasTextureId = -1;
+    int m_source_target_width = 0;
+    int m_source_target_height = 0;
+    int m_upscaling_target_width = 0;
+    int m_upscaling_target_height = 0;
+  #endif
     int m_color_space = -1;
     bool m_color_full = false;
+    bool m_dithering_enabled = false;
+    bool m_upscaling_enabled = false;
+  #ifdef SUPPORT_UPSCALING
+    bool m_rcas_enabled = false;
+    bool m_dithering_requested = false;
+    bool m_upscaling_requested = false;
+    bool m_rcas_requested = false;
+    float m_dithering_strength = 3.0f;
+    float m_rcas_strength = 0.2f;
+  #endif
 
-    VideoRenderStats m_video_render_stats = {};
+    VideoRenderStats m_video_render_stats_progress = {};
+    VideoRenderStats m_video_render_stats_cache = {};
+    uint64_t m_stats_time_accumulator = 0;
 };
 
 #endif // __SWITCH__

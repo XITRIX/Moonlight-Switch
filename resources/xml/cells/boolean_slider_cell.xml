@@ -1,0 +1,17 @@
+<brls:Box
+    width="auto"
+    height="auto"
+    axis="column"
+    alignItems="stretch">
+
+    <brls:BooleanCell
+        id="toggle"
+        lineBottom="0"/>
+
+    <brls:Slider
+        id="slider"
+        width="auto"
+        height="84"
+        grow="1"/>
+
+</brls:Box>

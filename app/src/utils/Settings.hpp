@@ -11,6 +11,8 @@
 enum VideoCodec : int { H264, H265, AV1 };
 std::string getVideoCodecName(VideoCodec codec);
 
+enum UpscalingMode : int { UPSCALING_OFF, UPSCALING_METALFX, UPSCALING_FSR1 };
+
 enum AudioBackend : int {
     SDL,
 #ifdef __SWITCH__
@@ -144,6 +146,92 @@ class Settings : public Singleton<Settings> {
     }
     void set_request_hdr(bool request_hdr) { m_enable_hdr = request_hdr; }
 
+    [[nodiscard]] bool upscaling() const {
+#ifdef SUPPORT_UPSCALING
+        return m_upscaling_mode != UPSCALING_OFF;
+#else
+        return false;
+#endif
+    }
+    void set_upscaling(bool upscaling) {
+#if defined(PLATFORM_APPLE) && !defined(PLATFORM_TVOS)
+        m_upscaling_mode = upscaling ? UPSCALING_METALFX : UPSCALING_OFF;
+#else
+        m_upscaling_mode = upscaling ? UPSCALING_FSR1 : UPSCALING_OFF;
+#endif
+    }
+    [[nodiscard]] UpscalingMode upscaling_mode() const {
+#ifdef SUPPORT_UPSCALING
+#if defined(PLATFORM_TVOS)
+        return m_upscaling_mode == UPSCALING_OFF ? UPSCALING_OFF : UPSCALING_FSR1;
+#else
+        return m_upscaling_mode;
+#endif
+#else
+        return UPSCALING_OFF;
+#endif
+    }
+    void set_upscaling_mode(UpscalingMode mode) {
+#if defined(PLATFORM_APPLE) && !defined(PLATFORM_TVOS)
+        if (mode == UPSCALING_METALFX || mode == UPSCALING_FSR1)
+            m_upscaling_mode = mode;
+        else
+            m_upscaling_mode = UPSCALING_OFF;
+#else
+        m_upscaling_mode = mode == UPSCALING_OFF ? UPSCALING_OFF : UPSCALING_FSR1;
+#endif
+    }
+
+        [[nodiscard]] bool dithering() const {
+        #ifdef SUPPORT_UPSCALING
+            return m_enable_dithering;
+        #else
+            return false;
+        #endif
+        }
+        void set_dithering(bool dithering) { m_enable_dithering = dithering; }
+
+        [[nodiscard]] float dithering_strength() const {
+        #ifdef SUPPORT_UPSCALING
+            return static_cast<float>(m_dithering_strength);
+        #else
+            return 3.0f;
+        #endif
+        }
+        void set_dithering_strength(float strength) {
+            if (strength < 1.0f)
+                strength = 1.0f;
+            else if (strength > 10.0f)
+                strength = 10.0f;
+
+            m_dithering_strength = static_cast<int>(strength + 0.5f);
+        }
+
+        [[nodiscard]] bool rcas() const {
+        #ifdef SUPPORT_UPSCALING
+            return m_enable_rcas;
+        #else
+            return false;
+        #endif
+        }
+        void set_rcas(bool rcas) { m_enable_rcas = rcas; }
+
+        [[nodiscard]] float rcas_strength() const {
+        #ifdef SUPPORT_UPSCALING
+            return static_cast<float>(m_rcas_strength) / 100.0f;
+        #else
+            return 0.2f;
+        #endif
+        }
+        void set_rcas_strength(float strength) {
+            if (strength < 0.0f)
+                strength = 0.0f;
+            else if (strength > 1.0f)
+                strength = 1.0f;
+
+            m_rcas_strength = static_cast<int>(strength * 100.0f);
+        }
+
     [[nodiscard]] bool click_by_tap() const { return m_click_by_tap; }
     void set_click_by_tap(bool click_by_tap) { m_click_by_tap = click_by_tap; }
 
@@ -250,6 +338,11 @@ class Settings : public Singleton<Settings> {
 #endif
     int m_bitrate = 10000;
     bool m_enable_hdr = false;
+    UpscalingMode m_upscaling_mode = UPSCALING_OFF;
+    bool m_enable_dithering = false;
+    int m_dithering_strength = 3;
+    bool m_enable_rcas = true;
+    int m_rcas_strength = 20;
     bool m_click_by_tap = false;
     int m_decoder_threads = 4;
     int m_frames_queue_size = 3;

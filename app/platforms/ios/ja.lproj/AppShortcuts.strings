@@ -1,0 +1,17 @@
+"Launch a game in ${applicationName}" = "${applicationName}でゲームを起動";
+"Start streaming with ${applicationName}" = "${applicationName}でストリーミングを開始";
+"Create a game in ${applicationName}" = "${applicationName}でゲームを作成";
+"Make a game in ${applicationName}" = "${applicationName}でゲームを作る";
+"Get favorite games from ${applicationName}" = "${applicationName}からお気に入りゲームを取得";
+"Show favorite games from ${applicationName}" = "${applicationName}からお気に入りゲームを表示";
+"Get game detail from ${applicationName}" = "${applicationName}からゲームの詳細を取得";
+"Read game detail from ${applicationName}" = "${applicationName}からゲームの詳細を読む";
+"Get game deep link from ${applicationName}" = "${applicationName}からゲームのディープリンクを取得";
+"Create game deep link with ${applicationName}" = "${applicationName}でゲームのディープリンクを作成";
+"Launch Game" = "ゲームを起動";
+"Create Game" = "ゲームを作成";
+"Get Favorite Games" = "お気に入りゲームを取得";
+"Get Favorites" = "お気に入りを取得";
+"Get Game Detail" = "ゲームの詳細を取得";
+"Get Game Deep Link" = "ゲームのディープリンクを取得";
+"Get Deep Link" = "ディープリンクを取得";

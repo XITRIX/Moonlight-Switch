@@ -27,4 +27,5 @@ class SDLAudioRenderer : public IAudioRenderer {
     short pcmBuffer[FRAME_SIZE * MAX_CHANNEL_COUNT];
     SDL_AudioDeviceID dev;
     int channelCount;
+    int audioOverflowBytes = 16000;
 };

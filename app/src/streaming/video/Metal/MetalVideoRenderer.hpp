@@ -3,6 +3,7 @@
 
 #include "IVideoRenderer.hpp"
 #include <SDL2/SDL.h>
+#include <atomic>
 
 class MetalVideoRenderer : public IVideoRenderer {
 public:
@@ -18,8 +19,24 @@ private:
     bool updateColorSpaceForFrame(AVFrame* frame);
     bool updateVideoRegionSizeForFrame(AVFrame* frame);
     bool initialize(int imageFormat);
+#ifdef SUPPORT_UPSCALING
+    bool shouldUseUpscaling() const;
+    bool shouldUseMetalFxUpscaling() const;
+    bool shouldUseFsrUpscaling() const;
+    bool shouldUseDithering() const;
+    bool shouldUseRcas() const;
+    bool ensureUpscalingResources(AVFrame* frame);
+    void updateEasuParams(int inputWidth, int inputHeight, int outputWidth, int outputHeight);
+    void updatePostProcessParams(bool ditheringEnabled);
+    void updateRcasParams();
+    void releaseUpscalingResources();
+#endif
 
-    VideoRenderStats m_video_render_stats = {};
+    VideoRenderStats m_video_render_stats_progress = {};
+    VideoRenderStats m_video_render_stats_cache = {};
+    uint64_t m_stats_time_accumulator = 0;
+    std::atomic<uint64_t> m_gpu_render_time_total_us{0};
+    std::atomic<uint32_t> m_gpu_timed_frames{0};
     SDL_Window* m_Window;
 //    SDL_MetalView m_MetalView;
 
@@ -30,6 +47,8 @@ private:
     int m_LastFrameHeight = -1;
     int m_LastDrawableWidth = -1;
     int m_LastDrawableHeight = -1;
+    int m_LastVideoRegionWidth = -1;
+    int m_LastVideoRegionHeight = -1;
     MetalRendererState* m_State = nullptr;
 };
 

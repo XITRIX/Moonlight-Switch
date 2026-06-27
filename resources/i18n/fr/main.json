@@ -57,6 +57,13 @@
         "stream_start": "La diffusion a échoué",
         "unknown_error": "Une erreur inconnue s'est produite"
     },
+    "forwarder": {
+        "install_failed": "Échec de l'installation du forwarder\n0x{:X}",
+        "installed": "Forwarder installé",
+        "make": "Créer un forwarder",
+        "open_shortcuts": "Ouvrir Raccourcis",
+        "shortcuts_message": "Cette app peut utiliser l'app Raccourcis pour créer des actions de lancement."
+    },
     "hints": {
         "back": "Retour",
         "off": "Non",
@@ -145,6 +152,10 @@
         "resolution": "Résolution",
         "resolution_native": "Native",
         "resolution_scale": "Échelle",
+        "image_adjustments": "Ajustements d'image",
+        "dithering": "Tramage",
+        "upscaling": "Mettre à l'échelle les basses résolutions",
+        "rcas_sharpening": "Netteté RCAS",
         "rumble_force": "Force de vibration",
         "single_joycon": "Mode Joycon unique",
         "stream_settings": "Paramètres de diffusion",

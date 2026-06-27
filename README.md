@@ -79,6 +79,29 @@ If you'd like to create it manually, without help of generator, you'll need to c
 example:
 `--ip=192.168.1.101 --appid=1233211234 --appname=Steam`
 
+## iOS / visionOS forwarder / deep link
+iOS and visionOS builds register the `moonlightswitch://` URL scheme. The supported deep link
+uses the same parameters as the Switch forwarder:
+
+`moonlightswitch://launch?ip=192.168.1.101&appid=1233211234&appname=Steam`
+
+`host` can be used instead of `ip` when launching by host MAC address.
+
+iOS 16+ and visionOS builds also expose Shortcuts actions. `Launch Game` accepts a Moonlight
+`Game` value. Use `Get Favorite Games` to pick from saved favorites, or
+`Create Game` to build a game manually from `Host`, `App ID`, and `App Name`,
+then pass the result to `Launch Game`. Use `Get Game Detail` to extract a
+selected game's `App ID`, `Host`, `App Name`, or `Display Host`, and `Get Game
+Deep Link` to create a `moonlightswitch://` URL from a `Game`. Favorite game rows
+use cached box art when available. `Host` accepts either a paired PC IP address
+or MAC address.
+
+Favorite apps can generate an Apple Shortcut forwarder. The forwarder action opens
+the Shortcuts editor and copies the generated deep link to the clipboard as a
+fallback. Prefer the Moonlight `Launch Game` action on iOS 16+ or visionOS, or
+add an `Open URLs` action and paste the copied `moonlightswitch://` URL on older
+iOS versions. Use Shortcuts' `Add to Home Screen` option to create the icon.
+
 ## Localization
 - English (100%)
 - Russian (100%)
@@ -248,3 +271,5 @@ Thanks a lot to [Rock88](https://github.com/rock88) and his [Moonlight-NX](https
 [Averne](https://github.com/averne) for NVDEC implementation into [FFmpeg](https://github.com/averne/FFmpeg) and useful guidance of how to enable it 
 
 Also huge thanks to [Cooler3D](https://github.com/Cooler3Ds) for help with Deko3D implementation and solving performance issues
+
+The Switch deko3d upscaling path includes AMD FidelityFX Super Resolution 1.0 EASU and RCAS code translated from the MIT-licensed [GPUOpen FidelityFX-FSR](https://github.com/GPUOpen-Effects/FidelityFX-FSR) reference implementation. Copyright (c) Advanced Micro Devices, Inc. All rights reserved.

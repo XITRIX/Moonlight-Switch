@@ -57,6 +57,13 @@
         "stream_start": "Errore nell'avvio dello stream...",
         "unknown_error": "Si è verificato un problema sconosciuto..."
     },
+    "forwarder": {
+        "install_failed": "Installazione forwarder non riuscita\n0x{:X}",
+        "installed": "Forwarder installato",
+        "make": "Crea forwarder",
+        "open_shortcuts": "Apri Comandi Rapidi",
+        "shortcuts_message": "Questa app può usare l'app Comandi Rapidi per creare azioni di avvio."
+    },
     "hints": {
         "back": "Indietro",
         "off": "Off",
@@ -145,6 +152,10 @@
         "resolution": "Risoluzione",
         "resolution_native": "Nativa",
         "resolution_scale": "Scala",
+        "image_adjustments": "Regolazioni immagine",
+        "dithering": "Dithering",
+        "upscaling": "Migliora le basse risoluzioni",
+        "rcas_sharpening": "Nitidezza RCAS",
         "rumble_force": "Rumble force",
         "single_joycon": "Single Joycon",
         "stream_settings": "Impostazioni Stream",

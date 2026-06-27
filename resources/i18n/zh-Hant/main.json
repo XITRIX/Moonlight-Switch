@@ -57,6 +57,13 @@
         "stream_start": "開始串流失敗……",
         "unknown_error": "發生了未知的錯誤……"
     },
+    "forwarder": {
+        "install_failed": "轉發器安裝失敗\n0x{:X}",
+        "installed": "轉發器已安裝",
+        "make": "建立轉發器",
+        "open_shortcuts": "打開捷徑",
+        "shortcuts_message": "此 App 可使用「捷徑」App 建立啟動動作。"
+    },
     "hints": {
         "back": "返回",
         "off": "關閉",
@@ -145,6 +152,10 @@
         "resolution": "解析度",
         "resolution_native": "原生",
         "resolution_scale": "縮放",
+        "image_adjustments": "影像調整",
+        "dithering": "抖動",
+        "upscaling": "將低解析度升尺度",
+        "rcas_sharpening": "RCAS 銳化",
         "rumble_force": "震動力度",
         "single_joycon": "單個Joycon",
         "stream_settings": "串流設定",

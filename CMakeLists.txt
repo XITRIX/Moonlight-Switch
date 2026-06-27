@@ -15,6 +15,7 @@ if (APPLE AND PLATFORM_DESKTOP)
     option(BUNDLE_MACOS_APP "Bundle a app for macOS" ON)
     set(CMAKE_OSX_ARCHITECTURES "arm64" CACHE STRING "" FORCE)
     set(CMAKE_OSX_DEPLOYMENT_TARGET "12.0" CACHE STRING "" FORCE)
+    set(CMAKE_XCODE_ATTRIBUTE_MACOSX_DEPLOYMENT_TARGET "12.0" CACHE STRING "" FORCE)
     message(STATUS "CMAKE_OSX_ARCHITECTURES: ${CMAKE_OSX_ARCHITECTURES}")
 endif ()
 
@@ -36,12 +37,29 @@ else ()
     set(USE_GL_RENDERER ON)
 endif ()
 
+set(SUPPORT_UPSCALING OFF)
+if (ENABLE_UPSCALING)
+    message(STATUS "Use ENABLE_UPSCALING")
+    if (PLATFORM_SWITCH AND USE_DEKO3D_RENDERER)
+        set(SUPPORT_UPSCALING ON)
+    elseif (PLATFORM_APPLE AND USE_METAL_RENDERER)
+        set(SUPPORT_UPSCALING ON)
+    else ()
+        message(FATAL_ERROR "ENABLE_UPSCALING=ON is only supported with the Switch deko3d renderer or Apple Metal renderer")
+    endif ()
+endif ()
+
 set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "${EXTERN_PATH}/cmake")
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${EXTERN_PATH}/cmake")
 #find_package(PkgConfig REQUIRED)
 
 # project info
 project(Moonlight)
+if (PLATFORM_IOS OR PLATFORM_VISIONOS)
+    enable_language(Swift)
+    set(CMAKE_Swift_LANGUAGE_VERSION 5)
+endif ()
+
 if (PLATFORM_IOS OR PLATFORM_TVOS OR PLATFORM_VISIONOS)
     moonlight_prepare_apple_mobile_vcpkg()
 endif ()
@@ -143,6 +161,27 @@ unset(_moonlight_vcpkg_triplet_dir)
 
 set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
 add_subdirectory(extern)
+if ((PLATFORM_IOS OR PLATFORM_VISIONOS) AND TARGET borealis)
+    get_target_property(_borealis_interface_options borealis INTERFACE_COMPILE_OPTIONS)
+    if (_borealis_interface_options)
+        set(_moonlight_borealis_interface_options)
+        foreach (_option IN LISTS _borealis_interface_options)
+            if (_option MATCHES "^-DBRLS_RESOURCES=" OR
+                    _option STREQUAL "-DYG_ENABLE_EVENTS" OR
+                    _option STREQUAL "-ffunction-sections" OR
+                    _option STREQUAL "-fdata-sections")
+                list(APPEND _moonlight_borealis_interface_options
+                        "$<$<COMPILE_LANGUAGE:C,CXX,OBJC,OBJCXX>:${_option}>")
+            else ()
+                list(APPEND _moonlight_borealis_interface_options "${_option}")
+            endif ()
+        endforeach ()
+        set_target_properties(borealis PROPERTIES
+                INTERFACE_COMPILE_OPTIONS "${_moonlight_borealis_interface_options}")
+    endif ()
+    unset(_moonlight_borealis_interface_options)
+    unset(_borealis_interface_options)
+endif ()
 
 # setting src and include
 #file(GLOB_RECURSE MAIN_SRC app/src/*.cpp )
@@ -156,6 +195,7 @@ file(GLOB MAIN_SRC CONFIGURE_DEPENDS
     app/src/streaming/audio/*.cpp
     app/src/streaming/ffmpeg/*.cpp
     app/src/streaming/switch/*.cpp
+    app/src/views/*.cpp
     app/src/utils/*.cpp)
 
 if (MOONLIGHT_APPLE_MOBILE_USE_MULTI_SDK)
@@ -193,11 +233,17 @@ elseif (PLATFORM_ANDROID)
 elseif (PLATFORM_IOS OR PLATFORM_TVOS OR PLATFORM_VISIONOS)
     list(APPEND MAIN_SRC app/platforms/ios/apple_mdns.mm)
     list(APPEND MAIN_SRC app/platforms/ios/apple_display.mm)
+    if (PLATFORM_IOS OR PLATFORM_VISIONOS)
+        list(APPEND MAIN_SRC app/platforms/ios/MoonlightShortcuts.swift)
+    endif ()
 endif ()
 
 if (USE_METAL_RENDERER)
     list(APPEND MAIN_SRC app/src/streaming/video/Metal/MetalVideoRenderer.mm)
     list(APPEND MAIN_SRC app/src/streaming/video/Metal/streamutils.cpp)
+    if (SUPPORT_UPSCALING AND PLATFORM_APPLE)
+        list(APPEND MAIN_SRC app/src/streaming/video/Metal/AppleMetalFxUpscalingSupport.mm)
+    endif ()
 elseif (USE_D3D11_RENDERER)
     list(APPEND MAIN_SRC app/src/streaming/video/D3D11/D3D11VideoRenderer.cpp)
 elseif (USE_DEKO3D_RENDERER)
@@ -216,6 +262,33 @@ if (MOONLIGHT_APPLE_MOBILE_USE_MULTI_SDK)
     target_compile_definitions(${PROJECT_NAME} PRIVATE CURL_STATICLIB)
 endif ()
 
+function(moonlight_add_apple_shortcut_resources target)
+    file(GLOB MOONLIGHT_APPLE_SHORTCUT_STRING_CATALOGS CONFIGURE_DEPENDS
+        "${CMAKE_CURRENT_SOURCE_DIR}/app/platforms/ios/*.xcstrings")
+    file(GLOB MOONLIGHT_APPLE_SHORTCUT_STRINGS CONFIGURE_DEPENDS
+        "${CMAKE_CURRENT_SOURCE_DIR}/app/platforms/ios/*.lproj/AppShortcuts.strings")
+
+    set(MOONLIGHT_APPLE_SHORTCUT_RESOURCES ${MOONLIGHT_APPLE_SHORTCUT_STRING_CATALOGS})
+    set_source_files_properties(${MOONLIGHT_APPLE_SHORTCUT_STRING_CATALOGS} PROPERTIES
+        MACOSX_PACKAGE_LOCATION "Resources")
+
+    set(MOONLIGHT_APPLE_SHORTCUT_STAGING_DIR "${CMAKE_CURRENT_BINARY_DIR}/apple-shortcut-resources")
+    foreach (_shortcut_strings_file IN LISTS MOONLIGHT_APPLE_SHORTCUT_STRINGS)
+        get_filename_component(_shortcut_lproj_dir "${_shortcut_strings_file}" DIRECTORY)
+        get_filename_component(_shortcut_lproj_name "${_shortcut_lproj_dir}" NAME)
+        string(REGEX REPLACE "\\.lproj$" "" _shortcut_locale "${_shortcut_lproj_name}")
+
+        set(_staged_shortcut_strings "${MOONLIGHT_APPLE_SHORTCUT_STAGING_DIR}/${_shortcut_locale}/AppShortcuts.strings")
+        file(MAKE_DIRECTORY "${MOONLIGHT_APPLE_SHORTCUT_STAGING_DIR}/${_shortcut_locale}")
+        configure_file("${_shortcut_strings_file}" "${_staged_shortcut_strings}" COPYONLY)
+        set_source_files_properties("${_staged_shortcut_strings}" PROPERTIES
+            MACOSX_PACKAGE_LOCATION "Resources/${_shortcut_lproj_name}")
+        list(APPEND MOONLIGHT_APPLE_SHORTCUT_RESOURCES "${_staged_shortcut_strings}")
+    endforeach ()
+
+    target_sources(${target} PRIVATE ${MOONLIGHT_APPLE_SHORTCUT_RESOURCES})
+endfunction()
+
 
 # building release file
 if (PLATFORM_DESKTOP)
@@ -225,7 +298,7 @@ if (PLATFORM_DESKTOP)
             MACOSX_BUNDLE TRUE
             MACOSX_BUNDLE_BUNDLE_NAME ${PROJECT_NAME}
             # MACOSX_BUNDLE_ICON_FILE "borealis.icns"
-            MACOSX_BUNDLE_COPYRIGHT "Copyright 2024 ${PROJECT_AUTHOR}"
+            MACOSX_BUNDLE_COPYRIGHT "Copyright 2026 ${PROJECT_AUTHOR}"
             # RESOURCE "${CMAKE_SOURCE_DIR}/app/borealis.icns"
             XCODE_ATTRIBUTE_ASSETCATALOG_COMPILER_APPICON_NAME "AppIcon"
             MACOSX_BUNDLE_GUI_IDENTIFIER "${PACKAGE_NAME}"
@@ -313,16 +386,18 @@ elseif (PLATFORM_IOS)
     set_target_properties(${PROJECT_NAME} PROPERTIES 
         INSTALL_RPATH @executable_path/Frameworks
         XCODE_EMBED_FRAMEWORKS_CODE_SIGN_ON_COPY ON
-        MACOSX_BUNDLE_COPYRIGHT "Copyright 2024 ${PROJECT_AUTHOR}"
+        MACOSX_BUNDLE_COPYRIGHT "Copyright 2026 ${PROJECT_AUTHOR}"
+        XCODE_ATTRIBUTE_ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES YES
         XCODE_ATTRIBUTE_CURRENT_PROJECT_VERSION "${VERSION_BUILD}"
         XCODE_ATTRIBUTE_INFOPLIST_KEY_GCSupportsGameMode YES
         XCODE_ATTRIBUTE_INFOPLIST_KEY_GCSupportsControllerUserInteraction YES
-        XCODE_ATTRIBUTE_INFOPLIST_KEY_GCRequiresControllerUserInteraction YES
         XCODE_ATTRIBUTE_INFOPLIST_KEY_LSSupportsGameMode YES
         XCODE_ATTRIBUTE_INFOPLIST_KEY_LSApplicationCategoryType "public.app-category.games"
         XCODE_ATTRIBUTE_LD_RUNPATH_SEARCH_PATHS "@executable_path/Frameworks"
         XCODE_ATTRIBUTE_FRAMEWORK_SEARCH_PATHS "${CMAKE_CURRENT_SOURCE_DIR}/extern/borealis/library/lib/extern/angle/ios/"
         XCODE_ATTRIBUTE_INSTALL_PATH $(LOCAL_APPS_DIR))
+
+    moonlight_add_apple_shortcut_resources(${PROJECT_NAME})
 elseif (PLATFORM_VISIONOS)
     ios_bundle(
             "${CMAKE_CURRENT_SOURCE_DIR}/app/platforms/ios/iphoneos/Splash.storyboard"
@@ -335,16 +410,18 @@ elseif (PLATFORM_VISIONOS)
     set_target_properties(${PROJECT_NAME} PROPERTIES
         INSTALL_RPATH @executable_path/Frameworks
         XCODE_EMBED_FRAMEWORKS_CODE_SIGN_ON_COPY ON
-        MACOSX_BUNDLE_COPYRIGHT "Copyright 2024 ${PROJECT_AUTHOR}"
+        MACOSX_BUNDLE_COPYRIGHT "Copyright 2026 ${PROJECT_AUTHOR}"
+        XCODE_ATTRIBUTE_ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES YES
         XCODE_ATTRIBUTE_CURRENT_PROJECT_VERSION "${VERSION_BUILD}"
         XCODE_ATTRIBUTE_INFOPLIST_KEY_GCSupportsGameMode YES
         XCODE_ATTRIBUTE_INFOPLIST_KEY_GCSupportsControllerUserInteraction YES
-        XCODE_ATTRIBUTE_INFOPLIST_KEY_GCRequiresControllerUserInteraction YES
         XCODE_ATTRIBUTE_INFOPLIST_KEY_LSSupportsGameMode YES
         XCODE_ATTRIBUTE_INFOPLIST_KEY_LSApplicationCategoryType "public.app-category.games"
         XCODE_ATTRIBUTE_LD_RUNPATH_SEARCH_PATHS "@executable_path/Frameworks"
         XCODE_ATTRIBUTE_FRAMEWORK_SEARCH_PATHS "${CMAKE_CURRENT_SOURCE_DIR}/extern/borealis/library/lib/extern/angle/vision/"
         XCODE_ATTRIBUTE_INSTALL_PATH $(LOCAL_APPS_DIR))
+
+    moonlight_add_apple_shortcut_resources(${PROJECT_NAME})
 elseif (PLATFORM_TVOS)
     ios_bundle(
             "${CMAKE_CURRENT_SOURCE_DIR}/app/platforms/ios/tvos/Splash.storyboard"
@@ -356,11 +433,11 @@ elseif (PLATFORM_TVOS)
     set_target_properties(${PROJECT_NAME} PROPERTIES 
         INSTALL_RPATH @executable_path/Frameworks
         XCODE_EMBED_FRAMEWORKS_CODE_SIGN_ON_COPY ON
-        MACOSX_BUNDLE_COPYRIGHT "Copyright 2024 ${PROJECT_AUTHOR}"
+        MACOSX_BUNDLE_COPYRIGHT "Copyright 2026 ${PROJECT_AUTHOR}"
         XCODE_ATTRIBUTE_CURRENT_PROJECT_VERSION "${VERSION_BUILD}"
         XCODE_ATTRIBUTE_INFOPLIST_KEY_GCSupportsGameMode YES
         XCODE_ATTRIBUTE_INFOPLIST_KEY_GCSupportsControllerUserInteraction YES
-        XCODE_ATTRIBUTE_INFOPLIST_KEY_GCRequiresControllerUserInteraction YES
+        XCODE_ATTRIBUTE_INFOPLIST_KEY_LSSupportsGameMode YES
         XCODE_ATTRIBUTE_INFOPLIST_KEY_LSApplicationCategoryType "public.app-category.games"
         XCODE_ATTRIBUTE_LD_RUNPATH_SEARCH_PATHS "@executable_path/Frameworks"
         XCODE_ATTRIBUTE_FRAMEWORK_SEARCH_PATHS "${CMAKE_CURRENT_SOURCE_DIR}/extern/borealis/library/lib/extern/angle/tvos/"
@@ -388,7 +465,10 @@ target_include_directories(${PROJECT_NAME} PUBLIC
         extern/CImg
         ${MBEDTLS_INCLUDE_DIRS}
         ${APP_PLATFORM_INCLUDE})
-target_compile_options(${PROJECT_NAME} PRIVATE -ffunction-sections -fdata-sections ${APP_PLATFORM_OPTION})
+target_compile_options(${PROJECT_NAME} PRIVATE
+        $<$<COMPILE_LANGUAGE:C,CXX,OBJC,OBJCXX>:-ffunction-sections>
+        $<$<COMPILE_LANGUAGE:C,CXX,OBJC,OBJCXX>:-fdata-sections>
+        ${APP_PLATFORM_OPTION})
 
 if(PLATFORM_SWITCH)
     target_include_directories(${PROJECT_NAME} PRIVATE
@@ -422,7 +502,7 @@ if (MOONLIGHT_APPLE_MOBILE_USE_MULTI_SDK)
     list(APPEND MOONLIGHT_APP_FFMPEG_LIBS avcodec avformat avutil swresample)
     list(APPEND MOONLIGHT_APP_MISC_LIBS jansson expat zstd opus png16 z)
 else ()
-    find_package(CURL REQUIRED)
+        find_package(CURL REQUIRED)
     find_package(Jansson REQUIRED)
     find_package(EXPAT REQUIRED)
     find_package(PNG REQUIRED)
@@ -521,6 +601,10 @@ if (SUPPORT_HDR)
     add_definitions(-DSUPPORT_HDR)
 endif ()
 
+if (SUPPORT_UPSCALING)
+    add_definitions(-DSUPPORT_UPSCALING)
+endif ()
+
 if (PLATFORM_IOS OR PLATFORM_TVOS OR PLATFORM_VISIONOS)
     set_target_properties(${PROJECT_NAME} PROPERTIES
         XCODE_EMBED_FRAMEWORKS "${IOS_FRAMEWORKS}")
@@ -529,6 +613,12 @@ endif()
 if (APPLE)
     set(XCODE_ATTRIBUTE_CLANG_ENABLE_OBJC_ARC OFF)
     target_link_libraries(${PROJECT_NAME} PRIVATE "-framework CoreMedia" "-framework VideoToolbox" "-framework AVKit" "-framework MetalKit")
+    if (PLATFORM_IOS OR PLATFORM_VISIONOS)
+        target_link_libraries(${PROJECT_NAME} PRIVATE "-weak_framework AppIntents")
+    endif ()
+    if (SUPPORT_UPSCALING AND USE_METAL_RENDERER AND NOT PLATFORM_TVOS)
+        target_link_libraries(${PROJECT_NAME} PRIVATE "-weak_framework MetalFX")
+    endif ()
     if (MOONLIGHT_APPLE_MOBILE_USE_MULTI_SDK)
         target_link_libraries(${PROJECT_NAME} PRIVATE
             "-framework Security"
