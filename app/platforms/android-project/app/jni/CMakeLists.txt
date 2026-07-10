@@ -78,9 +78,14 @@ if (DEFINED ANDROID_ABI)
 endif ()
 
 set(SDL_OPENGLES ON CACHE BOOL "Include OpenGL ES support" FORCE)
+set(SDL_SHARED ON CACHE BOOL "Build a shared SDL3 library" FORCE)
+set(SDL_STATIC OFF CACHE BOOL "Build a static SDL3 library" FORCE)
+set(SDL_TEST_LIBRARY OFF CACHE BOOL "Build the SDL3 test library" FORCE)
+set(SDL_TESTS OFF CACHE BOOL "Build the SDL3 tests" FORCE)
+set(USE_SDL2 OFF CACHE BOOL "Use SDL2" FORCE)
+set(USE_SDL3 ON CACHE BOOL "Use SDL3" FORCE)
 
-
-# SDL sources are in a subfolder named "SDL"
+# SDL3 sources are in a subfolder named "SDL"
 add_subdirectory(SDL)
 
 # Compilation of companion libraries

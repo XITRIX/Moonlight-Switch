@@ -8,7 +8,9 @@ extern "C" {
     #include <libavutil/pixdesc.h>
 }
 
+#if !defined(__SDL3__)
 #include <SDL2/SDL_syswm.h>
+#endif
 
 #include <borealis.hpp>
 #include <borealis/platforms/sdl/sdl_video.hpp>
@@ -224,6 +226,27 @@ static AppView* getOriginalMetalView(SDL_Window* window)
         return nil;
     }
 
+#if defined(__SDL3__)
+    SDL_PropertiesID properties = SDL_GetWindowProperties(window);
+#if TARGET_OS_OSX
+    NSWindow* nsWindow = (__bridge NSWindow*)SDL_GetPointerProperty(
+        properties, SDL_PROP_WINDOW_COCOA_WINDOW_POINTER, nullptr);
+    NSView* contentView = nsWindow.contentView;
+    if (contentView == nil || contentView.subviews.count == 0) {
+        return nil;
+    }
+
+    return contentView.subviews[0];
+#else
+    UIWindow* uiWindow = (__bridge UIWindow*)SDL_GetPointerProperty(
+        properties, SDL_PROP_WINDOW_UIKIT_WINDOW_POINTER, nullptr);
+    if (uiWindow == nil || uiWindow.rootViewController == nil) {
+        return nil;
+    }
+
+    return uiWindow.rootViewController.view;
+#endif
+#else
     SDL_SysWMinfo info;
     SDL_VERSION(&info.version);
 
@@ -253,6 +276,7 @@ static AppView* getOriginalMetalView(SDL_Window* window)
     }
 
     return uiWindow.rootViewController.view;
+#endif
 #endif
 }
 
@@ -999,7 +1023,11 @@ bool MetalVideoRenderer::waitToRender()
 #else
     // Pace ourselves by waiting if too many frames are pending presentation
     if (m_PendingPresentationCount > 2) {
+#if defined(__SDL3__)
+        if (!SDL_WaitConditionTimeout(m_PresentationCond, m_PresentationMutex, 100)) {
+#else
         if (SDL_CondWaitTimeout(m_PresentationCond, m_PresentationMutex, 100) == SDL_MUTEX_TIMEDOUT) {
+#endif
             SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
                         "Presentation wait timed out after 100 ms");
         }

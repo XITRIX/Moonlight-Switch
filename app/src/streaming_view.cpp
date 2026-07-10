@@ -21,7 +21,9 @@
 #include <chrono>
 #include <nanovg.h>
 
-#if defined(__SDL2__)
+#if defined(__SDL3__)
+#include <SDL3/SDL.h>
+#elif defined(__SDL2__)
 #include <SDL2/SDL.h>
 #endif
 
@@ -32,7 +34,7 @@ extern void updatePreferredDisplayMode(bool streamActive);
 #endif
 
 void setBottomBarStatus(const char *value) {
-#if defined(__SDL2__)
+#if defined(__SDL2__) || defined(__SDL3__)
     SDL_SetHint(SDL_HINT_IOS_HIDE_HOME_INDICATOR, value);
 #endif
 }

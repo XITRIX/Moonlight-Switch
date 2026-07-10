@@ -6,7 +6,11 @@
 #include "MoonlightSession.hpp"
 
 #if defined(_WIN32)
+#if defined(__SDL3__)
+#include <SDL3/SDL.h>
+#else
 #include <SDL.h>
+#endif
 #endif
 
 extern "C" {

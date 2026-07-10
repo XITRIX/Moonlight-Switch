@@ -7,7 +7,7 @@ extern "C" {
 #include <libavutil/hwcontext_mediacodec.h>
 }
 
-#include <SDL2/SDL.h>
+#include <SDL3/SDL.h>
 #include <jni.h>
 
 #include "borealis.hpp"
@@ -21,7 +21,7 @@ constexpr Uint32 MEDIA_CODEC_SURFACE_WAIT_TIMEOUT_MS = 500;
 constexpr Uint32 MEDIA_CODEC_SURFACE_WAIT_INTERVAL_MS = 10;
 
 jclass findPlatformUtilsClass(JNIEnv* env) {
-    jobject activity = reinterpret_cast<jobject>(SDL_AndroidGetActivity());
+    jobject activity = reinterpret_cast<jobject>(SDL_GetAndroidActivity());
     if (activity == nullptr) {
         brls::Logger::warning("FFmpeg: SDL didn't provide an Android activity while resolving PlatformUtils");
         return nullptr;
@@ -199,7 +199,7 @@ int initializeAndroidMediaCodecHardwareDevice(AndroidMediaCodecState& state,
                                               int height) {
     cleanupAndroidMediaCodecState(state);
 
-    auto* env = static_cast<JNIEnv*>(SDL_AndroidGetJNIEnv());
+    auto* env = static_cast<JNIEnv*>(SDL_GetAndroidJNIEnv());
     if (env == nullptr) {
         brls::Logger::error("FFmpeg: SDL didn't provide a JNI environment for MediaCodec setup");
         return AVERROR_EXTERNAL;
@@ -253,7 +253,7 @@ void cleanupAndroidMediaCodecState(AndroidMediaCodecState& state) {
         return;
     }
 
-    auto* env = static_cast<JNIEnv*>(SDL_AndroidGetJNIEnv());
+    auto* env = static_cast<JNIEnv*>(SDL_GetAndroidJNIEnv());
     if (env != nullptr) {
         env->DeleteGlobalRef(reinterpret_cast<jobject>(state.surfaceGlobalRef));
     }

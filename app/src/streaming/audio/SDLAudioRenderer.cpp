@@ -65,18 +65,32 @@ int SDLAudioRenderer::init(int audio_configuration,
     SDL_AudioSpec want, have;
     SDL_zero(want);
     want.freq = opus_config->sampleRate;
+#if defined(__SDL3__)
+    want.format = SDL_AUDIO_S16LE;
+#else
     want.format = AUDIO_S16LSB;
+#endif
     want.channels = opus_config->channelCount;
 
-    // Latest SDL2 Switch port broke audio for lower asmples
+    int wantSamples = std::max(480, opus_config->samplesPerFrame);
+    int haveSamples = wantSamples;
+#if defined(__SDL3__)
+    stream = SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &want, nullptr, nullptr);
+    dev = stream ? SDL_GetAudioStreamDevice(stream) : 0;
+    if (stream && !SDL_GetAudioDeviceFormat(dev, &have, &haveSamples)) {
+        have = want;
+    }
+#else
+    // Latest SDL2 Switch port broke audio for lower samples
 #if defined(PLATFORM_SWITCH)
+    wantSamples = 4096;
     want.samples = 4096;
 #else
-    want.samples = std::max(480, opus_config->samplesPerFrame); //1024;
+    want.samples = wantSamples;
 #endif
-
-    dev =
-        SDL_OpenAudioDevice(nullptr, 0, &want, &have, 0);
+    dev = SDL_OpenAudioDevice(nullptr, 0, &want, &have, 0);
+    haveSamples = have.samples;
+#endif
     if (dev == 0) {
         brls::Logger::error("Failed to open audio: %s\n", SDL_GetError());
         return -1;
@@ -97,11 +111,15 @@ int SDLAudioRenderer::init(int audio_configuration,
 
         brls::Logger::info(
             "SDL audio: want {} Hz, {} ch, {} samples; got {} Hz, {} ch, {} samples; overflow threshold {} bytes",
-            want.freq, (int)want.channels, want.samples,
-            have.freq, (int)have.channels, have.samples,
+            want.freq, (int)want.channels, wantSamples,
+            have.freq, (int)have.channels, haveSamples,
             audioOverflowBytes);
 
+#if defined(__SDL3__)
+        SDL_ResumeAudioStreamDevice(stream);
+#else
         SDL_PauseAudioDevice(dev, 0); // start audio playing.
+#endif
     }
 
     return 0;
@@ -111,7 +129,13 @@ void SDLAudioRenderer::cleanup() {
     if (decoder != nullptr)
         opus_multistream_decoder_destroy(decoder);
 
+#if defined(__SDL3__)
+    if (stream)
+        SDL_DestroyAudioStream(stream);
+    stream = nullptr;
+#else
     SDL_CloseAudioDevice(dev);
+#endif
 }
 
 void SDLAudioRenderer::decode_and_play_sample(char* sample_data,
@@ -134,13 +158,25 @@ void SDLAudioRenderer::decode_and_play_sample(char* sample_data,
                 Settings::instance().get_volume());
 
     const int frameBytes = decodeLen * channelCount * static_cast<int>(sizeof(short));
+#if defined(__SDL3__)
+    const int queuedAudioSize = SDL_GetAudioStreamQueued(stream);
+#else
     const Uint32 queuedAudioSize = SDL_GetQueuedAudioSize(dev);
-    if (queuedAudioSize > static_cast<Uint32>(audioOverflowBytes)) {
+#endif
+    if (queuedAudioSize > static_cast<decltype(queuedAudioSize)>(audioOverflowBytes)) {
         // clear audio queue to avoid big audio delay
         // average values are close to bufferOverflow bytes
+#if defined(__SDL3__)
+        SDL_ClearAudioStream(stream);
+#else
         SDL_ClearQueuedAudio(this->dev);
+#endif
     }
+#if defined(__SDL3__)
+    SDL_PutAudioStreamData(stream, pcmBuffer, frameBytes);
+#else
     SDL_QueueAudio(dev, pcmBuffer, frameBytes);
+#endif
 }
 
 int SDLAudioRenderer::capabilities() {

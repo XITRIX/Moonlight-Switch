@@ -2,9 +2,7 @@
 
 [中文](./README_ZH.md)
 
-The Android port of borealis follows SDL's documentation: [SDL/docs](https://github.com/libsdl-org/SDL/blob/release-2.28.x/docs/README-android.md)
-
-Currently, this project uses SDL 2.28.*, but there are some interesting Android-specific features in SDL3. We plan to migrate to SDL3 once it is officially released.
+The Android port of borealis follows SDL3's Android documentation and builds the vendored SDL3 submodule.
 
 Theoretically, it supports Android API 16 and later (Android 4.1+), but I have only tested it on devices running Android 5.0+ because I couldn't find older devices.
 

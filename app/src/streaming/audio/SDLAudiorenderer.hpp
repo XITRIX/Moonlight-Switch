@@ -2,8 +2,12 @@
 
 #include "IAudioRenderer.hpp"
 
+#if defined(__SDL3__)
+#include <SDL3/SDL.h>
+#else
 #include <SDL.h>
 #include <SDL_audio.h>
+#endif
 #include <opus/opus_multistream.h>
 
 #define MAX_CHANNEL_COUNT 6
@@ -26,6 +30,9 @@ class SDLAudioRenderer : public IAudioRenderer {
     OpusMSDecoder* decoder;
     short pcmBuffer[FRAME_SIZE * MAX_CHANNEL_COUNT];
     SDL_AudioDeviceID dev;
+#if defined(__SDL3__)
+    SDL_AudioStream* stream = nullptr;
+#endif
     int channelCount;
     int audioOverflowBytes = 16000;
 };

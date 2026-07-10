@@ -12,17 +12,15 @@ public class DemoActivity extends SDLActivity
         // but borealis heavily uses static variables,
         // which can cause some problems when reloading the program.
 
-        // In SDL3, we can use SDL_HINT_ANDROID_ALLOW_RECREATE_ACTIVITY to control the behavior
-
-        // In SDL2, Force exit of the app.
+        // Force exit of the app until Borealis supports recreating its static state.
         System.exit(0);
     }
 
     @Override
     protected String[] getLibraries() {
-        // Load SDL2 and borealis demo app
+        // Load SDL3 and Moonlight.
         return new String[] {
-                "SDL2",
+                "SDL3",
                 "Moonlight"
         };
     }

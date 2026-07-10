@@ -2,7 +2,11 @@
 #if defined(USE_METAL_RENDERER)
 
 #include "IVideoRenderer.hpp"
+#if defined(__SDL3__)
+#include <SDL3/SDL.h>
+#else
 #include <SDL2/SDL.h>
+#endif
 #include <atomic>
 
 class MetalVideoRenderer : public IVideoRenderer {

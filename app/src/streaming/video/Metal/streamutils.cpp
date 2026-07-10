@@ -18,7 +18,9 @@
 #include <unistd.h>
 #include <fcntl.h>
 
+#if !defined(__SDL3__)
 #include <SDL_syswm.h>
+#endif
 #endif
 
 #ifdef Q_OS_LINUX

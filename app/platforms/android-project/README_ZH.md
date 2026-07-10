@@ -2,7 +2,7 @@
 
 borealis 的安卓移植遵循 SDL 的文档：[SDL/docs](https://github.com/libsdl-org/SDL/blob/release-2.28.x/docs/README-android.md)
 
-目前本项目使用 SDL 2.28.* ，在 SDL3 中有一些关于安卓的有趣的特性，预计在其正式发布后再进行迁移
+本项目使用随仓库提供的 SDL3 子模块构建 Android 版本。
 
 理论上支持 Android API 16 及之后机型 (Android 4.1+)，但我只在 Android 5.0+ 的设备上测试过，因为我实在找不到更老的设备了。
 

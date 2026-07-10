@@ -33,7 +33,9 @@
 #define SDL_MAIN
 #endif
 
-#ifdef __SDL2__
+#if defined(__SDL3__)
+#include <SDL3/SDL_main.h>
+#elif defined(__SDL2__)
 #include <SDL_main.h>
 #endif
 #include <main_args.hpp>

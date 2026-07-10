@@ -5,7 +5,7 @@
 #include "AudrenAudioRenderer.hpp"
 #endif
 
-#ifdef __SDL2__
+#if defined(__SDL2__) || defined(__SDL3__)
 #include "SDLAudiorenderer.hpp"
 #endif
 
@@ -47,7 +47,7 @@ IAudioRenderer*
 SwitchMoonlightSessionDecoderAndRenderProvider::audio_renderer() {
 #ifdef __SWITCH__
     return new AudrenAudioRenderer();
-#elif defined(__SDL2__)
+#elif defined(__SDL2__) || defined(__SDL3__)
     return new SDLAudioRenderer();
 #else
 #error No audio renderer selected

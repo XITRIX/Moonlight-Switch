@@ -1,10 +1,14 @@
 #pragma once
 #if defined(USE_METAL_RENDERER)
 
+#if defined(__SDL3__)
+#include <SDL3/SDL.h>
+#else
 #include <SDL2/SDL.h>
+#endif
 
 // SDL_FRect wasn't added until 2.0.10
-#if !SDL_VERSION_ATLEAST(2, 0, 10)
+#if !defined(__SDL3__) && !SDL_VERSION_ATLEAST(2, 0, 10)
 typedef struct SDL_FRect
 {
     float x;

@@ -69,9 +69,13 @@ std::string getRcasStrengthText(float strength) {
 std::vector<std::string> audio_backends {
     "Audren",
 };
-#elif defined(__SDL2__)
+#elif defined(__SDL2__) || defined(__SDL3__)
 std::vector<std::string> audio_backends {
+#if defined(__SDL3__)
+    "SDL3",
+#else
     "SDL2",
+#endif
 };
 #else
 std::vector<std::string> audio_backends;
@@ -322,7 +326,7 @@ SettingsTab::SettingsTab() {
 #if defined(__SWITCH__)
     audioBackend->init("settings/audio_backend"_i18n, audio_backends, 0,
                        [](int) { Settings::instance().set_audio_backend(AUDREN); });
-#elif defined(__SDL2__)
+#elif defined(__SDL2__) || defined(__SDL3__)
     audioBackend->init("settings/audio_backend"_i18n, audio_backends, Settings::instance().audio_backend(),
                        [](int selected) { Settings::instance().set_audio_backend((AudioBackend)selected); });
 #else
