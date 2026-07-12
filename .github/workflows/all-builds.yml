@@ -17,6 +17,10 @@ jobs:
     uses: ./.github/workflows/android-apk.yml
     secrets: inherit
 
+  macos:
+    name: macOS
+    uses: ./.github/workflows/macos.yml
+
   windows:
     name: Windows
     uses: ./.github/workflows/windows.yml

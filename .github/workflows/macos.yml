@@ -1,0 +1,133 @@
+name: macOS Build
+
+on:
+  workflow_call:
+
+jobs:
+  build:
+    name: macOS arm64
+    runs-on: macos-15
+
+    steps:
+    - name: Check out repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        submodules: recursive
+
+    - name: Fetch vcpkg history and baseline
+      shell: bash
+      run: |
+        manifest="vcpkg.json"
+        baseline="$(sed -nE 's/.*"builtin-baseline":[[:space:]]*"([0-9a-f]{40})".*/\1/p' "${manifest}" | head -n1)"
+
+        if [ -z "${baseline}" ]; then
+          echo "Unable to determine vcpkg builtin-baseline from ${manifest}"
+          exit 1
+        fi
+
+        if git -C extern/vcpkg rev-parse --is-shallow-repository | grep -q true; then
+          git -C extern/vcpkg fetch --force --prune --tags --unshallow origin \
+            "+refs/heads/*:refs/remotes/origin/*"
+        else
+          git -C extern/vcpkg fetch --force --prune --tags origin \
+            "+refs/heads/*:refs/remotes/origin/*"
+        fi
+
+        if ! git -C extern/vcpkg cat-file -e "${baseline}^{commit}" 2>/dev/null; then
+          git -C extern/vcpkg fetch --force origin "${baseline}"
+        fi
+
+        git -C extern/vcpkg cat-file -e "${baseline}^{commit}"
+
+    - name: Install native build tools
+      shell: bash
+      run: |
+        brew install nasm
+        nasm -v
+
+    - name: Build libromfs generator
+      shell: bash
+      run: |
+        chmod +x build_libromfs_generator.sh
+        ./build_libromfs_generator.sh
+
+    - name: Bootstrap vcpkg
+      shell: bash
+      working-directory: extern/vcpkg
+      run: |
+        chmod +x bootstrap-vcpkg.sh
+        ./bootstrap-vcpkg.sh -disableMetrics
+
+    - name: Compute vcpkg cache key
+      id: vcpkg-cache-key
+      shell: bash
+      run: |
+        vcpkg_revision="$(git -C extern/vcpkg rev-parse HEAD)"
+        manifest_hash="${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json', 'extern/cmake/vcpkg-triplets/arm64-osx.cmake') }}"
+        echo "key=macOS-arm64-vcpkg-${vcpkg_revision}-${manifest_hash}" >> "$GITHUB_OUTPUT"
+        echo "restore-prefix=macOS-arm64-vcpkg-${vcpkg_revision}-" >> "$GITHUB_OUTPUT"
+
+    - name: Restore vcpkg cache
+      uses: actions/cache@v4
+      with:
+        path: |
+          extern/vcpkg/buildtrees
+          extern/vcpkg/downloads
+          extern/vcpkg/packages
+          build/macos/vcpkg_installed
+        key: ${{ steps.vcpkg-cache-key.outputs.key }}
+        restore-keys: |
+          ${{ steps.vcpkg-cache-key.outputs.restore-prefix }}
+
+    - name: Configure
+      shell: bash
+      run: |
+        cmake -B build/macos \
+          -DPLATFORM_DESKTOP=ON \
+          -DBUNDLE_MACOS_APP=ON \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DVCPKG_TARGET_TRIPLET=arm64-osx \
+          -DVCPKG_OVERLAY_TRIPLETS="$GITHUB_WORKSPACE/extern/cmake/vcpkg-triplets"
+
+    - name: Build app bundle
+      shell: bash
+      run: cmake --build build/macos --config Release --parallel 3
+
+    - name: Sign and validate app bundle
+      shell: bash
+      run: |
+        app="build/macos/Moonlight.app"
+
+        test -d "$app"
+        test -x "$app/Contents/MacOS/Moonlight"
+        plutil -lint "$app/Contents/Info.plist"
+        codesign --force --deep --sign - "$app"
+        codesign --verify --deep --strict "$app"
+
+    - name: Package app bundle
+      shell: bash
+      run: |
+        mkdir -p dist
+        ditto -c -k --sequesterRsrc --keepParent \
+          build/macos/Moonlight.app \
+          dist/Moonlight-macOS-arm64.zip
+
+    - name: Upload macOS build logs
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: Moonlight-macOS-build-logs
+        path: |
+          build/macos/vcpkg-manifest-install.log
+          build/macos/CMakeFiles/CMakeError.log
+          build/macos/CMakeFiles/CMakeOutput.log
+          extern/vcpkg/buildtrees/**/*.log
+        if-no-files-found: ignore
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: Moonlight-macOS-arm64
+        path: dist/Moonlight-macOS-arm64.zip
+        if-no-files-found: error
