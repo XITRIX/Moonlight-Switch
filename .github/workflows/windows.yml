@@ -1,0 +1,120 @@
+name: Windows Builds
+
+on:
+  workflow_call:
+
+jobs:
+  build:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.runner }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: UCRT64
+            runner: windows-latest
+            msystem: UCRT64
+            cmake: 'C:\msys64\ucrt64\bin\cmake.exe'
+            preset: windows-ucrt64-release
+            build_dir: build/windows-ucrt64
+            msys2_bin: /ucrt64/bin/
+            artifact: Moonlight-windows-ucrt64
+            packages: >-
+              mingw-w64-ucrt-x86_64-gcc
+              mingw-w64-ucrt-x86_64-cmake
+              mingw-w64-ucrt-x86_64-ninja
+              mingw-w64-ucrt-x86_64-pkgconf
+              mingw-w64-ucrt-x86_64-SDL2
+              mingw-w64-ucrt-x86_64-ffmpeg
+              mingw-w64-ucrt-x86_64-curl
+              mingw-w64-ucrt-x86_64-mbedtls
+              mingw-w64-ucrt-x86_64-jansson
+              mingw-w64-ucrt-x86_64-libpng
+              mingw-w64-ucrt-x86_64-opus
+              mingw-w64-ucrt-x86_64-expat
+              mingw-w64-ucrt-x86_64-zstd
+              mingw-w64-ucrt-x86_64-ntldd-git
+
+          - name: CLANGARM64
+            runner: windows-11-arm
+            msystem: CLANGARM64
+            cmake: 'C:\msys64\clangarm64\bin\cmake.exe'
+            preset: windows-clangarm64-release
+            build_dir: build/windows-clangarm64
+            msys2_bin: /clangarm64/bin/
+            artifact: Moonlight-windows-clangarm64
+            packages: >-
+              mingw-w64-clang-aarch64-clang
+              mingw-w64-clang-aarch64-cmake
+              mingw-w64-clang-aarch64-ninja
+              mingw-w64-clang-aarch64-pkgconf
+              mingw-w64-clang-aarch64-SDL2
+              mingw-w64-clang-aarch64-ffmpeg
+              mingw-w64-clang-aarch64-curl
+              mingw-w64-clang-aarch64-mbedtls
+              mingw-w64-clang-aarch64-jansson
+              mingw-w64-clang-aarch64-libpng
+              mingw-w64-clang-aarch64-opus
+              mingw-w64-clang-aarch64-expat
+              mingw-w64-clang-aarch64-zstd
+              mingw-w64-clang-aarch64-ntldd-git
+
+    steps:
+    - name: Check out repository
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Set up MSYS2 UCRT64
+      if: matrix.msystem == 'UCRT64'
+      uses: msys2/setup-msys2@v2
+      with:
+        msystem: ${{ matrix.msystem }}
+        release: false
+        update: true
+        install: ${{ matrix.packages }}
+
+    - name: Set up MSYS2 CLANGARM64
+      if: matrix.msystem == 'CLANGARM64'
+      uses: msys2/setup-msys2@v2
+      with:
+        location: 'C:\'
+        msystem: ${{ matrix.msystem }}
+        update: true
+        install: ${{ matrix.packages }}
+
+    - name: Configure
+      shell: pwsh
+      env:
+        CMAKE_EXE: ${{ matrix.cmake }}
+        CMAKE_PRESET: ${{ matrix.preset }}
+      run: '& $env:CMAKE_EXE --preset $env:CMAKE_PRESET'
+
+    - name: Build
+      shell: pwsh
+      env:
+        CMAKE_EXE: ${{ matrix.cmake }}
+        CMAKE_PRESET: ${{ matrix.preset }}
+      run: '& $env:CMAKE_EXE --build --preset $env:CMAKE_PRESET --parallel'
+
+    - name: Collect runtime DLLs
+      shell: msys2 {0}
+      env:
+        BUILD_DIR: ${{ matrix.build_dir }}
+        MSYS2_BIN: ${{ matrix.msys2_bin }}
+      run: |
+        exe="$(cygpath -u "$GITHUB_WORKSPACE")/$BUILD_DIR/Moonlight.exe"
+        outdir="$(dirname "$exe")"
+        ntldd -R "$exe" | awk -v prefix="$MSYS2_BIN" '$2 == "=>" && index($3, prefix) == 1 { print $3 }' | sort -u | while read -r dll; do
+          cp -f "$dll" "$outdir/"
+        done
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ matrix.artifact }}
+        path: |
+          ${{ matrix.build_dir }}/Moonlight.exe
+          ${{ matrix.build_dir }}/*.dll
+          ${{ matrix.build_dir }}/resources/**

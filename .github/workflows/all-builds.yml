@@ -1,0 +1,22 @@
+name: All Builds
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+  workflow_dispatch:
+
+jobs:
+  switch:
+    name: Nintendo Switch
+    uses: ./.github/workflows/docker-image.yml
+
+  android:
+    name: Android
+    uses: ./.github/workflows/android-apk.yml
+    secrets: inherit
+
+  windows:
+    name: Windows
+    uses: ./.github/workflows/windows.yml
