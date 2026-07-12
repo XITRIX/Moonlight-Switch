@@ -230,10 +230,12 @@ int FFmpegVideoDecoder::finalize_decoder_setup() {
 #elif defined(USE_D3D11_RENDERER)
     m_use_zero_copy_holder = ffmpeg::decoder::useD3D11ZeroCopyHolder(m_d3d11);
 #endif
-    AVFrameHolder::instance().prepare(m_use_zero_copy_holder);
+    AVFrameHolder::instance().prepare(m_stream_fps, m_use_zero_copy_holder);
 
     if (!m_use_zero_copy_holder) {
-        m_frames_size = Settings::instance().frames_queue_size() + 1;
+        m_frames_size = static_cast<int>(AVFrameQueue::capacityFor(
+                            Settings::instance().frames_queue_size())) +
+                        1;
         m_frames = new AVFrame*[m_frames_size];
 
         tmp_frame = av_frame_alloc();

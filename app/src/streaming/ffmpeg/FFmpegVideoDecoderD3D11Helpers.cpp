@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <Limelight.h>
 
+#include "AVFrameHolder.hpp"
 #include "Settings.hpp"
 #include "borealis.hpp"
 
@@ -168,7 +169,9 @@ int configureD3D11FramesContext(D3D11State& state, AVCodecContext* avctx, enum A
     framesContext->sw_format = state.hwSurfaceFormat;
     framesContext->initial_pool_size = std::max(
         framesContext->initial_pool_size,
-        Settings::instance().frames_queue_size() + avctx->thread_count + 2);
+        static_cast<int>(AVFrameQueue::capacityFor(
+            Settings::instance().frames_queue_size())) +
+            avctx->thread_count + 2);
     d3d11FramesContext->BindFlags |= D3D11_BIND_SHADER_RESOURCE;
 
     err = av_hwframe_ctx_init(framesRef);
@@ -187,7 +190,8 @@ int configureD3D11FramesContext(D3D11State& state, AVCodecContext* avctx, enum A
 void configureD3D11DecoderContext(D3D11State& state, AVCodecContext* decoderContext) {
     decoderContext->opaque = &state;
     decoderContext->get_format = &selectD3D11HardwareFormat;
-    decoderContext->extra_hw_frames = std::max(Settings::instance().frames_queue_size(), 1);
+    decoderContext->extra_hw_frames = static_cast<int>(AVFrameQueue::capacityFor(
+        Settings::instance().frames_queue_size()));
 }
 
 void logD3D11HardwareInitFailure(const D3D11State& state, const char* error) {

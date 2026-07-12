@@ -365,13 +365,21 @@ void StreamingView::draw(NVGcontext* vg, float x, float y, float width,
                 /*stats->video_render_stats.rendered_frames*/);
         }
 
-        statistics += fmt::format("Frame holder push/get rate: {}\n"
-                                  "Frames queue reuses | drops: {} | {}\n"
-                                  "Frames queue: {}",
-                                  AVFrameHolder::instance().getStat(),
+        statistics += fmt::format("Frames queue underflows | skipped: {} | {}\n"
+                                  "Queue empty | rebuffer holds: {} | {}\n"
+                                  "Queue overflow | paced skips: {} | {}\n"
+                                  "Max pushes between draws: {}\n"
+                                  "Frames queue depth | target | capacity: {} | {} | {}",
                                   AVFrameHolder::instance().getFakeFrameStat(),
                                   AVFrameHolder::instance().getFrameDropStat(),
-                                  AVFrameHolder::instance().getFrameQueueSize());
+                                  AVFrameHolder::instance().getFrameQueueEmptyStat(),
+                                  AVFrameHolder::instance().getFrameQueueRebufferHoldStat(),
+                                  AVFrameHolder::instance().getFrameQueueOverflowDropStat(),
+                                  AVFrameHolder::instance().getFrameQueuePacingSkipStat(),
+                                  AVFrameHolder::instance().getFrameQueueMaxPushBurstStat(),
+                                  AVFrameHolder::instance().getFrameQueueSize(),
+                                  AVFrameHolder::instance().getFrameQueueTargetDepth(),
+                                  AVFrameHolder::instance().getFrameQueueCapacity());
 
         nvgFontFaceId(vg, Application::getFont(FONT_REGULAR));
         nvgFontSize(vg, 20);
