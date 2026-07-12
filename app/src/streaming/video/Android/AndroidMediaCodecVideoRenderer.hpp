@@ -20,7 +20,6 @@ class AndroidMediaCodecVideoRenderer : public IVideoRenderer {
     GLVideoRenderer m_glRenderer;
     VideoRenderStats m_videoRenderStatsProgress = {};
     VideoRenderStats m_videoRenderStatsCache = {};
-    uint64_t m_statsTimeAccumulator = 0;
     AVBufferRef* m_lastPresentedBufferRef = nullptr;
     uint8_t* m_lastPresentedBufferHandle = nullptr;
     int64_t m_lastPresentedPts = AV_NOPTS_VALUE;

@@ -139,7 +139,6 @@ class DKVideoRenderer : public IVideoRenderer {
 
     VideoRenderStats m_video_render_stats_progress = {};
     VideoRenderStats m_video_render_stats_cache = {};
-    uint64_t m_stats_time_accumulator = 0;
 };
 
 #endif // __SWITCH__

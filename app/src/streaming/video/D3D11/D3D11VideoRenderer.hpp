@@ -92,7 +92,6 @@ class D3D11VideoRenderer : public IVideoRenderer {
 
     VideoRenderStats m_videoRenderStatsProgress = {};
     VideoRenderStats m_videoRenderStatsCache = {};
-    uint64_t m_statsTimeAccumulator = 0;
 };
 
 #endif // USE_D3D11_RENDERER

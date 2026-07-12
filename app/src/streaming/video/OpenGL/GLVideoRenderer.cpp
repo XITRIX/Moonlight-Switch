@@ -320,25 +320,28 @@ void GLVideoRenderer::draw(NVGcontext* vg, int width, int height,
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
     auto render_time = LiGetMillis() - before_render;
-    timeCount += render_time;
 
     m_video_render_stats_progress.total_render_time += render_time;
     m_video_render_stats_progress.rendered_frames++;
 
     const int time_interval = 200;
-    if (timeCount >= time_interval) {
+    const uint64_t now = LiGetMillis();
+    if (now - m_video_render_stats_progress.measurement_start_timestamp >=
+        time_interval) {
         // brls::Logger::debug("FPS: {}", frames / 5.0f);
         m_video_render_stats_cache = m_video_render_stats_progress;
         m_video_render_stats_progress = {};
 
-        uint64_t now = LiGetMillis();
-        m_video_render_stats_cache.rendered_fps = (float) m_video_render_stats_cache.rendered_frames /
-                ((float)(now - m_video_render_stats_cache.measurement_start_timestamp) / 1000);
+        const uint64_t elapsed_time =
+            now - m_video_render_stats_cache.measurement_start_timestamp;
+        m_video_render_stats_cache.rendered_fps =
+                elapsed_time && m_video_render_stats_cache.rendered_frames > 1
+                ? (float)(m_video_render_stats_cache.rendered_frames - 1) /
+                      ((float)elapsed_time / 1000)
+                : 0.0f;
 
         m_video_render_stats_cache.rendering_time = (float)m_video_render_stats_cache.total_render_time /
                 (float) m_video_render_stats_cache.rendered_frames;
-
-        timeCount -= time_interval;
     }
 
 //    auto code = glGetError();

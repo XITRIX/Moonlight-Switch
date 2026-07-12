@@ -32,25 +32,27 @@ void AndroidMediaCodecVideoRenderer::recordPresentation(uint64_t renderTimeMs) {
 
     m_videoRenderStatsProgress.total_render_time += renderTimeMs;
     m_videoRenderStatsProgress.rendered_frames++;
-    m_statsTimeAccumulator += renderTimeMs;
 
     const int timeIntervalMs = 200;
-    if (m_statsTimeAccumulator < timeIntervalMs) {
+    const uint64_t statsNow = LiGetMillis();
+    if (statsNow - m_videoRenderStatsProgress.measurement_start_timestamp <
+        timeIntervalMs) {
         return;
     }
 
     m_videoRenderStatsCache = m_videoRenderStatsProgress;
     m_videoRenderStatsProgress = {};
 
-    const uint64_t now = LiGetMillis();
+    const uint64_t elapsedTime =
+        statsNow - m_videoRenderStatsCache.measurement_start_timestamp;
     m_videoRenderStatsCache.rendered_fps =
-        static_cast<float>(m_videoRenderStatsCache.rendered_frames) /
-        (static_cast<float>(now - m_videoRenderStatsCache.measurement_start_timestamp) / 1000.0f);
+        elapsedTime && m_videoRenderStatsCache.rendered_frames > 1
+        ? static_cast<float>(m_videoRenderStatsCache.rendered_frames - 1) /
+              (static_cast<float>(elapsedTime) / 1000.0f)
+        : 0.0f;
     m_videoRenderStatsCache.rendering_time =
         static_cast<float>(m_videoRenderStatsCache.total_render_time) /
         static_cast<float>(m_videoRenderStatsCache.rendered_frames);
-
-    m_statsTimeAccumulator -= timeIntervalMs;
 }
 
 void AndroidMediaCodecVideoRenderer::draw(NVGcontext* vg, int width, int height,

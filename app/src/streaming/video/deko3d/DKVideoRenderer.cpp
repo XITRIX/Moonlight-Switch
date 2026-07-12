@@ -1152,19 +1152,19 @@ void DKVideoRenderer::draw(NVGcontext* vg, int width, int height, AVFrame* frame
 
     m_video_render_stats_progress.total_render_time += render_time;
     m_video_render_stats_progress.rendered_frames++;
-    m_stats_time_accumulator += render_time;
 
     const uint64_t stats_interval_ms = 200;
-    if (m_stats_time_accumulator >= stats_interval_ms) {
+    const uint64_t stats_now = LiGetMillis();
+    if (stats_now - m_video_render_stats_progress.measurement_start_timestamp >=
+        stats_interval_ms) {
         m_video_render_stats_cache = m_video_render_stats_progress;
         m_video_render_stats_progress = {};
 
-        const uint64_t now = LiGetMillis();
         const uint64_t elapsed_time =
-            now - m_video_render_stats_cache.measurement_start_timestamp;
+            stats_now - m_video_render_stats_cache.measurement_start_timestamp;
         m_video_render_stats_cache.rendered_fps =
-            elapsed_time
-                ? (float)m_video_render_stats_cache.rendered_frames /
+            elapsed_time && m_video_render_stats_cache.rendered_frames > 1
+                ? (float)(m_video_render_stats_cache.rendered_frames - 1) /
                       ((float)elapsed_time / 1000.0f)
                 : 0.0f;
 
@@ -1201,8 +1201,6 @@ void DKVideoRenderer::draw(NVGcontext* vg, int width, int height, AVFrame* frame
                    (float)m_video_render_stats_cache.sharpened_frames) /
                       1000.0f
                 : 0.0f;
-
-        m_stats_time_accumulator -= stats_interval_ms;
     }
 }
 
