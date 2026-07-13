@@ -34,7 +34,11 @@ public:
     [[nodiscard]] size_t getRebufferHoldStat() const;
     [[nodiscard]] size_t getOverflowDropStat() const;
     [[nodiscard]] size_t getPacingSkipStat() const;
+    [[nodiscard]] size_t getScheduledHoldStat() const;
     [[nodiscard]] size_t getMaxPushBurstStat() const;
+    [[nodiscard]] size_t getLocalClockPacedFrameStat() const;
+    [[nodiscard]] size_t getPlayoutResyncStat() const;
+    [[nodiscard]] double getEstimatedSourceFps() const;
 
     void cleanup();
 
@@ -42,6 +46,9 @@ private:
     friend class AVFrameHolder;
     AVFrame* acquireFrameLocked();
     bool pushTransferredLocked(AVFrame* item);
+    void recordArrivalLocked(std::chrono::steady_clock::time_point now);
+    void resetArrivalRateEstimatorLocked();
+    void trimToPlayoutWindowLocked();
     size_t limit = 0;
     std::queue<AVFrame*> queue;
     std::queue<AVFrame*> freeQueue;
@@ -49,13 +56,19 @@ private:
     bool transferOwnership = false;
     size_t targetBufferedFrames = 0;
     int streamFps = 0;
-    std::chrono::nanoseconds frameInterval{0};
+    std::chrono::nanoseconds adaptiveFrameInterval{0};
     std::chrono::steady_clock::time_point lastDraw{};
     std::chrono::nanoseconds averageDrawInterval{0};
+    std::chrono::steady_clock::time_point arrivalWindowStart{};
+    std::chrono::steady_clock::time_point lastArrival{};
+    size_t arrivalWindowFrames = 0;
+    size_t arrivalRateSamples = 0;
+    double estimatedSourceFps = 0.0;
     double frameCredit = 0.0;
-    size_t highOccupancyDraws = 0;
     bool drawClockStarted = false;
-    bool buffering = true;
+    bool arrivalClockStarted = false;
+    bool startupBuffering = true;
+    bool playoutResyncNeeded = true;
     mutable std::mutex m_mutex;
     size_t fakeFrameUsedStat = 0;
     size_t framesDroppedStat = 0;
@@ -63,8 +76,11 @@ private:
     size_t rebufferHoldStat = 0;
     size_t overflowDropStat = 0;
     size_t pacingSkipStat = 0;
+    size_t scheduledHoldStat = 0;
     size_t pushesSincePop = 0;
     size_t maxPushBurstStat = 0;
+    size_t localClockPacedFrameStat = 0;
+    size_t playoutResyncStat = 0;
 };
 
 class AVFrameHolder : public Singleton<AVFrameHolder> {
@@ -111,7 +127,11 @@ class AVFrameHolder : public Singleton<AVFrameHolder> {
     [[nodiscard]] size_t getFrameQueueRebufferHoldStat() const { return m_frame_queue.getRebufferHoldStat(); }
     [[nodiscard]] size_t getFrameQueueOverflowDropStat() const { return m_frame_queue.getOverflowDropStat(); }
     [[nodiscard]] size_t getFrameQueuePacingSkipStat() const { return m_frame_queue.getPacingSkipStat(); }
+    [[nodiscard]] size_t getFrameQueueScheduledHoldStat() const { return m_frame_queue.getScheduledHoldStat(); }
     [[nodiscard]] size_t getFrameQueueMaxPushBurstStat() const { return m_frame_queue.getMaxPushBurstStat(); }
+    [[nodiscard]] size_t getFrameQueueLocalClockPacedFrameStat() const { return m_frame_queue.getLocalClockPacedFrameStat(); }
+    [[nodiscard]] size_t getFrameQueuePlayoutResyncStat() const { return m_frame_queue.getPlayoutResyncStat(); }
+    [[nodiscard]] double getFrameQueueEstimatedSourceFps() const { return m_frame_queue.getEstimatedSourceFps(); }
 
   private:
     AVFrameQueue m_frame_queue;

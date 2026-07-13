@@ -366,8 +366,11 @@ void StreamingView::draw(NVGcontext* vg, float x, float y, float width,
         }
 
         statistics += fmt::format("Frames queue underflows | skipped: {} | {}\n"
-                                  "Queue empty | rebuffer holds: {} | {}\n"
+                                  "Queue empty | startup holds: {} | {}\n"
                                   "Queue overflow | paced skips: {} | {}\n"
+                                  "Scheduled frame holds: {}\n"
+                                  "Frames presented by local clock: {}\n"
+                                  "Playout resyncs | estimated source: {} | {:.2f} FPS\n"
                                   "Max pushes between draws: {}\n"
                                   "Frames queue depth | target | capacity: {} | {} | {}",
                                   AVFrameHolder::instance().getFakeFrameStat(),
@@ -376,6 +379,10 @@ void StreamingView::draw(NVGcontext* vg, float x, float y, float width,
                                   AVFrameHolder::instance().getFrameQueueRebufferHoldStat(),
                                   AVFrameHolder::instance().getFrameQueueOverflowDropStat(),
                                   AVFrameHolder::instance().getFrameQueuePacingSkipStat(),
+                                  AVFrameHolder::instance().getFrameQueueScheduledHoldStat(),
+                                  AVFrameHolder::instance().getFrameQueueLocalClockPacedFrameStat(),
+                                  AVFrameHolder::instance().getFrameQueuePlayoutResyncStat(),
+                                  AVFrameHolder::instance().getFrameQueueEstimatedSourceFps(),
                                   AVFrameHolder::instance().getFrameQueueMaxPushBurstStat(),
                                   AVFrameHolder::instance().getFrameQueueSize(),
                                   AVFrameHolder::instance().getFrameQueueTargetDepth(),

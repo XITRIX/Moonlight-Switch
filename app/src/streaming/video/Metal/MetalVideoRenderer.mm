@@ -1635,8 +1635,14 @@ bool MetalVideoRenderer::initialize(int imageFormat)
     // higher than opting for triple buffering.
     m_MetalLayer.maximumDrawableCount = 3;
 
-    // Allow tearing if V-Sync is off (also requires direct display path)
-//    m_MetalLayer.displaySyncEnabled = params->enableVsync;
+#if TARGET_OS_OSX
+    // Borealis already paces this manual renderer with the window's display
+    // link. A second CAMetalLayer V-Sync wait otherwise caps ProMotion output
+    // at 60 FPS.
+    if (@available(macOS 14.0, *)) {
+        m_MetalLayer.displaySyncEnabled = NO;
+    }
+#endif
 
     // Create the Metal texture cache for our CVPixelBuffers
     CFStringRef keys[1] = { kCVMetalTextureUsage };
