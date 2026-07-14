@@ -418,6 +418,14 @@ void GameStreamClient::find_hosts(ServerCallback<std::vector<Host>>& callback) {
 
         int sock = mdns_socket_open_ipv4(nullptr);
         if (sock < 0) {
+            brls::sync([callback, generation] {
+                if (generation != findHostsGeneration.load()) {
+                    return;
+                }
+
+                callback(GSResult<std::vector<Host>>::failure(
+                        "discovery_manager/no_ip"_i18n));
+            });
             return;
         }
 
@@ -471,8 +479,6 @@ void GameStreamClient::find_hosts(ServerCallback<std::vector<Host>>& callback) {
                 if (status == GS_OK) {
                     Host host;
                     host.address = searchContext.foundHost;
-                    host.remoteAddress =
-                        GameStreamClient::external_address_for_mdns(host.address);
                     host.hostname = server_data.hostname;
                     host.mac = server_data.mac;
                     merge_discovered_host(foundHosts, host);
@@ -494,6 +500,17 @@ void GameStreamClient::find_hosts(ServerCallback<std::vector<Host>>& callback) {
             }
 
             retro_sleep(500);
+        }
+
+        if (!isCancelled() && foundHosts.empty()) {
+            brls::sync([callback, generation] {
+                if (generation != findHostsGeneration.load()) {
+                    return;
+                }
+
+                callback(GSResult<std::vector<Host>>::failure(
+                        "discovery_manager/no_host"_i18n));
+            });
         }
 
         closeSocket();
