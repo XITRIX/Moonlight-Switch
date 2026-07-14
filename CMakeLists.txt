@@ -425,7 +425,8 @@ elseif (PLATFORM_VISIONOS)
         XCODE_ATTRIBUTE_INFOPLIST_KEY_LSApplicationCategoryType "public.app-category.games"
         XCODE_ATTRIBUTE_LD_RUNPATH_SEARCH_PATHS "@executable_path/Frameworks"
         XCODE_ATTRIBUTE_FRAMEWORK_SEARCH_PATHS "${CMAKE_CURRENT_SOURCE_DIR}/extern/borealis/library/lib/extern/angle/vision/"
-        XCODE_ATTRIBUTE_INSTALL_PATH $(LOCAL_APPS_DIR))
+        XCODE_ATTRIBUTE_INSTALL_PATH $(LOCAL_APPS_DIR)
+        XCODE_ATTRIBUTE_ASSETCATALOG_COMPILER_APPICON_NAME "AppIconVisionOS")
 
     moonlight_add_apple_shortcut_resources(${PROJECT_NAME})
 elseif (PLATFORM_TVOS)
