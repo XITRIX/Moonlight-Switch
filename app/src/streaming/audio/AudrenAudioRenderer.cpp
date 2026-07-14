@@ -16,10 +16,6 @@ static const uint8_t m_sink_channels[] = {0, 1};
 namespace {
 
 void applyVolume(s16* buffer, size_t sampleCount, int volume) {
-    if (volume >= 100) {
-        return;
-    }
-
     for (size_t i = 0; i < sampleCount; i++) {
         const int scaled = (static_cast<int>(buffer[i]) * volume) / 100;
         buffer[i] = static_cast<s16>(std::min<int>(SHRT_MAX, std::max<int>(SHRT_MIN, scaled)));

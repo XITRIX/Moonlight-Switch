@@ -37,10 +37,6 @@ int audioBytesForDurationMs(int sampleRate, int channels, int milliseconds) {
 }
 
 void applyVolume(short* buffer, size_t sampleCount, int volume) {
-    if (volume >= 100) {
-        return;
-    }
-
     for (size_t i = 0; i < sampleCount; i++) {
         const int scaled = (static_cast<int>(buffer[i]) * volume) / 100;
         buffer[i] = static_cast<short>(std::min<int>(SHRT_MAX, std::max<int>(SHRT_MIN, scaled)));
