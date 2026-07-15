@@ -59,6 +59,10 @@ class MoonlightInputManager : public Singleton<MoonlightInputManager> {
     void setInputEnabled(bool enabled) { inputEnabled = enabled; }
     static void leftMouseClick();
     static void rightMouseClick();
+    // Sends the Ctrl+Alt+Shift+F<displayNumber> combo to the host, which
+    // tells Sunshine/GeForce Experience to switch the streamed display.
+    // displayNumber is 1-based (1 maps to F1, 12 maps to F12).
+    static void switchDisplay(int displayNumber);
 
   private:
     RumbleValues rumbleCache[GAMEPADS_MAX];
