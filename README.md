@@ -145,6 +145,17 @@ cmake -B build/switch -DPLATFORM_SWITCH=ON
 make -C build/switch Moonlight.nro -j$(nproc)
 ```
 
+### PS Vita
+
+To build for PS Vita, install [VitaSDK](https://vitasdk.org/) and the Vita dependencies described in the [Borealis PS Vita guide](https://github.com/xfangfang/borealis/wiki/PS-Vita). The SDK must include FFmpeg and SDL2 built with `VIDEO_VITA_PVR` support. Set `VITASDK` to the SDK installation directory, then run:
+
+```bash
+export VITASDK=/opt/vitasdk
+scripts/psv-dev.sh build
+```
+
+The resulting package is written to `build-psv/Moonlight.vpk`. For installing the first VPK, deploying later builds, capturing PrincessLog output, and checking crash dumps, see the [PS Vita development guide](docs/psv-development.md).
+
 ### PC (Windows/Linux/MacOS)
 
 To build for PC, the following components are required:

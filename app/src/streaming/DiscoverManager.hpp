@@ -38,5 +38,6 @@ class DiscoverManager : public Singleton<DiscoverManager> {
     std::vector<Host> _hosts;
     brls::Event<GSResult<std::vector<Host>>> hostsUpdateEvent;
     int counter = 0;
+    bool candidatesFiltered = false;
     bool paused = true;
 };

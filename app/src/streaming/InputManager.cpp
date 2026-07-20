@@ -244,7 +244,7 @@ GamepadState MoonlightInputManager::getControllerState(int controllerNum,
     float rightYAxis = controller.axes[brls::RIGHT_Y];
 
     if (leftStickDeadzone > 0) {
-        float magnitude = fsqrt_(std::powf(leftXAxis, 2) + std::powf(leftYAxis, 2));
+        float magnitude = fsqrt_(leftXAxis * leftXAxis + leftYAxis * leftYAxis);
         if (magnitude < leftStickDeadzone) {
             leftXAxis = 0;
             leftYAxis = 0;
@@ -252,7 +252,7 @@ GamepadState MoonlightInputManager::getControllerState(int controllerNum,
     }
 
     if (rightStickDeadzone > 0) {
-        float magnitude = fsqrt_(std::powf(rightXAxis, 2) + std::powf(rightYAxis, 2));
+        float magnitude = fsqrt_(rightXAxis * rightXAxis + rightYAxis * rightYAxis);
         if (magnitude < rightStickDeadzone) {
             rightXAxis = 0;
             rightYAxis = 0;

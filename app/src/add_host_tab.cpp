@@ -180,7 +180,9 @@ void AddHostTab::findHost() {
 
 void AddHostTab::stopSearchHost() {
     searchGeneration++;
-#ifdef PLATFORM_IOS
+#ifdef MULTICAST_DISABLED
+    DiscoverManager::instance().pause();
+#elif defined(PLATFORM_IOS)
 #elif defined(PLATFORM_TVOS) || defined(PLATFORM_VISIONOS)
 #else
     GameStreamClient::cancel_find_hosts();

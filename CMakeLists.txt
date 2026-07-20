@@ -230,7 +230,9 @@ elseif (PLATFORM_SWITCH)
             app/src/switch/wrapper.c
             )
 elseif (PLATFORM_PSV)
-    add_definitions(-D__psp2__ -D__PSV__)
+    # VitaSDK itself uses __psp2__, Borealis uses __PSV__, and
+    # moonlight-common-c uses __vita__ for its Vita socket implementation.
+    add_definitions(-D__psp2__ -D__PSV__ -D__vita__)
 elseif (PLATFORM_ANDROID)
     list(APPEND MAIN_SRC app/src/streaming/video/Android/AndroidMediaCodecVideoRenderer.cpp)
 elseif (PLATFORM_IOS OR PLATFORM_TVOS OR PLATFORM_VISIONOS)
@@ -345,13 +347,16 @@ if (PLATFORM_DESKTOP)
     endif ()
 elseif (PLATFORM_PSV)
     set(VITA_MKSFOEX_FLAGS "${VITA_MKSFOEX_FLAGS} -d ATTRIBUTE2=12") # max heap size mode
-    vita_create_self(${PROJECT_NAME}.self ${PROJECT_NAME} UNSAFE)
+    # PVR_PSP2 user modules expect the executable layout used by working Vita
+    # Borealis applications such as wiliwili.
+    vita_create_self(${PROJECT_NAME}.self ${PROJECT_NAME} UNSAFE NOASLR)
     if (USE_LIBROMFS)
         vita_create_vpk(${PROJECT_NAME}.vpk ${PSN_TITLE_ID} ${PROJECT_NAME}.self
             VERSION ${PSN_VERSION}
             NAME ${PROJECT_NAME}
             FILE ${CMAKE_SOURCE_DIR}/app/platforms/psv/sce_sys sce_sys
             FILE ${CMAKE_SOURCE_DIR}/app/platforms/psv/module/ module
+            FILE ${CMAKE_SOURCE_DIR}/extern/borealis/psv/module/libpvrPSP2_WSEGL.suprx module/libpvrPSP2_WSEGL.suprx
         )
     else()
         vita_create_vpk(${PROJECT_NAME}.vpk ${PSN_TITLE_ID} ${PROJECT_NAME}.self
@@ -360,6 +365,7 @@ elseif (PLATFORM_PSV)
             FILE ${CMAKE_SOURCE_DIR}/resources resources
             FILE ${CMAKE_SOURCE_DIR}/app/platforms/psv/sce_sys sce_sys
             FILE ${CMAKE_SOURCE_DIR}/app/platforms/psv/module/ module
+            FILE ${CMAKE_SOURCE_DIR}/extern/borealis/psv/module/libpvrPSP2_WSEGL.suprx module/libpvrPSP2_WSEGL.suprx
         )
     endif()
 elseif (PLATFORM_SWITCH)
@@ -636,7 +642,12 @@ if (APPLE)
             m)
     endif ()
 elseif (PLATFORM_PSV)
-    target_link_libraries(${PROJECT_NAME} PRIVATE mp3lame libGLESv2_stub)
+    target_link_libraries(${PROJECT_NAME} PRIVATE
+        mp3lame
+        libGLESv2_stub
+        SceAudiodec_stub
+        SceVideodec_stub
+        SceCodecEngine_stub)
 endif ()
 
 if (WIN32 AND PLATFORM_DESKTOP AND MOONLIGHT_DESKTOP_USE_SYSTEM_PACKAGES AND

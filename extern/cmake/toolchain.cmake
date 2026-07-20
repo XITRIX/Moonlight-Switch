@@ -225,8 +225,9 @@ function(moonlight_prepare_apple_mobile_vcpkg)
     message(STATUS "Prepared Apple mobile multi-SDK dependency staging at ${_moonlight_stage_root}")
 endfunction()
 
-# For unknown reason PLATFORM_SWITCH reports APPLE flag as TRUE
-if (APPLE AND NOT PLATFORM_SWITCH)
+# Cross-compiling from macOS reports the host APPLE flag until the target
+# toolchain is loaded. Do not leak desktop Apple defines into console builds.
+if (APPLE AND NOT (PLATFORM_SWITCH OR PLATFORM_PSV))
     set(PLATFORM_APPLE ON)
     add_definitions(-DPLATFORM_APPLE)
 endif ()
@@ -461,7 +462,9 @@ elseif(PLATFORM_PSV)
     set(CMAKE_TOOLCHAIN_FILE "$ENV{VITASDK}/share/vita.toolchain.cmake" CACHE PATH "toolchain file")
     set(VITASDK $ENV{VITASDK} CACHE BOOL "VITASDK")
     include("${VITASDK}/share/vita.cmake" REQUIRED)
-    add_definitions(-D__psp2__ -D__PSV__)
+    # These are the platform spellings used by VitaSDK, Borealis, and
+    # moonlight-common-c respectively.
+    add_definitions(-D__psp2__ -D__PSV__ -D__vita__)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-error=pedantic -Wno-psabi -g")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error=pedantic -Wno-psabi -g")
 elseif (PLATFORM_SWITCH)

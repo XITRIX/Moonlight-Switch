@@ -3,3 +3,4 @@ cmake-build-debug
 libromfs-generator
 build*
 vcpkg_installed
+.psv-logs/

@@ -5,7 +5,22 @@
 
 #include "GLShaders.hpp"
 
+#include <cstring>
+
 // tex width | frame width | frame height | from color space | to color space
+#if defined(USE_GLES2)
+static const int nv12Planes[][5] = {
+    {1, 1, 1, GL_LUMINANCE, GL_LUMINANCE},              // Y
+    {2, 2, 2, GL_LUMINANCE_ALPHA, GL_LUMINANCE_ALPHA},  // UV
+    {0, 0, 0, 0, 0},                                    // NOT EXISTS
+};
+
+static const int yuv420Planes[][5] = {
+    {1, 1, 1, GL_LUMINANCE, GL_LUMINANCE},  // Y
+    {1, 2, 2, GL_LUMINANCE, GL_LUMINANCE},  // U
+    {1, 2, 2, GL_LUMINANCE, GL_LUMINANCE},  // V
+};
+#else
 static const int nv12Planes[][5] = {
     {1, 1, 1, GL_R8, GL_RED},  // Y
     {2, 2, 2, GL_RG8, GL_RG},  // UV
@@ -17,12 +32,15 @@ static const int yuv420Planes[][5] = {
     {1, 2, 2, GL_R8, GL_RED},  // U
     {1, 2, 2, GL_R8, GL_RED},  // V
 };
+#endif
 
+#if !defined(USE_GLES2)
 static const int p010Planes[][5] = {
     {1, 1, 2, GL_R16, GL_RED},  // Y
     {2, 2, 4, GL_RG16, GL_RG},  // UV
     {0, 0, 0, 0, 0},            // NOT EXISTS
 };
+#endif
 
 static const float vertices[] = {-1.0f, -1.0f, 1.0f, -1.0f,
                                  -1.0f, 1.0f,  1.0f, 1.0f};
@@ -109,9 +127,11 @@ GLVideoRenderer::~GLVideoRenderer() {
         glDeleteBuffers(1, &m_vbo);
     }
 
+#if !defined(USE_GLES2)
     if (m_vao) {
         glDeleteVertexArrays(1, &m_vao);
     }
+#endif
 
     for (int i = 0; i < currentFrameTypePlanesNum; i++) {
         if (m_texture_id[i]) {
@@ -129,12 +149,14 @@ void GLVideoRenderer::initialize(AVFrame* frame) {
     GLuint vert = glCreateShader(GL_VERTEX_SHADER);
     GLuint frag = glCreateShader(GL_FRAGMENT_SHADER);
 
+#if defined(USE_GLES2)
+    glShaderSource(vert, 1, &vertex_shader_string_gles2, nullptr);
+#else
     bool use_gl_core = use_core_shaders();
-
     glShaderSource(vert, 1,
-                   use_gl_core ? &vertex_shader_string_core
-                               : &vertex_shader_string,
-                   nullptr);
+        use_gl_core ? &vertex_shader_string_core : &vertex_shader_string,
+        nullptr);
+#endif
     glCompileShader(vert);
     check_shader(vert);
 
@@ -144,20 +166,33 @@ void GLVideoRenderer::initialize(AVFrame* frame) {
             currentPlanes = yuv420Planes;
             currentFormat = GL_UNSIGNED_BYTE;
 
+#if defined(USE_GLES2)
+            glShaderSource(frag, 1, &fragment_three_planes_shader_string_gles2, nullptr);
+#else
             glShaderSource(frag, 1,
-                   use_gl_core ? &fragment_three_planes_shader_string_core
-                               : &fragment_three_planes_shader_string, nullptr);
+                use_gl_core ? &fragment_three_planes_shader_string_core
+                            : &fragment_three_planes_shader_string, nullptr);
+#endif
             break;
         case AV_PIX_FMT_NV12:
             currentFrameTypePlanesNum = 2;
             currentPlanes = nv12Planes;
             currentFormat = GL_UNSIGNED_BYTE;
 
+#if defined(USE_GLES2)
+            glShaderSource(frag, 1, &fragment_two_planes_shader_string_gles2, nullptr);
+#else
             glShaderSource(frag, 1,
-                   use_gl_core ? &fragment_two_planes_shader_string_core
-                               : &fragment_two_planes_shader_string, nullptr);
+                use_gl_core ? &fragment_two_planes_shader_string_core
+                            : &fragment_two_planes_shader_string, nullptr);
+#endif
             break;
         case AV_PIX_FMT_P010:
+#if defined(USE_GLES2)
+            brls::Logger::error("GL: 10-bit P010 video is not supported by GLES 2");
+            m_is_initialized = false;
+            return;
+#else
             currentFrameTypePlanesNum = 2;
             currentPlanes = p010Planes;
             currentFormat = GL_UNSIGNED_SHORT;
@@ -166,6 +201,7 @@ void GLVideoRenderer::initialize(AVFrame* frame) {
                    use_gl_core ? &fragment_two_planes_shader_string_core
                                : &fragment_two_planes_shader_string, nullptr);
             break;
+#endif
         default:
             brls::Logger::info("GL: Unknown frame format! - {}", frame->format);
             m_is_initialized = false;
@@ -184,7 +220,9 @@ void GLVideoRenderer::initialize(AVFrame* frame) {
     glDeleteShader(frag);
 
     glGenBuffers(1, &m_vbo);
+#if !defined(USE_GLES2)
     glGenVertexArrays(1, &m_vao);
+#endif
 
     for (int i = 0; i < currentFrameTypePlanesNum; i++) {
         m_texture_uniform[i] =
@@ -197,13 +235,15 @@ void GLVideoRenderer::initialize(AVFrame* frame) {
 }
 
 void GLVideoRenderer::bindTexture(int id) {
-    float borderColorInternal[] = {borderColor[id], 0.0f, 0.0f, 1.0f};
     glBindTexture(GL_TEXTURE_2D, m_texture_id[id]);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+#if !defined(USE_GLES2)
+    float borderColorInternal[] = {borderColor[id], 0.0f, 0.0f, 1.0f};
     glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColorInternal);
+#endif
     textureWidth[id] = m_frame_width / currentPlanes[id][1];
     textureHeight[id] = m_frame_height / currentPlanes[id][2];
     glTexImage2D(GL_TEXTURE_2D, 0, currentPlanes[id][3], textureWidth[id], textureHeight[id],
@@ -232,26 +272,41 @@ void GLVideoRenderer::checkAndInitialize(int width, int height,
 
 void GLVideoRenderer::checkAndUpdateScale(int width, int height,
                                           AVFrame* frame) {
-    if ((m_frame_width != frame->width) || (m_frame_height != frame->height) ||
-        (m_screen_width != width) || (m_screen_height != height) ||
-        !use_core_shaders()) // Dirty fix for GLES, need to investigate the source of issue
-    {
+    bool textureLayoutChanged =
+        (m_frame_width != frame->width) ||
+        (m_frame_height != frame->height) ||
+        (m_screen_width != width) ||
+        (m_screen_height != height);
 
+#if !defined(__PSV__)
+    // Some GLES implementations historically needed this refresh. Recreating
+    // all YUV textures every frame is prohibitively expensive on Vita, so keep
+    // them stable until the frame or viewport geometry actually changes.
+    textureLayoutChanged = textureLayoutChanged || !use_core_shaders();
+#endif
+
+    if (textureLayoutChanged) {
         m_frame_width = frame->width;
         m_frame_height = frame->height;
 
         m_screen_width = width;
         m_screen_height = height;
+    }
 
-        glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
+    // Borealis/NanoVG changes the active vertex buffer and attribute state
+    // while drawing the in-game overlay. Restore our quad state on every
+    // video draw, even when the texture dimensions have not changed.
+    glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
+    if (textureLayoutChanged) {
         glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices,
                      GL_STATIC_DRAW);
+    }
 
-        int positionLocation =
-            glGetAttribLocation(m_shader_program, "position");
-        glEnableVertexAttribArray(positionLocation);
-        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
+    int positionLocation = glGetAttribLocation(m_shader_program, "position");
+    glEnableVertexAttribArray(positionLocation);
+    glVertexAttribPointer(positionLocation, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
 
+    if (textureLayoutChanged) {
         for (int i = 0; i < currentFrameTypePlanesNum; i++) {
             if (m_texture_id[i]) {
                 glDeleteTextures(1, &m_texture_id[i]);
@@ -298,7 +353,9 @@ void GLVideoRenderer::draw(NVGcontext* vg, int width, int height,
         return;
     }
 
+#if !defined(USE_GLES2)
     glBindVertexArray(m_vao);
+#endif
 
     glUseProgram(m_shader_program);
     checkAndUpdateScale(width, height, frame);
@@ -307,11 +364,25 @@ void GLVideoRenderer::draw(NVGcontext* vg, int width, int height,
     glClear(GL_COLOR_BUFFER_BIT);
 
     for (int i = 0; i < currentFrameTypePlanesNum; i++) {
-        uint8_t* image = frame->data[i];
+        const uint8_t* image = frame->data[i];
         glActiveTexture(GL_TEXTURE0 + i);
-		int real_width = frame->linesize[i] / currentPlanes[i][0];
         glBindTexture(GL_TEXTURE_2D, m_texture_id[i]);
+#if defined(USE_GLES2)
+        const int bytesPerComponent = currentFormat == GL_UNSIGNED_SHORT ? 2 : 1;
+        const size_t rowBytes = static_cast<size_t>(textureWidth[i]) *
+                                currentPlanes[i][0] * bytesPerComponent;
+        if (static_cast<size_t>(frame->linesize[i]) != rowBytes) {
+            uploadBuffer[i].resize(rowBytes * textureHeight[i]);
+            for (int row = 0; row < textureHeight[i]; row++) {
+                std::memcpy(uploadBuffer[i].data() + rowBytes * row,
+                    image + frame->linesize[i] * row, rowBytes);
+            }
+            image = uploadBuffer[i].data();
+        }
+#else
+        int real_width = frame->linesize[i] / currentPlanes[i][0];
         glPixelStorei(GL_UNPACK_ROW_LENGTH, real_width);
+#endif
         glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, textureWidth[i],
                         textureHeight[i], currentPlanes[i][4], currentFormat, image);
         glActiveTexture(GL_TEXTURE0);

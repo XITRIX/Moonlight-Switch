@@ -39,6 +39,10 @@ struct ipv6_mreq {
 };
 #endif
 
+#if defined(PLATFORM_PSV)
+#include <psp2/net/netctl.h>
+#endif
+
 #ifndef MULTICAST_DISABLED
 extern "C" {
 #include <mdns.h>
@@ -293,6 +297,25 @@ static uint32_t get_my_ip_address() {
     close(fd);
 #elif defined(__SWITCH__)
     nifmGetCurrentIpAddress(&address);
+#elif defined(PLATFORM_PSV)
+    SceNetCtlInfo info{};
+    const int result =
+        sceNetCtlInetGetInfo(SCE_NETCTL_INFO_GET_IP_ADDRESS, &info);
+    if (result < 0) {
+        Logger::warning(
+            "Vita host discovery could not obtain the local IP address: 0x{:08x}",
+            static_cast<uint32_t>(result));
+        return 0;
+    }
+
+    in_addr parsedAddress{};
+    if (inet_pton(AF_INET, info.ip_address, &parsedAddress) != 1) {
+        Logger::warning("Vita host discovery received an invalid local IP address: {}",
+                        info.ip_address);
+        return 0;
+    }
+    Logger::info("Vita host discovery local address: {}", info.ip_address);
+    address = parsedAddress.s_addr;
 #endif
     return address;
 }

@@ -5,6 +5,8 @@
 #include "borealis.hpp"
 #include "MoonlightSession.hpp"
 
+#include <cstring>
+
 #if defined(_WIN32)
 #if defined(__SDL3__)
 #include <SDL3/SDL.h>
@@ -98,6 +100,15 @@ int FFmpegVideoDecoder::configure_decoder_context(bool enable_hw_decode,
 
     m_decoder_context->width = m_video_width;
     m_decoder_context->height = m_video_height;
+#if defined(__PSV__)
+    // The Vita hardware decoder also exposes direct-rendering pixel formats,
+    // but the GLES renderer currently uploads ordinary CPU-backed planes.
+    // Request NV12 so FFmpeg performs the hardware-output copy for us.
+    if (m_decoder != nullptr && m_decoder->name != nullptr &&
+        std::strcmp(m_decoder->name, "h264_vita") == 0) {
+        m_decoder_context->pix_fmt = AV_PIX_FMT_NV12;
+    }
+#endif
 #if defined(PLATFORM_SWITCH)
 #ifdef BOREALIS_USE_DEKO3D
     if (ffmpeg::decoder::configureDeko3DDecoderContext(m_decoder_context, enable_hw_decode) < 0) {
@@ -404,6 +415,28 @@ int FFmpegVideoDecoder::setup(int video_format, int width, int height,
     } else {
         // Unsupported decoder type
     }
+#elif defined(__PSV__)
+    if (video_format & VIDEO_FORMAT_MASK_H264) {
+        if (Settings::instance().use_hw_decoding()) {
+            m_decoder = avcodec_find_decoder_by_name("h264_vita");
+            if (m_decoder != nullptr) {
+                brls::Logger::info(
+                    "FFmpeg: Using Vita sceVideodec H.264 decoder");
+            } else {
+                brls::Logger::warning(
+                    "FFmpeg: Vita H.264 hardware decoder unavailable; falling back to software");
+            }
+        }
+        if (m_decoder == nullptr) {
+            m_decoder = avcodec_find_decoder(AV_CODEC_ID_H264);
+        }
+        m_codec_id = AV_CODEC_ID_H264;
+    } else if (video_format & VIDEO_FORMAT_MASK_H265) {
+        m_decoder = avcodec_find_decoder(AV_CODEC_ID_HEVC);
+        m_codec_id = AV_CODEC_ID_HEVC;
+    } else {
+        // Unsupported decoder type
+    }
 #else
     if (video_format & VIDEO_FORMAT_MASK_H264) {
         m_decoder = avcodec_find_decoder(AV_CODEC_ID_H264);
@@ -471,8 +504,16 @@ int FFmpegVideoDecoder::setup(int video_format, int width, int height,
         brls::Logger::warning("FFmpeg: HW decoding disabled or unsupported by Platform");
     }
 
+#if defined(__PSV__)
+    // h264_vita is internally driven by sceVideodec and does not support
+    // FFmpeg slice workers. Respect the selected codec's advertised support
+    // rather than assuming all H.264 decoders can use slice threading.
+    m_supports_slice_threading =
+        (m_decoder->capabilities & AV_CODEC_CAP_SLICE_THREADS) != 0;
+#else
     m_supports_slice_threading =
         (video_format & (VIDEO_FORMAT_MASK_H264 | VIDEO_FORMAT_MASK_H265)) != 0;
+#endif
     m_use_decoder_threads =
         !m_hw_decode_active && m_decoder_threads_setting > 1 && m_supports_slice_threading;
     m_use_low_delay =

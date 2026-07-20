@@ -15,6 +15,7 @@ extern "C"
 #else
 #include <glad/glad.h>
 #endif
+#include <vector>
 #pragma once
 
 #define PLANES_NUM_MAX 3
@@ -37,8 +38,9 @@ class GLVideoRenderer : public IVideoRenderer {
     bool m_is_initialized = false;
     GLuint m_texture_id[PLANES_NUM_MAX] = {0, 0, 0};
     GLint m_texture_uniform[PLANES_NUM_MAX];
-    GLuint m_shader_program;
-    GLuint m_vbo, m_vao;
+    GLuint m_shader_program = 0;
+    GLuint m_vbo = 0;
+    GLuint m_vao = 0;
     int m_frame_width = 0;
     int m_frame_height = 0;
     int m_screen_width = 0;
@@ -48,6 +50,7 @@ class GLVideoRenderer : public IVideoRenderer {
     int m_uv_data_location;
     int textureWidth[PLANES_NUM_MAX];
     int textureHeight[PLANES_NUM_MAX];
+    std::vector<uint8_t> uploadBuffer[PLANES_NUM_MAX];
     float borderColor[PLANES_NUM_MAX] = {0.0f, 0.5f, 0.5f};
     VideoRenderStats m_video_render_stats_progress = {};
     VideoRenderStats m_video_render_stats_cache = {};

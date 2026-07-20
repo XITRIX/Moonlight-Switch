@@ -43,6 +43,53 @@ void main() {
 }
 )glsl";
 
+static const char* vertex_shader_string_gles2 = R"glsl(
+attribute vec2 position;
+varying mediump vec2 tex_position;
+
+void main() {
+    gl_Position = vec4(position, 1.0, 1.0);
+    tex_position = vec2(position.x * 0.5 + 0.5, 0.5 - position.y * 0.5);
+}
+)glsl";
+
+static const char* fragment_two_planes_shader_string_gles2 = R"glsl(
+precision mediump float;
+uniform sampler2D plane0;
+uniform sampler2D plane1;
+uniform mat3 yuvmat;
+uniform vec3 offset;
+uniform vec4 uv_data;
+varying mediump vec2 tex_position;
+
+void main() {
+    vec2 uv = (tex_position - uv_data.xy) * uv_data.zw;
+    vec3 YCbCr = vec3(texture2D(plane0, uv).r,
+                      texture2D(plane1, uv).r,
+                      texture2D(plane1, uv).a) - offset;
+    gl_FragColor = vec4(clamp(yuvmat * YCbCr, 0.0, 1.0), 1.0);
+}
+)glsl";
+
+static const char* fragment_three_planes_shader_string_gles2 = R"glsl(
+precision mediump float;
+uniform sampler2D plane0;
+uniform sampler2D plane1;
+uniform sampler2D plane2;
+uniform mat3 yuvmat;
+uniform vec3 offset;
+uniform vec4 uv_data;
+varying mediump vec2 tex_position;
+
+void main() {
+    vec2 uv = (tex_position - uv_data.xy) * uv_data.zw;
+    vec3 YCbCr = vec3(texture2D(plane0, uv).r,
+                      texture2D(plane1, uv).r,
+                      texture2D(plane2, uv).r) - offset;
+    gl_FragColor = vec4(clamp(yuvmat * YCbCr, 0.0, 1.0), 1.0);
+}
+)glsl";
+
 static const char* vertex_shader_string = R"glsl(#version 300 es
 in vec2 position;
 out vec2 tex_position;

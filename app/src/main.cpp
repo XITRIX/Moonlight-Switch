@@ -10,6 +10,16 @@
 #include <switch.h>
 #endif
 
+#ifdef __PSV__
+extern "C" {
+// PVR_PSP2 allocates its EGL/GLES state from the Sony libc heap. Match the
+// memory model used by working Borealis Vita applications such as wiliwili.
+unsigned int _newlib_heap_size_user      = 220 * 1024 * 1024;
+unsigned int _pthread_stack_default_user = 2 * 1024 * 1024;
+unsigned int sceLibcHeapSize             = 24 * 1024 * 1024;
+}
+#endif
+
 #include <cstdlib>
 
 #include <borealis.hpp>
@@ -162,8 +172,19 @@ int main(int argc, char* argv[]) {
     brls::Application::enableDebuggingView(Settings::instance().write_log());
     brls::Application::setSwapInputKeys(Settings::instance().swap_ui_keys());
 
-    // Run the app
-    while (brls::Application::mainLoop()) {}
+    // Run the app. The Vita development loop waits for this marker so a
+    // successful launch means at least one complete Borealis frame rendered.
+#ifdef __PSV__
+    bool vitaHealthReported = false;
+#endif
+    while (brls::Application::mainLoop()) {
+#ifdef __PSV__
+        if (!vitaHealthReported) {
+            brls::Logger::info("VITA_HEALTH: READY");
+            vitaHealthReported = true;
+        }
+#endif
+    }
 
     // Exit
 #if defined(PLATFORM_TVOS)
