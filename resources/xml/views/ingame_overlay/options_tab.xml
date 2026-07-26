@@ -34,6 +34,9 @@
             <brls:BooleanCell
                 id="touchscreen_mouse_mode"/>
 
+            <brls:SelectorCell
+                id="switch_display"/>
+
             <brls:Header
                 title="@i18n/settings/guide_key"
                 paddingTop="60"/>

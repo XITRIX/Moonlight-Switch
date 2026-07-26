@@ -177,6 +177,7 @@
         "connection": "連接選項",
         "debug_info": "除錯訊息",
         "disconnect": "斷開連接",
+        "display": "顯示器",
         "esc": "ESC按鍵",
         "input": "輸入",
         "keys": "按鍵",
@@ -185,6 +186,7 @@
         "mouse_speed": "滑鼠速度",
         "options": "選項",
         "show_logs": "顯示日誌",
+        "switch_display": "切換顯示器",
         "terminate": "終止應用程式",
         "volume": "音量"
     },

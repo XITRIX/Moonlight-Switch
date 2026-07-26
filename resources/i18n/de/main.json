@@ -177,6 +177,7 @@
         "connection": "Verbindung",
         "debug_info": "Debug Informationen",
         "disconnect": "Verbindung trennen",
+        "display": "Bildschirm",
         "esc": "ESC Taste",
         "input": "Eingabe",
         "keys": "Tasten",
@@ -185,6 +186,7 @@
         "mouse_speed": "Mausbeschleunigung",
         "options": "Einstellungen",
         "show_logs": "Protokolle anzeigen",
+        "switch_display": "Bildschirm wechseln",
         "terminate": "Programm beenden",
         "volume": "Lautstärke"
     },

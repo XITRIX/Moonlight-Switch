@@ -177,6 +177,7 @@
         "connection": "Connection",
         "debug_info": "Debug info",
         "disconnect": "Disconnect",
+        "display": "Display",
         "esc": "ESC button",
         "input": "Input",
         "keys": "Keys",
@@ -185,6 +186,7 @@
         "mouse_speed": "Mouse acceleration",
         "options": "Options",
         "show_logs": "Show logs",
+        "switch_display": "Switch display",
         "terminate": "Terminate app",
         "volume": "Volume"
     },

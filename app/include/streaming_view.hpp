@@ -30,6 +30,10 @@ class StreamingView : public brls::Box {
 
     void terminate(bool terminateApp);
 
+    // Whether the connected host is Sunshine, which supports switching the
+    // streamed display via the Ctrl+Alt+Shift+F<n> key combo.
+    bool isSunshineHost() const { return sunshineHost; }
+
     bool draw_stats = false;
 
     Host getHost() { return host; }
@@ -44,6 +48,7 @@ class StreamingView : public brls::Box {
     Box* keyboardHolder = nullptr;
     KeyboardView* keyboard = nullptr;
     bool blocked = false;
+    bool sunshineHost = false;
     bool terminated = false;
     bool tempInputLock = false;
     brls::Event<brls::KeyState>::Subscription keysSubscription;

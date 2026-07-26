@@ -177,6 +177,7 @@
         "connection": "Conexão",
         "debug_info": "Informações de debug",
         "disconnect": "Desconectar",
+        "display": "Tela",
         "esc": "Botão ESC",
         "input": "Entrada",
         "keys": "Teclas",
@@ -185,6 +186,7 @@
         "mouse_speed": "Aceleração do mouse",
         "options": "Opções",
         "show_logs": "Mostrar logs",
+        "switch_display": "Trocar de tela",
         "terminate": "Encerrar aplicativo",
         "volume": "Volume"
     },
