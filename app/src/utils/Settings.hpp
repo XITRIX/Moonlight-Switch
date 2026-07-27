@@ -3,6 +3,7 @@
 #include "Singleton.hpp"
 #include <borealis.hpp>
 #include <map>
+#include <cctype>
 #include <cstdio>
 #include <string>
 #include <utility>
@@ -66,8 +67,30 @@ struct Host {
     }
 };
 
+/**
+ * Whether a MAC address identifies a host.
+ *
+ * A host is not required to report one. Sunshine in particular answers
+ * serverinfo with an all zero MAC when it cannot determine the real one, and
+ * that is not an identity: two different hosts would both carry it, and it is
+ * not a usable Wake-on-LAN target. Treat it the same as no MAC at all.
+ */
+inline bool is_usable_mac(const std::string& mac) {
+    for (unsigned char ch : mac) {
+        if (ch == ':' || ch == '-' || ch == ' ')
+            continue;
+        if (!std::isxdigit(ch))
+            return false;
+        if (ch != '0')
+            return true;
+    }
+
+    // Either empty, or every digit was a zero.
+    return false;
+}
+
 inline bool hosts_match(const Host& lhs, const Host& rhs) {
-    if (!lhs.mac.empty() && !rhs.mac.empty())
+    if (is_usable_mac(lhs.mac) && is_usable_mac(rhs.mac))
         return lhs.mac == rhs.mac;
 
     for (const auto& address : lhs.connection_addresses()) {

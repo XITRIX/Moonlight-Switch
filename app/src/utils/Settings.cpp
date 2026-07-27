@@ -33,7 +33,7 @@ void merge_host(Host& target, const Host& source) {
         target.remoteAddress = source.remoteAddress;
     if (!source.hostname.empty())
         target.hostname = source.hostname;
-    if (!source.mac.empty())
+    if (is_usable_mac(source.mac))
         target.mac = source.mac;
 }
 
@@ -82,7 +82,7 @@ void Settings::set_working_dir(const std::string& working_dir) {
 void Settings::add_host(const Host& host) {
     if (Host* existing = find_host(m_hosts, host)) {
         merge_host(*existing, host);
-    } else if (!host.preferred_address().empty() && !host.mac.empty()) {
+    } else if (!host.preferred_address().empty() && is_usable_mac(host.mac)) {
         m_hosts.push_back(host);
     }
 
