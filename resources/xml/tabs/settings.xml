@@ -151,6 +151,16 @@
                 
             <brls:SelectorCell
                 id="overlay_by_system_button"/>
+
+            <brls:Header
+                title="@i18n/settings/host_shortcuts"
+                paddingTop="60"/>
+
+            <brls:DetailCell
+                id="host_close_app_buttons"/>
+
+            <brls:DetailCell
+                id="host_switch_window_buttons"/>
                 
             <brls:Header
                 title="@i18n/settings/mouse_input"

@@ -12,7 +12,7 @@
 #include "settings_tab.hpp"
 #include "Settings.hpp"
 #include "helper.hpp"
-#include "button_selecting_dialog.hpp"
+#include "key_combo_settings.hpp"
 #include "mapping_layout_editor.hpp"
 #include "UpscalingSupport.hpp"
 #include <cmath>
@@ -547,18 +547,10 @@ SettingsTab::SettingsTab() {
                           [](bool value) { Settings::instance().set_swap_joycon_stick_to_dpad(value); });
 
     guideKeyButtons->setText("settings/guide_key_buttons"_i18n);
-    setupButtonsSelectorCell(guideKeyButtons,
-                             Settings::instance().guide_key_options().buttons);
+    setupKeyComboCell(guideKeyButtons,
+                      Settings::instance().guide_key_options().buttons);
     guideKeyButtons->registerClickAction([this](View* view) {
-        ButtonSelectingDialog* dialog = ButtonSelectingDialog::create(
-            "settings/guide_key_setup_message"_i18n, [this](auto buttons) {
-                auto options = Settings::instance().guide_key_options();
-                options.buttons = buttons;
-                Settings::instance().set_guide_key_options(options);
-                setupButtonsSelectorCell(guideKeyButtons, buttons);
-            });
-
-        dialog->open();
+        openKeyComboDialog(KeyComboAction::GUIDE, guideKeyButtons);
         return true;
     });
 
@@ -621,21 +613,34 @@ SettingsTab::SettingsTab() {
         });
 
     overlayButtons->setText("settings/overlay_buttons"_i18n);
-    setupButtonsSelectorCell(overlayButtons,
-                             Settings::instance().overlay_options().buttons);
+    setupKeyComboCell(overlayButtons,
+                      Settings::instance().overlay_options().buttons);
     overlayButtons->registerClickAction([this](View* view) {
-        ButtonSelectingDialog* dialog = ButtonSelectingDialog::create(
-            "settings/overlay_setup_message"_i18n, [this](auto buttons) {
-                if (buttons.empty())
-                    return;
+        openKeyComboDialog(KeyComboAction::OVERLAY, overlayButtons, true);
+        return true;
+    });
 
-                auto options = Settings::instance().overlay_options();
-                options.buttons = buttons;
-                Settings::instance().set_overlay_options(options);
-                setupButtonsSelectorCell(overlayButtons, buttons);
-            });
+    hostCloseAppButtons->setText("settings/host_close_app"_i18n);
+    setupKeyComboCell(
+        hostCloseAppButtons,
+        Settings::instance()
+            .key_combo_options(KeyComboAction::HOST_CLOSE_APP)
+            .buttons);
+    hostCloseAppButtons->registerClickAction([this](View* view) {
+        openKeyComboDialog(KeyComboAction::HOST_CLOSE_APP,
+                           hostCloseAppButtons);
+        return true;
+    });
 
-        dialog->open();
+    hostSwitchWindowButtons->setText("settings/host_switch_window"_i18n);
+    setupKeyComboCell(
+        hostSwitchWindowButtons,
+        Settings::instance()
+            .key_combo_options(KeyComboAction::HOST_SWITCH_WINDOW)
+            .buttons);
+    hostSwitchWindowButtons->registerClickAction([this](View* view) {
+        openKeyComboDialog(KeyComboAction::HOST_SWITCH_WINDOW,
+                           hostSwitchWindowButtons);
         return true;
     });
 
@@ -649,18 +654,10 @@ SettingsTab::SettingsTab() {
         });
 
     mouseInputButtons->setText("settings/overlay_buttons"_i18n);
-    setupButtonsSelectorCell(
+    setupKeyComboCell(
         mouseInputButtons, Settings::instance().mouse_input_options().buttons);
     mouseInputButtons->registerClickAction([this](View* view) {
-        ButtonSelectingDialog* dialog = ButtonSelectingDialog::create(
-            "settings/mouse_input_setup_message"_i18n, [this](auto buttons) {
-                auto options = Settings::instance().mouse_input_options();
-                options.buttons = buttons;
-                Settings::instance().set_mouse_input_options(options);
-                setupButtonsSelectorCell(mouseInputButtons, buttons);
-            });
-
-        dialog->open();
+        openKeyComboDialog(KeyComboAction::MOUSE_INPUT, mouseInputButtons);
         return true;
     });
 
@@ -763,34 +760,6 @@ void SettingsTab::updateDeadZoneItems() {
         deadzoneStickRight->setDetailTextColor(Application::getTheme()["brls/text_disabled"]);
         deadzoneStickRight->setDetailText("hints/off"_i18n);
     }
-}
-
-void SettingsTab::setupButtonsSelectorCell(
-    brls::DetailCell* cell, std::vector<ControllerButton> buttons) {
-    cell->setDetailText(getTextFromButtons(buttons));
-    cell->setDetailTextColor(getColorFromButtons(buttons));
-}
-
-std::string
-SettingsTab::getTextFromButtons(std::vector<ControllerButton> buttons) {
-    std::string buttonsText = "";
-    if (buttons.size() > 0) {
-        for (int i = 0; i < buttons.size(); i++) {
-            buttonsText += brls::Hint::getKeyIcon(buttons[i], true);
-            if (i < buttons.size() - 1)
-                buttonsText += " + ";
-        }
-    } else {
-        buttonsText = "hints/off"_i18n;
-    }
-    return buttonsText;
-}
-
-NVGcolor
-SettingsTab::getColorFromButtons(std::vector<brls::ControllerButton> buttons) {
-    Theme theme = Application::getTheme();
-    return buttons.empty() ? theme["brls/text_disabled"]
-                           : theme["brls/list/listItem_value_color"];
 }
 
 SettingsTab::~SettingsTab() { Settings::instance().save(); }

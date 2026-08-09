@@ -3,6 +3,7 @@
 #include "Singleton.hpp"
 #include <borealis.hpp>
 #include <map>
+#include <optional>
 #include <cstdio>
 #include <string>
 #include <utility>
@@ -33,6 +34,14 @@ struct KeyMappingLayout {
 struct KeyComboOptions {
     int holdTime;
     std::vector<brls::ControllerButton> buttons;
+};
+
+enum class KeyComboAction : int {
+    GUIDE,
+    OVERLAY,
+    MOUSE_INPUT,
+    HOST_CLOSE_APP,
+    HOST_SWITCH_WINDOW,
 };
 
 struct App {
@@ -274,6 +283,13 @@ class Settings : public Singleton<Settings> {
     void set_mouse_input_options(KeyComboOptions options) { m_mouse_input_options = std::move(options); }
     [[nodiscard]] KeyComboOptions mouse_input_options() const { return m_mouse_input_options; }
 
+    void set_key_combo_options(KeyComboAction action, KeyComboOptions options);
+    [[nodiscard]] KeyComboOptions
+    key_combo_options(KeyComboAction action) const;
+    [[nodiscard]] std::optional<KeyComboAction> key_combo_conflict(
+        KeyComboAction action,
+        const std::vector<brls::ControllerButton>& buttons) const;
+
     void set_volume_amplification(bool allow) { m_volume_amplification = allow; }
     [[nodiscard]] bool get_volume_amplification() const { return m_volume_amplification; }
 
@@ -389,9 +405,18 @@ class Settings : public Singleton<Settings> {
         .holdTime = 0,
         .buttons = {},
     };
+    KeyComboOptions m_host_close_app_options{
+        .holdTime = 1,
+        .buttons = {},
+    };
+    KeyComboOptions m_host_switch_window_options{
+        .holdTime = 1,
+        .buttons = {},
+    };
 
     float m_deadzone_stick_left = 0;
     float m_deadzone_stick_right = 0;
 
     void loadBaseLayouts();
+    void sanitizeHostShortcutOptions();
 };

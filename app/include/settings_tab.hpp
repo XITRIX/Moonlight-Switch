@@ -45,6 +45,8 @@ class SettingsTab : public brls::Box {
     BRLS_BIND(brls::SelectorCell, overlayTime, "overlay_time");
     BRLS_BIND(brls::DetailCell, overlayButtons, "overlay_buttons");
     BRLS_BIND(brls::SelectorCell, overlayBySystemButton, "overlay_by_system_button");
+    BRLS_BIND(brls::DetailCell, hostCloseAppButtons, "host_close_app_buttons");
+    BRLS_BIND(brls::DetailCell, hostSwitchWindowButtons, "host_switch_window_buttons");
     BRLS_BIND(brls::SelectorCell, mouseInputTime, "mouse_input_time");
     BRLS_BIND(brls::DetailCell, mouseInputButtons, "mouse_input_buttons");
     BRLS_BIND(brls::SelectorCell, keyboardType, "keyboard_type");
@@ -60,9 +62,5 @@ class SettingsTab : public brls::Box {
     static brls::View* create();
 
   private:
-    void setupButtonsSelectorCell(brls::DetailCell* cell,
-                                  std::vector<brls::ControllerButton> buttons);
-    std::string getTextFromButtons(std::vector<brls::ControllerButton> buttons);
-    NVGcolor getColorFromButtons(std::vector<brls::ControllerButton> buttons);
     void updateDeadZoneItems();
 };

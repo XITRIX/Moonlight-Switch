@@ -5,12 +5,65 @@
 #include <iomanip>
 #include <climits>
 #include <filesystem>
+#include <set>
 
 using namespace brls;
 using namespace brls::literals;
 
 namespace {
 namespace fs = std::filesystem;
+
+bool key_combos_conflict(
+    const std::vector<brls::ControllerButton>& lhs,
+    const std::vector<brls::ControllerButton>& rhs) {
+    if (lhs.empty() || rhs.empty())
+        return false;
+
+    std::set<brls::ControllerButton> lhsButtons(lhs.begin(), lhs.end());
+    std::set<brls::ControllerButton> rhsButtons(rhs.begin(), rhs.end());
+    const auto& smaller = lhsButtons.size() < rhsButtons.size() ? lhsButtons
+                                                                : rhsButtons;
+    const auto& larger = lhsButtons.size() < rhsButtons.size() ? rhsButtons
+                                                               : lhsButtons;
+    return std::includes(larger.begin(), larger.end(), smaller.begin(),
+                         smaller.end());
+}
+
+void load_button_array(json_t* settings, const char* key,
+                       std::vector<brls::ControllerButton>& buttons) {
+    json_t* jsonButtons = json_object_get(settings, key);
+    if (!json_is_array(jsonButtons))
+        return;
+
+    buttons.clear();
+    const size_t size = json_array_size(jsonButtons);
+    for (size_t i = 0; i < size; i++) {
+        json_t* button = json_array_get(jsonButtons, i);
+        if (!json_is_integer(button))
+            continue;
+
+        const auto value = json_integer_value(button);
+        if (value < 0 || value >= brls::ControllerButton::_BUTTON_MAX)
+            continue;
+
+        const auto controllerButton =
+            static_cast<brls::ControllerButton>(value);
+        if (std::find(buttons.begin(), buttons.end(), controllerButton) ==
+            buttons.end())
+            buttons.push_back(controllerButton);
+    }
+}
+
+void save_button_array(json_t* settings, const char* key,
+                       const std::vector<brls::ControllerButton>& buttons) {
+    json_t* jsonButtons = json_array();
+    if (!jsonButtons)
+        return;
+
+    for (auto button : buttons)
+        json_array_append_new(jsonButtons, json_integer(button));
+    json_object_set_new(settings, key, jsonButtons);
+}
 
 Host* find_host(std::vector<Host>& hosts, const Host& target) {
     auto it = std::find_if(hosts.begin(), hosts.end(), [target](const Host& host) {
@@ -146,6 +199,96 @@ bool Settings::has_any_favorite() {
     return std::any_of(m_hosts.begin(), m_hosts.end(), [&](const auto &item) {
         return !item.favorites.empty();
     });
+}
+
+void Settings::set_key_combo_options(KeyComboAction action,
+                                     KeyComboOptions options) {
+    switch (action) {
+    case KeyComboAction::GUIDE:
+        m_guide_key_options = std::move(options);
+        break;
+    case KeyComboAction::OVERLAY:
+        m_overlay_options = std::move(options);
+        break;
+    case KeyComboAction::MOUSE_INPUT:
+        m_mouse_input_options = std::move(options);
+        break;
+    case KeyComboAction::HOST_CLOSE_APP:
+        options.holdTime = 1;
+        m_host_close_app_options = std::move(options);
+        break;
+    case KeyComboAction::HOST_SWITCH_WINDOW:
+        options.holdTime = 1;
+        m_host_switch_window_options = std::move(options);
+        break;
+    }
+}
+
+KeyComboOptions Settings::key_combo_options(KeyComboAction action) const {
+    switch (action) {
+    case KeyComboAction::GUIDE:
+        return m_guide_key_options;
+    case KeyComboAction::OVERLAY:
+        return m_overlay_options;
+    case KeyComboAction::MOUSE_INPUT:
+        return m_mouse_input_options;
+    case KeyComboAction::HOST_CLOSE_APP:
+        return m_host_close_app_options;
+    case KeyComboAction::HOST_SWITCH_WINDOW:
+        return m_host_switch_window_options;
+    }
+
+    return {.holdTime = 0, .buttons = {}};
+}
+
+std::optional<KeyComboAction> Settings::key_combo_conflict(
+    KeyComboAction action,
+    const std::vector<brls::ControllerButton>& buttons) const {
+    constexpr KeyComboAction actions[] = {
+        KeyComboAction::GUIDE,
+        KeyComboAction::OVERLAY,
+        KeyComboAction::MOUSE_INPUT,
+        KeyComboAction::HOST_CLOSE_APP,
+        KeyComboAction::HOST_SWITCH_WINDOW,
+    };
+
+    for (auto candidate : actions) {
+        if (candidate == action)
+            continue;
+        if (key_combos_conflict(buttons,
+                                key_combo_options(candidate).buttons))
+            return candidate;
+    }
+
+    return std::nullopt;
+}
+
+void Settings::sanitizeHostShortcutOptions() {
+    constexpr KeyComboAction existingActions[] = {
+        KeyComboAction::GUIDE,
+        KeyComboAction::OVERLAY,
+        KeyComboAction::MOUSE_INPUT,
+    };
+
+    for (auto action : existingActions) {
+        if (key_combos_conflict(m_host_close_app_options.buttons,
+                                key_combo_options(action).buttons)) {
+            m_host_close_app_options.buttons.clear();
+            break;
+        }
+    }
+
+    for (auto action : existingActions) {
+        if (key_combos_conflict(m_host_switch_window_options.buttons,
+                                key_combo_options(action).buttons)) {
+            m_host_switch_window_options.buttons.clear();
+            return;
+        }
+    }
+
+    if (key_combos_conflict(m_host_switch_window_options.buttons,
+                            m_host_close_app_options.buttons))
+        m_host_switch_window_options.buttons.clear();
 }
 
 void Settings::load() {
@@ -426,47 +569,17 @@ void Settings::load() {
                 }
             }
 
-            if (json_t* buttons = json_object_get(settings, "overlay_buttons")) {
-                m_overlay_options.buttons.clear();
-                size_t size = json_array_size(buttons);
-                for (size_t i = 0; i < size; i++) {
-                    if (json_t* j_button = json_array_get(buttons, i)) {
-                        brls::ControllerButton button;
-                        if (json_typeof(j_button) == JSON_INTEGER) {
-                            button = (brls::ControllerButton)json_integer_value(j_button);
-                            m_overlay_options.buttons.push_back(button);
-                        }
-                    }
-                }
-            }
-            
-            if (json_t* buttons = json_object_get(settings, "mouse_input_buttons")) {
-                m_mouse_input_options.buttons.clear();
-                size_t size = json_array_size(buttons);
-                for (size_t i = 0; i < size; i++) {
-                    if (json_t* j_button = json_array_get(buttons, i)) {
-                        brls::ControllerButton button;
-                        if (json_typeof(j_button) == JSON_INTEGER) {
-                            button = (brls::ControllerButton)json_integer_value(j_button);
-                            m_mouse_input_options.buttons.push_back(button);
-                        }
-                    }
-                }
-            }
-            
-            if (json_t* buttons = json_object_get(settings, "guide_key_buttons")) {
-                m_guide_key_options.buttons.clear();
-                size_t size = json_array_size(buttons);
-                for (size_t i = 0; i < size; i++) {
-                    if (json_t* j_button = json_array_get(buttons, i)) {
-                        brls::ControllerButton button;
-                        if (json_typeof(j_button) == JSON_INTEGER) {
-                            button = (brls::ControllerButton)json_integer_value(j_button);
-                            m_guide_key_options.buttons.push_back(button);
-                        }
-                    }
-                }
-            }
+            load_button_array(settings, "overlay_buttons",
+                              m_overlay_options.buttons);
+            load_button_array(settings, "mouse_input_buttons",
+                              m_mouse_input_options.buttons);
+            load_button_array(settings, "guide_key_buttons",
+                              m_guide_key_options.buttons);
+            load_button_array(settings, "host_close_app_buttons",
+                              m_host_close_app_options.buttons);
+            load_button_array(settings, "host_switch_window_buttons",
+                              m_host_switch_window_options.buttons);
+            sanitizeHostShortcutOptions();
         }
 
         if (json_t* layouts = json_object_get(root, "mapping_layouts")) {
@@ -570,26 +683,16 @@ void Settings::save() {
             json_object_set_new(settings, "overlay_system_button", json_integer((int)m_overlay_system_button));
             json_object_set_new(settings, "guide_system_button", json_integer((int)m_guide_system_button));
 
-            if (json_t* overlayButtons = json_array()) {
-                for (auto button: m_overlay_options.buttons) {
-                    json_array_append_new(overlayButtons, json_integer(button));
-                }
-                json_object_set_new(settings, "overlay_buttons", overlayButtons);
-            }
-
-            if (json_t* mouseInputButtons = json_array()) {
-                for (auto button: m_mouse_input_options.buttons) {
-                    json_array_append_new(mouseInputButtons, json_integer(button));
-                }
-                json_object_set_new(settings, "mouse_input_buttons", mouseInputButtons);
-            }
-            
-            if (json_t* guideKeyButtons = json_array()) { 
-                for (auto button: m_guide_key_options.buttons) {
-                    json_array_append_new(guideKeyButtons, json_integer(button));
-                }
-                json_object_set_new(settings, "guide_key_buttons", guideKeyButtons);
-            }
+            save_button_array(settings, "overlay_buttons",
+                              m_overlay_options.buttons);
+            save_button_array(settings, "mouse_input_buttons",
+                              m_mouse_input_options.buttons);
+            save_button_array(settings, "guide_key_buttons",
+                              m_guide_key_options.buttons);
+            save_button_array(settings, "host_close_app_buttons",
+                              m_host_close_app_options.buttons);
+            save_button_array(settings, "host_switch_window_buttons",
+                              m_host_switch_window_options.buttons);
             
             json_object_set_new(root, "settings", settings);
         }

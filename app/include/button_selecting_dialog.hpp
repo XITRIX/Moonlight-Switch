@@ -17,7 +17,7 @@ class ButtonSelectingDialog : public Dialog {
     static ButtonSelectingDialog*
     create(std::string titleText,
            std::function<void(std::vector<ControllerButton>)> callback,
-           bool oneKey = false);
+           bool oneKey = false, bool allowDisable = false);
     void open() override;
 
   private:
