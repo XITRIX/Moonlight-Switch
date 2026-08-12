@@ -12,6 +12,14 @@
 enum VideoCodec : int { H264, H265, AV1 };
 std::string getVideoCodecName(VideoCodec codec);
 
+enum class FramePacingMode : int {
+    LOWEST_LATENCY = 0,
+    BALANCED = 1,
+    SMOOTHEST_VIDEO = 2,
+};
+std::string getFramePacingModeName(FramePacingMode mode);
+const char* getFramePacingModeDebugName(FramePacingMode mode);
+
 enum UpscalingMode : int { UPSCALING_OFF, UPSCALING_METALFX, UPSCALING_FSR1 };
 
 enum AudioBackend : int {
@@ -138,7 +146,42 @@ class Settings : public Singleton<Settings> {
     void set_fps(int fps) { m_fps = fps; }
 
     [[nodiscard]] VideoCodec video_codec() const { return m_video_codec; }
-    void set_video_codec(VideoCodec video_codec) { m_video_codec = video_codec; }
+    void set_video_codec(VideoCodec video_codec) {
+        switch (video_codec) {
+        case H264:
+        case H265:
+        case AV1:
+            m_video_codec = video_codec;
+            break;
+        default:
+#ifdef __PSV__
+            m_video_codec = H264;
+#else
+            m_video_codec = H265;
+#endif
+            break;
+        }
+    }
+
+    [[nodiscard]] FramePacingMode frame_pacing_mode() const {
+#ifdef __SWITCH__
+        return m_frame_pacing_mode;
+#else
+        return FramePacingMode::BALANCED;
+#endif
+    }
+    void set_frame_pacing_mode(FramePacingMode mode) {
+        switch (mode) {
+        case FramePacingMode::LOWEST_LATENCY:
+        case FramePacingMode::BALANCED:
+        case FramePacingMode::SMOOTHEST_VIDEO:
+            m_frame_pacing_mode = mode;
+            break;
+        default:
+            m_frame_pacing_mode = FramePacingMode::BALANCED;
+            break;
+        }
+    }
 
     [[nodiscard]] AudioBackend audio_backend() const { return m_audio_backend; }
     void set_audio_backend(AudioBackend audio_backend) { m_audio_backend = audio_backend; }
@@ -372,6 +415,7 @@ class Settings : public Singleton<Settings> {
     bool m_click_by_tap = false;
     int m_decoder_threads = 4;
     int m_frames_queue_size = 3;
+    FramePacingMode m_frame_pacing_mode = FramePacingMode::BALANCED;
     bool m_sops = false;
     bool m_play_audio = false;
     bool m_write_log = false;

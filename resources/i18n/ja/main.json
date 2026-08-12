@@ -104,7 +104,11 @@
     },
     "settings": {
         "audio_backend": "Audio driver",
-        "av1": "AV1 (実験的)",
+        "av1": "AV1 を優先 (実験的)",
+        "frame_pacing": "ビデオフレームペーシング",
+        "frame_pacing_lowest_latency": "最低遅延",
+        "frame_pacing_balanced": "バランス (推奨)",
+        "frame_pacing_smoothest": "最も滑らかな映像 (遅延が大幅に増える場合があります)",
         "buttons": {
             "home": "Home",
             "screenshot": "Screenshot"

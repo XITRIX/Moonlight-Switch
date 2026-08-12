@@ -3,8 +3,10 @@
 #include "GameStreamClient.hpp"
 #include "InputManager.hpp"
 #include "Settings.hpp"
+#include "VideoCodecSupport.hpp"
 #include "borealis.hpp"
 #include <string.h>
+#include <utility>
 
 #if defined(PLATFORM_IOS) || defined(PLATFORM_VISIONOS)
 extern void getWindowSize(int* w, int* h);
@@ -107,7 +109,7 @@ void MoonlightSession::connection_terminated(int error_code) {
         // Connection is already terminated here; avoid toggling the user stop flag.
         LiStopConnection();
 
-        m_active_session->start([](const GSResult<bool>& result) {
+        m_active_session->start_internal([](const GSResult<bool>& result) {
             if (result.isSuccess()) {
                 brls::Logger::info("MoonlightSession: Reconnected");
             } else {
@@ -171,8 +173,15 @@ int MoonlightSession::video_decoder_setup(int video_format, int width,
                                           void* context, int dr_flags) {
     m_video_format = video_format;
     if (m_active_session && m_active_session->m_video_decoder) {
-        return m_active_session->m_video_decoder->setup(
+        const int result = m_active_session->m_video_decoder->setup(
             video_format, width, height, redraw_rate, context, dr_flags);
+        if (result < 0 && (video_format & VIDEO_FORMAT_MASK_AV1) != 0) {
+            m_active_session->m_av1_decoder_failed = true;
+            brls::Logger::warning(
+                "MoonlightSession: AV1 hardware decoder setup failed on {}; scheduling one fallback attempt",
+                hardwareVideoCodecSupport().av1Backend);
+        }
+        return result;
     }
     return DR_OK;
 }
@@ -198,8 +207,18 @@ void MoonlightSession::video_decoder_cleanup() {
 int MoonlightSession::video_decoder_submit_decode_unit(
     PDECODE_UNIT decode_unit) {
     if (m_active_session && m_active_session->m_video_decoder) {
-        return m_active_session->m_video_decoder->submit_decode_unit(
-            decode_unit);
+        const int result =
+            m_active_session->m_video_decoder->submit_decode_unit(decode_unit);
+        if (result < 0) {
+            if ((m_video_format & VIDEO_FORMAT_MASK_AV1) != 0 &&
+                m_active_session->fallback_from_av1()) {
+                return DR_OK;
+            }
+
+            m_active_session->restart();
+            return DR_OK;
+        }
+        return result;
     }
     return DR_OK;
 }
@@ -245,9 +264,17 @@ void MoonlightSession::audio_renderer_decode_and_play_sample(
 // MARK: MoonlightSession
 
 void MoonlightSession::start(ServerCallback<bool> callback, bool is_sunshine) {
+    m_force_disable_av1 = false;
+    m_av1_fallback_attempted = false;
+    start_internal(std::move(callback), is_sunshine);
+}
+
+void MoonlightSession::start_internal(ServerCallback<bool> callback,
+                                      bool is_sunshine) {
     m_is_sunshine = is_sunshine;
     m_stop_requested = false;
     m_is_terminated = false;
+    m_av1_decoder_failed = false;
 
     LiInitializeStreamConfiguration(&m_config);
 
@@ -287,19 +314,48 @@ void MoonlightSession::start(ServerCallback<bool> callback, bool is_sunshine) {
     m_config.bitrate = Settings::instance().bitrate();
     m_config.encryptionFlags = m_is_sunshine ? ENCFLG_ALL : ENCFLG_VIDEO;
 
-    switch (Settings::instance().video_codec()) {
+    const VideoCodec requestedCodec = Settings::instance().video_codec();
+    const VideoCodec codec = validatedVideoCodec(requestedCodec);
+    if (codec != requestedCodec) {
+        Settings::instance().set_video_codec(codec);
+        brls::Logger::info(
+            "MoonlightSession: Requested codec is unavailable; using {}",
+            getVideoCodecName(codec));
+    }
+
+    switch (codec) {
     case H264:
         m_config.supportedVideoFormats = VIDEO_FORMAT_H264;
         break;
     case H265:
         m_config.supportedVideoFormats = VIDEO_FORMAT_H265;
-            if (Settings::instance().request_hdr())
-                m_config.supportedVideoFormats |= VIDEO_FORMAT_H265_MAIN10;
+        if (Settings::instance().request_hdr()) {
+            m_config.supportedVideoFormats |= VIDEO_FORMAT_H265_MAIN10;
+        }
         break;
     case AV1:
-        m_config.supportedVideoFormats = VIDEO_FORMAT_AV1_MAIN8;
-            if (Settings::instance().request_hdr())
+        if (m_force_disable_av1) {
+            m_config.supportedVideoFormats =
+                VIDEO_FORMAT_H264 | VIDEO_FORMAT_H265;
+            if (Settings::instance().request_hdr()) {
+                m_config.supportedVideoFormats |= VIDEO_FORMAT_H265_MAIN10;
+            }
+            brls::Logger::info(
+                "MoonlightSession: AV1 fallback active; advertising HEVC and H.264");
+            break;
+        }
+
+        m_config.supportedVideoFormats =
+            VIDEO_FORMAT_H264 | VIDEO_FORMAT_H265 | VIDEO_FORMAT_AV1_MAIN8;
+        if (Settings::instance().request_hdr()) {
+            m_config.supportedVideoFormats |= VIDEO_FORMAT_H265_MAIN10;
+            if (hardwareVideoCodecSupport().av1Main10) {
                 m_config.supportedVideoFormats |= VIDEO_FORMAT_AV1_MAIN10;
+            }
+        }
+        brls::Logger::info(
+            "MoonlightSession: Prefer AV1 via {}; HEVC and H.264 fallback enabled",
+            hardwareVideoCodecSupport().av1Backend);
         break;
     default:
         break;
@@ -352,7 +408,17 @@ void MoonlightSession::start(ServerCallback<bool> callback, bool is_sunshine) {
                         &m_data.serverInfo, &m_config, &m_connection_callbacks,
                         &m_video_callbacks, &m_audio_callbacks, NULL, 0, NULL, 0);
 
-                    if (result != 0) {
+                    if (result != 0 && m_av1_decoder_failed &&
+                        !m_av1_fallback_attempted) {
+                        m_av1_fallback_attempted = true;
+                        m_force_disable_av1 = true;
+                        m_av1_decoder_failed = false;
+                        brls::Logger::warning(
+                            "MoonlightSession: Retrying once without AV1 after {} hardware decoder setup failure; fallback formats are HEVC and H.264",
+                            hardwareVideoCodecSupport().av1Backend);
+                        LiStopConnection();
+                        start_internal(std::move(callback), m_is_sunshine);
+                    } else if (result != 0) {
                         LiStopConnection();
                         callback(
                             GSResult<bool>::failure("error/stream_start"_i18n));
@@ -385,7 +451,7 @@ void MoonlightSession::stop(int terminate_app) {
 void MoonlightSession::restart() {
     LiStopConnection();
 
-    start([](const GSResult<bool>& result) {
+    start_internal([](const GSResult<bool>& result) {
         if (result.isSuccess()) {
             brls::Logger::info("MoonlightSession: Reconnected");
         } else {
@@ -396,6 +462,20 @@ void MoonlightSession::restart() {
             }
         }
     }, m_active_session->m_is_sunshine);
+}
+
+bool MoonlightSession::fallback_from_av1() {
+    if (m_av1_fallback_attempted || m_force_disable_av1) {
+        return false;
+    }
+
+    m_av1_fallback_attempted = true;
+    m_force_disable_av1 = true;
+    brls::Logger::warning(
+        "MoonlightSession: AV1 hardware frame decode failed on {}; reconnecting once with HEVC and H.264 fallback",
+        hardwareVideoCodecSupport().av1Backend);
+    restart();
+    return true;
 }
 
 void MoonlightSession::draw(NVGcontext* vg, int width, int height) {

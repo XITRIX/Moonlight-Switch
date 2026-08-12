@@ -104,7 +104,11 @@
     },
     "settings": {
         "audio_backend": "音頻驅動",
-        "av1": "AV1 (實驗性)",
+        "av1": "優先使用 AV1（實驗性）",
+        "frame_pacing": "影片幀節奏",
+        "frame_pacing_lowest_latency": "最低延遲",
+        "frame_pacing_balanced": "平衡（建議）",
+        "frame_pacing_smoothest": "最流暢影片（可能顯著增加延遲）",
         "buttons": {
             "home": "Home",
             "screenshot": "Screenshot"

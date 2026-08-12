@@ -9,6 +9,7 @@
 
 #include <borealis.hpp>
 
+#include "Settings.hpp"
 #include "views/boolean_slider_cell.hpp"
 
 class SettingsTab : public brls::Box {
@@ -27,6 +28,7 @@ class SettingsTab : public brls::Box {
     BRLS_BIND(brls::SelectorCell, codec, "codec");
     BRLS_BIND(brls::BooleanCell, requestHdr, "request_hdr");
     BRLS_BIND(brls::SelectorCell, decoder, "decoder");
+    BRLS_BIND(brls::SelectorCell, framePacing, "frame_pacing");
     BRLS_BIND(brls::BooleanCell, hwDecoding, "use_hw_decoding");
     BRLS_BIND(brls::Header, header, "header");
     BRLS_BIND(brls::Slider, slider, "slider");
@@ -62,5 +64,8 @@ class SettingsTab : public brls::Box {
     static brls::View* create();
 
   private:
+    void refreshVideoCodecs();
     void updateDeadZoneItems();
+    std::vector<VideoCodec> supportedVideoCodecs;
+    bool videoCodecSelectorInitialized = false;
 };

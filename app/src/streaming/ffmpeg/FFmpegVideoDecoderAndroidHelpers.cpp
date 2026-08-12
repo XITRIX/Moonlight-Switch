@@ -265,6 +265,37 @@ bool useAndroidDirectHardwareFrames(bool hw_decode_active) {
     return hw_decode_active;
 }
 
+int androidAv1DecoderSupport() {
+    auto* env = static_cast<JNIEnv*>(SDL_GetAndroidJNIEnv());
+    if (env == nullptr) {
+        return 0;
+    }
+
+    jclass utilsClass = findPlatformUtilsClass(env);
+    if (utilsClass == nullptr) {
+        return 0;
+    }
+
+    jmethodID method = env->GetStaticMethodID(utilsClass,
+                                              "getAv1DecoderSupport",
+                                              "()I");
+    if (method == nullptr) {
+        env->ExceptionClear();
+        env->DeleteLocalRef(utilsClass);
+        return 0;
+    }
+
+    const jint support = env->CallStaticIntMethod(utilsClass, method);
+    if (env->ExceptionCheck()) {
+        env->ExceptionClear();
+        env->DeleteLocalRef(utilsClass);
+        return 0;
+    }
+
+    env->DeleteLocalRef(utilsClass);
+    return static_cast<int>(support);
+}
+
 } // namespace ffmpeg::decoder
 
 #endif

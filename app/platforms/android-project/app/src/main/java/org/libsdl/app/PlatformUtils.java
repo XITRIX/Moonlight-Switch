@@ -7,6 +7,8 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Color;
 import android.media.AudioAttributes;
+import android.media.MediaCodecInfo;
+import android.media.MediaCodecList;
 import android.net.ConnectivityManager;
 import android.net.Network;
 import android.net.NetworkCapabilities;
@@ -30,6 +32,8 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.RelativeLayout;
+
+import java.util.Locale;
 
 public class PlatformUtils {
 
@@ -235,6 +239,62 @@ public class PlatformUtils {
         else {
             requestMediaCodecVideoSurfaceLayoutUpdate();
         }
+    }
+
+    public static int getAv1DecoderSupport() {
+        final String av1MimeType = "video/av01";
+        final int main8Profile = 1;
+        int support = 0;
+
+        try {
+            for (MediaCodecInfo codecInfo :
+                    new MediaCodecList(MediaCodecList.ALL_CODECS).getCodecInfos()) {
+                if (codecInfo.isEncoder()) {
+                    continue;
+                }
+
+                boolean hardwareAccelerated;
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    hardwareAccelerated = codecInfo.isHardwareAccelerated();
+                }
+                else {
+                    String codecName =
+                            codecInfo.getName().toLowerCase(Locale.ROOT);
+                    hardwareAccelerated = !codecName.startsWith("omx.google.") &&
+                            !codecName.startsWith("c2.android.") &&
+                            !codecName.startsWith("c2.google.") &&
+                            !codecName.startsWith("omx.ffmpeg.") &&
+                            !codecName.contains(".sw.") &&
+                            !codecName.contains("software");
+                }
+
+                if (!hardwareAccelerated) {
+                    continue;
+                }
+
+                for (String supportedType : codecInfo.getSupportedTypes()) {
+                    if (!av1MimeType.equalsIgnoreCase(supportedType)) {
+                        continue;
+                    }
+
+                    support |= 0x1;
+                    MediaCodecInfo.CodecCapabilities capabilities =
+                            codecInfo.getCapabilitiesForType(supportedType);
+                    for (MediaCodecInfo.CodecProfileLevel profileLevel :
+                            capabilities.profileLevels) {
+                        if (profileLevel.profile != main8Profile) {
+                            support |= 0x2;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        catch (IllegalArgumentException | SecurityException ignored) {
+            return 0;
+        }
+
+        return support;
     }
 
     public static boolean isBatterySupported() {

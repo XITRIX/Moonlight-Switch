@@ -104,7 +104,11 @@
     },
     "settings": {
         "audio_backend": "音频驱动",
-        "av1": "AV1 (实验性)",
+        "av1": "优先使用 AV1（实验性）",
+        "frame_pacing": "视频帧节奏",
+        "frame_pacing_lowest_latency": "最低延迟",
+        "frame_pacing_balanced": "平衡（推荐）",
+        "frame_pacing_smoothest": "最流畅视频（可能显著增加延迟）",
         "buttons": {
             "home": "Home",
             "screenshot": "截图"

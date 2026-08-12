@@ -43,6 +43,9 @@ class MoonlightSession {
     }
 
   private:
+    void start_internal(ServerCallback<bool> callback, bool is_sunshine);
+    bool fallback_from_av1();
+
     static void connection_stage_starting(int);
     static void connection_stage_complete(int);
     static void connection_stage_failed(int, int);
@@ -86,6 +89,9 @@ class MoonlightSession {
     bool m_stop_requested = false;
     bool m_connection_status_is_poor = false;
     bool m_use_hdr = false;
+    bool m_force_disable_av1 = false;
+    bool m_av1_fallback_attempted = false;
+    bool m_av1_decoder_failed = false;
 
     SessionStats m_session_stats = {};
     uint64_t m_last_stats_update_ms = 0;

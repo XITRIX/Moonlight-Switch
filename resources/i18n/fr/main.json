@@ -104,7 +104,11 @@
     },
     "settings": {
         "audio_backend": "Driver audio",
-        "av1": "AV1 (Expérimental)",
+        "av1": "Préférer AV1 (Expérimental)",
+        "frame_pacing": "Cadencement des images vidéo",
+        "frame_pacing_lowest_latency": "Latence minimale",
+        "frame_pacing_balanced": "Équilibré (Recommandé)",
+        "frame_pacing_smoothest": "Vidéo la plus fluide (peut fortement augmenter la latence)",
         "buttons": {
             "home": "Home",
             "screenshot": "Capture d'écran"

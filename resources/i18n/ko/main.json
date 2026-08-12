@@ -104,7 +104,11 @@
     },
     "settings": {
         "audio_backend": "오디오 드라이버",
-        "av1": "AV1 (실험용)",
+        "av1": "AV1 우선 (실험용)",
+        "frame_pacing": "비디오 프레임 페이싱",
+        "frame_pacing_lowest_latency": "최저 지연 시간",
+        "frame_pacing_balanced": "균형 (권장)",
+        "frame_pacing_smoothest": "가장 부드러운 비디오 (지연 시간이 크게 늘어날 수 있음)",
         "buttons": {
             "home": "홈",
             "screenshot": "스크린샷"

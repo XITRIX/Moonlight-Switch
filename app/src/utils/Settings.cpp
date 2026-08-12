@@ -114,6 +114,32 @@ std::string getVideoCodecName(VideoCodec codec) {
     }
 }
 
+std::string getFramePacingModeName(FramePacingMode mode) {
+    switch (mode) {
+    case FramePacingMode::LOWEST_LATENCY:
+        return "settings/frame_pacing_lowest_latency"_i18n;
+    case FramePacingMode::BALANCED:
+        return "settings/frame_pacing_balanced"_i18n;
+    case FramePacingMode::SMOOTHEST_VIDEO:
+        return "settings/frame_pacing_smoothest"_i18n;
+    default:
+        return "settings/frame_pacing_balanced"_i18n;
+    }
+}
+
+const char* getFramePacingModeDebugName(FramePacingMode mode) {
+    switch (mode) {
+    case FramePacingMode::LOWEST_LATENCY:
+        return "lowest-latency";
+    case FramePacingMode::BALANCED:
+        return "balanced";
+    case FramePacingMode::SMOOTHEST_VIDEO:
+        return "smoothest-video";
+    default:
+        return "balanced";
+    }
+}
+
 void Settings::set_working_dir(const std::string& working_dir) {
     const fs::path base_path = fs::path(working_dir).make_preferred();
 
@@ -384,7 +410,7 @@ void Settings::load() {
             
             if (json_t* video_codec = json_object_get(settings, "video_codec")) {
                 if (json_typeof(video_codec) == JSON_INTEGER) {
-                    m_video_codec = (VideoCodec)json_integer_value(video_codec);
+                    set_video_codec((VideoCodec)json_integer_value(video_codec));
                 }
             }
 
@@ -454,6 +480,13 @@ void Settings::load() {
 
                     // SANITY CHECK, APP WILL CRASH OTHERWISE
                     if (m_frames_queue_size < 1) m_frames_queue_size = 1;
+                }
+            }
+
+            if (json_t* frame_pacing_mode = json_object_get(settings, "frame_pacing_mode")) {
+                if (json_typeof(frame_pacing_mode) == JSON_INTEGER) {
+                    set_frame_pacing_mode(
+                        (FramePacingMode)json_integer_value(frame_pacing_mode));
                 }
             }
 
@@ -652,6 +685,8 @@ void Settings::save() {
             json_object_set_new(settings, "bitrate", json_integer(m_bitrate));
             json_object_set_new(settings, "decoder_threads", json_integer(m_decoder_threads));
             json_object_set_new(settings, "frames_queue_size", json_integer(m_frames_queue_size));
+            json_object_set_new(settings, "frame_pacing_mode",
+                                json_integer(static_cast<int>(m_frame_pacing_mode)));
             json_object_set_new(settings, "enable_hdr", m_enable_hdr ? json_true() : json_false());
             json_object_set_new(settings, "enable_upscaling", upscaling() ? json_true() : json_false());
             json_object_set_new(settings, "upscaling_mode", json_integer(upscaling_mode()));

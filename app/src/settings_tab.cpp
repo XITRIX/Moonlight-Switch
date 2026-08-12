@@ -15,6 +15,8 @@
 #include "key_combo_settings.hpp"
 #include "mapping_layout_editor.hpp"
 #include "UpscalingSupport.hpp"
+#include "VideoCodecSupport.hpp"
+#include <algorithm>
 #include <cmath>
 #include <iomanip>
 #include <sstream>
@@ -80,6 +82,57 @@ std::vector<std::string> audio_backends {
 #else
 std::vector<std::string> audio_backends;
 #endif
+
+void SettingsTab::refreshVideoCodecs() {
+    supportedVideoCodecs = {
+        H264,
+#if !defined(__PSV__)
+        H265,
+#endif
+    };
+
+    if (isAv1HardwareDecodingAvailable()) {
+        supportedVideoCodecs.push_back(AV1);
+    }
+
+    const VideoCodec requestedCodec = Settings::instance().video_codec();
+    const VideoCodec selectedCodec = validatedVideoCodec(requestedCodec);
+    if (selectedCodec != requestedCodec) {
+        brls::Logger::info(
+            "Settings: Selected codec is unavailable; falling back to {}",
+            getVideoCodecName(selectedCodec));
+        Settings::instance().set_video_codec(selectedCodec);
+    }
+
+    std::vector<std::string> supportedCodecNames;
+    for (VideoCodec supportedCodec : supportedVideoCodecs) {
+        supportedCodecNames.push_back(getVideoCodecName(supportedCodec));
+    }
+
+    const auto selectedIt =
+        std::find(supportedVideoCodecs.begin(), supportedVideoCodecs.end(),
+                  selectedCodec);
+    const int selectedIndex =
+        selectedIt == supportedVideoCodecs.end()
+            ? 0
+            : static_cast<int>(selectedIt - supportedVideoCodecs.begin());
+
+    if (!videoCodecSelectorInitialized) {
+        codec->init("settings/video_codec"_i18n, supportedCodecNames,
+                    selectedIndex, [this](int selected) {
+                        if (selected >= 0 &&
+                            static_cast<size_t>(selected) <
+                                supportedVideoCodecs.size()) {
+                            Settings::instance().set_video_codec(
+                                supportedVideoCodecs[selected]);
+                        }
+                    });
+        videoCodecSelectorInitialized = true;
+    } else {
+        codec->setData(supportedCodecNames);
+        codec->setSelection(selectedIndex, true);
+    }
+}
 
 
 SettingsTab::SettingsTab() {
@@ -305,30 +358,35 @@ SettingsTab::SettingsTab() {
         }
     });
 
-    std::vector<VideoCodec> supportedCodecs = {
-        H264,
-#if !defined(__PSV__)
-        H265,
-#endif
+    refreshVideoCodecs();
+
+#if defined(PLATFORM_SWITCH)
+    const std::vector<FramePacingMode> framePacingModes = {
+        FramePacingMode::LOWEST_LATENCY,
+        FramePacingMode::BALANCED,
+        FramePacingMode::SMOOTHEST_VIDEO,
     };
-
-    std::vector<std::string> supportedCodecNames;
-    for (int i = 0; i < supportedCodecs.size(); i++) {
-        supportedCodecNames.push_back(getVideoCodecName(supportedCodecs[i]));
+    std::vector<std::string> framePacingModeNames;
+    for (FramePacingMode mode : framePacingModes) {
+        framePacingModeNames.push_back(getFramePacingModeName(mode));
     }
 
-    auto it = find(supportedCodecs.begin(), supportedCodecs.end(), Settings::instance().video_codec());
-
-    int selected = 0;
-    if (it != supportedCodecs.end()) {
-        int index = it - supportedCodecs.begin();
-        selected = index;
-    }
-
-    codec->init("settings/video_codec"_i18n, supportedCodecNames,
-                selected, [supportedCodecs](int selected) {
-                    Settings::instance().set_video_codec(supportedCodecs[selected]);
-                });
+    const auto framePacingIt =
+        std::find(framePacingModes.begin(), framePacingModes.end(),
+                  Settings::instance().frame_pacing_mode());
+    const int selectedFramePacing =
+        framePacingIt == framePacingModes.end()
+            ? 1
+            : static_cast<int>(framePacingIt - framePacingModes.begin());
+    framePacing->init("settings/frame_pacing"_i18n, framePacingModeNames,
+                      selectedFramePacing,
+                      [framePacingModes](int selected) {
+                          Settings::instance().set_frame_pacing_mode(
+                              framePacingModes[selected]);
+                      });
+#else
+    framePacing->removeFromSuperView(true);
+#endif
 
     requestHdr->init("settings/request_hdr"_i18n, Settings::instance().request_hdr(),
                      [](bool value) { Settings::instance().set_request_hdr(value); });
@@ -337,8 +395,12 @@ SettingsTab::SettingsTab() {
     requestHdr->removeFromSuperView(true);
  #endif
 
-    hwDecoding->init("settings/use_hw_decoding"_i18n, Settings::instance().use_hw_decoding(),
-                     [](bool value) { Settings::instance().set_use_hw_decoding(value); });
+    hwDecoding->init(
+        "settings/use_hw_decoding"_i18n,
+        Settings::instance().use_hw_decoding(), [this](bool value) {
+            Settings::instance().set_use_hw_decoding(value);
+            refreshVideoCodecs();
+        });
 
 #if defined(__linux__) && defined(PLATFORM_DESKTOP)
     hwDecoding->setEnabled(true);

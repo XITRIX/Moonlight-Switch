@@ -365,7 +365,8 @@ void StreamingView::draw(NVGcontext* vg, float x, float y, float width,
                 /*stats->video_render_stats.rendered_frames*/);
         }
 
-        statistics += fmt::format("Frames queue underflows | skipped: {} | {}\n"
+        statistics += fmt::format("Frame pacing mode: {}\n"
+                                  "Frames queue underflows | skipped: {} | {}\n"
                                   "Queue empty | startup holds: {} | {}\n"
                                   "Queue overflow | paced skips: {} | {}\n"
                                   "Scheduled frame holds: {}\n"
@@ -373,6 +374,8 @@ void StreamingView::draw(NVGcontext* vg, float x, float y, float width,
                                   "Playout resyncs | estimated source: {} | {:.2f} FPS\n"
                                   "Max pushes between draws: {}\n"
                                   "Frames queue depth | target | capacity: {} | {} | {}",
+                                  getFramePacingModeDebugName(
+                                      AVFrameHolder::instance().getFramePacingMode()),
                                   AVFrameHolder::instance().getFakeFrameStat(),
                                   AVFrameHolder::instance().getFrameDropStat(),
                                   AVFrameHolder::instance().getFrameQueueEmptyStat(),

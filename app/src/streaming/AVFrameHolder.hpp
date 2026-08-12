@@ -22,12 +22,13 @@ public:
     AVFrame* acquireWriteFrame();
     void recycleWriteFrame(AVFrame*& frame);
     void configure(size_t queueLimit, int streamFps,
-                   bool transferOwnershipEnabled);
+                   bool transferOwnershipEnabled, FramePacingMode pacingMode);
     static size_t capacityFor(size_t configuredQueueSize);
 
     [[nodiscard]] size_t size() const;
     [[nodiscard]] size_t targetDepth() const;
     [[nodiscard]] size_t capacity() const;
+    [[nodiscard]] FramePacingMode pacingMode() const;
     [[nodiscard]] size_t getFakeFrameUsage() const;
     [[nodiscard]] size_t getFramesDropStat() const;
     [[nodiscard]] size_t getEmptyQueueStat() const;
@@ -56,6 +57,7 @@ private:
     bool transferOwnership = false;
     size_t targetBufferedFrames = 0;
     int streamFps = 0;
+    FramePacingMode framePacingMode = FramePacingMode::BALANCED;
     std::chrono::nanoseconds adaptiveFrameInterval{0};
     std::chrono::steady_clock::time_point lastDraw{};
     std::chrono::nanoseconds averageDrawInterval{0};
@@ -111,7 +113,8 @@ class AVFrameHolder : public Singleton<AVFrameHolder> {
 
     void prepare(int streamFps, bool transferOwnership = false) {
         m_frame_queue.configure(Settings::instance().frames_queue_size(),
-                                streamFps, transferOwnership);
+                                streamFps, transferOwnership,
+                                Settings::instance().frame_pacing_mode());
     }
 
     void cleanup() {
@@ -123,6 +126,7 @@ class AVFrameHolder : public Singleton<AVFrameHolder> {
     [[nodiscard]] size_t getFrameQueueSize() const { return m_frame_queue.size(); }
     [[nodiscard]] size_t getFrameQueueTargetDepth() const { return m_frame_queue.targetDepth(); }
     [[nodiscard]] size_t getFrameQueueCapacity() const { return m_frame_queue.capacity(); }
+    [[nodiscard]] FramePacingMode getFramePacingMode() const { return m_frame_queue.pacingMode(); }
     [[nodiscard]] size_t getFrameQueueEmptyStat() const { return m_frame_queue.getEmptyQueueStat(); }
     [[nodiscard]] size_t getFrameQueueRebufferHoldStat() const { return m_frame_queue.getRebufferHoldStat(); }
     [[nodiscard]] size_t getFrameQueueOverflowDropStat() const { return m_frame_queue.getOverflowDropStat(); }
