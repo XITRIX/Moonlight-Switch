@@ -32,6 +32,8 @@ MoonlightSession::MoonlightSession(const std::string& address, int app_id) {
     m_address = address;
     m_app_id = app_id;
     m_active_session = this;
+    m_stream_settings = StreamProfileResolver::globalDefaults();
+    setActiveResolvedStreamSettings(&m_stream_settings);
 
     m_video_decoder = m_provider->video_decoder();
     m_video_renderer = m_provider->video_renderer();
@@ -51,7 +53,16 @@ MoonlightSession::~MoonlightSession() {
         delete m_audio_renderer;
     }
 
+    setActiveResolvedStreamSettings(nullptr);
     m_active_session = nullptr;
+}
+
+void MoonlightSession::set_stream_settings(
+    const ResolvedStreamSettings& settings) {
+    if (m_is_active)
+        return;
+    m_stream_settings = settings;
+    setActiveResolvedStreamSettings(&m_stream_settings);
 }
 
 // MARK: Connection callbacks
@@ -278,7 +289,7 @@ void MoonlightSession::start_internal(ServerCallback<bool> callback,
 
     LiInitializeStreamConfiguration(&m_config);
 
-    int resolution = Settings::instance().resolution();
+    int resolution = m_stream_settings.resolution;
     int h = resolution;
     int w = h * 16 / 9;
     if (resolution == -1) {
@@ -289,7 +300,7 @@ void MoonlightSession::start_internal(ServerCallback<bool> callback,
         w = Application::windowWidth;
 #endif
 
-        int nativeResolutionScale = Settings::instance().native_resolution_scale();
+        int nativeResolutionScale = m_stream_settings.nativeResolutionScale;
         if (nativeResolutionScale != 100 && w > 0 && h > 0) {
             w = (w * nativeResolutionScale + 50) / 100;
             h = (h * nativeResolutionScale + 50) / 100;
@@ -307,17 +318,16 @@ void MoonlightSession::start_internal(ServerCallback<bool> callback,
 
     m_config.width = w;
     m_config.height = h;
-    m_config.fps = Settings::instance().fps();
+    m_config.fps = m_stream_settings.fps;
     m_config.audioConfiguration = AUDIO_CONFIGURATION_STEREO;
     m_config.packetSize = 1392;
     m_config.streamingRemotely = STREAM_CFG_AUTO;
-    m_config.bitrate = Settings::instance().bitrate();
+    m_config.bitrate = m_stream_settings.bitrate;
     m_config.encryptionFlags = m_is_sunshine ? ENCFLG_ALL : ENCFLG_VIDEO;
 
-    const VideoCodec requestedCodec = Settings::instance().video_codec();
+    const VideoCodec requestedCodec = m_stream_settings.videoCodec;
     const VideoCodec codec = validatedVideoCodec(requestedCodec);
     if (codec != requestedCodec) {
-        Settings::instance().set_video_codec(codec);
         brls::Logger::info(
             "MoonlightSession: Requested codec is unavailable; using {}",
             getVideoCodecName(codec));
@@ -329,7 +339,7 @@ void MoonlightSession::start_internal(ServerCallback<bool> callback,
         break;
     case H265:
         m_config.supportedVideoFormats = VIDEO_FORMAT_H265;
-        if (Settings::instance().request_hdr()) {
+        if (m_stream_settings.requestHdr) {
             m_config.supportedVideoFormats |= VIDEO_FORMAT_H265_MAIN10;
         }
         break;
@@ -337,7 +347,7 @@ void MoonlightSession::start_internal(ServerCallback<bool> callback,
         if (m_force_disable_av1) {
             m_config.supportedVideoFormats =
                 VIDEO_FORMAT_H264 | VIDEO_FORMAT_H265;
-            if (Settings::instance().request_hdr()) {
+            if (m_stream_settings.requestHdr) {
                 m_config.supportedVideoFormats |= VIDEO_FORMAT_H265_MAIN10;
             }
             brls::Logger::info(
@@ -347,7 +357,7 @@ void MoonlightSession::start_internal(ServerCallback<bool> callback,
 
         m_config.supportedVideoFormats =
             VIDEO_FORMAT_H264 | VIDEO_FORMAT_H265 | VIDEO_FORMAT_AV1_MAIN8;
-        if (Settings::instance().request_hdr()) {
+        if (m_stream_settings.requestHdr) {
             m_config.supportedVideoFormats |= VIDEO_FORMAT_H265_MAIN10;
             if (hardwareVideoCodecSupport().av1Main10) {
                 m_config.supportedVideoFormats |= VIDEO_FORMAT_AV1_MAIN10;

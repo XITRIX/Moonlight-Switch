@@ -157,6 +157,7 @@
         "overlay_zero_time": "0（立即）",
         "paop": "串流時在主機上也同時播放音訊",
         "quality": "串流質量 (更高的質量需要CPU超頻)",
+        "global_defaults": "全域預設值 · 品質",
         "request_hdr": "Request HDR Video",
         "resolution": "解析度",
         "resolution_native": "原生",
@@ -181,6 +182,12 @@
         "video_codec": "影片解碼器",
         "volume_amplification": "允許放大音量",
         "zero_threads": "0（不使用執行緒）"
+    },
+    "stream_profiles": {
+        "title": "串流設定檔", "context": "連線環境",
+        "local_wifi": "本地 Wi-Fi", "local_ethernet": "本地乙太網路", "remote": "遠端",
+        "use_custom": "使用自訂設定檔", "configured": "已設定",
+        "inherited": "繼承全域預設值", "all_inherited": "全部繼承全域預設值"
     },
     "streaming": {
         "connection": "連接選項",

@@ -25,6 +25,9 @@
                 
             <brls:DetailCell
                 id="connect"/>
+
+            <brls:DetailCell
+                id="stream_profiles"/>
                 
             <brls:DetailCell
                 id="remove"

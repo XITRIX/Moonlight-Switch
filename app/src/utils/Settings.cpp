@@ -99,6 +99,149 @@ std::string make_preferred_path(const fs::path& path) {
 std::string settings_file_path(const std::string& working_dir) {
     return make_preferred_path(fs::path(working_dir) / "settings.json");
 }
+
+const char* stream_context_key(StreamProfileContext context) {
+    switch (context) {
+    case StreamProfileContext::LocalWifi:
+        return "local_wifi";
+    case StreamProfileContext::LocalEthernet:
+        return "local_ethernet";
+    case StreamProfileContext::Remote:
+        return "remote";
+    }
+    return "";
+}
+
+constexpr StreamProfileContext stream_contexts[] = {
+    StreamProfileContext::LocalWifi,
+    StreamProfileContext::LocalEthernet,
+    StreamProfileContext::Remote,
+};
+
+std::optional<int> optional_integer(json_t* object, const char* key) {
+    json_t* value = json_object_get(object, key);
+    if (!json_is_integer(value))
+        return std::nullopt;
+    return static_cast<int>(json_integer_value(value));
+}
+
+std::optional<float> optional_number(json_t* object, const char* key) {
+    json_t* value = json_object_get(object, key);
+    if (!json_is_number(value))
+        return std::nullopt;
+    return static_cast<float>(json_number_value(value));
+}
+
+std::optional<bool> optional_boolean(json_t* object, const char* key) {
+    json_t* value = json_object_get(object, key);
+    if (!json_is_boolean(value))
+        return std::nullopt;
+    return json_is_true(value);
+}
+
+StreamProfile load_stream_profile(json_t* json) {
+    StreamProfile profile;
+    if (!json_is_object(json))
+        return profile;
+
+    profile.enabled = optional_boolean(json, "enabled").value_or(false);
+    profile.resolution = optional_integer(json, "resolution");
+    profile.nativeResolutionScale = optional_integer(json, "native_resolution_scale");
+    profile.fps = optional_integer(json, "fps");
+    profile.bitrate = optional_integer(json, "bitrate");
+    if (const auto value = optional_integer(json, "video_codec"))
+        profile.videoCodec = static_cast<VideoCodec>(*value);
+    profile.requestHdr = optional_boolean(json, "enable_hdr");
+    if (const auto value = optional_integer(json, "frame_pacing_mode"))
+        profile.framePacingMode = static_cast<FramePacingMode>(*value);
+    if (const auto value = optional_integer(json, "upscaling_mode"))
+        profile.upscalingMode = static_cast<UpscalingMode>(*value);
+    profile.dithering = optional_boolean(json, "enable_dithering");
+    profile.ditheringStrength = optional_number(json, "dithering_strength");
+    profile.rcas = optional_boolean(json, "enable_rcas");
+    profile.rcasStrength = optional_number(json, "rcas_strength");
+    return profile;
+}
+
+void set_optional_integer(json_t* json, const char* key,
+                          const std::optional<int>& value) {
+    if (value)
+        json_object_set_new(json, key, json_integer(*value));
+}
+
+void set_optional_number(json_t* json, const char* key,
+                         const std::optional<float>& value) {
+    if (value)
+        json_object_set_new(json, key, json_real(*value));
+}
+
+void set_optional_boolean(json_t* json, const char* key,
+                          const std::optional<bool>& value) {
+    if (value)
+        json_object_set_new(json, key, *value ? json_true() : json_false());
+}
+
+json_t* save_stream_profile(const StreamProfile& profile) {
+    json_t* json = json_object();
+    json_object_set_new(json, "enabled", profile.enabled ? json_true() : json_false());
+    set_optional_integer(json, "resolution", profile.resolution);
+    set_optional_integer(json, "native_resolution_scale", profile.nativeResolutionScale);
+    set_optional_integer(json, "fps", profile.fps);
+    set_optional_integer(json, "bitrate", profile.bitrate);
+    if (profile.videoCodec)
+        json_object_set_new(json, "video_codec", json_integer(*profile.videoCodec));
+    set_optional_boolean(json, "enable_hdr", profile.requestHdr);
+    if (profile.framePacingMode)
+        json_object_set_new(json, "frame_pacing_mode",
+                            json_integer(static_cast<int>(*profile.framePacingMode)));
+    if (profile.upscalingMode)
+        json_object_set_new(json, "upscaling_mode",
+                            json_integer(static_cast<int>(*profile.upscalingMode)));
+    set_optional_boolean(json, "enable_dithering", profile.dithering);
+    set_optional_number(json, "dithering_strength", profile.ditheringStrength);
+    set_optional_boolean(json, "enable_rcas", profile.rcas);
+    set_optional_number(json, "rcas_strength", profile.rcasStrength);
+    return json;
+}
+
+StreamQualityAggregate load_stream_quality(json_t* json) {
+    StreamQualityAggregate aggregate;
+    if (!json_is_object(json))
+        return aggregate;
+    aggregate.sampleCount = static_cast<uint32_t>(
+        std::max(0, optional_integer(json, "sample_count").value_or(0)));
+    aggregate.rttMs = optional_number(json, "rtt_ms").value_or(0.0f);
+    aggregate.rttVariationMs = optional_number(json, "rtt_variation_ms").value_or(0.0f);
+    aggregate.networkFrameLoss = optional_number(json, "network_frame_loss").value_or(0.0f);
+    aggregate.hostFps = optional_number(json, "host_fps").value_or(0.0f);
+    aggregate.receivedFps = optional_number(json, "received_fps").value_or(0.0f);
+    aggregate.decodedFps = optional_number(json, "decoded_fps").value_or(0.0f);
+    aggregate.renderedFps = optional_number(json, "rendered_fps").value_or(0.0f);
+    aggregate.decodeTimeMs = optional_number(json, "decode_time_ms").value_or(0.0f);
+    aggregate.gpuTimeMs = optional_number(json, "gpu_time_ms").value_or(0.0f);
+    aggregate.postProcessingTimeMs = optional_number(json, "post_processing_time_ms").value_or(0.0f);
+    aggregate.queueDepth = optional_number(json, "queue_depth").value_or(0.0f);
+    aggregate.underflowsPerSecond = optional_number(json, "underflows_per_second").value_or(0.0f);
+    return aggregate;
+}
+
+json_t* save_stream_quality(const StreamQualityAggregate& aggregate) {
+    json_t* json = json_object();
+    json_object_set_new(json, "sample_count", json_integer(aggregate.sampleCount));
+    json_object_set_new(json, "rtt_ms", json_real(aggregate.rttMs));
+    json_object_set_new(json, "rtt_variation_ms", json_real(aggregate.rttVariationMs));
+    json_object_set_new(json, "network_frame_loss", json_real(aggregate.networkFrameLoss));
+    json_object_set_new(json, "host_fps", json_real(aggregate.hostFps));
+    json_object_set_new(json, "received_fps", json_real(aggregate.receivedFps));
+    json_object_set_new(json, "decoded_fps", json_real(aggregate.decodedFps));
+    json_object_set_new(json, "rendered_fps", json_real(aggregate.renderedFps));
+    json_object_set_new(json, "decode_time_ms", json_real(aggregate.decodeTimeMs));
+    json_object_set_new(json, "gpu_time_ms", json_real(aggregate.gpuTimeMs));
+    json_object_set_new(json, "post_processing_time_ms", json_real(aggregate.postProcessingTimeMs));
+    json_object_set_new(json, "queue_depth", json_real(aggregate.queueDepth));
+    json_object_set_new(json, "underflows_per_second", json_real(aggregate.underflowsPerSecond));
+    return json;
+}
 }
 
 std::string getVideoCodecName(VideoCodec codec) {
@@ -166,6 +309,32 @@ void Settings::add_host(const Host& host) {
     }
 
     save();
+}
+
+std::optional<Host> Settings::host(const Host& host) const {
+    if (const Host* existing = find_host(m_hosts, host))
+        return *existing;
+    return std::nullopt;
+}
+
+void Settings::set_stream_profile(const Host& host,
+                                  StreamProfileContext context,
+                                  const StreamProfile& profile,
+                                  bool persist) {
+    if (Host* existing = find_host(m_hosts, host)) {
+        existing->streamProfiles[context] = profile;
+        if (persist)
+            save();
+    }
+}
+
+void Settings::set_stream_quality_aggregate(
+    const Host& host, StreamProfileContext context,
+    const StreamQualityAggregate& aggregate) {
+    if (Host* existing = find_host(m_hosts, host)) {
+        existing->streamQuality[context] = aggregate;
+        save();
+    }
 }
 
 void Settings::remove_host(const Host& host) {
@@ -380,6 +549,30 @@ void Settings::load() {
                                         host.favorites.push_back(app);
                                     }
                                 }
+                            }
+                        }
+
+                        if (json_t* profiles =
+                                json_object_get(json, "stream_profiles");
+                            json_is_object(profiles)) {
+                            for (auto context : stream_contexts) {
+                                json_t* profile = json_object_get(
+                                    profiles, stream_context_key(context));
+                                if (json_is_object(profile))
+                                    host.streamProfiles[context] =
+                                        load_stream_profile(profile);
+                            }
+                        }
+
+                        if (json_t* quality =
+                                json_object_get(json, "stream_quality");
+                            json_is_object(quality)) {
+                            for (auto context : stream_contexts) {
+                                json_t* aggregate = json_object_get(
+                                    quality, stream_context_key(context));
+                                if (json_is_object(aggregate))
+                                    host.streamQuality[context] =
+                                        load_stream_quality(aggregate);
                             }
                         }
                         
@@ -669,6 +862,26 @@ void Settings::save() {
                             }
                         }
                         json_object_set_new(json, "favorites", apps);
+                    }
+
+                    if (!host.streamProfiles.empty()) {
+                        json_t* profiles = json_object();
+                        for (const auto& [context, profile] : host.streamProfiles) {
+                            json_object_set_new(profiles,
+                                                stream_context_key(context),
+                                                save_stream_profile(profile));
+                        }
+                        json_object_set_new(json, "stream_profiles", profiles);
+                    }
+
+                    if (!host.streamQuality.empty()) {
+                        json_t* quality = json_object();
+                        for (const auto& [context, aggregate] : host.streamQuality) {
+                            json_object_set_new(quality,
+                                                stream_context_key(context),
+                                                save_stream_quality(aggregate));
+                        }
+                        json_object_set_new(json, "stream_quality", quality);
                     }
                     json_array_append_new(hosts, json);
                 }

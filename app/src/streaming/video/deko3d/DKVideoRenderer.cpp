@@ -4,6 +4,7 @@
 
 #include "DKVideoRenderer.hpp"
 #include "Settings.hpp"
+#include "StreamProfileResolver.hpp"
 #include <borealis/platforms/switch/switch_platform.hpp>
 
 #include <libavcodec/avcodec.h>
@@ -74,6 +75,34 @@ namespace
     static constexpr float DefaultDitheringStrength = 3.0f;
     static constexpr float DefaultRcasStrength = 0.2f;
 #endif
+
+    bool streamUpscalingEnabled() {
+        const auto* settings = activeResolvedStreamSettings();
+        return settings ? settings->upscalingMode != UPSCALING_OFF
+                        : Settings::instance().upscaling();
+    }
+
+    bool streamDitheringEnabled() {
+        const auto* settings = activeResolvedStreamSettings();
+        return settings ? settings->dithering : Settings::instance().dithering();
+    }
+
+    float streamDitheringStrength() {
+        const auto* settings = activeResolvedStreamSettings();
+        return settings ? settings->ditheringStrength
+                        : Settings::instance().dithering_strength();
+    }
+
+    bool streamRcasEnabled() {
+        const auto* settings = activeResolvedStreamSettings();
+        return settings ? settings->rcas : Settings::instance().rcas();
+    }
+
+    float streamRcasStrength() {
+        const auto* settings = activeResolvedStreamSettings();
+        return settings ? settings->rcasStrength
+                        : Settings::instance().rcas_strength();
+    }
 
     struct Transformation
     {
@@ -303,7 +332,7 @@ DKVideoRenderer::~DKVideoRenderer() {
 
 bool DKVideoRenderer::shouldUseUpscaling() const {
 #ifdef SUPPORT_UPSCALING
-    return Settings::instance().upscaling() && m_frame_width > 0 &&
+    return streamUpscalingEnabled() && m_frame_width > 0 &&
            m_frame_height > 0 && m_screen_width > 0 && m_screen_height > 0 &&
            (m_screen_width > m_frame_width || m_screen_height > m_frame_height);
 #else
@@ -313,7 +342,7 @@ bool DKVideoRenderer::shouldUseUpscaling() const {
 
 #ifdef SUPPORT_UPSCALING
 bool DKVideoRenderer::shouldUseDithering() const {
-    return Settings::instance().dithering() && Settings::instance().dithering_strength() > 0.0f && m_frame_width > 0 &&
+    return streamDitheringEnabled() && streamDitheringStrength() > 0.0f && m_frame_width > 0 &&
            m_frame_height > 0 && m_screen_width > 0 && m_screen_height > 0;
 }
 
@@ -323,7 +352,7 @@ void DKVideoRenderer::updateDitheringConstants() {
     }
 
     const float requestedStrength =
-        std::clamp(Settings::instance().dithering_strength(), 1.0f, 10.0f);
+        std::clamp(streamDitheringStrength(), 1.0f, 10.0f);
     DitheringConstants ditheringConstants = {};
     ditheringConstants.control[0] = m_dithering_enabled ? 1.0f : 0.0f;
     ditheringConstants.control[1] = requestedStrength;
@@ -333,7 +362,7 @@ void DKVideoRenderer::updateDitheringConstants() {
 }
 
 bool DKVideoRenderer::shouldUseRcas() const {
-    return Settings::instance().rcas() && Settings::instance().rcas_strength() > 0.0f && m_frame_width > 0 &&
+    return streamRcasEnabled() && streamRcasStrength() > 0.0f && m_frame_width > 0 &&
            m_frame_height > 0 && m_screen_width > 0 && m_screen_height > 0;
 }
 
@@ -343,7 +372,7 @@ void DKVideoRenderer::updateRcasConstants() {
     }
 
     const float requestedStrength =
-        std::clamp(Settings::instance().rcas_strength(), 0.0f, 1.0f);
+        std::clamp(streamRcasStrength(), 0.0f, 1.0f);
     if (requestedStrength == m_rcas_strength) {
         return;
     }
@@ -942,17 +971,17 @@ void DKVideoRenderer::updateRenderState(int width, int height, AVFrame* frame) {
         m_color_space != static_cast<int>(colorSpace) || m_color_full != colorFull;
 #ifdef SUPPORT_UPSCALING
     const bool requestedDithering =
-        Settings::instance().dithering() && frame->width > 0 && frame->height > 0 &&
+        streamDitheringEnabled() && frame->width > 0 && frame->height > 0 &&
         width > 0 && height > 0;
 #else
     const bool requestedDithering = false;
 #endif
     const bool requestedUpscaling =
-        Settings::instance().upscaling() && frame->width > 0 && frame->height > 0 &&
+        streamUpscalingEnabled() && frame->width > 0 && frame->height > 0 &&
         width > 0 && height > 0 &&
         (width > frame->width || height > frame->height);
     const bool requestedRcas =
-        Settings::instance().rcas() && Settings::instance().rcas_strength() > 0.0f &&
+        streamRcasEnabled() && streamRcasStrength() > 0.0f &&
         frame->width > 0 && frame->height > 0 &&
         width > 0 && height > 0;
     const bool ditheringChanged = m_dithering_requested != requestedDithering;

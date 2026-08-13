@@ -157,6 +157,7 @@
         "overlay_zero_time": "0 (즉시)",
         "paop": "PC에서 오디오 재생",
         "quality": "품질 (설정이 높을수록 CPU 오버클럭 필요)",
+        "global_defaults": "전역 기본값 · 품질",
         "request_hdr": "HDR 비디오 요청",
         "resolution": "해상도",
         "resolution_native": "기본",
@@ -181,6 +182,12 @@
         "video_codec": "동영상 코덱",
         "volume_amplification": "볼륨 증폭 허용",
         "zero_threads": "0 (스레드 사용 안 함)"
+    },
+    "stream_profiles": {
+        "title": "스트리밍 프로필", "context": "연결 환경",
+        "local_wifi": "로컬 Wi-Fi", "local_ethernet": "로컬 Ethernet", "remote": "원격",
+        "use_custom": "사용자 지정 프로필 사용", "configured": "설정됨",
+        "inherited": "전역 기본값 상속", "all_inherited": "모두 전역 기본값 상속"
     },
     "streaming": {
         "connection": "연결",

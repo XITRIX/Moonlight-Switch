@@ -157,6 +157,7 @@
         "overlay_zero_time": "0 (すぐに)",
         "paop": "PCでオーディオを再生する",
         "quality": "品質 (Higher settings requires CPU overclock)",
+        "global_defaults": "グローバル既定値 · 品質",
         "request_hdr": "Request HDR Video",
         "resolution": "解像度",
         "resolution_native": "ネイティブ",
@@ -181,6 +182,12 @@
         "video_codec": "ビデオコーデック",
         "volume_amplification": "ボリューム増幅を許可する",
         "zero_threads": "0 (使用しないスレッド)"
+    },
+    "stream_profiles": {
+        "title": "ストリーミングプロファイル", "context": "接続コンテキスト",
+        "local_wifi": "ローカル Wi-Fi", "local_ethernet": "ローカル Ethernet", "remote": "リモート",
+        "use_custom": "カスタムプロファイルを使用", "configured": "設定済み",
+        "inherited": "グローバル既定値を継承", "all_inherited": "すべてグローバル既定値を継承"
     },
     "streaming": {
         "connection": "接続",

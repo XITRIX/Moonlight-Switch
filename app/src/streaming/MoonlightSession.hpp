@@ -2,6 +2,7 @@
 
 #include "GameStreamClient.hpp"
 #include "MoonlightSessionDecoderAndRenderProvider.hpp"
+#include "StreamProfileResolver.hpp"
 #include <nanovg.h>
 
 struct SessionStats {
@@ -22,6 +23,10 @@ class MoonlightSession {
     void start(ServerCallback<bool> callback, bool is_sunshine);
     void stop(int terminate_app);
     void set_address(const std::string& address) { m_address = address; }
+    void set_stream_settings(const ResolvedStreamSettings& settings);
+    [[nodiscard]] const ResolvedStreamSettings& stream_settings() const {
+        return m_stream_settings;
+    }
 
     void restart();
 
@@ -92,6 +97,7 @@ class MoonlightSession {
     bool m_force_disable_av1 = false;
     bool m_av1_fallback_attempted = false;
     bool m_av1_decoder_failed = false;
+    ResolvedStreamSettings m_stream_settings;
 
     SessionStats m_session_stats = {};
     uint64_t m_last_stats_update_ms = 0;

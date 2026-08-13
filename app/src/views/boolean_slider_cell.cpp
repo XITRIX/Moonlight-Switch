@@ -32,6 +32,10 @@ void BooleanSliderCell::setProgress(float progress) {
     slider->setProgress(progress);
 }
 
+void BooleanSliderCell::setOn(bool on, bool animated) {
+    toggle->setOn(on, animated);
+}
+
 float BooleanSliderCell::getProgress() {
     return slider->getProgress();
 }

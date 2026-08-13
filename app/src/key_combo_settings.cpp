@@ -35,7 +35,8 @@ std::string setup_message(KeyComboAction action) {
         return "settings/mouse_input_setup_message"_i18n;
     case KeyComboAction::HOST_CLOSE_APP:
     case KeyComboAction::HOST_SWITCH_WINDOW:
-        return fmt::format("settings/host_shortcut_setup_message"_i18n,
+        return fmt::format(fmt::runtime(
+                               "settings/host_shortcut_setup_message"_i18n),
                            action_title(action));
     }
 
@@ -79,7 +80,7 @@ void openKeyComboDialog(KeyComboAction action, DetailCell* cell,
                 Settings::instance().key_combo_conflict(action, buttons);
             if (conflict.has_value()) {
                 const std::string message = fmt::format(
-                    "settings/key_combo_conflict"_i18n,
+                    fmt::runtime("settings/key_combo_conflict"_i18n),
                     action_title(conflict.value()));
                 sync([message] { showError(message, [] {}); });
                 return;

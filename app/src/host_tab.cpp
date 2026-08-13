@@ -10,6 +10,8 @@
 #include "app_list_view.hpp"
 #include "helper.hpp"
 #include "main_tabs_view.hpp"
+#include "stream_profiles_view.hpp"
+#include "StreamProfileResolver.hpp"
 
 using namespace brls::literals;
 
@@ -32,6 +34,17 @@ HostTab::HostTab(const Host& host) : host(host) {
     remove->title->setTextColor(RGB(229, 57, 53));
 
     reloadHost();
+
+#ifdef PLATFORM_SWITCH
+    streamProfiles->setText("stream_profiles/title"_i18n);
+    updateStreamProfileSummary();
+    streamProfiles->registerClickAction([this](View*) {
+        present(new StreamProfilesView(this->host));
+        return true;
+    });
+#else
+    streamProfiles->removeFromSuperView(true);
+#endif
 
     registerAction("host/rename"_i18n, ControllerButton::BUTTON_START,
                    [this](View* view) {
@@ -117,7 +130,30 @@ HostTab::HostTab(const Host& host) : host(host) {
     });
 }
 
+void HostTab::onFocusGained() {
+    Box::onFocusGained();
+#ifdef PLATFORM_SWITCH
+    host = Settings::instance().host(host).value_or(host);
+    updateStreamProfileSummary();
+#endif
+}
+
+void HostTab::updateStreamProfileSummary() {
+#ifdef PLATFORM_SWITCH
+    size_t configuredProfiles = 0;
+    for (const auto& [context, profile] : host.streamProfiles) {
+        if (profile.enabled)
+            configuredProfiles++;
+    }
+    streamProfiles->setDetailText(
+        configuredProfiles == 0
+            ? "stream_profiles/all_inherited"_i18n
+            : fmt::format("{} / 3", configuredProfiles));
+#endif
+}
+
 void HostTab::reloadHost() {
+    host = Settings::instance().host(host).value_or(host);
     state = FETCHING;
     header->setTitle("host/status"_i18n + ": " + "host/fetching"_i18n);
     header->setSubtitle(host_subtitle(host));

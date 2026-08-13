@@ -5,6 +5,7 @@
 #include <map>
 #include <optional>
 #include <cstdio>
+#include <cstdint>
 #include <string>
 #include <utility>
 #include <vector>
@@ -21,6 +22,46 @@ std::string getFramePacingModeName(FramePacingMode mode);
 const char* getFramePacingModeDebugName(FramePacingMode mode);
 
 enum UpscalingMode : int { UPSCALING_OFF, UPSCALING_METALFX, UPSCALING_FSR1 };
+
+enum class StreamProfileContext : int {
+    LocalWifi = 0,
+    LocalEthernet = 1,
+    Remote = 2,
+};
+
+struct StreamProfile {
+    bool enabled = false;
+    std::optional<int> resolution;
+    std::optional<int> nativeResolutionScale;
+    std::optional<int> fps;
+    std::optional<int> bitrate;
+    std::optional<VideoCodec> videoCodec;
+    std::optional<bool> requestHdr;
+    std::optional<FramePacingMode> framePacingMode;
+    std::optional<UpscalingMode> upscalingMode;
+    std::optional<bool> dithering;
+    std::optional<float> ditheringStrength;
+    std::optional<bool> rcas;
+    std::optional<float> rcasStrength;
+};
+
+// Compact, per-host/context storage reserved for the quality assistant. Phase 1
+// only persists this model; it does not collect or upload telemetry.
+struct StreamQualityAggregate {
+    uint32_t sampleCount = 0;
+    float rttMs = 0.0f;
+    float rttVariationMs = 0.0f;
+    float networkFrameLoss = 0.0f;
+    float hostFps = 0.0f;
+    float receivedFps = 0.0f;
+    float decodedFps = 0.0f;
+    float renderedFps = 0.0f;
+    float decodeTimeMs = 0.0f;
+    float gpuTimeMs = 0.0f;
+    float postProcessingTimeMs = 0.0f;
+    float queueDepth = 0.0f;
+    float underflowsPerSecond = 0.0f;
+};
 
 enum AudioBackend : int {
     SDL,
@@ -63,6 +104,8 @@ struct Host {
     std::string hostname;
     std::string mac;
     std::vector<App> favorites;
+    std::map<StreamProfileContext, StreamProfile> streamProfiles;
+    std::map<StreamProfileContext, StreamQualityAggregate> streamQuality;
 
     [[nodiscard]] std::vector<std::string> connection_addresses() const {
         std::vector<std::string> addresses;
@@ -114,8 +157,16 @@ class Settings : public Singleton<Settings> {
 
     [[nodiscard]] std::vector<Host> hosts() const { return m_hosts; }
 
+    [[nodiscard]] std::optional<Host> host(const Host& host) const;
+
     void add_host(const Host& host);
     void remove_host(const Host& host);
+    void set_stream_profile(const Host& host, StreamProfileContext context,
+                            const StreamProfile& profile,
+                            bool persist = true);
+    void set_stream_quality_aggregate(
+        const Host& host, StreamProfileContext context,
+        const StreamQualityAggregate& aggregate);
 
     void add_favorite(const Host& host, const App& app);
     void remove_favorite(const Host& host, int app_id);

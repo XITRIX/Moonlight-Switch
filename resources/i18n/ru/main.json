@@ -157,6 +157,7 @@
         "overlay_zero_time": "0 (Немедленно)",
         "paop": "Воспроизводить аудио на ПК",
         "quality": "Качество (Повышенные настройки требуют разгона CPU)",
+        "global_defaults": "Глобальные настройки · Качество",
         "request_hdr": "Запрашивать HDR Видео",
         "resolution": "Разрешение",
         "resolution_native": "Родное",
@@ -181,6 +182,12 @@
         "video_codec": "Видео кодек",
         "volume_amplification": "Разрешить усиление громкости",
         "zero_threads": "0 (Не использовать потоки)"
+    },
+    "stream_profiles": {
+        "title": "Профили стриминга", "context": "Контекст подключения",
+        "local_wifi": "Локальный Wi-Fi", "local_ethernet": "Локальный Ethernet", "remote": "Удалённо",
+        "use_custom": "Использовать свой профиль", "configured": "Настроено",
+        "inherited": "Унаследовано из глобальных настроек", "all_inherited": "Все используют глобальные настройки"
     },
     "streaming": {
         "connection": "Соединение",

@@ -157,6 +157,7 @@
         "overlay_zero_time": "0 (keine Verzögerung)",
         "paop": "Audio auf Host abspielen",
         "quality": "Qualität (Higher settings requires CPU overclock)",
+        "global_defaults": "Globale Standards · Qualität",
         "request_hdr": "Request HDR Video",
         "resolution": "Auflösung",
         "resolution_native": "Nativ",
@@ -181,6 +182,12 @@
         "video_codec": "Video Codec",
         "volume_amplification": "Lautstärkeverstärkung zulassen",
         "zero_threads": "0 (Keine Threads benutzen)"
+    },
+    "stream_profiles": {
+        "title": "Streaming-Profile", "context": "Verbindungskontext",
+        "local_wifi": "Lokales WLAN", "local_ethernet": "Lokales Ethernet", "remote": "Remote",
+        "use_custom": "Benutzerdefiniertes Profil verwenden", "configured": "Konfiguriert",
+        "inherited": "Von globalen Standards geerbt", "all_inherited": "Alle verwenden globale Standards"
     },
     "streaming": {
         "connection": "Verbindung",

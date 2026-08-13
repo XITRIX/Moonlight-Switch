@@ -4,6 +4,7 @@
 #include <chrono>
 #include <functional>
 #include "Settings.hpp"
+#include "StreamProfileResolver.hpp"
 #include <mutex>
 #include <queue>
 
@@ -112,9 +113,12 @@ class AVFrameHolder : public Singleton<AVFrameHolder> {
     }
 
     void prepare(int streamFps, bool transferOwnership = false) {
+        const auto* streamSettings = activeResolvedStreamSettings();
         m_frame_queue.configure(Settings::instance().frames_queue_size(),
                                 streamFps, transferOwnership,
-                                Settings::instance().frame_pacing_mode());
+                                streamSettings
+                                    ? streamSettings->framePacingMode
+                                    : Settings::instance().frame_pacing_mode());
     }
 
     void cleanup() {
