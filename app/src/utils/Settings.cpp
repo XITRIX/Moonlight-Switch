@@ -5,12 +5,65 @@
 #include <iomanip>
 #include <climits>
 #include <filesystem>
+#include <set>
 
 using namespace brls;
 using namespace brls::literals;
 
 namespace {
 namespace fs = std::filesystem;
+
+bool key_combos_conflict(
+    const std::vector<brls::ControllerButton>& lhs,
+    const std::vector<brls::ControllerButton>& rhs) {
+    if (lhs.empty() || rhs.empty())
+        return false;
+
+    std::set<brls::ControllerButton> lhsButtons(lhs.begin(), lhs.end());
+    std::set<brls::ControllerButton> rhsButtons(rhs.begin(), rhs.end());
+    const auto& smaller = lhsButtons.size() < rhsButtons.size() ? lhsButtons
+                                                                : rhsButtons;
+    const auto& larger = lhsButtons.size() < rhsButtons.size() ? rhsButtons
+                                                               : lhsButtons;
+    return std::includes(larger.begin(), larger.end(), smaller.begin(),
+                         smaller.end());
+}
+
+void load_button_array(json_t* settings, const char* key,
+                       std::vector<brls::ControllerButton>& buttons) {
+    json_t* jsonButtons = json_object_get(settings, key);
+    if (!json_is_array(jsonButtons))
+        return;
+
+    buttons.clear();
+    const size_t size = json_array_size(jsonButtons);
+    for (size_t i = 0; i < size; i++) {
+        json_t* button = json_array_get(jsonButtons, i);
+        if (!json_is_integer(button))
+            continue;
+
+        const auto value = json_integer_value(button);
+        if (value < 0 || value >= brls::ControllerButton::_BUTTON_MAX)
+            continue;
+
+        const auto controllerButton =
+            static_cast<brls::ControllerButton>(value);
+        if (std::find(buttons.begin(), buttons.end(), controllerButton) ==
+            buttons.end())
+            buttons.push_back(controllerButton);
+    }
+}
+
+void save_button_array(json_t* settings, const char* key,
+                       const std::vector<brls::ControllerButton>& buttons) {
+    json_t* jsonButtons = json_array();
+    if (!jsonButtons)
+        return;
+
+    for (auto button : buttons)
+        json_array_append_new(jsonButtons, json_integer(button));
+    json_object_set_new(settings, key, jsonButtons);
+}
 
 Host* find_host(std::vector<Host>& hosts, const Host& target) {
     auto it = std::find_if(hosts.begin(), hosts.end(), [target](const Host& host) {
@@ -46,6 +99,149 @@ std::string make_preferred_path(const fs::path& path) {
 std::string settings_file_path(const std::string& working_dir) {
     return make_preferred_path(fs::path(working_dir) / "settings.json");
 }
+
+const char* stream_context_key(StreamProfileContext context) {
+    switch (context) {
+    case StreamProfileContext::LocalWifi:
+        return "local_wifi";
+    case StreamProfileContext::LocalEthernet:
+        return "local_ethernet";
+    case StreamProfileContext::Remote:
+        return "remote";
+    }
+    return "";
+}
+
+constexpr StreamProfileContext stream_contexts[] = {
+    StreamProfileContext::LocalWifi,
+    StreamProfileContext::LocalEthernet,
+    StreamProfileContext::Remote,
+};
+
+std::optional<int> optional_integer(json_t* object, const char* key) {
+    json_t* value = json_object_get(object, key);
+    if (!json_is_integer(value))
+        return std::nullopt;
+    return static_cast<int>(json_integer_value(value));
+}
+
+std::optional<float> optional_number(json_t* object, const char* key) {
+    json_t* value = json_object_get(object, key);
+    if (!json_is_number(value))
+        return std::nullopt;
+    return static_cast<float>(json_number_value(value));
+}
+
+std::optional<bool> optional_boolean(json_t* object, const char* key) {
+    json_t* value = json_object_get(object, key);
+    if (!json_is_boolean(value))
+        return std::nullopt;
+    return json_is_true(value);
+}
+
+StreamProfile load_stream_profile(json_t* json) {
+    StreamProfile profile;
+    if (!json_is_object(json))
+        return profile;
+
+    profile.enabled = optional_boolean(json, "enabled").value_or(false);
+    profile.resolution = optional_integer(json, "resolution");
+    profile.nativeResolutionScale = optional_integer(json, "native_resolution_scale");
+    profile.fps = optional_integer(json, "fps");
+    profile.bitrate = optional_integer(json, "bitrate");
+    if (const auto value = optional_integer(json, "video_codec"))
+        profile.videoCodec = static_cast<VideoCodec>(*value);
+    profile.requestHdr = optional_boolean(json, "enable_hdr");
+    if (const auto value = optional_integer(json, "frame_pacing_mode"))
+        profile.framePacingMode = static_cast<FramePacingMode>(*value);
+    if (const auto value = optional_integer(json, "upscaling_mode"))
+        profile.upscalingMode = static_cast<UpscalingMode>(*value);
+    profile.dithering = optional_boolean(json, "enable_dithering");
+    profile.ditheringStrength = optional_number(json, "dithering_strength");
+    profile.rcas = optional_boolean(json, "enable_rcas");
+    profile.rcasStrength = optional_number(json, "rcas_strength");
+    return profile;
+}
+
+void set_optional_integer(json_t* json, const char* key,
+                          const std::optional<int>& value) {
+    if (value)
+        json_object_set_new(json, key, json_integer(*value));
+}
+
+void set_optional_number(json_t* json, const char* key,
+                         const std::optional<float>& value) {
+    if (value)
+        json_object_set_new(json, key, json_real(*value));
+}
+
+void set_optional_boolean(json_t* json, const char* key,
+                          const std::optional<bool>& value) {
+    if (value)
+        json_object_set_new(json, key, *value ? json_true() : json_false());
+}
+
+json_t* save_stream_profile(const StreamProfile& profile) {
+    json_t* json = json_object();
+    json_object_set_new(json, "enabled", profile.enabled ? json_true() : json_false());
+    set_optional_integer(json, "resolution", profile.resolution);
+    set_optional_integer(json, "native_resolution_scale", profile.nativeResolutionScale);
+    set_optional_integer(json, "fps", profile.fps);
+    set_optional_integer(json, "bitrate", profile.bitrate);
+    if (profile.videoCodec)
+        json_object_set_new(json, "video_codec", json_integer(*profile.videoCodec));
+    set_optional_boolean(json, "enable_hdr", profile.requestHdr);
+    if (profile.framePacingMode)
+        json_object_set_new(json, "frame_pacing_mode",
+                            json_integer(static_cast<int>(*profile.framePacingMode)));
+    if (profile.upscalingMode)
+        json_object_set_new(json, "upscaling_mode",
+                            json_integer(static_cast<int>(*profile.upscalingMode)));
+    set_optional_boolean(json, "enable_dithering", profile.dithering);
+    set_optional_number(json, "dithering_strength", profile.ditheringStrength);
+    set_optional_boolean(json, "enable_rcas", profile.rcas);
+    set_optional_number(json, "rcas_strength", profile.rcasStrength);
+    return json;
+}
+
+StreamQualityAggregate load_stream_quality(json_t* json) {
+    StreamQualityAggregate aggregate;
+    if (!json_is_object(json))
+        return aggregate;
+    aggregate.sampleCount = static_cast<uint32_t>(
+        std::max(0, optional_integer(json, "sample_count").value_or(0)));
+    aggregate.rttMs = optional_number(json, "rtt_ms").value_or(0.0f);
+    aggregate.rttVariationMs = optional_number(json, "rtt_variation_ms").value_or(0.0f);
+    aggregate.networkFrameLoss = optional_number(json, "network_frame_loss").value_or(0.0f);
+    aggregate.hostFps = optional_number(json, "host_fps").value_or(0.0f);
+    aggregate.receivedFps = optional_number(json, "received_fps").value_or(0.0f);
+    aggregate.decodedFps = optional_number(json, "decoded_fps").value_or(0.0f);
+    aggregate.renderedFps = optional_number(json, "rendered_fps").value_or(0.0f);
+    aggregate.decodeTimeMs = optional_number(json, "decode_time_ms").value_or(0.0f);
+    aggregate.gpuTimeMs = optional_number(json, "gpu_time_ms").value_or(0.0f);
+    aggregate.postProcessingTimeMs = optional_number(json, "post_processing_time_ms").value_or(0.0f);
+    aggregate.queueDepth = optional_number(json, "queue_depth").value_or(0.0f);
+    aggregate.underflowsPerSecond = optional_number(json, "underflows_per_second").value_or(0.0f);
+    return aggregate;
+}
+
+json_t* save_stream_quality(const StreamQualityAggregate& aggregate) {
+    json_t* json = json_object();
+    json_object_set_new(json, "sample_count", json_integer(aggregate.sampleCount));
+    json_object_set_new(json, "rtt_ms", json_real(aggregate.rttMs));
+    json_object_set_new(json, "rtt_variation_ms", json_real(aggregate.rttVariationMs));
+    json_object_set_new(json, "network_frame_loss", json_real(aggregate.networkFrameLoss));
+    json_object_set_new(json, "host_fps", json_real(aggregate.hostFps));
+    json_object_set_new(json, "received_fps", json_real(aggregate.receivedFps));
+    json_object_set_new(json, "decoded_fps", json_real(aggregate.decodedFps));
+    json_object_set_new(json, "rendered_fps", json_real(aggregate.renderedFps));
+    json_object_set_new(json, "decode_time_ms", json_real(aggregate.decodeTimeMs));
+    json_object_set_new(json, "gpu_time_ms", json_real(aggregate.gpuTimeMs));
+    json_object_set_new(json, "post_processing_time_ms", json_real(aggregate.postProcessingTimeMs));
+    json_object_set_new(json, "queue_depth", json_real(aggregate.queueDepth));
+    json_object_set_new(json, "underflows_per_second", json_real(aggregate.underflowsPerSecond));
+    return json;
+}
 }
 
 std::string getVideoCodecName(VideoCodec codec) {
@@ -58,6 +254,32 @@ std::string getVideoCodecName(VideoCodec codec) {
             return "settings/av1"_i18n;
         default:
             return "settings/h264"_i18n;
+    }
+}
+
+std::string getFramePacingModeName(FramePacingMode mode) {
+    switch (mode) {
+    case FramePacingMode::LOWEST_LATENCY:
+        return "settings/frame_pacing_lowest_latency"_i18n;
+    case FramePacingMode::BALANCED:
+        return "settings/frame_pacing_balanced"_i18n;
+    case FramePacingMode::SMOOTHEST_VIDEO:
+        return "settings/frame_pacing_smoothest"_i18n;
+    default:
+        return "settings/frame_pacing_balanced"_i18n;
+    }
+}
+
+const char* getFramePacingModeDebugName(FramePacingMode mode) {
+    switch (mode) {
+    case FramePacingMode::LOWEST_LATENCY:
+        return "lowest-latency";
+    case FramePacingMode::BALANCED:
+        return "balanced";
+    case FramePacingMode::SMOOTHEST_VIDEO:
+        return "smoothest-video";
+    default:
+        return "balanced";
     }
 }
 
@@ -87,6 +309,32 @@ void Settings::add_host(const Host& host) {
     }
 
     save();
+}
+
+std::optional<Host> Settings::host(const Host& host) const {
+    if (const Host* existing = find_host(m_hosts, host))
+        return *existing;
+    return std::nullopt;
+}
+
+void Settings::set_stream_profile(const Host& host,
+                                  StreamProfileContext context,
+                                  const StreamProfile& profile,
+                                  bool persist) {
+    if (Host* existing = find_host(m_hosts, host)) {
+        existing->streamProfiles[context] = profile;
+        if (persist)
+            save();
+    }
+}
+
+void Settings::set_stream_quality_aggregate(
+    const Host& host, StreamProfileContext context,
+    const StreamQualityAggregate& aggregate) {
+    if (Host* existing = find_host(m_hosts, host)) {
+        existing->streamQuality[context] = aggregate;
+        save();
+    }
 }
 
 void Settings::remove_host(const Host& host) {
@@ -146,6 +394,96 @@ bool Settings::has_any_favorite() {
     return std::any_of(m_hosts.begin(), m_hosts.end(), [&](const auto &item) {
         return !item.favorites.empty();
     });
+}
+
+void Settings::set_key_combo_options(KeyComboAction action,
+                                     KeyComboOptions options) {
+    switch (action) {
+    case KeyComboAction::GUIDE:
+        m_guide_key_options = std::move(options);
+        break;
+    case KeyComboAction::OVERLAY:
+        m_overlay_options = std::move(options);
+        break;
+    case KeyComboAction::MOUSE_INPUT:
+        m_mouse_input_options = std::move(options);
+        break;
+    case KeyComboAction::HOST_CLOSE_APP:
+        options.holdTime = 1;
+        m_host_close_app_options = std::move(options);
+        break;
+    case KeyComboAction::HOST_SWITCH_WINDOW:
+        options.holdTime = 1;
+        m_host_switch_window_options = std::move(options);
+        break;
+    }
+}
+
+KeyComboOptions Settings::key_combo_options(KeyComboAction action) const {
+    switch (action) {
+    case KeyComboAction::GUIDE:
+        return m_guide_key_options;
+    case KeyComboAction::OVERLAY:
+        return m_overlay_options;
+    case KeyComboAction::MOUSE_INPUT:
+        return m_mouse_input_options;
+    case KeyComboAction::HOST_CLOSE_APP:
+        return m_host_close_app_options;
+    case KeyComboAction::HOST_SWITCH_WINDOW:
+        return m_host_switch_window_options;
+    }
+
+    return {.holdTime = 0, .buttons = {}};
+}
+
+std::optional<KeyComboAction> Settings::key_combo_conflict(
+    KeyComboAction action,
+    const std::vector<brls::ControllerButton>& buttons) const {
+    constexpr KeyComboAction actions[] = {
+        KeyComboAction::GUIDE,
+        KeyComboAction::OVERLAY,
+        KeyComboAction::MOUSE_INPUT,
+        KeyComboAction::HOST_CLOSE_APP,
+        KeyComboAction::HOST_SWITCH_WINDOW,
+    };
+
+    for (auto candidate : actions) {
+        if (candidate == action)
+            continue;
+        if (key_combos_conflict(buttons,
+                                key_combo_options(candidate).buttons))
+            return candidate;
+    }
+
+    return std::nullopt;
+}
+
+void Settings::sanitizeHostShortcutOptions() {
+    constexpr KeyComboAction existingActions[] = {
+        KeyComboAction::GUIDE,
+        KeyComboAction::OVERLAY,
+        KeyComboAction::MOUSE_INPUT,
+    };
+
+    for (auto action : existingActions) {
+        if (key_combos_conflict(m_host_close_app_options.buttons,
+                                key_combo_options(action).buttons)) {
+            m_host_close_app_options.buttons.clear();
+            break;
+        }
+    }
+
+    for (auto action : existingActions) {
+        if (key_combos_conflict(m_host_switch_window_options.buttons,
+                                key_combo_options(action).buttons)) {
+            m_host_switch_window_options.buttons.clear();
+            return;
+        }
+    }
+
+    if (key_combos_conflict(m_host_switch_window_options.buttons,
+                            m_host_close_app_options.buttons))
+        m_host_switch_window_options.buttons.clear();
 }
 
 void Settings::load() {
@@ -213,6 +551,30 @@ void Settings::load() {
                                 }
                             }
                         }
+
+                        if (json_t* profiles =
+                                json_object_get(json, "stream_profiles");
+                            json_is_object(profiles)) {
+                            for (auto context : stream_contexts) {
+                                json_t* profile = json_object_get(
+                                    profiles, stream_context_key(context));
+                                if (json_is_object(profile))
+                                    host.streamProfiles[context] =
+                                        load_stream_profile(profile);
+                            }
+                        }
+
+                        if (json_t* quality =
+                                json_object_get(json, "stream_quality");
+                            json_is_object(quality)) {
+                            for (auto context : stream_contexts) {
+                                json_t* aggregate = json_object_get(
+                                    quality, stream_context_key(context));
+                                if (json_is_object(aggregate))
+                                    host.streamQuality[context] =
+                                        load_stream_quality(aggregate);
+                            }
+                        }
                         
                         m_hosts.push_back(host);
                     }
@@ -241,7 +603,7 @@ void Settings::load() {
             
             if (json_t* video_codec = json_object_get(settings, "video_codec")) {
                 if (json_typeof(video_codec) == JSON_INTEGER) {
-                    m_video_codec = (VideoCodec)json_integer_value(video_codec);
+                    set_video_codec((VideoCodec)json_integer_value(video_codec));
                 }
             }
 
@@ -311,6 +673,13 @@ void Settings::load() {
 
                     // SANITY CHECK, APP WILL CRASH OTHERWISE
                     if (m_frames_queue_size < 1) m_frames_queue_size = 1;
+                }
+            }
+
+            if (json_t* frame_pacing_mode = json_object_get(settings, "frame_pacing_mode")) {
+                if (json_typeof(frame_pacing_mode) == JSON_INTEGER) {
+                    set_frame_pacing_mode(
+                        (FramePacingMode)json_integer_value(frame_pacing_mode));
                 }
             }
 
@@ -426,47 +795,17 @@ void Settings::load() {
                 }
             }
 
-            if (json_t* buttons = json_object_get(settings, "overlay_buttons")) {
-                m_overlay_options.buttons.clear();
-                size_t size = json_array_size(buttons);
-                for (size_t i = 0; i < size; i++) {
-                    if (json_t* j_button = json_array_get(buttons, i)) {
-                        brls::ControllerButton button;
-                        if (json_typeof(j_button) == JSON_INTEGER) {
-                            button = (brls::ControllerButton)json_integer_value(j_button);
-                            m_overlay_options.buttons.push_back(button);
-                        }
-                    }
-                }
-            }
-            
-            if (json_t* buttons = json_object_get(settings, "mouse_input_buttons")) {
-                m_mouse_input_options.buttons.clear();
-                size_t size = json_array_size(buttons);
-                for (size_t i = 0; i < size; i++) {
-                    if (json_t* j_button = json_array_get(buttons, i)) {
-                        brls::ControllerButton button;
-                        if (json_typeof(j_button) == JSON_INTEGER) {
-                            button = (brls::ControllerButton)json_integer_value(j_button);
-                            m_mouse_input_options.buttons.push_back(button);
-                        }
-                    }
-                }
-            }
-            
-            if (json_t* buttons = json_object_get(settings, "guide_key_buttons")) {
-                m_guide_key_options.buttons.clear();
-                size_t size = json_array_size(buttons);
-                for (size_t i = 0; i < size; i++) {
-                    if (json_t* j_button = json_array_get(buttons, i)) {
-                        brls::ControllerButton button;
-                        if (json_typeof(j_button) == JSON_INTEGER) {
-                            button = (brls::ControllerButton)json_integer_value(j_button);
-                            m_guide_key_options.buttons.push_back(button);
-                        }
-                    }
-                }
-            }
+            load_button_array(settings, "overlay_buttons",
+                              m_overlay_options.buttons);
+            load_button_array(settings, "mouse_input_buttons",
+                              m_mouse_input_options.buttons);
+            load_button_array(settings, "guide_key_buttons",
+                              m_guide_key_options.buttons);
+            load_button_array(settings, "host_close_app_buttons",
+                              m_host_close_app_options.buttons);
+            load_button_array(settings, "host_switch_window_buttons",
+                              m_host_switch_window_options.buttons);
+            sanitizeHostShortcutOptions();
         }
 
         if (json_t* layouts = json_object_get(root, "mapping_layouts")) {
@@ -524,6 +863,26 @@ void Settings::save() {
                         }
                         json_object_set_new(json, "favorites", apps);
                     }
+
+                    if (!host.streamProfiles.empty()) {
+                        json_t* profiles = json_object();
+                        for (const auto& [context, profile] : host.streamProfiles) {
+                            json_object_set_new(profiles,
+                                                stream_context_key(context),
+                                                save_stream_profile(profile));
+                        }
+                        json_object_set_new(json, "stream_profiles", profiles);
+                    }
+
+                    if (!host.streamQuality.empty()) {
+                        json_t* quality = json_object();
+                        for (const auto& [context, aggregate] : host.streamQuality) {
+                            json_object_set_new(quality,
+                                                stream_context_key(context),
+                                                save_stream_quality(aggregate));
+                        }
+                        json_object_set_new(json, "stream_quality", quality);
+                    }
                     json_array_append_new(hosts, json);
                 }
             }
@@ -539,6 +898,8 @@ void Settings::save() {
             json_object_set_new(settings, "bitrate", json_integer(m_bitrate));
             json_object_set_new(settings, "decoder_threads", json_integer(m_decoder_threads));
             json_object_set_new(settings, "frames_queue_size", json_integer(m_frames_queue_size));
+            json_object_set_new(settings, "frame_pacing_mode",
+                                json_integer(static_cast<int>(m_frame_pacing_mode)));
             json_object_set_new(settings, "enable_hdr", m_enable_hdr ? json_true() : json_false());
             json_object_set_new(settings, "enable_upscaling", upscaling() ? json_true() : json_false());
             json_object_set_new(settings, "upscaling_mode", json_integer(upscaling_mode()));
@@ -570,26 +931,16 @@ void Settings::save() {
             json_object_set_new(settings, "overlay_system_button", json_integer((int)m_overlay_system_button));
             json_object_set_new(settings, "guide_system_button", json_integer((int)m_guide_system_button));
 
-            if (json_t* overlayButtons = json_array()) {
-                for (auto button: m_overlay_options.buttons) {
-                    json_array_append_new(overlayButtons, json_integer(button));
-                }
-                json_object_set_new(settings, "overlay_buttons", overlayButtons);
-            }
-
-            if (json_t* mouseInputButtons = json_array()) {
-                for (auto button: m_mouse_input_options.buttons) {
-                    json_array_append_new(mouseInputButtons, json_integer(button));
-                }
-                json_object_set_new(settings, "mouse_input_buttons", mouseInputButtons);
-            }
-            
-            if (json_t* guideKeyButtons = json_array()) { 
-                for (auto button: m_guide_key_options.buttons) {
-                    json_array_append_new(guideKeyButtons, json_integer(button));
-                }
-                json_object_set_new(settings, "guide_key_buttons", guideKeyButtons);
-            }
+            save_button_array(settings, "overlay_buttons",
+                              m_overlay_options.buttons);
+            save_button_array(settings, "mouse_input_buttons",
+                              m_mouse_input_options.buttons);
+            save_button_array(settings, "guide_key_buttons",
+                              m_guide_key_options.buttons);
+            save_button_array(settings, "host_close_app_buttons",
+                              m_host_close_app_options.buttons);
+            save_button_array(settings, "host_switch_window_buttons",
+                              m_host_switch_window_options.buttons);
             
             json_object_set_new(root, "settings", settings);
         }

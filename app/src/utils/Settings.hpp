@@ -3,7 +3,9 @@
 #include "Singleton.hpp"
 #include <borealis.hpp>
 #include <map>
+#include <optional>
 #include <cstdio>
+#include <cstdint>
 #include <string>
 #include <utility>
 #include <vector>
@@ -11,7 +13,55 @@
 enum VideoCodec : int { H264, H265, AV1 };
 std::string getVideoCodecName(VideoCodec codec);
 
+enum class FramePacingMode : int {
+    LOWEST_LATENCY = 0,
+    BALANCED = 1,
+    SMOOTHEST_VIDEO = 2,
+};
+std::string getFramePacingModeName(FramePacingMode mode);
+const char* getFramePacingModeDebugName(FramePacingMode mode);
+
 enum UpscalingMode : int { UPSCALING_OFF, UPSCALING_METALFX, UPSCALING_FSR1 };
+
+enum class StreamProfileContext : int {
+    LocalWifi = 0,
+    LocalEthernet = 1,
+    Remote = 2,
+};
+
+struct StreamProfile {
+    bool enabled = false;
+    std::optional<int> resolution;
+    std::optional<int> nativeResolutionScale;
+    std::optional<int> fps;
+    std::optional<int> bitrate;
+    std::optional<VideoCodec> videoCodec;
+    std::optional<bool> requestHdr;
+    std::optional<FramePacingMode> framePacingMode;
+    std::optional<UpscalingMode> upscalingMode;
+    std::optional<bool> dithering;
+    std::optional<float> ditheringStrength;
+    std::optional<bool> rcas;
+    std::optional<float> rcasStrength;
+};
+
+// Compact, per-host/context storage reserved for the quality assistant. Phase 1
+// only persists this model; it does not collect or upload telemetry.
+struct StreamQualityAggregate {
+    uint32_t sampleCount = 0;
+    float rttMs = 0.0f;
+    float rttVariationMs = 0.0f;
+    float networkFrameLoss = 0.0f;
+    float hostFps = 0.0f;
+    float receivedFps = 0.0f;
+    float decodedFps = 0.0f;
+    float renderedFps = 0.0f;
+    float decodeTimeMs = 0.0f;
+    float gpuTimeMs = 0.0f;
+    float postProcessingTimeMs = 0.0f;
+    float queueDepth = 0.0f;
+    float underflowsPerSecond = 0.0f;
+};
 
 enum AudioBackend : int {
     SDL,
@@ -35,6 +85,14 @@ struct KeyComboOptions {
     std::vector<brls::ControllerButton> buttons;
 };
 
+enum class KeyComboAction : int {
+    GUIDE,
+    OVERLAY,
+    MOUSE_INPUT,
+    HOST_CLOSE_APP,
+    HOST_SWITCH_WINDOW,
+};
+
 struct App {
     std::string name;
     int app_id;
@@ -46,6 +104,8 @@ struct Host {
     std::string hostname;
     std::string mac;
     std::vector<App> favorites;
+    std::map<StreamProfileContext, StreamProfile> streamProfiles;
+    std::map<StreamProfileContext, StreamQualityAggregate> streamQuality;
 
     [[nodiscard]] std::vector<std::string> connection_addresses() const {
         std::vector<std::string> addresses;
@@ -97,8 +157,16 @@ class Settings : public Singleton<Settings> {
 
     [[nodiscard]] std::vector<Host> hosts() const { return m_hosts; }
 
+    [[nodiscard]] std::optional<Host> host(const Host& host) const;
+
     void add_host(const Host& host);
     void remove_host(const Host& host);
+    void set_stream_profile(const Host& host, StreamProfileContext context,
+                            const StreamProfile& profile,
+                            bool persist = true);
+    void set_stream_quality_aggregate(
+        const Host& host, StreamProfileContext context,
+        const StreamQualityAggregate& aggregate);
 
     void add_favorite(const Host& host, const App& app);
     void remove_favorite(const Host& host, int app_id);
@@ -129,7 +197,42 @@ class Settings : public Singleton<Settings> {
     void set_fps(int fps) { m_fps = fps; }
 
     [[nodiscard]] VideoCodec video_codec() const { return m_video_codec; }
-    void set_video_codec(VideoCodec video_codec) { m_video_codec = video_codec; }
+    void set_video_codec(VideoCodec video_codec) {
+        switch (video_codec) {
+        case H264:
+        case H265:
+        case AV1:
+            m_video_codec = video_codec;
+            break;
+        default:
+#ifdef __PSV__
+            m_video_codec = H264;
+#else
+            m_video_codec = H265;
+#endif
+            break;
+        }
+    }
+
+    [[nodiscard]] FramePacingMode frame_pacing_mode() const {
+#ifdef __SWITCH__
+        return m_frame_pacing_mode;
+#else
+        return FramePacingMode::BALANCED;
+#endif
+    }
+    void set_frame_pacing_mode(FramePacingMode mode) {
+        switch (mode) {
+        case FramePacingMode::LOWEST_LATENCY:
+        case FramePacingMode::BALANCED:
+        case FramePacingMode::SMOOTHEST_VIDEO:
+            m_frame_pacing_mode = mode;
+            break;
+        default:
+            m_frame_pacing_mode = FramePacingMode::BALANCED;
+            break;
+        }
+    }
 
     [[nodiscard]] AudioBackend audio_backend() const { return m_audio_backend; }
     void set_audio_backend(AudioBackend audio_backend) { m_audio_backend = audio_backend; }
@@ -274,6 +377,13 @@ class Settings : public Singleton<Settings> {
     void set_mouse_input_options(KeyComboOptions options) { m_mouse_input_options = std::move(options); }
     [[nodiscard]] KeyComboOptions mouse_input_options() const { return m_mouse_input_options; }
 
+    void set_key_combo_options(KeyComboAction action, KeyComboOptions options);
+    [[nodiscard]] KeyComboOptions
+    key_combo_options(KeyComboAction action) const;
+    [[nodiscard]] std::optional<KeyComboAction> key_combo_conflict(
+        KeyComboAction action,
+        const std::vector<brls::ControllerButton>& buttons) const;
+
     void set_volume_amplification(bool allow) { m_volume_amplification = allow; }
     [[nodiscard]] bool get_volume_amplification() const { return m_volume_amplification; }
 
@@ -356,6 +466,7 @@ class Settings : public Singleton<Settings> {
     bool m_click_by_tap = false;
     int m_decoder_threads = 4;
     int m_frames_queue_size = 3;
+    FramePacingMode m_frame_pacing_mode = FramePacingMode::BALANCED;
     bool m_sops = false;
     bool m_play_audio = false;
     bool m_write_log = false;
@@ -389,9 +500,18 @@ class Settings : public Singleton<Settings> {
         .holdTime = 0,
         .buttons = {},
     };
+    KeyComboOptions m_host_close_app_options{
+        .holdTime = 1,
+        .buttons = {},
+    };
+    KeyComboOptions m_host_switch_window_options{
+        .holdTime = 1,
+        .buttons = {},
+    };
 
     float m_deadzone_stick_left = 0;
     float m_deadzone_stick_right = 0;
 
     void loadBaseLayouts();
+    void sanitizeHostShortcutOptions();
 };

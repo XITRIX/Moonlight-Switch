@@ -17,8 +17,10 @@ class HostTab : public brls::Box {
   public:
     HostTab(const Host& host);
     void reloadHost();
+    void onFocusGained() override;
 
     BRLS_BIND(brls::DetailCell, connect, "connect");
+    BRLS_BIND(brls::DetailCell, streamProfiles, "stream_profiles");
     BRLS_BIND(brls::DetailCell, remove, "remove");
     BRLS_BIND(brls::Header, header, "header");
 
@@ -27,4 +29,5 @@ class HostTab : public brls::Box {
     HostState state = HostState::FETCHING;
     uint64_t wakeRequestGeneration = 0;
     uint64_t canceledWakeRequestGeneration = 0;
+    void updateStreamProfileSummary();
 };

@@ -1,0 +1,48 @@
+<brls:Box
+    width="auto"
+    height="auto">
+
+    <brls:ScrollingFrame
+        width="auto"
+        height="auto"
+        axis="column"
+        alignItems="stretch"
+        grow="1.0">
+
+        <brls:Box
+            width="10000"
+            height="auto"
+            axis="column"
+            alignItems="stretch"
+            paddingTop="@style/brls/tab_details/padding_top"
+            paddingRight="@style/brls/tab_details/padding_right"
+            paddingBottom="@style/brls/tab_details/padding_bottom"
+            paddingLeft="@style/brls/tab_details/padding_left">
+
+            <brls:Header title="@i18n/stream_profiles/title"/>
+            <brls:DetailCell id="local_wifi"/>
+            <brls:DetailCell id="local_ethernet"/>
+            <brls:DetailCell id="remote"/>
+            <brls:Header id="summary" paddingTop="30"/>
+            <brls:BooleanCell id="enabled"/>
+            <brls:SelectorCell id="fps"/>
+            <brls:SelectorCell id="resolution"/>
+            <brls:SelectorCell id="resolution_scale"/>
+            <brls:SelectorCell id="codec"/>
+            <brls:BooleanCell id="request_hdr"/>
+            <brls:SelectorCell id="frame_pacing"/>
+            <brls:Header
+                id="bitrate_header"
+                title="@i18n/settings/video_bitrate"
+                paddingTop="40"/>
+            <brls:Slider id="bitrate_slider" height="84" grow="1"/>
+            <brls:Header
+                id="image_adjustments_header"
+                title="@i18n/settings/image_adjustments"
+                paddingTop="40"/>
+            <brls:BooleanCell id="upscaling"/>
+            <BooleanSliderCell id="dithering"/>
+            <BooleanSliderCell id="rcas"/>
+        </brls:Box>
+    </brls:ScrollingFrame>
+</brls:Box>

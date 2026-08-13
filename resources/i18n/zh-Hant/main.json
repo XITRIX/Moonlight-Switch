@@ -104,7 +104,11 @@
     },
     "settings": {
         "audio_backend": "音頻驅動",
-        "av1": "AV1 (實驗性)",
+        "av1": "優先使用 AV1（實驗性）",
+        "frame_pacing": "影片幀節奏",
+        "frame_pacing_lowest_latency": "最低延遲",
+        "frame_pacing_balanced": "平衡（建議）",
+        "frame_pacing_smoothest": "最流暢影片（可能顯著增加延遲）",
         "buttons": {
             "home": "Home",
             "screenshot": "Screenshot"
@@ -120,6 +124,11 @@
         "decoder_threads": "解碼器執行緒",
         "fps": "FPS",
         "guide_key": "嚮導鍵（立即按下）",
+        "host_shortcuts": "主機快捷鍵",
+        "host_close_app": "關閉目前應用程式 (Alt+F4)",
+        "host_switch_window": "切換視窗 (Alt+Tab)",
+        "host_shortcut_setup_message": "按下用於{}的按鍵：\n\n",
+        "key_combo_conflict": "此組合與{}衝突。",
         "guide_key_buttons": "按鍵組合",
         "guide_key_setup_message": "按下想使用的按鍵來配置嚮導鍵：\n\n",
         "h264": "H.264",
@@ -148,6 +157,7 @@
         "overlay_zero_time": "0（立即）",
         "paop": "串流時在主機上也同時播放音訊",
         "quality": "串流質量 (更高的質量需要CPU超頻)",
+        "global_defaults": "全域預設值 · 品質",
         "request_hdr": "Request HDR Video",
         "resolution": "解析度",
         "resolution_native": "原生",
@@ -172,6 +182,12 @@
         "video_codec": "影片解碼器",
         "volume_amplification": "允許放大音量",
         "zero_threads": "0（不使用執行緒）"
+    },
+    "stream_profiles": {
+        "title": "串流設定檔", "context": "連線環境",
+        "local_wifi": "本地 Wi-Fi", "local_ethernet": "本地乙太網路", "remote": "遠端",
+        "use_custom": "使用自訂設定檔", "configured": "已設定",
+        "inherited": "繼承全域預設值", "all_inherited": "全部繼承全域預設值"
     },
     "streaming": {
         "connection": "連接選項",

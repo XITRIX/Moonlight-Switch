@@ -104,7 +104,11 @@
     },
     "settings": {
         "audio_backend": "Audio driver",
-        "av1": "AV1 (Experimental)",
+        "av1": "Preferisci AV1 (Sperimentale)",
+        "frame_pacing": "Cadenza fotogrammi video",
+        "frame_pacing_lowest_latency": "Latenza minima",
+        "frame_pacing_balanced": "Bilanciato (Consigliato)",
+        "frame_pacing_smoothest": "Video più fluido (può aumentare molto la latenza)",
         "buttons": {
             "home": "Home",
             "screenshot": "Screenshot"
@@ -120,6 +124,11 @@
         "decoder_threads": "Threads del decodificatore",
         "fps": "FPS",
         "guide_key": "Pulsante guida (Click Istantaneo)",
+        "host_shortcuts": "Scorciatoie dell'host",
+        "host_close_app": "Chiudi app corrente (Alt+F4)",
+        "host_switch_window": "Cambia finestra (Alt+Tab)",
+        "host_shortcut_setup_message": "Premi i pulsanti da usare per {}:\n\n",
+        "key_combo_conflict": "Questa combinazione è in conflitto con {}.",
         "guide_key_buttons": "Buttons combination",
         "guide_key_setup_message": "Press keys you'd like to use to press Guide button:\n\n",
         "h264": "H.264",
@@ -148,6 +157,7 @@
         "overlay_zero_time": "0 (Immediato)",
         "paop": "Riproduci l'audio sul PC",
         "quality": "Qualità",
+        "global_defaults": "Predefiniti globali · Qualità",
         "request_hdr": "Request HDR Video",
         "resolution": "Risoluzione",
         "resolution_native": "Nativa",
@@ -172,6 +182,12 @@
         "video_codec": "Codec Video",
         "volume_amplification": "Consenti l'amplificazione del volume",
         "zero_threads": "0 (Non usare threads)"
+    },
+    "stream_profiles": {
+        "title": "Profili di streaming", "context": "Contesto connessione",
+        "local_wifi": "Wi-Fi locale", "local_ethernet": "Ethernet locale", "remote": "Remoto",
+        "use_custom": "Usa profilo personalizzato", "configured": "Configurato",
+        "inherited": "Ereditato dai predefiniti globali", "all_inherited": "Tutti ereditano i predefiniti globali"
     },
     "streaming": {
         "connection": "Connessione",

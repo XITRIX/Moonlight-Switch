@@ -20,7 +20,7 @@
             paddingLeft="@style/brls/tab_details/padding_left">
             
             <brls:Header
-                title="@i18n/settings/quality"/>
+                title="@i18n/settings/global_defaults"/>
                 
             <brls:SelectorCell
                 id="fps"/>
@@ -39,6 +39,9 @@
                 
             <brls:SelectorCell
                 id="decoder"/>
+
+            <brls:SelectorCell
+                id="frame_pacing"/>
 
             <brls:BooleanCell
                 id="use_hw_decoding"/>
@@ -151,6 +154,16 @@
                 
             <brls:SelectorCell
                 id="overlay_by_system_button"/>
+
+            <brls:Header
+                title="@i18n/settings/host_shortcuts"
+                paddingTop="60"/>
+
+            <brls:DetailCell
+                id="host_close_app_buttons"/>
+
+            <brls:DetailCell
+                id="host_switch_window_buttons"/>
                 
             <brls:Header
                 title="@i18n/settings/mouse_input"

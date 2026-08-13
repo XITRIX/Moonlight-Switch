@@ -75,7 +75,10 @@ bool AVFrameQueue::push(AVFrame* item) {
     maxPushBurstStat = std::max(maxPushBurstStat, pushesSincePop);
 
     if (queue.size() > limit) {
-        const size_t keepFrames = targetBufferedFrames + 1;
+        const size_t keepFrames =
+            framePacingMode == FramePacingMode::SMOOTHEST_VIDEO
+                ? limit
+                : targetBufferedFrames + 1;
         while (queue.size() > keepFrames) {
             AVFrame* droppedFrame = queue.front();
             queue.pop();
@@ -102,6 +105,33 @@ AVFrame* AVFrameQueue::pop(bool* consumed) {
 
     if (consumed) {
         *consumed = false;
+    }
+
+    if (framePacingMode == FramePacingMode::LOWEST_LATENCY) {
+        if (queue.empty()) {
+            if (bufferFrame) {
+                fakeFrameUsedStat++;
+                emptyQueueStat++;
+            }
+            return bufferFrame;
+        }
+
+        recycleFrame(freeQueue, bufferFrame);
+        while (queue.size() > 1) {
+            AVFrame* staleFrame = queue.front();
+            queue.pop();
+            recycleFrame(freeQueue, staleFrame);
+            framesDroppedStat++;
+            pacingSkipStat++;
+        }
+
+        bufferFrame = queue.front();
+        queue.pop();
+        if (consumed) {
+            *consumed = true;
+        }
+        localClockPacedFrameStat++;
+        return bufferFrame;
     }
 
     const auto now = std::chrono::steady_clock::now();
@@ -151,8 +181,11 @@ AVFrame* AVFrameQueue::pop(bool* consumed) {
         // Resume immediately after a real miss. If latency has reached the
         // hard limit, discard the stale backlog once instead of repeatedly
         // overflowing the oldest frame while playback remains frozen.
-        trimToPlayoutWindowLocked();
-        if (backlogResync) {
+        if (framePacingMode == FramePacingMode::BALANCED) {
+            trimToPlayoutWindowLocked();
+        }
+        if (backlogResync &&
+            framePacingMode == FramePacingMode::BALANCED) {
             resetArrivalRateEstimatorLocked();
         }
         playoutResyncNeeded = false;
@@ -191,6 +224,10 @@ AVFrame* AVFrameQueue::pop(bool* consumed) {
             frameCredit -= static_cast<double>(wholeFrames);
             dueFrames = std::min(wholeFrames, limit);
         }
+    }
+
+    if (framePacingMode == FramePacingMode::SMOOTHEST_VIDEO) {
+        dueFrames = std::min<size_t>(dueFrames, 1);
     }
 
     if (dueFrames == 0) {
@@ -247,12 +284,18 @@ void AVFrameQueue::recycleWriteFrame(AVFrame*& frame) {
 }
 
 void AVFrameQueue::configure(size_t queueLimit, int configuredStreamFps,
-                             bool transferOwnershipEnabled) {
+                             bool transferOwnershipEnabled,
+                             FramePacingMode pacingMode) {
     std::lock_guard<std::mutex> lock(m_mutex);
     const size_t configuredDepth = std::max<size_t>(queueLimit, 1);
     limit = capacityFor(configuredDepth);
+    framePacingMode = pacingMode;
     targetBufferedFrames =
-        configuredDepth > 1 ? std::min<size_t>(configuredDepth - 1, 2) : 0;
+        framePacingMode == FramePacingMode::LOWEST_LATENCY
+            ? 0
+            : (configuredDepth > 1
+                   ? std::min<size_t>(configuredDepth - 1, 2)
+                   : 0);
     transferOwnership = transferOwnershipEnabled;
     streamFps = configuredStreamFps;
     adaptiveFrameInterval = std::chrono::nanoseconds::zero();
@@ -280,6 +323,11 @@ size_t AVFrameQueue::targetDepth() const {
 size_t AVFrameQueue::capacity() const {
     std::lock_guard<std::mutex> lock(m_mutex);
     return limit;
+}
+
+FramePacingMode AVFrameQueue::pacingMode() const {
+    std::lock_guard<std::mutex> lock(m_mutex);
+    return framePacingMode;
 }
 
 size_t AVFrameQueue::getFakeFrameUsage() const {
@@ -361,7 +409,10 @@ bool AVFrameQueue::pushTransferredLocked(AVFrame* item) {
     maxPushBurstStat = std::max(maxPushBurstStat, pushesSincePop);
 
     if (queue.size() > limit) {
-        const size_t keepFrames = targetBufferedFrames + 1;
+        const size_t keepFrames =
+            framePacingMode == FramePacingMode::SMOOTHEST_VIDEO
+                ? limit
+                : targetBufferedFrames + 1;
         while (queue.size() > keepFrames) {
             AVFrame* droppedFrame = queue.front();
             queue.pop();

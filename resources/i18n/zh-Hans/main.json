@@ -104,7 +104,11 @@
     },
     "settings": {
         "audio_backend": "音频驱动",
-        "av1": "AV1 (实验性)",
+        "av1": "优先使用 AV1（实验性）",
+        "frame_pacing": "视频帧节奏",
+        "frame_pacing_lowest_latency": "最低延迟",
+        "frame_pacing_balanced": "平衡（推荐）",
+        "frame_pacing_smoothest": "最流畅视频（可能显著增加延迟）",
         "buttons": {
             "home": "Home",
             "screenshot": "截图"
@@ -120,6 +124,11 @@
         "decoder_threads": "解码器线程",
         "fps": "FPS",
         "guide_key": "向导键（立即按下）",
+        "host_shortcuts": "主机快捷键",
+        "host_close_app": "关闭当前应用 (Alt+F4)",
+        "host_switch_window": "切换窗口 (Alt+Tab)",
+        "host_shortcut_setup_message": "按下用于{}的按键：\n\n",
+        "key_combo_conflict": "此组合与{}冲突。",
         "guide_key_buttons": "按键组合",
         "guide_key_setup_message": "按下想使用的按键来配置向导键：\n\n",
         "h264": "H.264",
@@ -148,6 +157,7 @@
         "overlay_zero_time": "0（立即）",
         "paop": "串流时在主机上也同时播放音频",
         "quality": "串流质量 (更高的质量需要CPU超频)",
+        "global_defaults": "全局默认值 · 质量",
         "request_hdr": "请求 HDR 视频",
         "resolution": "分辨率",
         "resolution_native": "原生",
@@ -172,6 +182,12 @@
         "video_codec": "视频解码器",
         "volume_amplification": "允许放大音量",
         "zero_threads": "0（不使用线程）"
+    },
+    "stream_profiles": {
+        "title": "串流配置文件", "context": "连接环境",
+        "local_wifi": "本地 Wi-Fi", "local_ethernet": "本地以太网", "remote": "远程",
+        "use_custom": "使用自定义配置", "configured": "已配置",
+        "inherited": "继承全局默认值", "all_inherited": "全部继承全局默认值"
     },
     "streaming": {
         "connection": "连接选项",

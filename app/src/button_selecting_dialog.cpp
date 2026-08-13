@@ -18,7 +18,8 @@ ButtonSelectingDialog::~ButtonSelectingDialog() {
 
 ButtonSelectingDialog* ButtonSelectingDialog::create(
     std::string titleText,
-    std::function<void(std::vector<ControllerButton>)> callback, bool oneKey) {
+    std::function<void(std::vector<ControllerButton>)> callback, bool oneKey,
+    bool allowDisable) {
     brls::Style style = brls::Application::getStyle();
 
     brls::Label* label = new brls::Label();
@@ -48,6 +49,10 @@ ButtonSelectingDialog* ButtonSelectingDialog::create(
     dialog->addButton("common/cancel"_i18n, [] {});
     dialog->addButton("common/confirm"_i18n,
                       [dialog] { dialog->callback(dialog->buttons); });
+    if (allowDisable) {
+        dialog->addButton("hints/off"_i18n,
+                          [dialog] { dialog->callback({}); });
+    }
 
     if (!oneKey) {
         dialog->timer.reset(4);

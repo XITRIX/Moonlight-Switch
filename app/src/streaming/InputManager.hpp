@@ -12,6 +12,7 @@
 #include <borealis.hpp>
 #include <chrono>
 #include <optional>
+#include <vector>
 
 // Moonlight ready gamepad
 struct GamepadState {
@@ -48,6 +49,15 @@ struct RumbleValues {
     uint16_t rightTriggerMotor;
 };
 
+struct HostShortcutState {
+    int action = -1;
+    int holdTime = 1;
+    bool eligible = false;
+    bool triggered = false;
+    std::chrono::steady_clock::time_point pressedAt;
+    std::vector<brls::ControllerButton> buttons;
+};
+
 class MoonlightInputManager : public Singleton<MoonlightInputManager> {
   public:
     MoonlightInputManager();
@@ -70,6 +80,7 @@ class MoonlightInputManager : public Singleton<MoonlightInputManager> {
 
     RumbleValues rumbleCache[GAMEPADS_MAX];
     GamepadState lastGamepadStates[GAMEPADS_MAX];
+    HostShortcutState hostShortcutStates[GAMEPADS_MAX];
     brls::ControllerButton mappingButtons[brls::_BUTTON_MAX];
     std::optional<brls::PanGestureStatus> panStatus;
     std::map<uint32_t, bool> activeTouchIDs;
@@ -89,6 +100,10 @@ class MoonlightInputManager : public Singleton<MoonlightInputManager> {
     void sendDesktopMouseScroll(brls::Point scroll);
 
     GamepadState getControllerState(int controllerNum, bool specialKey);
+    std::vector<brls::ControllerButton> handleHostShortcuts(
+        int controllerNum, const brls::ControllerState& controller);
+    static void sendHostShortcut(int action);
+    void resetHostShortcuts();
     void handleControllers(bool specialKey);
 
     static short controllersToMap();

@@ -104,7 +104,11 @@
     },
     "settings": {
         "audio_backend": "Audio driver",
-        "av1": "AV1 (Experimental)",
+        "av1": "Prefer AV1 (Experimental)",
+        "frame_pacing": "Video frame pacing",
+        "frame_pacing_lowest_latency": "Lowest latency",
+        "frame_pacing_balanced": "Balanced (Recommended)",
+        "frame_pacing_smoothest": "Smoothest video (may significantly increase latency)",
         "buttons": {
             "home": "Home",
             "screenshot": "Screenshot"
@@ -120,6 +124,11 @@
         "decoder_threads": "Decoder Threads",
         "fps": "FPS",
         "guide_key": "Guide key (clicks immediately)",
+        "host_shortcuts": "Host shortcuts",
+        "host_close_app": "Close current app (Alt+F4)",
+        "host_switch_window": "Switch window (Alt+Tab)",
+        "host_shortcut_setup_message": "Press the buttons to use for {}:\n\n",
+        "key_combo_conflict": "This combination conflicts with {}.",
         "guide_key_buttons": "Buttons combination",
         "guide_key_setup_message": "Press keys you'd like to use to press Guide button:\n\n",
         "h264": "H.264",
@@ -148,6 +157,7 @@
         "overlay_zero_time": "0 (Immediately)",
         "paop": "Play Audio on PC",
         "quality": "Quality (Higher settings requires CPU overclock)",
+        "global_defaults": "Global defaults · Quality",
         "request_hdr": "Request HDR Video",
         "resolution": "Resolution",
         "resolution_native": "Native",
@@ -172,6 +182,17 @@
         "video_codec": "Video codec",
         "volume_amplification": "Allow volume amplification",
         "zero_threads": "0 (No use threads)"
+    },
+    "stream_profiles": {
+        "title": "Streaming profiles",
+        "context": "Connection context",
+        "local_wifi": "Local Wi-Fi",
+        "local_ethernet": "Local Ethernet",
+        "remote": "Remote",
+        "use_custom": "Use custom profile",
+        "configured": "Configured",
+        "inherited": "Inherited from global defaults",
+        "all_inherited": "All inherit global defaults"
     },
     "streaming": {
         "connection": "Connection",

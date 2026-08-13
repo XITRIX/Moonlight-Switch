@@ -67,6 +67,17 @@ To open overlay, press - and + key simultaneously by default or Hold ESC on keyb
 
 Key combination and holding time are configurable in settings.
 
+### Host shortcuts
+While streaming, controller combinations can send these shortcuts to the host:
+
+- **Close current app** sends `Alt+F4`.
+- **Switch window** sends `Alt+Tab` once to select the next window.
+
+Both shortcuts are disabled by default. Configure their button combinations in
+**Settings > Host shortcuts** or from the in-game overlay options. Hold the
+complete combination for one second to trigger it. The selected buttons are not
+forwarded as gamepad input until the combination is fully released.
+
 ## NSP forwarder
 App supports NSP forwarders to start stream immediately with predefined configuration. Add app you want to launch in Favorites list first. You can generate forwarder using [NSP Forwarder Generator](https://nsp-forwarder.vercel.app/moonlight)
 

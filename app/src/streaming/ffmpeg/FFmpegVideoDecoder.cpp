@@ -183,6 +183,7 @@ int FFmpegVideoDecoder::open_decoder() {
     }
 
     if (err < 0 && m_using_android_mediacodec_decoder &&
+        m_codec_id != AV_CODEC_ID_AV1 &&
         m_codec_id != AV_CODEC_ID_NONE) {
         char error[512];
         av_strerror(err, error, sizeof(error));
@@ -220,7 +221,8 @@ int FFmpegVideoDecoder::open_decoder() {
 #endif
 
 #if defined(__linux__) && defined(PLATFORM_DESKTOP)
-    if (err < 0 && m_hw_decode_active) {
+    if (err < 0 && m_hw_decode_active &&
+        m_codec_id != AV_CODEC_ID_AV1) {
         char error[AV_ERROR_MAX_STRING_SIZE] = {0};
         brls::Logger::warning(
             "FFmpeg: Couldn't open the Linux {} hardware decoder - {}. "
@@ -465,6 +467,9 @@ int FFmpegVideoDecoder::setup(int video_format, int width, int height,
     } else if (video_format & VIDEO_FORMAT_MASK_H265) {
         m_decoder = avcodec_find_decoder_by_name("hevc_mediacodec");
         m_codec_id = AV_CODEC_ID_HEVC;
+    } else if (video_format & VIDEO_FORMAT_MASK_AV1) {
+        m_decoder = avcodec_find_decoder_by_name("av1_mediacodec");
+        m_codec_id = AV_CODEC_ID_AV1;
     } else {
         // Unsupported decoder type
     }
@@ -487,6 +492,9 @@ int FFmpegVideoDecoder::setup(int video_format, int width, int height,
     } else if (video_format & VIDEO_FORMAT_MASK_H265) {
         m_decoder = avcodec_find_decoder(AV_CODEC_ID_HEVC);
         m_codec_id = AV_CODEC_ID_HEVC;
+    } else if (video_format & VIDEO_FORMAT_MASK_AV1) {
+        m_decoder = avcodec_find_decoder(AV_CODEC_ID_AV1);
+        m_codec_id = AV_CODEC_ID_AV1;
     } else {
         // Unsupported decoder type
     }
@@ -497,6 +505,9 @@ int FFmpegVideoDecoder::setup(int video_format, int width, int height,
     } else if (video_format & VIDEO_FORMAT_MASK_H265) {
         m_decoder = avcodec_find_decoder(AV_CODEC_ID_HEVC);
         m_codec_id = AV_CODEC_ID_HEVC;
+    } else if (video_format & VIDEO_FORMAT_MASK_AV1) {
+        m_decoder = avcodec_find_decoder(AV_CODEC_ID_AV1);
+        m_codec_id = AV_CODEC_ID_AV1;
     } else {
         // Unsupported decoder type
     }
@@ -581,6 +592,13 @@ int FFmpegVideoDecoder::setup(int video_format, int width, int height,
         brls::Logger::warning("FFmpeg: HW decoding disabled or unsupported by Platform");
     }
 #endif
+
+    if (m_codec_id == AV_CODEC_ID_AV1 && !m_hw_decode_active) {
+        brls::Logger::error(
+            "FFmpeg: AV1 requires an active hardware decoder on this platform");
+        cleanup();
+        return AVERROR(ENOSYS);
+    }
 
 #if defined(__PSV__)
     // h264_vita is internally driven by sceVideodec and does not support
@@ -840,8 +858,7 @@ int FFmpegVideoDecoder::submit_decode_unit(PDECODE_UNIT decode_unit) {
 
         }
         else {
-            if (MoonlightSession::activeSession() != nullptr)
-                MoonlightSession::activeSession()->restart();
+            return decoded_frames;
         }
     } else {
         brls::Logger::error("FFmpeg: Big buffer to decode... 2");
@@ -981,6 +998,15 @@ int FFmpegVideoDecoder::get_frame(bool native_frame, AVFrame** frame) {
         decodeFrame->hw_frames_ctx != nullptr ||
         (decodedFormat != nullptr &&
          (decodedFormat->flags & AV_PIX_FMT_FLAG_HWACCEL) != 0);
+
+    if (m_codec_id == AV_CODEC_ID_AV1 && !hardwareBackedFrame) {
+        brls::Logger::error(
+            "FFmpeg: AV1 decoder produced a software frame; rejecting non-hardware fallback");
+        if (m_use_zero_copy_holder) {
+            AVFrameHolder::instance().recycleWriteFrame(resultFrame);
+        }
+        return AVERROR(ENOSYS);
+    }
 
     if (hardwareBackedFrame) {
 #if defined(BOREALIS_USE_DEKO3D) || defined(USE_METAL_RENDERER) || defined(PLATFORM_ANDROID)

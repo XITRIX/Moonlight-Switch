@@ -16,6 +16,7 @@
 #include "helper.hpp"
 #include "ingame_overlay_view.hpp"
 #include "streaming_input_overlay.hpp"
+#include "StreamProfileResolver.hpp"
 #include "two_finger_scroll_recognizer.hpp"
 #include <Limelight.h>
 #include <chrono>
@@ -95,8 +96,30 @@ StreamingView::StreamingView(const Host& host, const AppInfo& app) : host(host),
                 return;
             }
 
-            session->set_address(
-                GameStreamClient::instance().active_address(this->host));
+            const auto activeAddress =
+                GameStreamClient::instance().active_address(this->host);
+            session->set_address(activeAddress);
+
+            const Host effectiveHost =
+                Settings::instance().host(this->host).value_or(this->host);
+#ifdef PLATFORM_SWITCH
+            const ResolvedStreamSettings streamSettings =
+                StreamProfileResolver::resolve(
+                    effectiveHost, activeAddress,
+                    StreamProfileResolver::currentNetworkConnectionType());
+#else
+            const ResolvedStreamSettings streamSettings =
+                StreamProfileResolver::globalDefaults();
+#endif
+            session->set_stream_settings(streamSettings);
+            if (streamSettings.context) {
+                Logger::info(
+                    "Streaming profile: {} ({})",
+                    StreamProfileResolver::contextName(*streamSettings.context),
+                    streamSettings.profileApplied ? "configured" : "global defaults");
+            } else {
+                Logger::info("Streaming profile: context unavailable; using global defaults");
+            }
 
             ASYNC_RETAIN
             session->start([ASYNC_TOKEN](GSResult<bool> result) {
@@ -365,7 +388,8 @@ void StreamingView::draw(NVGcontext* vg, float x, float y, float width,
                 /*stats->video_render_stats.rendered_frames*/);
         }
 
-        statistics += fmt::format("Frames queue underflows | skipped: {} | {}\n"
+        statistics += fmt::format("Frame pacing mode: {}\n"
+                                  "Frames queue underflows | skipped: {} | {}\n"
                                   "Queue empty | startup holds: {} | {}\n"
                                   "Queue overflow | paced skips: {} | {}\n"
                                   "Scheduled frame holds: {}\n"
@@ -373,6 +397,8 @@ void StreamingView::draw(NVGcontext* vg, float x, float y, float width,
                                   "Playout resyncs | estimated source: {} | {:.2f} FPS\n"
                                   "Max pushes between draws: {}\n"
                                   "Frames queue depth | target | capacity: {} | {} | {}",
+                                  getFramePacingModeDebugName(
+                                      AVFrameHolder::instance().getFramePacingMode()),
                                   AVFrameHolder::instance().getFakeFrameStat(),
                                   AVFrameHolder::instance().getFrameDropStat(),
                                   AVFrameHolder::instance().getFrameQueueEmptyStat(),

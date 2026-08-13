@@ -20,6 +20,8 @@ constexpr float STICK_SCROLL_DEADZONE = 0.2f;
 constexpr float MOONLIGHT_WHEEL_DELTA = 120.0f;
 constexpr auto DESKTOP_SCROLL_GESTURE_TIMEOUT =
     std::chrono::milliseconds(600);
+constexpr short VK_TAB_KEY = 0x09;
+constexpr short VK_F4_KEY = 0x73;
 
 float applyStickScrollDeadzone(float axis, float configuredDeadzone) {
     float deadzone = std::fmax(STICK_SCROLL_DEADZONE, configuredDeadzone);
@@ -258,6 +260,7 @@ void MoonlightInputManager::dropInput() {
     pendingHorizontalScrollEvents = 0;
     desktopScrollAxis = DesktopScrollAxis::None;
     lastDesktopScrollEvent = {};
+    resetHostShortcuts();
 
     bool res = true;
     // Drop gamepad state
@@ -305,6 +308,10 @@ GamepadState MoonlightInputManager::getControllerState(int controllerNum,
     brls::Application::setSwapHalfJoyconStickToDpad(Settings::instance().swap_joycon_stick_to_dpad());
     brls::Application::getPlatform()->getInputManager()->updateControllerState(
         &rawController, controllerNum);
+    const auto suppressedButtons =
+        handleHostShortcuts(controllerNum, rawController);
+    for (auto button : suppressedButtons)
+        rawController.buttons[button] = false;
     controller = mapController(rawController);
 
     // Use axis or button if axis is not available (equals 0)
@@ -402,6 +409,87 @@ GamepadState MoonlightInputManager::getControllerState(int controllerNum,
                : (gamepadState.buttonFlags &= ~SPECIAL_FLAG);
 
     return gamepadState;
+}
+
+std::vector<brls::ControllerButton>
+MoonlightInputManager::handleHostShortcuts(
+    int controllerNum, const brls::ControllerState& controller) {
+    auto& state = hostShortcutStates[controllerNum];
+    const auto now = std::chrono::steady_clock::now();
+
+    if (state.action >= 0) {
+        bool anyPressed = false;
+        bool allPressed = true;
+        for (auto button : state.buttons) {
+            anyPressed |= controller.buttons[button];
+            allPressed &= controller.buttons[button];
+        }
+
+        if (!anyPressed) {
+            state = {};
+            return {};
+        }
+
+        if (!allPressed)
+            state.eligible = false;
+
+        if (state.eligible && !state.triggered &&
+            now - state.pressedAt >= std::chrono::seconds(state.holdTime)) {
+            state.triggered = true;
+            sendHostShortcut(state.action);
+        }
+
+        return state.buttons;
+    }
+
+    constexpr KeyComboAction actions[] = {
+        KeyComboAction::HOST_CLOSE_APP,
+        KeyComboAction::HOST_SWITCH_WINDOW,
+    };
+    for (auto action : actions) {
+        const auto options = Settings::instance().key_combo_options(action);
+        if (options.buttons.empty())
+            continue;
+
+        bool allPressed = true;
+        for (auto button : options.buttons)
+            allPressed &= controller.buttons[button];
+
+        if (!allPressed)
+            continue;
+
+        state.action = static_cast<int>(action);
+        state.holdTime = options.holdTime;
+        state.eligible = true;
+        state.triggered = false;
+        state.pressedAt = now;
+        state.buttons = options.buttons;
+        return state.buttons;
+    }
+
+    return {};
+}
+
+void MoonlightInputManager::sendHostShortcut(int action) {
+    short key = 0;
+    switch (static_cast<KeyComboAction>(action)) {
+    case KeyComboAction::HOST_CLOSE_APP:
+        key = VK_F4_KEY;
+        break;
+    case KeyComboAction::HOST_SWITCH_WINDOW:
+        key = VK_TAB_KEY;
+        break;
+    default:
+        return;
+    }
+
+    LiSendKeyboardEvent(key, KEY_ACTION_DOWN, MODIFIER_ALT);
+    LiSendKeyboardEvent(key, KEY_ACTION_UP, MODIFIER_ALT);
+}
+
+void MoonlightInputManager::resetHostShortcuts() {
+    for (auto& state : hostShortcutStates)
+        state = {};
 }
 
 void MoonlightInputManager::handleControllers(bool specialKey) {

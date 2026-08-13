@@ -104,7 +104,11 @@
     },
     "settings": {
         "audio_backend": "Driver audio",
-        "av1": "AV1 (Expérimental)",
+        "av1": "Préférer AV1 (Expérimental)",
+        "frame_pacing": "Cadencement des images vidéo",
+        "frame_pacing_lowest_latency": "Latence minimale",
+        "frame_pacing_balanced": "Équilibré (Recommandé)",
+        "frame_pacing_smoothest": "Vidéo la plus fluide (peut fortement augmenter la latence)",
         "buttons": {
             "home": "Home",
             "screenshot": "Capture d'écran"
@@ -120,6 +124,11 @@
         "decoder_threads": "Threads de décodage",
         "fps": "FPS",
         "guide_key": "Bouton Guide (s'ouvre immédiatement)",
+        "host_shortcuts": "Raccourcis de l'hôte",
+        "host_close_app": "Fermer l'application actuelle (Alt+F4)",
+        "host_switch_window": "Changer de fenêtre (Alt+Tab)",
+        "host_shortcut_setup_message": "Appuyez sur les boutons à utiliser pour {} :\n\n",
+        "key_combo_conflict": "Cette combinaison entre en conflit avec {}.",
         "guide_key_buttons": "Combinaison de boutons",
         "guide_key_setup_message": "Appuyez sur les boutons à utiliser pour le bouton Guide :\n\n",
         "h264": "H.264",
@@ -148,6 +157,7 @@
         "overlay_zero_time": "0 (immédiatement)",
         "paop": "Jouer l'audio sur la machine hôte",
         "quality": "Qualité (Des paramètres plus élevés nécessitent un overclock CPU)",
+        "global_defaults": "Valeurs globales · Qualité",
         "request_hdr": "Demander une vidéo HDR",
         "resolution": "Résolution",
         "resolution_native": "Native",
@@ -172,6 +182,12 @@
         "video_codec": "Codec vidéo",
         "volume_amplification": "Amplification du volume",
         "zero_threads": "0 (pas de threads)"
+    },
+    "stream_profiles": {
+        "title": "Profils de streaming", "context": "Contexte de connexion",
+        "local_wifi": "Wi-Fi local", "local_ethernet": "Ethernet local", "remote": "À distance",
+        "use_custom": "Utiliser un profil personnalisé", "configured": "Configuré",
+        "inherited": "Hérité des valeurs globales", "all_inherited": "Tous utilisent les valeurs globales"
     },
     "streaming": {
         "connection": "Connexion",

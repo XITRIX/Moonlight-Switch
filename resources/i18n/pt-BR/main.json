@@ -104,7 +104,11 @@
     },
     "settings": {
         "audio_backend": "Audio driver",
-        "av1": "AV1 (Experimental)",
+        "av1": "Preferir AV1 (Experimental)",
+        "frame_pacing": "Cadência dos frames de vídeo",
+        "frame_pacing_lowest_latency": "Menor latência",
+        "frame_pacing_balanced": "Balanceado (Recomendado)",
+        "frame_pacing_smoothest": "Vídeo mais fluido (pode aumentar bastante a latência)",
         "buttons": {
             "home": "Home",
             "screenshot": "Screenshot"
@@ -120,6 +124,11 @@
         "decoder_threads": "Decor Threads",
         "fps": "FPS",
         "guide_key": "Tecla Guia (Clique imediato)",
+        "host_shortcuts": "Atalhos do host",
+        "host_close_app": "Fechar aplicativo atual (Alt+F4)",
+        "host_switch_window": "Alternar janela (Alt+Tab)",
+        "host_shortcut_setup_message": "Pressione os botões que deseja usar para {}:\n\n",
+        "key_combo_conflict": "Esta combinação entra em conflito com {}.",
         "guide_key_buttons": "Combinação de botões",
         "guide_key_setup_message": "Pressione as teclas que você gostaria de usar para o botão Guia:\n\n",
         "h264": "H.264",
@@ -148,6 +157,7 @@
         "overlay_zero_time": "0 (Imediatamente)",
         "paop": "Reproduzir áudio no PC",
         "quality": "Qualidade",
+        "global_defaults": "Padrões globais · Qualidade",
         "request_hdr": "Request HDR Video",
         "resolution": "Resolução",
         "resolution_native": "Nativa",
@@ -172,6 +182,17 @@
         "video_codec": "Codec de vídeo",
         "volume_amplification": "Permitir amplificação de volume",
         "zero_threads": "0 (Não usar threads)"
+    },
+    "stream_profiles": {
+        "title": "Perfis de streaming",
+        "context": "Contexto da conexão",
+        "local_wifi": "Wi-Fi local",
+        "local_ethernet": "Ethernet local",
+        "remote": "Remoto",
+        "use_custom": "Usar perfil personalizado",
+        "configured": "Configurado",
+        "inherited": "Herdado dos padrões globais",
+        "all_inherited": "Todos herdam os padrões globais"
     },
     "streaming": {
         "connection": "Conexão",

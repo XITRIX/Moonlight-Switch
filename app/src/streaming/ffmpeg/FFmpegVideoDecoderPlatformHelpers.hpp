@@ -36,6 +36,7 @@ int initializeAndroidMediaCodecHardwareDevice(AndroidMediaCodecState& state,
 											  int height);
 void cleanupAndroidMediaCodecState(AndroidMediaCodecState& state);
 bool useAndroidDirectHardwareFrames(bool hw_decode_active);
+int androidAv1DecoderSupport();
 #endif
 
 #if defined(PLATFORM_APPLE)
