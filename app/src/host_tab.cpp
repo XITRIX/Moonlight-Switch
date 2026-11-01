@@ -129,6 +129,14 @@ void HostTab::reloadHost() {
             ASYNC_RELEASE
 
             if (result.isSuccess()) {
+                // Hosts are stored from the pre-pair serverinfo, where
+                // Sunshine withholds the MAC. Paired, it reports the real one.
+                if (!is_usable_mac(this->host.mac) &&
+                    is_usable_mac(result.value().mac)) {
+                    this->host.mac = result.value().mac;
+                    Settings::instance().add_host(this->host);
+                }
+
                 const auto connectedAddress =
                     GameStreamClient::instance().active_address(this->host);
                 header->setTitle("host/status"_i18n + ": " + "host/ready"_i18n);
@@ -140,7 +148,9 @@ void HostTab::reloadHost() {
             } else {
                 header->setTitle("host/status"_i18n + ": " +
                                  "host/unable"_i18n);
-                connect->setText("host/wake_up"_i18n);
+                connect->setText(GameStreamClient::can_wake_up_host(this->host)
+                                     ? "host/wake_up"_i18n
+                                     : "host/unable"_i18n);
                 state = UNAVAILABLE;
             }
         });
