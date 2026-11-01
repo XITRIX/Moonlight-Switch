@@ -318,10 +318,8 @@ bool startFromLaunchRequest(LaunchRequest request, bool resetActivityStack) {
     }
 
     auto hosts = Settings::instance().hosts();
-    if (auto it = std::find_if(hosts.begin(), hosts.end(), [request](const Host& host) {
-            return host.mac == request.mac || host.has_address(request.ip);
-        }); it != std::end(hosts)) {
-        const Host& host = *it;
+    if (const Host* found = find_forwarder_host(hosts, request.mac, request.ip)) {
+        const Host& host = *found;
         AppInfo info { request.appName, appId.value() };
 
         if (resetActivityStack) {

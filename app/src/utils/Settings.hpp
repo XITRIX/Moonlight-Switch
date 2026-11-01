@@ -68,27 +68,45 @@ struct Host {
 };
 
 /**
- * Whether a MAC address identifies a host.
+ * The twelve hex digits of a MAC address, or an empty string if it is not one.
  *
- * A host is not required to report one. Sunshine answers every HTTP serverinfo
- * with an all zero placeholder, so that is what an unpaired client sees, and
- * uses the same placeholder over HTTPS when it cannot find the real MAC. That
- * is not an identity: two different hosts would both carry it, and it is not a
- * usable Wake-on-LAN target. Treat it the same as no MAC at all.
+ * Accepts what normalize_mac_address() accepts for Wake-on-LAN: colon, dash or
+ * space separators, or none.
  */
-inline bool is_usable_mac(const std::string& mac) {
-    bool has_nonzero_digit = false;
+inline std::string mac_hex_digits(const std::string& mac) {
+    std::string digits;
     for (unsigned char ch : mac) {
-        if (ch == ':' || ch == '-' || ch == ' ')
+        if (ch == ':' || ch == '-' || std::isspace(ch))
             continue;
         if (!std::isxdigit(ch))
-            return false;
-        if (ch != '0')
-            has_nonzero_digit = true;
+            return "";
+        digits.push_back(static_cast<char>(ch));
     }
 
-    // False if empty, or if every digit was a zero.
-    return has_nonzero_digit;
+    return digits.size() == 12 ? digits : "";
+}
+
+/**
+ * Whether a MAC address is the all zero placeholder.
+ *
+ * Sunshine answers every HTTP serverinfo with it, so that is what an unpaired
+ * client sees, and uses it over HTTPS when it cannot find the real MAC.
+ */
+inline bool is_placeholder_mac(const std::string& mac) {
+    const std::string digits = mac_hex_digits(mac);
+    return !digits.empty() &&
+           digits.find_first_not_of('0') == std::string::npos;
+}
+
+/**
+ * Whether a MAC address identifies a host.
+ *
+ * A host is not required to report one, and the placeholder is not an
+ * identity: two different hosts would both carry it, and it is not a usable
+ * Wake-on-LAN target. Treat it the same as no MAC at all.
+ */
+inline bool is_usable_mac(const std::string& mac) {
+    return !mac_hex_digits(mac).empty() && !is_placeholder_mac(mac);
 }
 
 inline bool hosts_match(const Host& lhs, const Host& rhs) {
@@ -106,6 +124,25 @@ inline bool hosts_match(const Host& lhs, const Host& rhs) {
     }
 
     return false;
+}
+
+/**
+ * The host a forwarder launch refers to, or nullptr.
+ *
+ * Forwarders used to be built with the placeholder as --host. It cannot match
+ * by MAC: the host may have stored its real MAC since, and with several hosts
+ * it does not say which one is meant. The only safe answer is the only host.
+ */
+inline const Host* find_forwarder_host(const std::vector<Host>& hosts,
+                                       const std::string& mac,
+                                       const std::string& ip) {
+    const bool placeholder = is_placeholder_mac(mac);
+    for (const auto& host : hosts) {
+        if ((!placeholder && host.mac == mac) || host.has_address(ip))
+            return &host;
+    }
+
+    return placeholder && hosts.size() == 1 ? &hosts.front() : nullptr;
 }
 
 class Settings : public Singleton<Settings> {
