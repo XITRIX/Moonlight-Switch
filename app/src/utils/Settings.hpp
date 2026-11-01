@@ -70,28 +70,35 @@ struct Host {
 /**
  * Whether a MAC address identifies a host.
  *
- * A host is not required to report one. Sunshine in particular answers
- * serverinfo with an all zero MAC when it cannot determine the real one, and
- * that is not an identity: two different hosts would both carry it, and it is
- * not a usable Wake-on-LAN target. Treat it the same as no MAC at all.
+ * A host is not required to report one. Sunshine answers every HTTP serverinfo
+ * with an all zero placeholder, so that is what an unpaired client sees, and
+ * uses the same placeholder over HTTPS when it cannot find the real MAC. That
+ * is not an identity: two different hosts would both carry it, and it is not a
+ * usable Wake-on-LAN target. Treat it the same as no MAC at all.
  */
 inline bool is_usable_mac(const std::string& mac) {
+    bool has_nonzero_digit = false;
     for (unsigned char ch : mac) {
         if (ch == ':' || ch == '-' || ch == ' ')
             continue;
         if (!std::isxdigit(ch))
             return false;
         if (ch != '0')
-            return true;
+            has_nonzero_digit = true;
     }
 
-    // Either empty, or every digit was a zero.
-    return false;
+    // False if empty, or if every digit was a zero.
+    return has_nonzero_digit;
 }
 
 inline bool hosts_match(const Host& lhs, const Host& rhs) {
     if (is_usable_mac(lhs.mac) && is_usable_mac(rhs.mac))
         return lhs.mac == rhs.mac;
+
+    // remoteAddress is the WAN address, which every host behind one NAT
+    // shares, so it can only decide when a LAN address is missing.
+    if (!lhs.address.empty() && !rhs.address.empty())
+        return lhs.address == rhs.address;
 
     for (const auto& address : lhs.connection_addresses()) {
         if (rhs.has_address(address))

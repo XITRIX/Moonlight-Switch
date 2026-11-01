@@ -65,10 +65,10 @@ std::string normalize_mac_address(const std::string& mac) {
         return "";
     }
 
-    // An all zero MAC is what a host reports when it could not work out its
-    // own, notably Sunshine. A magic packet addressed to it wakes nothing, so
-    // reject it here rather than offering the user a button that silently
-    // does nothing.
+    // An all zero MAC is a placeholder, notably from Sunshine, which sends it
+    // to any client that is not yet paired. A magic packet addressed to it
+    // wakes nothing, so reject it here rather than offering the user a button
+    // that silently does nothing.
     if (normalized.find_first_not_of('0') == std::string::npos) {
         return "";
     }

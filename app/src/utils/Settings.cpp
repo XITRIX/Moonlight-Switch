@@ -82,7 +82,7 @@ void Settings::set_working_dir(const std::string& working_dir) {
 void Settings::add_host(const Host& host) {
     if (Host* existing = find_host(m_hosts, host)) {
         merge_host(*existing, host);
-    } else if (!host.preferred_address().empty() && is_usable_mac(host.mac)) {
+    } else if (!host.preferred_address().empty() && !host.mac.empty()) {
         m_hosts.push_back(host);
     }
 
