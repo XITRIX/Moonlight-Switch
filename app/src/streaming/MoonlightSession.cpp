@@ -18,6 +18,7 @@ using namespace brls;
 
 int m_video_format;
 static MoonlightSession* m_active_session = nullptr;
+static uint64_t m_session_generation = 0;
 static MoonlightSessionDecoderAndRenderProvider* m_provider = nullptr;
 
 
@@ -34,6 +35,7 @@ MoonlightSession::MoonlightSession(const std::string& address, int app_id) {
     m_address = address;
     m_app_id = app_id;
     m_active_session = this;
+    m_generation = ++m_session_generation;
 
     m_video_decoder = m_provider->video_decoder();
     m_video_renderer = m_provider->video_renderer();
@@ -95,13 +97,25 @@ void MoonlightSession::connection_started() {
 void MoonlightSession::connection_terminated(int error_code) {
     brls::Logger::info("MoonlightSession: Connection terminated with code: {}", error_code);
 
+    // This runs on moonlight-common-c's termination thread. libnx cannot
+    // detach threads, so on Switch the library joins this thread instead
+    // (#328), and calling LiStopConnection() from here would deadlock waiting
+    // for the thread that is waiting for us. Hand the work to the main thread.
     if (!m_active_session)
         return;
 
-    if (m_active_session->m_stop_requested) {
+    const uint64_t generation = m_active_session->m_generation;
+    brls::sync([generation, error_code] {
+        if (m_active_session && m_active_session->m_generation == generation)
+            m_active_session->handle_connection_terminated(error_code);
+    });
+}
+
+void MoonlightSession::handle_connection_terminated(int error_code) {
+    if (m_stop_requested) {
         brls::Logger::info("MoonlightSession: Termination acknowledged after stop request");
-        m_active_session->m_is_active = false;
-        m_active_session->m_is_terminated = true;
+        m_is_active = false;
+        m_is_terminated = true;
         return;
     }
 
@@ -111,7 +125,7 @@ void MoonlightSession::connection_terminated(int error_code) {
         // Connection is already terminated here; avoid toggling the user stop flag.
         LiStopConnection();
 
-        m_active_session->start([](const GSResult<bool>& result) {
+        start([](const GSResult<bool>& result) {
             if (result.isSuccess()) {
                 brls::Logger::info("MoonlightSession: Reconnected");
             } else {
@@ -121,12 +135,12 @@ void MoonlightSession::connection_terminated(int error_code) {
                     m_active_session->m_is_terminated = true;
                 }
             }
-        }, m_active_session->m_is_sunshine);
+        }, m_is_sunshine);
         return;
     }
 
-    m_active_session->m_is_active = false;
-    m_active_session->m_is_terminated = true;
+    m_is_active = false;
+    m_is_terminated = true;
 }
 
 void MoonlightSession::connection_log_message(const char* format, ...) {
