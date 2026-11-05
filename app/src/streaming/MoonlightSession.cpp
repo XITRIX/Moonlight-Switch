@@ -146,12 +146,21 @@ void MoonlightSession::handle_connection_terminated(int error_code) {
 void MoonlightSession::connection_log_message(const char* format, ...) {
     va_list arglist;
     va_start(arglist, format);
-    int size = vsnprintf(NULL, 0, format, arglist);
-    char buffer[size];
-    vsnprintf(buffer, size, format, arglist);
+    va_list copy;
+    va_copy(copy, arglist);
+    const int size = vsnprintf(NULL, 0, format, copy);
+    va_end(copy);
+
+    std::string message(size > 0 ? size : 0, ' ');
+    if (size > 0)
+        vsnprintf(message.data(), message.size() + 1, format, arglist);
     va_end(arglist);
 
-    brls::Logger::info(fmt::runtime(std::string(buffer)));
+    while (!message.empty() && (message.back() == '\n' || message.back() == '\r'))
+        message.pop_back();
+
+    // Pass the text as an argument: library messages may contain { or }.
+    brls::Logger::info("{}", message);
 }
 
 void MoonlightSession::connection_rumble(unsigned short controller,

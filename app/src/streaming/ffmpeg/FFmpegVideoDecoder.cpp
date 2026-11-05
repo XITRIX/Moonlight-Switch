@@ -597,8 +597,11 @@ int FFmpegVideoDecoder::setup(int video_format, int width, int height,
     m_use_low_delay =
         (m_perf_level & LOW_LATENCY_DECODE) && !m_use_decoder_threads;
 
+    m_ffmpeg_buffer_capacity = DECODER_BUFFER_SIZE;
+    m_consecutive_decode_errors = 0;
+    m_stats_window_start = 0;
     m_ffmpeg_buffer =
-        (char*)malloc(DECODER_BUFFER_SIZE + AV_INPUT_BUFFER_PADDING_SIZE);
+        (char*)malloc(m_ffmpeg_buffer_capacity + AV_INPUT_BUFFER_PADDING_SIZE);
     if (m_ffmpeg_buffer == nullptr) {
         brls::Logger::error("FFmpeg: Not enough memory");
         cleanup();
@@ -690,7 +693,24 @@ void FFmpegVideoDecoder::cleanup() {
 }
 
 int FFmpegVideoDecoder::submit_decode_unit(PDECODE_UNIT decode_unit) {
-    if (decode_unit->fullLength < DECODER_BUFFER_SIZE) {
+    // Grow the reassembly buffer for oversized frames (large keyframes at high
+    // bitrate) instead of dropping them, which left the picture corrupted
+    // until the host happened to send another keyframe.
+    if (static_cast<size_t>(decode_unit->fullLength) > m_ffmpeg_buffer_capacity) {
+        const size_t capacity = static_cast<size_t>(decode_unit->fullLength) * 3 / 2;
+        char* grown = (char*)realloc(m_ffmpeg_buffer,
+                                     capacity + AV_INPUT_BUFFER_PADDING_SIZE);
+        if (grown == nullptr) {
+            brls::Logger::error("FFmpeg: Could not grow the decode buffer to {} bytes",
+                                capacity);
+            return DR_NEED_IDR;
+        }
+        brls::Logger::info("FFmpeg: Decode buffer grown to {} bytes", capacity);
+        m_ffmpeg_buffer = grown;
+        m_ffmpeg_buffer_capacity = capacity;
+    }
+
+    {
         PLENTRY entry = decode_unit->bufferList;
 
         if (m_video_decode_stats_progress.measurement_start_timestamp == 0) {
@@ -747,37 +767,29 @@ int FFmpegVideoDecoder::submit_decode_unit(PDECODE_UNIT decode_unit) {
 
         int length = 0;
         while (entry != nullptr) {
-            if (length > DECODER_BUFFER_SIZE) {
-                brls::Logger::error("FFmpeg: Big buffer to decode... !");
-            }
-
             memcpy(m_ffmpeg_buffer + length, entry->data, entry->length);
             length += entry->length;
             entry = entry->next;
         }
-
-        if (length <= DECODER_BUFFER_SIZE) {
-            memset(m_ffmpeg_buffer + length, 0, AV_INPUT_BUFFER_PADDING_SIZE);
-        }
+        memset(m_ffmpeg_buffer + length, 0, AV_INPUT_BUFFER_PADDING_SIZE);
 
         m_video_decode_stats_progress.current_reassembly_time += LiGetMillis() - (decode_unit->receiveTimeUs / 1000);
         m_frames_in++;
 
-        uint64_t before_decode = LiGetMillis();
-
-        if (length > DECODER_BUFFER_SIZE) {
-            brls::Logger::error("FFmpeg: Big buffer to decode...");
-        }
+        // Microseconds: hardware decode usually takes well under 1 ms.
+        const uint64_t before_decode = LiGetMicroseconds();
 
         const int decoded_frames = decode(m_ffmpeg_buffer, length);
         if (decoded_frames >= 0) {
+            m_consecutive_decode_errors = 0;
+
             if (decoded_frames == 0) {
                 return DR_OK;
             }
 
             m_frames_out += decoded_frames;
 
-            auto decodeTime = LiGetMillis() - before_decode;
+            const uint64_t decodeTime = LiGetMicroseconds() - before_decode;
             m_video_decode_stats_progress.current_decode_time += decodeTime;
 
             // Also count the frame-to-frame delay if the decoder is delaying
@@ -790,9 +802,13 @@ int FFmpegVideoDecoder::submit_decode_unit(PDECODE_UNIT decode_unit) {
                 pending_frames * (1000 / m_stream_fps);
             m_video_decode_stats_progress.current_decoded_frames += decoded_frames;
 
-            const int time_interval = 60;
-            timeCount += decodeTime;
-            if (timeCount >= time_interval) {
+            // Publish the stats on a wall-clock window.
+            const uint64_t statsNow = LiGetMillis();
+            if (m_stats_window_start == 0) {
+                m_stats_window_start = statsNow;
+            }
+            if (statsNow - m_stats_window_start >= 500) {
+                m_stats_window_start = statsNow;
                 // brls::Logger::debug("FPS: {}", frames / 5.0f);
 
                 m_video_decode_stats_cache = m_video_decode_stats_progress;
@@ -823,28 +839,39 @@ int FFmpegVideoDecoder::submit_decode_unit(PDECODE_UNIT decode_unit) {
 
                 m_video_decode_stats_cache.current_receive_time = (float) m_video_decode_stats_cache.current_reassembly_time /
                                                                   (float) m_video_decode_stats_cache.current_received_frames;
-                m_video_decode_stats_cache.current_decoding_time = (float) m_video_decode_stats_cache.current_decode_time /
+                m_video_decode_stats_cache.current_decoding_time = (float) m_video_decode_stats_cache.current_decode_time / 1000.0f /
                                                                    (float) m_video_decode_stats_cache.current_decoded_frames;
                 m_video_decode_stats_cache.current_decoder_delay = (float) m_video_decode_stats_cache.current_decoder_delay_time /
                                                                    (float) m_video_decode_stats_cache.current_decoded_frames;
 
                 m_video_decode_stats_cache.session_receive_time = (float) m_video_decode_stats_cache.total_reassembly_time /
                                                                   (float) m_video_decode_stats_cache.total_received_frames;
-                m_video_decode_stats_cache.session_decoding_time = (float) m_video_decode_stats_cache.total_decode_time /
+                m_video_decode_stats_cache.session_decoding_time = (float) m_video_decode_stats_cache.total_decode_time / 1000.0f /
                                                                    (float) m_video_decode_stats_cache.total_decoded_frames;
                 m_video_decode_stats_cache.session_decoder_delay = (float) m_video_decode_stats_cache.total_decoder_delay_time /
                                                                    (float) m_video_decode_stats_cache.total_decoded_frames;
 
-                timeCount -= time_interval;
             }
 
         }
         else {
-            if (MoonlightSession::activeSession() != nullptr)
-                MoonlightSession::activeSession()->restart();
+            // This runs on moonlight-common-c's video decoder thread, so it
+            // must not stop the connection here: LiStopConnection() joins this
+            // very thread. Flush the decoder and ask the host for a keyframe;
+            // only a decoder that keeps failing gets a full reconnect, from
+            // the main thread.
+            m_consecutive_decode_errors++;
+            avcodec_flush_buffers(m_decoder_context);
+
+            if (m_consecutive_decode_errors == 10) {
+                brls::Logger::error("FFmpeg: Decoder keeps failing, reconnecting");
+                brls::sync([] {
+                    if (MoonlightSession::activeSession() != nullptr)
+                        MoonlightSession::activeSession()->restart();
+                });
+            }
+            return DR_NEED_IDR;
         }
-    } else {
-        brls::Logger::error("FFmpeg: Big buffer to decode... 2");
     }
     return DR_OK;
 }
