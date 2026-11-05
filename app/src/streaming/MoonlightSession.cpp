@@ -90,6 +90,7 @@ void MoonlightSession::connection_started() {
     if (!m_active_session)
         return;
 
+    MoonlightInputManager::instance().resetControllerState();
     m_active_session->m_stop_requested = false;
     m_active_session->m_is_active = true;
 }

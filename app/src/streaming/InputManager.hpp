@@ -10,6 +10,7 @@
 #include "Singleton.hpp"
 #include "keyboard_view.hpp"
 #include <borealis.hpp>
+#include <atomic>
 #include <chrono>
 #include <optional>
 
@@ -52,6 +53,7 @@ class MoonlightInputManager : public Singleton<MoonlightInputManager> {
   public:
     MoonlightInputManager();
     void dropInput();
+    void resetControllerState() { resetControllers = true; }
     void handleInput(bool ignoreTouch = false);
     void sendMouseScroll(brls::Point scroll);
     void handleRumble(unsigned short controller, unsigned short lowFreqMotor, unsigned short highFreqMotor);
@@ -88,6 +90,8 @@ class MoonlightInputManager : public Singleton<MoonlightInputManager> {
     std::chrono::steady_clock::time_point lastDesktopScrollEvent;
     bool inputDropped = false;
     bool inputEnabled = true;
+    std::atomic<bool> resetControllers = true;
+    int announcedControllerCount = -1;
 
     brls::ControllerState mapController(brls::ControllerState controller);
     static short glfwKeyToVKKey(brls::BrlsKeyboardScancode key);
