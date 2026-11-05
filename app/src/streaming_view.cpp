@@ -383,86 +383,109 @@ void StreamingView::draw(NVGcontext* vg, float x, float y, float width,
     }
 
     if (draw_stats) {
-        auto stats = session->session_stats();
-
-        auto statistics = fmt::format(
-                    "Estimated host PC frame rate: {:.{}f} FPS\n"
-                        "Incoming frame rate from network: {:.{}f} FPS\n"
-                        "Decoding frame rate: {:.{}f} FPS\n"
-                        "Rendering frame rate: {:.{}f} FPS\n",
-                    stats->video_decode_stats.current_host_fps, 2,
-                    stats->video_decode_stats.current_received_fps, 2,
-                    stats->video_decode_stats.current_decoded_fps, 2,
-                    stats->video_render_stats.rendered_fps, 2);
-
-        statistics += fmt::format("Frames dropped by your network connection: {}\n"
-                                  "Average receive time: {:.{}f} | {:.{}f} ms\n"
-                                  "Average decode time: {:.{}f} | {:.{}f} ms\n"
-                                  "Average decoder delay: {:.{}f} | {:.{}f} ms\n"
-                                  "Average rendering time: {:.{}f} ms\n",
-                                  stats->video_decode_stats.network_dropped_frames,
-                                  stats->video_decode_stats.current_receive_time, 2,
-                                  stats->video_decode_stats.session_receive_time, 2,
-                                  stats->video_decode_stats.current_decoding_time, 2,
-                                  stats->video_decode_stats.session_decoding_time, 2,
-                                  stats->video_decode_stats.current_decoder_delay, 2,
-                                  stats->video_decode_stats.session_decoder_delay, 2,
-                                  stats->video_render_stats.rendering_time, 2);
-
-        if (stats->video_render_stats.gpu_timed_frames > 0) {
-            statistics += fmt::format("Average GPU render time: {:.{}f} ms\n",
-                                      stats->video_render_stats.gpu_rendering_time, 2);
+        // The stats only change a few times a second; formatting them and
+        // laying the text out twice (blurred shadow + text) every frame cost
+        // a noticeable part of the frame. Rebuild the text every 250 ms and
+        // draw it once over a plain backdrop.
+        const auto statsNow = std::chrono::steady_clock::now();
+        if (statsText.empty() ||
+            statsNow - statsTextTime >= std::chrono::milliseconds(250)) {
+            statsText = buildStatsText();
+            statsTextTime = statsNow;
+            statsBoundsValid = false;
         }
-
-        if (stats->video_render_stats.post_processed_frames > 0) {
-            statistics += fmt::format(
-                "Average post-processing pass time: {:.{}f} ms (D:{:.{}f} | U:{:.{}f} | S:{:.{}f})\n",
-                /* "Post-processed frames: {} / {}\n", */
-                stats->video_render_stats.post_processing_time, 2,
-                stats->video_render_stats.dithering_time, 2,
-                stats->video_render_stats.upscaling_time, 2,
-                stats->video_render_stats.sharpening_time, 2
-                /*stats->video_render_stats.post_processed_frames, */
-                /*stats->video_render_stats.rendered_frames*/);
-        }
-
-        statistics += fmt::format("Frames queue underflows | skipped: {} | {}\n"
-                                  "Queue empty | startup holds: {} | {}\n"
-                                  "Queue overflow | paced skips: {} | {}\n"
-                                  "Scheduled frame holds: {}\n"
-                                  "Frames presented by local clock: {}\n"
-                                  "Playout resyncs | estimated source: {} | {:.2f} FPS\n"
-                                  "Max pushes between draws: {}\n"
-                                  "Frames queue depth | target | capacity: {} | {} | {}",
-                                  AVFrameHolder::instance().getFakeFrameStat(),
-                                  AVFrameHolder::instance().getFrameDropStat(),
-                                  AVFrameHolder::instance().getFrameQueueEmptyStat(),
-                                  AVFrameHolder::instance().getFrameQueueRebufferHoldStat(),
-                                  AVFrameHolder::instance().getFrameQueueOverflowDropStat(),
-                                  AVFrameHolder::instance().getFrameQueuePacingSkipStat(),
-                                  AVFrameHolder::instance().getFrameQueueScheduledHoldStat(),
-                                  AVFrameHolder::instance().getFrameQueueLocalClockPacedFrameStat(),
-                                  AVFrameHolder::instance().getFrameQueuePlayoutResyncStat(),
-                                  AVFrameHolder::instance().getFrameQueueEstimatedSourceFps(),
-                                  AVFrameHolder::instance().getFrameQueueMaxPushBurstStat(),
-                                  AVFrameHolder::instance().getFrameQueueSize(),
-                                  AVFrameHolder::instance().getFrameQueueTargetDepth(),
-                                  AVFrameHolder::instance().getFrameQueueCapacity());
 
         nvgFontFaceId(vg, Application::getFont(FONT_REGULAR));
         nvgFontSize(vg, 20);
+        nvgFontBlur(vg, 0);
         nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_BOTTOM);
 
-        nvgFontBlur(vg, 1);
-        nvgFillColor(vg, nvgRGBA(0, 0, 0, 255));
-        nvgTextBox(vg, 20, 30, width, statistics.c_str(), nullptr);
+        if (!statsBoundsValid) {
+            nvgTextBoxBounds(vg, 20, 30, width, statsText.c_str(), nullptr,
+                             statsBounds);
+            statsBoundsValid = true;
+        }
+        nvgBeginPath(vg);
+        nvgRect(vg, statsBounds[0] - 6, statsBounds[1] - 4,
+                statsBounds[2] - statsBounds[0] + 12,
+                statsBounds[3] - statsBounds[1] + 8);
+        nvgFillColor(vg, nvgRGBA(0, 0, 0, 170));
+        nvgFill(vg);
 
-        nvgFontBlur(vg, 0);
         nvgFillColor(vg, nvgRGBA(0, 255, 0, 255));
-        nvgTextBox(vg, 20, 30, width, statistics.c_str(), nullptr);
+        nvgTextBox(vg, 20, 30, width, statsText.c_str(), nullptr);
     }
 
     Box::draw(vg, x, y, width, height, style, ctx);
+}
+
+std::string StreamingView::buildStatsText() {
+    auto stats = session->session_stats();
+    
+    auto statistics = fmt::format(
+                "Estimated host PC frame rate: {:.{}f} FPS\n"
+                    "Incoming frame rate from network: {:.{}f} FPS\n"
+                    "Decoding frame rate: {:.{}f} FPS\n"
+                    "Rendering frame rate: {:.{}f} FPS\n",
+                stats->video_decode_stats.current_host_fps, 2,
+                stats->video_decode_stats.current_received_fps, 2,
+                stats->video_decode_stats.current_decoded_fps, 2,
+                stats->video_render_stats.rendered_fps, 2);
+    
+    statistics += fmt::format("Frames dropped by your network connection: {}\n"
+                              "Average receive time: {:.{}f} | {:.{}f} ms\n"
+                              "Average decode time: {:.{}f} | {:.{}f} ms\n"
+                              "Average decoder delay: {:.{}f} | {:.{}f} ms\n"
+                              "Average rendering time: {:.{}f} ms\n",
+                              stats->video_decode_stats.network_dropped_frames,
+                              stats->video_decode_stats.current_receive_time, 2,
+                              stats->video_decode_stats.session_receive_time, 2,
+                              stats->video_decode_stats.current_decoding_time, 2,
+                              stats->video_decode_stats.session_decoding_time, 2,
+                              stats->video_decode_stats.current_decoder_delay, 2,
+                              stats->video_decode_stats.session_decoder_delay, 2,
+                              stats->video_render_stats.rendering_time, 2);
+    
+    if (stats->video_render_stats.gpu_timed_frames > 0) {
+        statistics += fmt::format("Average GPU render time: {:.{}f} ms\n",
+                                  stats->video_render_stats.gpu_rendering_time, 2);
+    }
+    
+    if (stats->video_render_stats.post_processed_frames > 0) {
+        statistics += fmt::format(
+            "Average post-processing pass time: {:.{}f} ms (D:{:.{}f} | U:{:.{}f} | S:{:.{}f})\n",
+            /* "Post-processed frames: {} / {}\n", */
+            stats->video_render_stats.post_processing_time, 2,
+            stats->video_render_stats.dithering_time, 2,
+            stats->video_render_stats.upscaling_time, 2,
+            stats->video_render_stats.sharpening_time, 2
+            /*stats->video_render_stats.post_processed_frames, */
+            /*stats->video_render_stats.rendered_frames*/);
+    }
+    
+    statistics += fmt::format("Frames queue underflows | skipped: {} | {}\n"
+                              "Queue empty | startup holds: {} | {}\n"
+                              "Queue overflow | paced skips: {} | {}\n"
+                              "Scheduled frame holds: {}\n"
+                              "Frames presented by local clock: {}\n"
+                              "Playout resyncs | estimated source: {} | {:.2f} FPS\n"
+                              "Max pushes between draws: {}\n"
+                              "Frames queue depth | target | capacity: {} | {} | {}",
+                              AVFrameHolder::instance().getFakeFrameStat(),
+                              AVFrameHolder::instance().getFrameDropStat(),
+                              AVFrameHolder::instance().getFrameQueueEmptyStat(),
+                              AVFrameHolder::instance().getFrameQueueRebufferHoldStat(),
+                              AVFrameHolder::instance().getFrameQueueOverflowDropStat(),
+                              AVFrameHolder::instance().getFrameQueuePacingSkipStat(),
+                              AVFrameHolder::instance().getFrameQueueScheduledHoldStat(),
+                              AVFrameHolder::instance().getFrameQueueLocalClockPacedFrameStat(),
+                              AVFrameHolder::instance().getFrameQueuePlayoutResyncStat(),
+                              AVFrameHolder::instance().getFrameQueueEstimatedSourceFps(),
+                              AVFrameHolder::instance().getFrameQueueMaxPushBurstStat(),
+                              AVFrameHolder::instance().getFrameQueueSize(),
+                              AVFrameHolder::instance().getFrameQueueTargetDepth(),
+                              AVFrameHolder::instance().getFrameQueueCapacity());
+    return statistics;
 }
 
 void StreamingView::addKeyboard() {

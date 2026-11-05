@@ -327,9 +327,15 @@ void DKVideoRenderer::updateDitheringConstants() {
     DitheringConstants ditheringConstants = {};
     ditheringConstants.control[0] = m_dithering_enabled ? 1.0f : 0.0f;
     ditheringConstants.control[1] = requestedStrength;
+    m_dithering_strength = requestedStrength;
+    // Called every frame; don't rewrite a buffer the GPU may be reading
+    // when nothing changed.
+    if (memcmp(ditheringUniformBuffer.getCpuAddr(), &ditheringConstants,
+               sizeof(ditheringConstants)) == 0) {
+        return;
+    }
     memcpy(ditheringUniformBuffer.getCpuAddr(), &ditheringConstants,
            sizeof(ditheringConstants));
-    m_dithering_strength = requestedStrength;
 }
 
 bool DKVideoRenderer::shouldUseRcas() const {
@@ -1129,9 +1135,10 @@ void DKVideoRenderer::draw(NVGcontext* vg, int width, int height, AVFrame* frame
         if (m_dithering_enabled || m_upscaling_enabled || m_rcas_enabled) {
             const auto postProcessStart = PostProcessClock::now();
             const auto upscalingStageStart = PostProcessClock::now();
+            // Same queue, so the post-process pass runs after this list; the
+            // barrier at the end of the list makes its output visible to the
+            // texture reads. A fence signal+wait here only drained the GPU.
             queue.submitCommands(cmdlist);
-            vctx->queueSignalFence(&upscalingFence);
-            vctx->queueWaitFence(&upscalingFence);
 
             if (m_upscaling_enabled) {
                 m_video_render_stats_progress.total_upscaling_time +=
@@ -1149,9 +1156,13 @@ void DKVideoRenderer::draw(NVGcontext* vg, int width, int height, AVFrame* frame
             }
         } else {
             queue.submitCommands(cmdlist);
+            // Start the GPU on the video now instead of when the UI frame
+            // is submitted at the end of the draw.
+            vctx->queueFlush();
         }
 #else
         queue.submitCommands(cmdlist);
+        vctx->queueFlush();
 #endif
     }
 
