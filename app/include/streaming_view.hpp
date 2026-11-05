@@ -60,7 +60,6 @@ class StreamingView : public brls::Box {
     std::string statsText;
     std::chrono::steady_clock::time_point statsTextTime{};
     float statsBounds[4] = {0, 0, 0, 0};
-    bool statsBoundsValid = false;
 
     void handleInput();
     void handleOverlayCombo();

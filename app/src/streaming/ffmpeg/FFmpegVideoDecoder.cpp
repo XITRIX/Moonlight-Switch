@@ -599,6 +599,7 @@ int FFmpegVideoDecoder::setup(int video_format, int width, int height,
 
     m_ffmpeg_buffer_capacity = DECODER_BUFFER_SIZE;
     m_consecutive_decode_errors = 0;
+    m_reconnect_requested = false;
     m_stats_window_start = 0;
     m_ffmpeg_buffer =
         (char*)malloc(m_ffmpeg_buffer_capacity + AV_INPUT_BUFFER_PADDING_SIZE);
@@ -862,8 +863,19 @@ int FFmpegVideoDecoder::submit_decode_unit(PDECODE_UNIT decode_unit) {
             // the main thread.
             m_consecutive_decode_errors++;
             avcodec_flush_buffers(m_decoder_context);
+            // The flush discarded whatever the decoder was holding, so don't
+            // keep counting it as pending in the decoder delay stat.
+            m_frames_out = m_frames_in;
 
-            if (m_consecutive_decode_errors == 10) {
+            bool reconnect = m_consecutive_decode_errors >= 10;
+#if defined(__linux__) && defined(PLATFORM_DESKTOP)
+            // A failed Linux hardware decoder only falls back to software on
+            // the next setup, so reconnect now instead of waiting for more
+            // failures.
+            reconnect = reconnect || (m_linux_hardware_failed && m_hw_decode_active);
+#endif
+            if (reconnect && !m_reconnect_requested) {
+                m_reconnect_requested = true;
                 brls::Logger::error("FFmpeg: Decoder keeps failing, reconnecting");
                 brls::sync([] {
                     if (MoonlightSession::activeSession() != nullptr)

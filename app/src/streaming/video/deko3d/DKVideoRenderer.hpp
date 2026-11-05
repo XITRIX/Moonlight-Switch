@@ -82,7 +82,6 @@ class DKVideoRenderer : public IVideoRenderer {
     CMemPool::Handle easuUniformBuffer;
     CMemPool::Handle ditheringUniformBuffer;
     CMemPool::Handle rcasUniformBuffer;
-    DkFence upscalingFence = {};
   #endif
 
     dk::ImageLayout lumaMappingLayout;

@@ -894,7 +894,9 @@ void DKVideoRenderer::recordStaticCommands(AVFrame* frame) {
         bindRenderTarget(sourceTargetImage, m_source_target_width,
                          m_source_target_height);
         drawDecodePass(sourceTransformState);
-        cmdbuf.barrier(DkBarrier_Tiles, DkInvalidateFlags_Image);
+        // EASU samples a neighbourhood of the source that crosses tiles, so a
+        // same-tile barrier is not enough here.
+        cmdbuf.barrier(DkBarrier_Fragments, DkInvalidateFlags_Image);
 
         bindRenderTarget(upscalingTargetImage, m_upscaling_target_width,
                          m_upscaling_target_height);
@@ -915,7 +917,12 @@ void DKVideoRenderer::recordStaticCommands(AVFrame* frame) {
     }
 
     if (useUpscaling || useDithering || useRcas) {
-        cmdbuf.barrier(DkBarrier_Tiles, DkInvalidateFlags_Image);
+        // The post-process pass is submitted right after this list with no
+        // fence in between. DkBarrier_Tiles only orders same-tile reads (like a
+        // Vulkan subpass); RCAS and the filtered present pass sample across
+        // tiles, so wait for all fragments. Still much cheaper than the old
+        // fence signal+wait, which drained the whole GPU.
+        cmdbuf.barrier(DkBarrier_Fragments, DkInvalidateFlags_Image);
     }
 #else
     drawDecodePass(displayTransformState);
@@ -1136,8 +1143,9 @@ void DKVideoRenderer::draw(NVGcontext* vg, int width, int height, AVFrame* frame
             const auto postProcessStart = PostProcessClock::now();
             const auto upscalingStageStart = PostProcessClock::now();
             // Same queue, so the post-process pass runs after this list; the
-            // barrier at the end of the list makes its output visible to the
-            // texture reads. A fence signal+wait here only drained the GPU.
+            // barrier at the end of the list (see recordStaticCommands) makes
+            // its output visible to the texture reads. A fence signal+wait here
+            // only drained the GPU.
             queue.submitCommands(cmdlist);
 
             if (m_upscaling_enabled) {

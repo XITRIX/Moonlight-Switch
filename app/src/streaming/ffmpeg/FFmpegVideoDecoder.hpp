@@ -72,6 +72,7 @@ class FFmpegVideoDecoder : public IFFmpegVideoDecoder {
     VideoDecodeStats m_video_decode_stats_cache = {};
     uint64_t m_stats_window_start = 0;
     int m_consecutive_decode_errors = 0;
+    bool m_reconnect_requested = false;
     size_t m_ffmpeg_buffer_capacity = 0;
 
     char* m_ffmpeg_buffer = nullptr;

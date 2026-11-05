@@ -72,14 +72,18 @@ int AudrenAudioRenderer::init(int audio_configuration,
         ~(AUDREN_MEMPOOL_ALIGNMENT - 1);
     mempool_ptr = memalign(AUDREN_MEMPOOL_ALIGNMENT, mempool_size);
 
+    // moonlight-common-c does not call cleanup() when init() fails, so free
+    // what was allocated here on every failure path.
     if (!mempool_ptr) {
         brls::Logger::error("Audren: mempool alloc failed");
+        cleanup();
         return -1;
     }
 
     Result rc = audrenInitialize(&m_ar_config);
     if (R_FAILED(rc)) {
         brls::Logger::error("Audren: audrenInitialize: {:x}", rc);
+        cleanup();
         return -1;
     }
 
@@ -87,6 +91,7 @@ int AudrenAudioRenderer::init(int audio_configuration,
     if (R_FAILED(rc)) {
         brls::Logger::error("Audren: audrvCreate: {:x}", rc);
         audrenExit();
+        cleanup();
         return -1;
     }
 

@@ -387,24 +387,20 @@ void StreamingView::draw(NVGcontext* vg, float x, float y, float width,
         // laying the text out twice (blurred shadow + text) every frame cost
         // a noticeable part of the frame. Rebuild the text every 250 ms and
         // draw it once over a plain backdrop.
-        const auto statsNow = std::chrono::steady_clock::now();
-        if (statsText.empty() ||
-            statsNow - statsTextTime >= std::chrono::milliseconds(250)) {
-            statsText = buildStatsText();
-            statsTextTime = statsNow;
-            statsBoundsValid = false;
-        }
-
         nvgFontFaceId(vg, Application::getFont(FONT_REGULAR));
         nvgFontSize(vg, 20);
         nvgFontBlur(vg, 0);
         nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_BOTTOM);
 
-        if (!statsBoundsValid) {
+        const auto statsNow = std::chrono::steady_clock::now();
+        if (statsText.empty() ||
+            statsNow - statsTextTime >= std::chrono::milliseconds(250)) {
+            statsText = buildStatsText();
+            statsTextTime = statsNow;
             nvgTextBoxBounds(vg, 20, 30, width, statsText.c_str(), nullptr,
                              statsBounds);
-            statsBoundsValid = true;
         }
+
         nvgBeginPath(vg);
         nvgRect(vg, statsBounds[0] - 6, statsBounds[1] - 4,
                 statsBounds[2] - statsBounds[0] + 12,

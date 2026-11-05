@@ -419,6 +419,11 @@ void MoonlightSession::stop(int terminate_app) {
 }
 
 void MoonlightSession::restart() {
+    // Queued from the decoder thread with brls::sync; the user may have
+    // stopped the stream before it ran. Don't bring it back.
+    if (m_stop_requested || m_is_terminated)
+        return;
+
     LiStopConnection();
 
     start([](const GSResult<bool>& result) {
