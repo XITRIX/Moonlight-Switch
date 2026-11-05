@@ -1057,6 +1057,21 @@ void DKVideoRenderer::updateFrameMapping(AVFrame* frame) {
     queue.submitCommands(updateCmdMemRing.end(updateCmdbuf));
 }
 
+void DKVideoRenderer::invalidateHardwareResources() {
+    if (!m_is_initialized) {
+        return;
+    }
+
+    // frameMappings wrap decoder pool buffers keyed by their nvmap handle and
+    // CPU address. After a sleep an entry can still match by handle while no
+    // longer describing the memory the GPU samples, which faults the GPU
+    // (orange screen, #306). Drop them all; updateFrameMapping() rebuilds the
+    // one the next frame needs, as it does when the frame size changes.
+    queue.waitIdle();
+    frameMappings.clear();
+    currentMappingIndex = -1;
+}
+
 void DKVideoRenderer::releaseImageSlots() {
     if (!vctx) {
         return;

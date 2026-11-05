@@ -27,6 +27,11 @@ class MoonlightSession {
 
     void draw(NVGcontext* vg, int width, int height);
 
+    // Stop touching the GPU while the app is off screen, and drop renderer
+    // state that may not survive a console sleep once it is back.
+    void set_suspended(bool suspended);
+    bool is_suspended() const { return m_suspended; }
+
     bool is_active() const { return m_is_active; }
     bool is_terminated() const { return m_is_terminated; }
 
@@ -87,6 +92,8 @@ class MoonlightSession {
     bool m_stop_requested = false;
     uint64_t m_generation = 0;
     bool m_connection_status_is_poor = false;
+    bool m_suspended = false;
+    bool m_invalidate_renderer_pending = false;
     bool m_use_hdr = false;
 
     SessionStats m_session_stats = {};

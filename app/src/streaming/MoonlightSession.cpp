@@ -425,8 +425,32 @@ void MoonlightSession::restart() {
     }, m_active_session->m_is_sunshine);
 }
 
+void MoonlightSession::set_suspended(bool suspended) {
+    if (m_suspended == suspended)
+        return;
+
+    m_suspended = suspended;
+    brls::Logger::info("MoonlightSession: rendering {}",
+                       suspended ? "suspended" : "resumed");
+
+    // The renderer belongs to the decoder callbacks, so let draw() reset it
+    // on the render thread instead of reaching for it from here.
+    if (!suspended)
+        m_invalidate_renderer_pending = true;
+}
+
 void MoonlightSession::draw(NVGcontext* vg, int width, int height) {
+    // Off screen nothing we draw is shown, and during a sleep the graphics
+    // service may be going away underneath us.
+    if (m_suspended)
+        return;
+
     if (m_video_decoder && m_video_renderer) {
+        if (m_invalidate_renderer_pending) {
+            m_invalidate_renderer_pending = false;
+            m_video_renderer->invalidateHardwareResources();
+        }
+
         bool consumed = false;
         AVFrameHolder::instance().get(
             [this, vg, width, height](AVFrame* frame) {

@@ -41,6 +41,12 @@ class IVideoRenderer {
                       AVFrame* frame, int imageFormat) = 0;
     virtual VideoRenderStats* video_render_stats() = 0;
 
+    // Called on the render thread after the app was out of focus. A console
+    // sleep can reinitialise the decoder and graphics services, so renderers
+    // that cache mappings of memory they do not own must drop them here and
+    // rebuild them from the next frame.
+    virtual void invalidateHardwareResources() {}
+
     // Default implementations
     virtual int getDecoderColorspace() {
         // Rec 601 is default
