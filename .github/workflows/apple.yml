@@ -1,4 +1,4 @@
-name: iOS Build
+name: Apple Builds
 
 on:
   workflow_call:
@@ -6,9 +6,28 @@ on:
 
 jobs:
   build:
-    name: iOS arm64 (unsigned)
+    name: ${{ matrix.name }}
     runs-on: macos-15
     timeout-minutes: 90
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: macOS arm64
+            platform: macos
+            artifact: Moonlight-macOS-arm64
+            package: dist/Moonlight-macOS-arm64.zip
+            log_platform: macOS
+          - name: iOS arm64 (unsigned)
+            platform: ios
+            artifact: Moonlight-iOS-arm64-unsigned
+            package: dist/Moonlight-iOS-arm64-unsigned.ipa
+            log_platform: iOS
+
+    env:
+      APPLE_PLATFORM: ${{ matrix.platform }}
+      BUILD_DIR: build/${{ matrix.platform }}
 
     steps:
     - name: Check out repository
@@ -66,11 +85,16 @@ jobs:
       shell: bash
       run: |
         vcpkg_revision="$(git -C extern/vcpkg rev-parse HEAD)"
-        manifest_hash="${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json', 'extern/cmake/vcpkg-triplets/arm64-ios.cmake', 'extern/cmake/ios.toolchain.cmake') }}"
-        sdk_version="$(xcrun --sdk iphoneos --show-sdk-version)"
-        xcodebuild -version
-        echo "key=iOS-arm64-vcpkg-${sdk_version}-${vcpkg_revision}-${manifest_hash}" >> "$GITHUB_OUTPUT"
-        echo "restore-prefix=iOS-arm64-vcpkg-${sdk_version}-${vcpkg_revision}-" >> "$GITHUB_OUTPUT"
+        manifest_hash="${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json', 'extern/cmake/vcpkg-triplets/arm64-ios.cmake', 'extern/cmake/vcpkg-triplets/arm64-osx.cmake', 'extern/cmake/ios.toolchain.cmake') }}"
+        if [[ "$APPLE_PLATFORM" == ios ]]; then
+          sdk_version="$(xcrun --sdk iphoneos --show-sdk-version)"
+          prefix="iOS-arm64-vcpkg-${sdk_version}-${vcpkg_revision}"
+          xcodebuild -version
+        else
+          prefix="macOS-arm64-vcpkg-${vcpkg_revision}"
+        fi
+        echo "key=${prefix}-${manifest_hash}" >> "$GITHUB_OUTPUT"
+        echo "restore-prefix=${prefix}-" >> "$GITHUB_OUTPUT"
 
     - name: Restore vcpkg cache
       uses: actions/cache@v6
@@ -79,12 +103,50 @@ jobs:
           extern/vcpkg/buildtrees
           extern/vcpkg/downloads
           extern/vcpkg/packages
-          build/ios/vcpkg_installed
+          ${{ env.BUILD_DIR }}/vcpkg_installed
         key: ${{ steps.vcpkg-cache-key.outputs.key }}
         restore-keys: |
           ${{ steps.vcpkg-cache-key.outputs.restore-prefix }}
 
+    - name: Configure
+      if: matrix.platform == 'macos'
+      shell: bash
+      run: |
+        cmake -B build/macos \
+          -DPLATFORM_DESKTOP=ON \
+          -DBUNDLE_MACOS_APP=ON \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DVCPKG_TARGET_TRIPLET=arm64-osx \
+          -DVCPKG_OVERLAY_TRIPLETS="$GITHUB_WORKSPACE/extern/cmake/vcpkg-triplets"
+
+    - name: Build app bundle
+      if: matrix.platform == 'macos'
+      shell: bash
+      run: cmake --build build/macos --config Release --parallel 3
+
+    - name: Sign and validate app bundle
+      if: matrix.platform == 'macos'
+      shell: bash
+      run: |
+        app="build/macos/Moonlight.app"
+
+        test -d "$app"
+        test -x "$app/Contents/MacOS/Moonlight"
+        plutil -lint "$app/Contents/Info.plist"
+        codesign --force --deep --sign - "$app"
+        codesign --verify --deep --strict "$app"
+
+    - name: Package app bundle
+      if: matrix.platform == 'macos'
+      shell: bash
+      run: |
+        mkdir -p dist
+        ditto -c -k --sequesterRsrc --keepParent \
+          build/macos/Moonlight.app \
+          dist/Moonlight-macOS-arm64.zip
+
     - name: Configure unsigned iOS device build
+      if: matrix.platform == 'ios'
       shell: bash
       run: |
         cmake -B build/ios -G Xcode \
@@ -97,6 +159,7 @@ jobs:
           -DLIBROMFS_PREBUILT_GENERATOR="$GITHUB_WORKSPACE/libromfs-generator"
 
     - name: Build unsigned app bundle
+      if: matrix.platform == 'ios'
       shell: bash
       run: |
         cmake --build build/ios --config Release --parallel 3 -- \
@@ -106,6 +169,7 @@ jobs:
           CODE_SIGN_IDENTITY=
 
     - name: Validate and package unsigned IPA
+      if: matrix.platform == 'ios'
       shell: bash
       run: |
         set -euo pipefail
@@ -120,22 +184,22 @@ jobs:
         (cd dist && zip -qry Moonlight-iOS-arm64-unsigned.ipa Payload)
         unzip -tq dist/Moonlight-iOS-arm64-unsigned.ipa
 
-    - name: Upload iOS build logs
+    - name: Upload Apple build logs
       if: failure()
       uses: actions/upload-artifact@v7
       with:
-        name: Moonlight-iOS-build-logs
+        name: Moonlight-${{ matrix.log_platform }}-build-logs
         path: |
-          build/ios/vcpkg-manifest-install*.log
-          build/ios/CMakeFiles/CMakeConfigureLog.yaml
-          build/ios/CMakeFiles/CMakeError.log
-          build/ios/CMakeFiles/CMakeOutput.log
+          ${{ env.BUILD_DIR }}/vcpkg-manifest-install*.log
+          ${{ env.BUILD_DIR }}/CMakeFiles/CMakeConfigureLog.yaml
+          ${{ env.BUILD_DIR }}/CMakeFiles/CMakeError.log
+          ${{ env.BUILD_DIR }}/CMakeFiles/CMakeOutput.log
           extern/vcpkg/buildtrees/**/*.log
         if-no-files-found: ignore
 
-    - name: Upload unsigned IPA
+    - name: Upload artifact
       uses: actions/upload-artifact@v7
       with:
-        name: Moonlight-iOS-arm64-unsigned
-        path: dist/Moonlight-iOS-arm64-unsigned.ipa
+        name: ${{ matrix.artifact }}
+        path: ${{ matrix.package }}
         if-no-files-found: error
