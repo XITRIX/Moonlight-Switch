@@ -14,9 +14,13 @@ option(PLATFORM_ANDROID "build for Android" OFF)
 option(PLATFORM_PSV "build for psv" OFF)
 option(PLATFORM_PS4 "build for ps4" OFF)
 option(PLATFORM_SWITCH "build for switch" OFF)
+option(PLATFORM_SWITCH2 "build a native Switch 2 NRO with libounce" OFF)
+if (PLATFORM_SWITCH2)
+    set(PLATFORM_SWITCH ON)
+endif ()
 
 set(_moonlight_enable_upscaling_default OFF)
-if (PLATFORM_SWITCH OR PLATFORM_IOS OR PLATFORM_TVOS OR PLATFORM_VISIONOS OR
+if ((PLATFORM_SWITCH AND NOT PLATFORM_SWITCH2) OR PLATFORM_IOS OR PLATFORM_TVOS OR PLATFORM_VISIONOS OR
         (PLATFORM_DESKTOP AND (APPLE OR CMAKE_HOST_APPLE OR CMAKE_HOST_SYSTEM_NAME STREQUAL "Darwin")))
     set(_moonlight_enable_upscaling_default ON)
 endif ()

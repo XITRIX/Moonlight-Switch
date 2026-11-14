@@ -282,7 +282,7 @@ class Settings : public Singleton<Settings> {
 
     void set_use_hw_decoding(bool hw_decoding) { m_use_hw_decoding = hw_decoding; }
     [[nodiscard]] bool use_hw_decoding() const {
-#if defined(__linux__) && defined(PLATFORM_DESKTOP)
+#if defined(__SWITCH2__) || (defined(__linux__) && defined(PLATFORM_DESKTOP))
         return m_use_hw_decoding;
 #else
         return true;
@@ -336,7 +336,7 @@ class Settings : public Singleton<Settings> {
     int m_resolution = 720;
     int m_native_resolution_scale = 100;
     int m_fps = 60;
-#ifdef __PSV__
+#if defined(__PSV__) || defined(__SWITCH2__)
     VideoCodec m_video_codec = H264;
 #else
     VideoCodec m_video_codec = H265;

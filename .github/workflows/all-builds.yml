@@ -13,6 +13,10 @@ jobs:
     name: Nintendo Switch
     uses: ./.github/workflows/docker-image.yml
 
+  switch2:
+    name: Nintendo Switch 2
+    uses: ./.github/workflows/switch2.yml
+
   psvita:
     name: PS Vita
     uses: ./.github/workflows/psvita.yml

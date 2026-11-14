@@ -5,6 +5,9 @@
 #include "Settings.hpp"
 #include "borealis.hpp"
 #include <string.h>
+#ifdef __SWITCH2__
+#include <switch.h>
+#endif
 
 #if defined(PLATFORM_IOS) || defined(PLATFORM_VISIONOS)
 extern void getWindowSize(int* w, int* h);
@@ -255,7 +258,12 @@ void MoonlightSession::start(ServerCallback<bool> callback, bool is_sunshine) {
     int h = resolution;
     int w = h * 16 / 9;
     if (resolution == -1) {
-#if defined(PLATFORM_IOS) || defined(PLATFORM_VISIONOS)
+#ifdef __SWITCH2__
+        u32 nativeWidth = Application::windowWidth, nativeHeight = Application::windowHeight;
+        nwindowGetDimensions(nwindowGetDefault(), &nativeWidth, &nativeHeight);
+        w = nativeWidth;
+        h = nativeHeight;
+#elif defined(PLATFORM_IOS) || defined(PLATFORM_VISIONOS)
         getWindowSize(&w, &h);
 #else
         h = Application::windowHeight;
@@ -281,6 +289,10 @@ void MoonlightSession::start(ServerCallback<bool> callback, bool is_sunshine) {
     m_config.width = w;
     m_config.height = h;
     m_config.fps = Settings::instance().fps();
+#ifdef __SWITCH2__
+    m_config.colorSpace = COLORSPACE_REC_709;
+    m_config.colorRange = COLOR_RANGE_LIMITED;
+#endif
     m_config.audioConfiguration = AUDIO_CONFIGURATION_STEREO;
     m_config.packetSize = 1392;
     m_config.streamingRemotely = STREAM_CFG_AUTO;

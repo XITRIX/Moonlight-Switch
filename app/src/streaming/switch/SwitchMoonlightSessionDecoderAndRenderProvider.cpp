@@ -1,5 +1,8 @@
 #include "SwitchMoonlightSessionDecoderAndRenderProvider.hpp"
 #include "FFmpegVideoDecoder.hpp"
+#ifdef __SWITCH2__
+#include "Switch2VideoDecoder.hpp"
+#endif
 
 #ifdef __SWITCH__
 #include "AudrenAudioRenderer.hpp"
@@ -9,7 +12,9 @@
 #include "SDLAudiorenderer.hpp"
 #endif
 
-#ifdef BOREALIS_USE_DEKO3D
+#ifdef USE_VULKAN_RENDERER
+#include "VulkanVideoRenderer.hpp"
+#elif defined(BOREALIS_USE_DEKO3D)
 #include "DKVideoRenderer.hpp"
 #elif defined(PLATFORM_ANDROID)
 #include "../video/Android/AndroidMediaCodecVideoRenderer.hpp"
@@ -20,17 +25,23 @@
 #elif defined(USE_GL_RENDERER)
 #include "GLVideoRenderer.hpp"
 #else
-#error No renderer selected, enable USE_GL_RENDERER, USE_D3D11_RENDERER, or USE_METAL_RENDERER
+#error No renderer selected, enable USE_VULKAN_RENDERER, USE_GL_RENDERER, USE_D3D11_RENDERER, or USE_METAL_RENDERER
 #endif
 
 IFFmpegVideoDecoder*
 SwitchMoonlightSessionDecoderAndRenderProvider::video_decoder() {
+#ifdef __SWITCH2__
+    return new Switch2VideoDecoder();
+#else
     return new FFmpegVideoDecoder();
+#endif
 }
 
 IVideoRenderer*
 SwitchMoonlightSessionDecoderAndRenderProvider::video_renderer() {
-#ifdef BOREALIS_USE_DEKO3D
+#ifdef USE_VULKAN_RENDERER
+    return new VulkanVideoRenderer();
+#elif defined(BOREALIS_USE_DEKO3D)
     return new DKVideoRenderer();
 #elif defined(PLATFORM_ANDROID)
     return new AndroidMediaCodecVideoRenderer();

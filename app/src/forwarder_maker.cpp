@@ -12,7 +12,7 @@
 
 using namespace brls::literals;
 
-#ifdef __SWITCH__
+#if defined(__SWITCH__) && !defined(__SWITCH2__)
 #include <Settings.hpp>
 
 #include "BoxArtManager.hpp"
@@ -78,7 +78,7 @@ void showShortcutsAlert() {
 } // namespace
 #endif
 
-#ifdef __SWITCH__
+#if defined(__SWITCH__) && !defined(__SWITCH2__)
 
 #include <switch.h>
 

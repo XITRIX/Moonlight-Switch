@@ -1,0 +1,23 @@
+﻿---
+AccessModifierOffset: -2
+AlignConsecutiveAssignments: 'true'
+BasedOnStyle: WebKit
+BreakBeforeBraces: Allman
+IncludeBlocks: Regroup
+IncludeCategories:
+  - Regex: '^<borealis/.*\.hpp>'
+    Priority: 2
+  - Regex: '^<.*\.h>'
+    Priority: 1
+  - Regex: '^<.*'
+    Priority: 2
+  - Regex: '.*'
+    Priority: 3
+IndentCaseLabels: 'true'
+PointerAlignment: Left
+SortIncludes: 'true'
+Standard: Cpp11
+
+# Keep native streaming code readable without changing Borealis's own rules.
+ColumnLimit: 120
+...

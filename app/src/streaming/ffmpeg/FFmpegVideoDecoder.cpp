@@ -511,7 +511,7 @@ int FFmpegVideoDecoder::setup(int video_format, int width, int height,
 
 #if !defined(__linux__) || !defined(PLATFORM_DESKTOP)
     AVHWDeviceType hwType = AV_HWDEVICE_TYPE_NONE;
-#if defined(PLATFORM_SWITCH)
+#if defined(PLATFORM_SWITCH) && !defined(PLATFORM_SWITCH2)
     hwType = AV_HWDEVICE_TYPE_NVTEGRA;
 #elif defined(PLATFORM_ANDROID)
     hwType = AV_HWDEVICE_TYPE_MEDIACODEC;

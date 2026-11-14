@@ -1,6 +1,6 @@
 # Moonlight-Switch
 
-Moonlight-Switch is a port of [Moonlight Game Streaming Project](https://github.com/moonlight-stream "Moonlight Game Streaming Project") for Nintendo Switch.
+Moonlight-Switch is a port of [Moonlight Game Streaming Project](https://github.com/moonlight-stream "Moonlight Game Streaming Project") for Nintendo Switch and Nintendo Switch 2.
 
 ## Screenshots
 <details>
@@ -32,6 +32,12 @@ Or download it from [HB App Store](https://apps.fortheusers.org/switch/Moonlight
 > I DO NOT RESPOSIBLE FOR ANY DAMAGE TO YOUR CONSOLE IF SOMETHING WILL GO WRONG!
 >
 > I am using 4IFIR by myself and not find any issue, but everything is possible. So think by you own head and be responsible for what you do with your devices!
+
+### Switch 2
+1. Download latest Moonlight-Switch2 [release](https://github.com/XITRIX/Moonlight-Switch/releases).
+2. Extract Moonlight-Switch2.zip to the root of your SD card;
+3. Launch hbmenu;
+4. Launch moonlight.
 
 ### iOS, tvOS and macOS
 Accept [invite for TestFlight](https://testflight.apple.com/join/P9EX5vQ5) and download app from there
@@ -144,6 +150,17 @@ To build for Switch, a standard development environment must first be set up. In
 cmake -B build/switch -DPLATFORM_SWITCH=ON
 make -C build/switch Moonlight.nro -j$(nproc)
 ```
+
+### Switch 2
+
+To build for Switch 2, install [ounce-devkit](https://github.com/ouncebrew/ounce-devkit). Set `DEVKITPRO` to the SDK installation directory, then run:
+
+```bash
+export DEVKITPRO=/opt/devkitpro
+bash scripts/switch2/build.sh
+```
+
+The resulting package is written to `build/switch2/Moonlight-Switch.nro`.
 
 ### PS Vita
 

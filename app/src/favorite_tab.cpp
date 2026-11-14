@@ -53,7 +53,7 @@ void FavoriteTab::updateAppList() {
             auto* cell = new AppCell(host, info, 0);
             gridView->addView(cell);
 
-#if defined(PLATFORM_SWITCH) || defined(PLATFORM_IOS)
+#if (defined(PLATFORM_SWITCH) && !defined(PLATFORM_SWITCH2)) || defined(PLATFORM_IOS)
             cell->registerAction(
                 "forwarder/make"_i18n, BUTTON_X,
                 [host, app](View* view) {
