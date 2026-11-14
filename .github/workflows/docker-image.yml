@@ -15,7 +15,7 @@ jobs:
 
     steps:
     - name: Check out repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
       with:
         submodules: recursive
 
@@ -44,14 +44,14 @@ jobs:
         cp build/switch/Moonlight.elf build/switch/Debug.elf
 
     - name: Upload Moonlight-Switch.nro
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: Moonlight-Switch.nro
         path: build/switch/Moonlight-Switch.nro
         if-no-files-found: error
 
     - name: Upload Debug.elf
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: Debug.elf
         path: build/switch/Debug.elf

@@ -18,10 +18,10 @@ jobs:
 
     steps:
     - name: Check out release scripts
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
 
     - name: Download build artifacts
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v8
       with:
         path: artifacts
 

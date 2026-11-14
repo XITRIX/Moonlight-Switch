@@ -26,7 +26,7 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           submodules: recursive
           persist-credentials: false
@@ -52,7 +52,7 @@ jobs:
           cat "$DEVKITPRO/ounce-devkit-version.txt"
 
       - name: Cache Switch 2 dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: build/deps
           key: switch2-linux-devkita64-20260219-${{ env.OUNCE_DEVKIT_SHA256 }}-${{ hashFiles('scripts/switch2/dependencies.sh', 'scripts/switch2/sources.sha256', 'scripts/switch2/mbedtls_entropy.c', 'scripts/switch2/prepare_expat.py') }}
@@ -64,14 +64,14 @@ jobs:
         run: python3 scripts/switch2/package_ci.py
 
       - name: Upload Switch 2 installation
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: Moonlight-Switch2
           path: build/dist-switch2/Moonlight-Switch2.zip
           if-no-files-found: error
 
       - name: Upload Switch 2 debug symbols and validation
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: Moonlight-Switch2-debug
           path: |
@@ -84,7 +84,7 @@ jobs:
 
       - name: Upload build diagnostics
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: Moonlight-Switch2-build-logs
           path: |

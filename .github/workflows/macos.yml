@@ -10,7 +10,7 @@ jobs:
 
     steps:
     - name: Check out repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
       with:
         fetch-depth: 0
         submodules: recursive
@@ -69,7 +69,7 @@ jobs:
         echo "restore-prefix=macOS-arm64-vcpkg-${vcpkg_revision}-" >> "$GITHUB_OUTPUT"
 
     - name: Restore vcpkg cache
-      uses: actions/cache@v4
+      uses: actions/cache@v6
       with:
         path: |
           extern/vcpkg/buildtrees
@@ -115,7 +115,7 @@ jobs:
 
     - name: Upload macOS build logs
       if: failure()
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: Moonlight-macOS-build-logs
         path: |
@@ -126,7 +126,7 @@ jobs:
         if-no-files-found: ignore
 
     - name: Upload artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: Moonlight-macOS-arm64
         path: dist/Moonlight-macOS-arm64.zip
