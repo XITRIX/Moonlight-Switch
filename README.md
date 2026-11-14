@@ -17,7 +17,7 @@ Moonlight-Switch is a port of [Moonlight Game Streaming Project](https://github.
 # Installing
 ### Switch
 1. Download latest Moonlight-Switch [release](https://github.com/XITRIX/Moonlight-Switch/releases).
-2. Put Moonlight.nro to sdcard:/switch/Moonlight-Switch;
+2. Rename the Switch 1 release NRO to Moonlight-Switch.nro and put it in sdcard:/switch/Moonlight-Switch;
 3. Launch hbmenu over *Title Redirection* (for FULL RAM access);
 4. Launch moonlight.
 
@@ -35,7 +35,7 @@ Or download it from [HB App Store](https://apps.fortheusers.org/switch/Moonlight
 
 ### Switch 2
 1. Download latest Moonlight-Switch2 [release](https://github.com/XITRIX/Moonlight-Switch/releases).
-2. Extract Moonlight-Switch2.zip to the root of your SD card;
+2. Extract Moonlight-Switch2-vX.X.X.zip to the root of your SD card;
 3. Launch hbmenu;
 4. Launch moonlight.
 

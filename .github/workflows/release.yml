@@ -1,31 +1,25 @@
-name: Draft Release
+name: Release
 
 on:
-  push:
-    tags:
-      - 'v*'
+  workflow_call:
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: release-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
-  build:
-    name: Build all platforms
-    uses: ./.github/workflows/all-builds.yml
-    secrets: inherit
-
   release:
-    name: Create draft release
-    needs: build
+    name: Publish release assets
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
 
     steps:
+    - name: Check out release scripts
+      uses: actions/checkout@v4
+
     - name: Download build artifacts
       uses: actions/download-artifact@v4
       with:
@@ -33,51 +27,21 @@ jobs:
 
     - name: Collect release assets
       shell: bash
-      run: |
-        set -euo pipefail
+      run: python3 scripts/ci/collect_release.py "$GITHUB_REF_NAME" artifacts dist
 
-        mkdir -p dist
-
-        while IFS= read -r -d '' artifact_dir; do
-          artifact_name="$(basename "$artifact_dir")"
-          mapfile -d '' files < <(find "$artifact_dir" -type f -print0)
-
-          if (( ${#files[@]} == 1 )); then
-            filename="$(basename "${files[0]}")"
-            destination="dist/${filename}"
-
-            if [[ -e "$destination" ]]; then
-              destination="dist/${artifact_name}-${filename}"
-            fi
-
-            cp "${files[0]}" "$destination"
-          elif (( ${#files[@]} > 1 )); then
-            (
-              cd "$artifact_dir"
-              zip -9 -r "$GITHUB_WORKSPACE/dist/${artifact_name}.zip" .
-            )
-          fi
-        done < <(find artifacts -mindepth 1 -maxdepth 1 -type d -print0)
-
-        if ! find dist -mindepth 1 -maxdepth 1 -type f -print -quit | grep -q .; then
-          echo "No release assets were collected"
-          exit 1
-        fi
-
-        find dist -mindepth 1 -maxdepth 1 -type f -print
-
-    - name: Create or update draft release
+    - name: Create or update release
       shell: bash
       env:
         GH_TOKEN: ${{ github.token }}
         GH_REPO: ${{ github.repository }}
       run: |
+        set -euo pipefail
         if gh release view "$GITHUB_REF_NAME" > /dev/null 2>&1; then
-          gh release edit "$GITHUB_REF_NAME" --draft
           gh release upload "$GITHUB_REF_NAME" dist/* --clobber
+          gh release edit "$GITHUB_REF_NAME" --draft=false
         else
           gh release create "$GITHUB_REF_NAME" dist/* \
-            --draft \
+            --verify-tag \
             --title "$GITHUB_REF_NAME" \
             --generate-notes
         fi

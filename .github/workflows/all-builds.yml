@@ -3,6 +3,7 @@ name: All Builds
 on:
   push:
     branches: [ master ]
+    tags: [ 'v[0-9]+.[0-9]+.[0-9]+' ]
   pull_request:
     branches: [ master ]
   workflow_dispatch:
@@ -37,3 +38,11 @@ jobs:
   linux:
     name: Linux
     uses: ./.github/workflows/linux.yml
+
+  release:
+    name: Release
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    needs: [switch, switch2, psvita, android, macos, windows, linux]
+    permissions:
+      contents: write
+    uses: ./.github/workflows/release.yml

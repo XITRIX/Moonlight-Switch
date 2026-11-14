@@ -81,6 +81,7 @@ jobs:
       with:
         location: 'C:\'
         msystem: ${{ matrix.msystem }}
+        release: false
         update: true
         install: ${{ matrix.packages }}
 

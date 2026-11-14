@@ -15,7 +15,7 @@ jobs:
 
     steps:
     - name: Check out repository
-      uses: actions/checkout@v1
+      uses: actions/checkout@v4
       with:
         submodules: recursive
 
@@ -39,16 +39,20 @@ jobs:
       run: make -C build/switch Moonlight.nro -j8
 
     - name: Rename artifact 
-      run: mv build/switch/Moonlight.nro build/switch/Moonlight-Switch.nro
+      run: |
+        mv build/switch/Moonlight.nro build/switch/Moonlight-Switch.nro
+        cp build/switch/Moonlight.elf build/switch/Debug.elf
 
     - name: Upload Moonlight-Switch.nro
-      uses: actions/upload-artifact@master
+      uses: actions/upload-artifact@v4
       with:
         name: Moonlight-Switch.nro
         path: build/switch/Moonlight-Switch.nro
+        if-no-files-found: error
 
-    - name: Upload Moonlight-Switch.elf
-      uses: actions/upload-artifact@master
+    - name: Upload Debug.elf
+      uses: actions/upload-artifact@v4
       with:
         name: Debug.elf
-        path: build/switch/Moonlight.elf
+        path: build/switch/Debug.elf
+        if-no-files-found: error

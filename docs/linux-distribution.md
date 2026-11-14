@@ -6,16 +6,16 @@ streaming path.
 
 ## Choosing a download
 
-Every release is built for both `x86_64` and `aarch64`.
+Every release is built for both `x86_64` and `arm64`.
 
 | System | Recommended artifact |
 | --- | --- |
-| Steam Deck / SteamOS | `steamrt4-x86_64.tar.gz` |
-| Ubuntu, Debian, Linux Mint | `amd64.deb` or `arm64.deb` |
-| Fedora | `x86_64.rpm` or `aarch64.rpm` |
+| Steam Deck / SteamOS | `Moonlight-SteamOS-x86_64-vX.X.X.tar.gz` |
+| Ubuntu, Debian, Linux Mint | `Moonlight-Linux-x86_64-vX.X.X.deb` or `Moonlight-Linux-arm64-vX.X.X.deb` |
+| Fedora | `Moonlight-Linux-x86_64-vX.X.X.rpm` or `Moonlight-Linux-arm64-vX.X.X.rpm` |
 | Arch, Manjaro, openSUSE, and other desktop distributions | AppImage |
-| Systems without AppImage/FUSE support | Portable `linux-*.tar.gz` |
-| ARM64 laptops and Raspberry Pi-class desktops | `aarch64` AppImage/tar or `arm64.deb` |
+| Systems without AppImage/FUSE support | Portable `Moonlight-Linux-*.tar.gz` |
+| ARM64 laptops and Raspberry Pi-class desktops | `arm64` AppImage/tar or `arm64-vX.X.X.deb` |
 
 Steam Deck is an x86_64 device. The ARM64 Steam Runtime artifact is provided for
 other ARM64 Linux gaming systems.
@@ -35,7 +35,7 @@ driver still come from the host.
 Extract the Steam Runtime archive:
 
 ```bash
-tar -xzf Moonlight-Switch-*-steamrt4-*.tar.gz
+tar -xzf Moonlight-SteamOS-x86_64-v*.tar.gz
 ```
 
 In Steam Desktop Mode, open `Moonlight-Switch.AppDir` in the file manager and
@@ -56,38 +56,38 @@ in the Steamworks Linux Runtime settings.
 ### AppImage
 
 ```bash
-chmod +x Moonlight-Switch-*-linux-x86_64.AppImage
-./Moonlight-Switch-*-linux-x86_64.AppImage
+chmod +x Moonlight-Linux-x86_64-v*.AppImage
+./Moonlight-Linux-x86_64-v*.AppImage
 ```
 
-Use the `aarch64` filename on ARM64. If FUSE is unavailable, AppImage also
+Use the `arm64` filename on ARM64. If FUSE is unavailable, AppImage also
 supports:
 
 ```bash
-./Moonlight-Switch-*.AppImage --appimage-extract-and-run
+./Moonlight-Linux-*.AppImage --appimage-extract-and-run
 ```
 
 ### Debian, Ubuntu, and Linux Mint
 
 ```bash
-sudo apt install ./moonlight-switch_*_amd64.deb
+sudo apt install ./Moonlight-Linux-x86_64-v*.deb
 ```
 
-Use the `arm64.deb` file on ARM64.
+Use the `arm64-vX.X.X.deb` file on ARM64.
 
 ### Fedora
 
 ```bash
-sudo dnf install ./moonlight-switch-*.x86_64.rpm
+sudo dnf install ./Moonlight-Linux-x86_64-v*.rpm
 ```
 
-Use the `aarch64.rpm` file on ARM64. On RPM distributions with different
+Use the `arm64-vX.X.X.rpm` file on ARM64. On RPM distributions with different
 dependency naming, use the AppImage instead.
 
 ### Portable tarball
 
 ```bash
-tar -xzf Moonlight-Switch-*-linux-x86_64.tar.gz
+tar -xzf Moonlight-Linux-x86_64-v*.tar.gz
 ./Moonlight-Switch.AppDir/AppRun
 ```
 
