@@ -64,12 +64,12 @@ Downloaded source archives are checked against `scripts/switch2/sources.sha256`.
 
 ## GitHub Actions
 
-`.github/workflows/switch2.yml` is a reusable workflow and also supports manual
-dispatch. `all-builds.yml` includes it alongside Switch 1, so the existing tag
-release workflow collects its artifacts automatically.
+`.github/workflows/switch.yml` builds Switch 1 and Switch 2 in a matrix and also
+supports manual dispatch. `all-builds.yml` includes it as the Switch group; tag
+builds publish both platforms' artifacts in the release.
 
-It runs on a GitHub-hosted Ubuntu runner in `devkitpro/devkita64:20260219`, matching
-the public devkit's Dockerfile. It installs the public
+The Switch 2 job runs on a GitHub-hosted Ubuntu runner in
+`devkitpro/devkita64:20260219`, matching the public devkit's Dockerfile. It installs the public
 [ounce-devkit 20261114 release](https://github.com/ouncebrew/ounce-devkit/releases/tag/devkit-20261114)
 after checking the archive against the SHA-256 pinned in the workflow. No private
 SDK access or self-hosted runner is needed. The verifier accepts both the current

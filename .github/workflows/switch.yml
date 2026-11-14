@@ -1,4 +1,4 @@
-name: Nintendo Switch 2
+name: Switch
 
 on:
   workflow_call:
@@ -9,11 +9,23 @@ permissions:
 
 jobs:
   build:
+    name: ${{ matrix.name }}
     runs-on: ubuntu-latest
     timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Switch 1
+            platform: switch1
+            image: devkitpro/devkita64:latest
+          - name: Switch 2
+            platform: switch2
+            # Matches the public ounce-devkit Dockerfile's devkitPro toolchain.
+            image: devkitpro/devkita64:20260219
+
     container:
-      # Matches the public ounce-devkit Dockerfile's devkitPro toolchain.
-      image: devkitpro/devkita64:20260219
+      image: ${{ matrix.image }}
 
     defaults:
       run:
@@ -31,7 +43,51 @@ jobs:
           submodules: recursive
           persist-credentials: false
 
+      - name: Remove useless fonts
+        if: matrix.platform == 'switch1'
+        run: rm -rf ./resources/font
+
+      - name: Remove enet
+        if: matrix.platform == 'switch1'
+        run: dkp-pacman --noconfirm -R switch-enet
+
+      - name: Run cmake
+        if: matrix.platform == 'switch1'
+        continue-on-error: true
+        run: cmake -B build/switch -DCMAKE_BUILD_TYPE=Release -DPLATFORM_SWITCH=ON -DUSE_DEKO3D=ON
+
+      - name: Dirty second cmake run
+        if: matrix.platform == 'switch1'
+        run: cmake -B build/switch -DCMAKE_BUILD_TYPE=Release -DPLATFORM_SWITCH=ON -DUSE_DEKO3D=ON
+
+      - name: Run build
+        if: matrix.platform == 'switch1'
+        run: make -C build/switch Moonlight.nro -j8
+
+      - name: Rename artifact
+        if: matrix.platform == 'switch1'
+        run: |
+          mv build/switch/Moonlight.nro build/switch/Moonlight-Switch.nro
+          cp build/switch/Moonlight.elf build/switch/Debug.elf
+
+      - name: Upload Moonlight-Switch.nro
+        if: matrix.platform == 'switch1'
+        uses: actions/upload-artifact@v7
+        with:
+          name: Moonlight-Switch.nro
+          path: build/switch/Moonlight-Switch.nro
+          if-no-files-found: error
+
+      - name: Upload Debug.elf
+        if: matrix.platform == 'switch1'
+        uses: actions/upload-artifact@v7
+        with:
+          name: Debug.elf
+          path: build/switch/Debug.elf
+          if-no-files-found: error
+
       - name: Install host build tools
+        if: matrix.platform == 'switch2'
         run: |
           set -euo pipefail
           apt-get update
@@ -40,6 +96,7 @@ jobs:
             ninja-build pkg-config python3 spirv-tools xz-utils
 
       - name: Install the public Switch 2 SDK
+        if: matrix.platform == 'switch2'
         run: |
           set -euo pipefail
           archive="$RUNNER_TEMP/ounce-devkit.tar.xz"
@@ -52,18 +109,22 @@ jobs:
           cat "$DEVKITPRO/ounce-devkit-version.txt"
 
       - name: Cache Switch 2 dependencies
+        if: matrix.platform == 'switch2'
         uses: actions/cache@v6
         with:
           path: build/deps
           key: switch2-linux-devkita64-20260219-${{ env.OUNCE_DEVKIT_SHA256 }}-${{ hashFiles('scripts/switch2/dependencies.sh', 'scripts/switch2/sources.sha256', 'scripts/switch2/mbedtls_entropy.c', 'scripts/switch2/prepare_expat.py') }}
 
       - name: Build and validate native Vulkan NRO
+        if: matrix.platform == 'switch2'
         run: bash scripts/switch2/build.sh all
 
       - name: Package the SD card installation
+        if: matrix.platform == 'switch2'
         run: python3 scripts/switch2/package_ci.py
 
       - name: Upload Switch 2 installation
+        if: matrix.platform == 'switch2'
         uses: actions/upload-artifact@v7
         with:
           name: Moonlight-Switch2
@@ -71,6 +132,7 @@ jobs:
           if-no-files-found: error
 
       - name: Upload Switch 2 debug symbols and validation
+        if: matrix.platform == 'switch2'
         uses: actions/upload-artifact@v7
         with:
           name: Moonlight-Switch2-debug
@@ -83,7 +145,7 @@ jobs:
           if-no-files-found: error
 
       - name: Upload build diagnostics
-        if: failure()
+        if: failure() && matrix.platform == 'switch2'
         uses: actions/upload-artifact@v7
         with:
           name: Moonlight-Switch2-build-logs
