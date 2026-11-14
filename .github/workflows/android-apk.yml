@@ -111,7 +111,7 @@ jobs:
       shell: bash
       run: |
         runner_os="${{ runner.os }}"
-        manifest_hash="${{ hashFiles('app/platforms/android-project/app/jni/vcpkg.json', 'app/platforms/android-project/app/jni/vcpkg-configuration.json') }}"
+        manifest_hash="${{ hashFiles('app/platforms/android-project/app/jni/vcpkg.json', 'app/platforms/android-project/app/jni/vcpkg-configuration.json', 'extern/cmake/vcpkg-triplets/*android.cmake') }}"
         vcpkg_revision="$(git -C extern/vcpkg rev-parse HEAD)"
         triplets="arm-neon-android-arm64-android"
 
@@ -139,11 +139,13 @@ jobs:
       run: |
         ./vcpkg install \
           --triplet arm-neon-android \
+          --overlay-triplets "$GITHUB_WORKSPACE/extern/cmake/vcpkg-triplets" \
           --x-manifest-root "$GITHUB_WORKSPACE/app/platforms/android-project/app/jni" \
           --x-install-root "$GITHUB_WORKSPACE/extern/vcpkg/installed"
 
         ./vcpkg install \
           --triplet arm64-android \
+          --overlay-triplets "$GITHUB_WORKSPACE/extern/cmake/vcpkg-triplets" \
           --x-manifest-root "$GITHUB_WORKSPACE/app/platforms/android-project/app/jni" \
           --x-install-root "$GITHUB_WORKSPACE/extern/vcpkg/installed"
 
@@ -236,9 +238,12 @@ jobs:
       with:
         name: Moonlight-android-build-logs
         path: |
+          extern/vcpkg/buildtrees/**/*.log
+          extern/vcpkg/installed/vcpkg/issue_body.md
           app/platforms/android-project/app/.cxx/**/vcpkg-manifest-install.log
           app/platforms/android-project/app/.cxx/**/CMakeFiles/CMakeError.log
           app/platforms/android-project/app/.cxx/**/CMakeFiles/CMakeOutput.log
+        include-hidden-files: true
         if-no-files-found: ignore
 
     - name: Upload artifact
