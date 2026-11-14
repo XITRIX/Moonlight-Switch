@@ -17,6 +17,7 @@ ASSETS = {
     "Moonlight-windows-ucrt64": ("Windows-x64", ".zip", True),
     "Moonlight-windows-clangarm64": ("Windows-arm64", ".zip", True),
     "Moonlight-macOS-arm64": ("macOS-arm64", ".zip", False),
+    "Moonlight-iOS-arm64-unsigned": ("iOS-arm64", "-unsigned.ipa", False),
     "Moonlight-android-release-apk": ("Android", ".apk", False),
     "Moonlight-android-release-unsigned-apk": ("Android", "-unsigned.apk", False),
 }

@@ -38,8 +38,11 @@ class ReleaseTests(unittest.TestCase):
 
     def test_all_platforms_and_debug_symbols(self):
         assets = collect("v1.6.0", self.artifacts, self.output)
-        self.assertEqual(len(assets), 19)
-        self.assertEqual(len({asset.name for asset in assets}), 19)
+        self.assertEqual(len(assets), 20)
+        self.assertEqual(len({asset.name for asset in assets}), 20)
+        self.assertTrue(
+            (self.output / "Moonlight-iOS-arm64-v1.6.0-unsigned.ipa").is_file()
+        )
         self.assertEqual(
             (self.output / "Moonlight-Switch1-v1.6.0-Debug.elf").read_bytes(),
             b"Debug.elf",

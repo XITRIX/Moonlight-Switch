@@ -27,6 +27,10 @@ jobs:
     name: macOS
     uses: ./.github/workflows/macos.yml
 
+  ios:
+    name: iOS
+    uses: ./.github/workflows/ios.yml
+
   windows:
     name: Windows
     uses: ./.github/workflows/windows.yml
@@ -38,7 +42,7 @@ jobs:
   release:
     name: Release
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
-    needs: [switch, psvita, android, macos, windows, linux]
+    needs: [switch, psvita, android, macos, ios, windows, linux]
     permissions:
       contents: write
     uses: ./.github/workflows/release.yml
