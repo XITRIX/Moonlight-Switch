@@ -82,6 +82,8 @@ jobs:
         location: 'C:\'
         msystem: ${{ matrix.msystem }}
         release: false
+        # paccache can fail after a successful ARM64 package installation.
+        cache: false
         update: true
         install: ${{ matrix.packages }}
 
