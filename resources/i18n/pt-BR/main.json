@@ -141,6 +141,7 @@
         "mouse_input": "Modo mouse",
         "mouse_input_setup_message": "Pressione as teclas que você gostaria de usar para abrir o modo mouse:\n\n",
         "mouse_speed": "Aceleração do mouse",
+        "mouse_scroll_sensitivity": "Sensibilidade da rolagem",
         "overlay": "Sobreposição em jogo",
         "overlay_buttons": "Combinação de botões",
         "overlay_setup_message": "Pressione as teclas que você gostaria de usar para abrir a Sobreposição:\n\n",

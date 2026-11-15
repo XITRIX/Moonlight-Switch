@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Check native Switch 2 ABI, library selection and packaged NRO integrity."""
 
+import argparse
 import hashlib
 import json
 import os
@@ -12,6 +13,13 @@ BUILD = ROOT / os.environ.get("MOONLIGHT_SWITCH2_BUILD_DIR", "build/switch2")
 
 
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--allow-dirty-dependencies",
+        action="store_true",
+        help="Validate an uncommitted local console-test candidate; CI stays strict",
+    )
+    args = parser.parse_args()
     sdk = Path(os.environ["DEVKITPRO"])
 
     def run(tool, *args):
@@ -116,6 +124,7 @@ def main():
     fingerprint = json.loads(
         (ROOT / "build/switch2-generated/source-fingerprint.json").read_text()
     )
+    dependency_changes = {}
     for name, folder in (
         ("borealis", "extern/borealis"),
         ("SDL3", "extern/borealis/library/lib/extern/SDL3"),
@@ -125,9 +134,11 @@ def main():
             subprocess.check_output(git + ["rev-parse", "HEAD"], text=True).strip()
             == fingerprint["dependencies"][name]
         )
-        assert not subprocess.check_output(
+        dirty = subprocess.check_output(
             git + ["status", "--porcelain", "--ignore-submodules"], text=True
-        ).strip(), name + " must be committed"
+        ).strip()
+        assert args.allow_dirty_dependencies or not dirty, name + " must be committed"
+        dependency_changes[name] = bool(dirty)
     sdk_version = next(
         (
             path
@@ -154,6 +165,7 @@ def main():
         ),
         "buildId": fingerprint["buildId"],
         "dependencies": fingerprint["dependencies"],
+        "uncommittedDependencies": dependency_changes,
         "translationUnitsChecked": len(commands),
         "undefinedSymbols": 0,
         "nroBytes": len(data),

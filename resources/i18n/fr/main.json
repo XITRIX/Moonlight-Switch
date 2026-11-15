@@ -141,6 +141,7 @@
         "mouse_input": "Mode souris",
         "mouse_input_setup_message": "Appuyez sur les boutons à utiliser pour le mode souris :",
         "mouse_speed": "Vitesse de la souris",
+        "mouse_scroll_sensitivity": "Sensibilité du défilement",
         "overlay": "Overlay en jeu",
         "overlay_buttons": "Combinaison de boutons",
         "overlay_setup_message": "Appuyez sur les boutons à utiliser pour ouvrir l'overlay :\n\n",

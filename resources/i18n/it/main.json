@@ -141,6 +141,7 @@
         "mouse_input": "Modalità input del mouse",
         "mouse_input_setup_message": "Premi i tasti che desideri usare per aprire la modalità di input del mouse:",
         "mouse_speed": "Accelerazione mouse",
+        "mouse_scroll_sensitivity": "Sensibilità scorrimento",
         "overlay": "Sovrapposizione in gioco",
         "overlay_buttons": "Combinazione Tasti",
         "overlay_setup_message": "Premi i tasti che vuoi usare per aprire la Sovrapposizione:\n\n",

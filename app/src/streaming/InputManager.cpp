@@ -113,7 +113,7 @@ void MoonlightInputManager::handleDesktopMouseScroll(brls::Point scroll) {
         desktopScrollAxis = DesktopScrollAxis::Vertical;
         pendingHorizontalScroll = 0;
         pendingHorizontalScrollEvents = 0;
-        sendDesktopMouseScroll({0, scroll.y});
+        sendMouseScroll({0, scroll.y});
         return;
     }
 
@@ -135,38 +135,73 @@ void MoonlightInputManager::handleDesktopMouseScroll(brls::Point scroll) {
         pendingHorizontalScrollEvents = 0;
     }
 
-    sendDesktopMouseScroll({scroll.x, 0});
+    sendMouseScroll({scroll.x, 0});
 }
 
-void MoonlightInputManager::sendDesktopMouseScroll(brls::Point scroll) {
-    desktopScrollRemainder.x += scroll.x * MOONLIGHT_WHEEL_DELTA;
-    desktopScrollRemainder.y += scroll.y * MOONLIGHT_WHEEL_DELTA;
+void MoonlightInputManager::sendMouseScroll(brls::Point scroll)
+{
+    const float sensitivity = Settings::instance().get_mouse_scroll_multiplier();
+    const auto now          = std::chrono::steady_clock::now();
+    if (sensitivity != loggedScrollSensitivity)
+    {
+        brls::Logger::info("MOUSE_SCROLL: sensitivity={:.2f}", sensitivity);
+        loggedScrollSensitivity = sensitivity;
+        scrollLogInput          = { };
+        scrollLogSentX = scrollLogSentY = 0;
+        scrollLogEvents                 = 0;
+        lastScrollLog                   = now;
+    }
+    scrollLogInput.x += scroll.x;
+    scrollLogInput.y += scroll.y;
+    ++scrollLogEvents;
+    if (lastScrollLog.time_since_epoch().count() == 0)
+        lastScrollLog = now;
+    desktopScrollRemainder.x += scroll.x * MOONLIGHT_WHEEL_DELTA * sensitivity;
+    desktopScrollRemainder.y += scroll.y * MOONLIGHT_WHEEL_DELTA * sensitivity;
 
-    const int horizontal = std::clamp(
-        static_cast<int>(std::trunc(desktopScrollRemainder.x)),
-        static_cast<int>(std::numeric_limits<short>::min()),
-        static_cast<int>(std::numeric_limits<short>::max()));
-    const int vertical = std::clamp(
-        static_cast<int>(std::trunc(desktopScrollRemainder.y)),
-        static_cast<int>(std::numeric_limits<short>::min()),
-        static_cast<int>(std::numeric_limits<short>::max()));
+#ifdef __SWITCH2__
+    // Some host applications round every small packet to a whole wheel click.
+    // Accumulate fractional Joy-Con scrolling here so sensitivity controls rate.
+    constexpr int quantum = 120;
+#else
+    constexpr int quantum = 1;
+#endif
+    constexpr float minimum = (std::numeric_limits<short>::min() / quantum) * quantum;
+    constexpr float maximum = (std::numeric_limits<short>::max() / quantum) * quantum;
+    const int horizontal
+        = static_cast<int>(std::clamp(std::trunc(desktopScrollRemainder.x / quantum) * quantum, minimum, maximum));
+    const int vertical
+        = static_cast<int>(std::clamp(std::trunc(desktopScrollRemainder.y / quantum) * quantum, minimum, maximum));
 
-    if (horizontal != 0) {
+    if (horizontal != 0)
+    {
         desktopScrollRemainder.x -= horizontal;
-        const int result =
-            LiSendHighResHScrollEvent(static_cast<short>(horizontal));
+        const int result = LiSendHighResHScrollEvent(static_cast<short>(horizontal));
         if (result < 0)
-            brls::Logger::warning(
-                "Failed to queue horizontal mouse scroll: {}", result);
+            brls::Logger::warning("Failed to queue horizontal mouse scroll: {}", result);
+        else
+            scrollLogSentX += horizontal;
     }
 
-    if (vertical != 0) {
+    if (vertical != 0)
+    {
         desktopScrollRemainder.y -= vertical;
-        const int result =
-            LiSendHighResScrollEvent(static_cast<short>(vertical));
+        const int result = LiSendHighResScrollEvent(static_cast<short>(vertical));
         if (result < 0)
-            brls::Logger::warning(
-                "Failed to queue vertical mouse scroll: {}", result);
+            brls::Logger::warning("Failed to queue vertical mouse scroll: {}", result);
+        else
+            scrollLogSentY += vertical;
+    }
+    if (now - lastScrollLog >= std::chrono::seconds(1))
+    {
+        brls::Logger::info("MOUSE_SCROLL: sensitivity={:.2f} quantum={} events={} wheelX={:.4f} wheelY={:.4f} "
+                           "queuedX={} queuedY={} pendingX={:.4f} pendingY={:.4f}",
+            sensitivity, quantum, scrollLogEvents, scrollLogInput.x, scrollLogInput.y, scrollLogSentX, scrollLogSentY,
+            desktopScrollRemainder.x, desktopScrollRemainder.y);
+        scrollLogInput = { };
+        scrollLogSentX = scrollLogSentY = 0;
+        scrollLogEvents                 = 0;
+        lastScrollLog                   = now;
     }
 }
 
@@ -254,6 +289,11 @@ void MoonlightInputManager::dropInput() {
 
     desktopMouseRemainder = {0, 0};
     desktopScrollRemainder = {0, 0};
+    scrollLogInput = {0, 0};
+    scrollLogSentX = scrollLogSentY = 0;
+    scrollLogEvents = 0;
+    loggedScrollSensitivity = -1;
+    lastScrollLog = {};
     pendingHorizontalScroll = 0;
     pendingHorizontalScrollEvents = 0;
     desktopScrollAxis = DesktopScrollAxis::None;
@@ -534,7 +574,7 @@ void MoonlightInputManager::handleInput(bool ignoreTouch) {
         timeStamp = timeNow;
         brls::Logger::info("Scroll sended: {}", mouseState.scroll_y);
         lastMouseState.scroll_y = mouseState.scroll_y;
-        LiSendScrollEvent(mouseState.scroll_y > 0 ? 1 : -1);
+        sendMouseScroll({0, mouseState.scroll_y > 0 ? 1.0f : -1.0f});
     }
 
     if (!Settings::instance().touchscreen_mouse_mode()) {

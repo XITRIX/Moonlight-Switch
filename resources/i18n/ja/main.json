@@ -141,6 +141,7 @@
         "mouse_input": "Mouse input mode",
         "mouse_input_setup_message": "Press keys you'd like to use to open Mouse input mode:\n\n",
         "mouse_speed": "マウスの加速",
+        "mouse_scroll_sensitivity": "スクロール感度",
         "overlay": "ゲーム内オーバーレイ",
         "overlay_buttons": "ボタンの組み合わせ",
         "overlay_setup_message": "オーバーレイを開くために使用するキーを押します:\n\n",

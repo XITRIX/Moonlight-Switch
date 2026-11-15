@@ -141,6 +141,7 @@
         "mouse_input": "Mauseingabemodus",
         "mouse_input_setup_message": "Drücke die Tasten, die du nutzen möchtest, um den Mauseingabemodus zu aktivieren:\n\n",
         "mouse_speed": "Mausbeschleunigung",
+        "mouse_scroll_sensitivity": "Scroll-Empfindlichkeit",
         "overlay": "Ingame Overlay",
         "overlay_buttons": "Tastenkombination",
         "overlay_setup_message": "Drücken Sie die Tasten, die Sie benutzen wollen, um das Overlay zu öffnen:\n\n\n",

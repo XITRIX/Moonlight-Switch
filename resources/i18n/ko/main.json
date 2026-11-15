@@ -141,6 +141,7 @@
         "mouse_input": "마우스 입력 모드",
         "mouse_input_setup_message": "마우스 입력 모드를 여는 데 사용할 키를 누르세요:\n\n",
         "mouse_speed": "마우스 가속",
+        "mouse_scroll_sensitivity": "스크롤 감도",
         "overlay": "게임 오버레이",
         "overlay_buttons": "버튼 조합",
         "overlay_setup_message": "오버레이를 여는 데 사용할 키를 누르세요:\n\n",

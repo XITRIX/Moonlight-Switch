@@ -15,6 +15,7 @@ class SettingsTab : public brls::Box {
   public:
     SettingsTab();
     ~SettingsTab();
+    void willAppear(bool resetState = false) override;
 
     BRLS_BIND(brls::SelectorCell, resolution, "resolution");
     BRLS_BIND(brls::SelectorCell, resolutionScale, "resolution_scale");
@@ -55,6 +56,8 @@ class SettingsTab : public brls::Box {
     BRLS_BIND(brls::BooleanCell, swapMouseScroll, "swap_mouse_scroll");
     BRLS_BIND(brls::Header, mouseSpeedHeader, "mouse_speed_header");
     BRLS_BIND(brls::Slider, mouseSpeedSlider, "mouse_speed_slider");
+    BRLS_BIND(brls::Header, mouseScrollHeader, "mouse_scroll_header");
+    BRLS_BIND(brls::Slider, mouseScrollSlider, "mouse_scroll_slider");
     BRLS_BIND(brls::BooleanCell, writeLog, "writeLog");
 
     static brls::View* create();

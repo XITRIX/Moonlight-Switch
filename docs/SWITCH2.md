@@ -37,6 +37,13 @@ are MSYS2 CMake, Ninja, Git, make, curl, tar and Python, plus UCRT64 GCC.
 Only the build process environment changes. The Ounce SDK supplies devkitA64,
 libounce and NRO packaging tools. Nothing is installed into the shared SDK.
 
+To test Borealis/SDL changes on the console before committing them, add
+`-AllowDirtyDependencies`. On Linux/MSYS2, set
+`MOONLIGHT_SWITCH2_ALLOW_DIRTY_DEPS=1`. The source fingerprint still identifies
+the candidate, and `validation.json` records its uncommitted dependencies.
+All ABI, shader and linker checks still run. Normal builds and CI require
+committed dependency changes.
+
 On Linux/MSYS2, export `DEVKITPRO`, then run `bash scripts/switch2/build.sh`.
 `libraries` builds just dependencies; `app` builds the application. Outputs:
 
@@ -144,6 +151,28 @@ queries and the first-UI-frame marker. This establishes the selected display
 mode, not measured scanout or streaming throughput. The user then reported
 misaligned touchscreen hits; the corrected touch build was uploaded and
 readback-verified, retaining the display build as a backup.
+
+## Joy-Con 2 mouse
+
+The primary controller's Joy-Con 2 pointers use libounce's `PadPointer` through
+the Borealis input backend, alongside USB mice. L/R left-clicks, ZL/ZR
+right-clicks, pressing the stick middle-clicks, and the stick scrolls. Mouse
+buttons and stick input are suppressed from the gamepad only while that Joy-Con
+is acting as a mouse; lifting during a drag preserves the held mouse button.
+
+Joy-Con movement uses two thirds of the native delta and retains fractional
+motion. The existing Mouse acceleration slider controls streamed movement and
+the local Joy-Con cursor; its multiplier is applied once to each path.
+Scroll sensitivity sits beside it in Settings and the in-game options, defaults
+to x1.00, and is saved as `mouse_scroll_multiplier` (10–200 percent).
+
+Joy-Con scroll samples are normalized at 120 native units per wheel click.
+Switch 2 accumulates fractional scrolling into whole wheel steps before sending
+it to the PC, so applications that round small packets still respect sensitivity.
+`SWITCH2_JOYCON_MOUSE` logs the first raw and normalized scroll sample;
+`MOUSE_SCROLL` reports the active multiplier, wheel input, queued units and
+pending fractions. One wheel step is 120 queued units. The native mouse adapter
+and scroll sender regressions run as part of the Switch 2 build.
 
 ## Native hardware decoder
 

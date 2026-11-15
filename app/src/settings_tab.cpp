@@ -11,6 +11,7 @@
 
 #include "settings_tab.hpp"
 #include "Settings.hpp"
+#include "MouseScrollSettings.hpp"
 #include "helper.hpp"
 #include "button_selecting_dialog.hpp"
 #include "mapping_layout_editor.hpp"
@@ -772,12 +773,20 @@ SettingsTab::SettingsTab() {
         Settings::instance().set_mouse_speed_multiplier(value * 100);
     });
     mouseSpeedSlider->setProgress(mouseProgress);
+    setupMouseScrollSettings(mouseScrollHeader, mouseScrollSlider);
 
     writeLog->init("settings/debugging_view"_i18n,
                    Settings::instance().write_log(), [](bool value) {
                        Settings::instance().set_write_log(value);
                        brls::Application::enableDebuggingView(value);
                    });
+}
+
+void SettingsTab::willAppear(bool resetState)
+{
+    Box::willAppear(resetState);
+    mouseSpeedSlider->setProgress(Settings::instance().get_mouse_speed_multiplier() / 100.0f);
+    refreshMouseScrollSettings(mouseScrollSlider);
 }
 
 void SettingsTab::updateDeadZoneItems() {

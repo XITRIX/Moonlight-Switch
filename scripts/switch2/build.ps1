@@ -1,7 +1,8 @@
 param(
     [ValidateSet('all','libraries','app')][string]$Target = 'all',
     [string]$MsysRoot = "$env:USERPROFILE/.dirt2-tools/msys64",
-    [string]$DevkitProDirectory = "$PSScriptRoot/../../../devkitPro"
+    [string]$DevkitProDirectory = "$PSScriptRoot/../../../devkitPro",
+    [switch]$AllowDirtyDependencies
 )
 $ErrorActionPreference = 'Stop'
 $env:MSYSTEM = 'MSYS'
@@ -9,6 +10,7 @@ $env:CHERE_INVOKING = '1'
 $env:MOONLIGHT_PROJECT_WIN = (Resolve-Path "$PSScriptRoot/../..").Path
 $env:MOONLIGHT_SDK_WIN = (Resolve-Path -LiteralPath $DevkitProDirectory).Path
 $env:MOONLIGHT_TARGET = $Target
+$env:MOONLIGHT_SWITCH2_ALLOW_DIRTY_DEPS = if ($AllowDirtyDependencies) { '1' } else { '0' }
 & "$MsysRoot/usr/bin/bash.exe" -lc '
 set -euo pipefail
 cd "$(cygpath -u "$MOONLIGHT_PROJECT_WIN")"

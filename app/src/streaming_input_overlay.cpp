@@ -6,6 +6,7 @@
 //
 
 #include "streaming_input_overlay.hpp"
+#include "InputManager.hpp"
 #include <Limelight.h>
 
 using namespace brls;
@@ -146,7 +147,7 @@ void StreamingInputOverlay::draw(NVGcontext* vg, float x, float y, float width,
         if (scroll_y != 0 && duration > 550 - abs(scroll_y) * 500) {
             timeStamp = timeNow;
             brls::Logger::info("Scroll sended: {}", scroll_y);
-            LiSendScrollEvent(scroll_y > 0 ? 1 : -1);
+            MoonlightInputManager::instance().sendMouseScroll({0, scroll_y > 0 ? 1.0f : -1.0f});
         }
     }
 }

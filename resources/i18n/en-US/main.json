@@ -141,6 +141,7 @@
         "mouse_input": "Mouse input mode",
         "mouse_input_setup_message": "Press keys you'd like to use to open Mouse input mode:\n\n",
         "mouse_speed": "Mouse acceleration",
+        "mouse_scroll_sensitivity": "Scroll sensitivity",
         "overlay": "Ingame overlay",
         "overlay_buttons": "Buttons combination",
         "overlay_setup_message": "Press keys you'd like to use to open Overlay:\n\n",

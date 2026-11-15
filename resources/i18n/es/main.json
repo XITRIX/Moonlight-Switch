@@ -141,6 +141,7 @@
         "mouse_input": "Modo de entrada de ratón",
         "mouse_input_setup_message": "Presiones los botones que usaría para abrir el Modo de entrada de ratón:\n\n",
         "mouse_speed": "Aceleración del ratón",
+        "mouse_scroll_sensitivity": "Sensibilidad del desplazamiento",
         "overlay": "Superposición dentro del juego",
         "overlay_buttons": "Combinación de botones",
         "overlay_setup_message": "Pulsa los botones que quieres usar para abrir la superposición:\n\n\n",

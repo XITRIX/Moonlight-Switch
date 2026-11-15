@@ -88,6 +88,18 @@
                 grow="1"/>
 
             <brls:Header
+                id="mouse_scroll_header"
+                title="@i18n/settings/mouse_scroll_sensitivity"
+                subtitle="x1.00"
+                paddingTop="60"/>
+
+            <brls:Slider
+                id="mouse_scroll_slider"
+                width="auto"
+                height="84"
+                grow="1"/>
+
+            <brls:Header
                 id="image_adjustments_header"
                 title="@i18n/settings/image_adjustments"
                 paddingTop="60"

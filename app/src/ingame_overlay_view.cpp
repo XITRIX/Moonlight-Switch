@@ -10,6 +10,7 @@
 #endif
 
 #include "helper.hpp"
+#include "MouseScrollSettings.hpp"
 #include "ingame_overlay_view.hpp"
 #include "streaming_input_overlay.hpp"
 #include "button_selecting_dialog.hpp"
@@ -188,6 +189,7 @@ OptionsTab::OptionsTab(StreamingView* streamView) : streamView(streamView) {
         Settings::instance().set_mouse_speed_multiplier(int(value * 100));
     });
     mouseSlider->setProgress(mouseProgress);
+    setupMouseScrollSettings(mouseScrollHeader, mouseScrollSlider);
 
     inputOverlayButton->setText("streaming/mouse_input"_i18n);
     inputOverlayButton->registerClickAction([this](View* view) {

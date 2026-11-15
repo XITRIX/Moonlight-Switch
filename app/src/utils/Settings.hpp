@@ -307,8 +307,11 @@ class Settings : public Singleton<Settings> {
     void set_rumble_force(float rumble_force) { m_rumble_force = int(rumble_force * 100); }
     [[nodiscard]] float get_rumble_force() const { return float(m_rumble_force) / 100.f; }
 
-    void set_mouse_speed_multiplier(int mouse_speed_multiplier) { m_mouse_speed_multiplier = mouse_speed_multiplier; }
+    void set_mouse_speed_multiplier(int mouse_speed_multiplier);
     [[nodiscard]] int get_mouse_speed_multiplier() const { return m_mouse_speed_multiplier; }
+
+    void set_mouse_scroll_multiplier(int percent);
+    [[nodiscard]] float get_mouse_scroll_multiplier() const { return m_mouse_scroll_multiplier / 100.0f; }
 
     void set_deadzone_stick_left(float deadzone) { m_deadzone_stick_left = deadzone; }
     [[nodiscard]] float get_deadzone_stick_left() const { return m_deadzone_stick_left; }
@@ -374,6 +377,7 @@ class Settings : public Singleton<Settings> {
     int m_keyboard_locale = 0;
     bool m_volume_amplification = false;
     int m_mouse_speed_multiplier = 34;
+    int m_mouse_scroll_multiplier = 100;
     int m_current_mapping_layout = 0;
     std::vector<KeyMappingLayout> m_mapping_laouts;
     KeyComboOptions m_guide_key_options{

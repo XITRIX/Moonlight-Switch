@@ -141,6 +141,7 @@
         "mouse_input": "滑鼠輸入模式",
         "mouse_input_setup_message": "按下想使用的按鍵來打開滑鼠輸入模式：\n\n",
         "mouse_speed": "滑鼠加速",
+        "mouse_scroll_sensitivity": "捲動靈敏度",
         "overlay": "遊戲中疊加層",
         "overlay_buttons": "按鍵組合",
         "overlay_setup_message": "按下想使用的按鍵來打開疊加層：\n\n",

@@ -201,8 +201,8 @@ StreamingView::StreamingView(const Host& host, const AppInfo& app) : host(host),
                     Logger::debug("Scroll on: {}",
                                   threshold - this->touchScrollCounter);
                     int invert = Settings::instance().swap_mouse_scroll() ? -1 : 1;
-                    char scrollCount = threshold - this->touchScrollCounter;
-                    LiSendScrollEvent(scrollCount * invert);
+                    const int scrollCount = threshold - this->touchScrollCounter;
+                    MoonlightInputManager::instance().sendMouseScroll({0, static_cast<float>(scrollCount * invert)});
                     this->touchScrollCounter = threshold;
                 }
             });

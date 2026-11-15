@@ -5,6 +5,9 @@
 #include <iomanip>
 #include <climits>
 #include <filesystem>
+#ifdef __SWITCH2__
+#include <borealis/platforms/switch/switch_input.hpp>
+#endif
 
 using namespace brls;
 using namespace brls::literals;
@@ -147,6 +150,17 @@ bool Settings::has_any_favorite() {
         return !item.favorites.empty();
     });
 }
+
+void Settings::set_mouse_speed_multiplier(int mouse_speed_multiplier)
+{
+    m_mouse_speed_multiplier = std::clamp(mouse_speed_multiplier, 0, 100);
+#ifdef __SWITCH2__
+    auto* input = static_cast<brls::SwitchInputManager*>(Application::getPlatform()->getInputManager());
+    input->setJoyConMouseCursorSpeed(m_mouse_speed_multiplier / 100.0f * 1.5f + 0.5f);
+#endif
+}
+
+void Settings::set_mouse_scroll_multiplier(int percent) { m_mouse_scroll_multiplier = std::clamp(percent, 10, 200); }
 
 void Settings::load() {
     loadBaseLayouts();
@@ -378,6 +392,12 @@ void Settings::load() {
                 }
             }
 
+            if (json_t* mouse_scroll_multiplier = json_object_get(settings, "mouse_scroll_multiplier")) {
+                if (json_typeof(mouse_scroll_multiplier) == JSON_INTEGER) {
+                    set_mouse_scroll_multiplier(static_cast<int>(json_integer_value(mouse_scroll_multiplier)));
+                }
+            }
+
             if (json_t* deadzone_stick_left = json_object_get(settings, "deadzone_stick_left")) {
                 if (json_typeof(deadzone_stick_left) == JSON_INTEGER) {
                     m_deadzone_stick_left = (float)json_integer_value(deadzone_stick_left) / 100.f;
@@ -501,6 +521,7 @@ void Settings::load() {
         
         json_decref(root);
     }
+    set_mouse_speed_multiplier(m_mouse_speed_multiplier);
 }
 
 void Settings::save() {
@@ -561,6 +582,7 @@ void Settings::save() {
             json_object_set_new(settings, "overlay_hold_time", json_integer(m_overlay_options.holdTime));
             json_object_set_new(settings, "mouse_input_hold_time", json_integer(m_mouse_input_options.holdTime));
             json_object_set_new(settings, "mouse_speed_multiplier", json_integer(m_mouse_speed_multiplier));
+            json_object_set_new(settings, "mouse_scroll_multiplier", json_integer(m_mouse_scroll_multiplier));
             json_object_set_new(settings, "deadzone_stick_left", json_integer(int(m_deadzone_stick_left * 100.f)));
             json_object_set_new(settings, "deadzone_stick_right", json_integer(int(m_deadzone_stick_right * 100.f)));
             json_object_set_new(settings, "rumble_force", json_integer(m_rumble_force));
