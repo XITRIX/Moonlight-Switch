@@ -33,8 +33,8 @@ jobs:
 
     env:
       DEVKITPRO: /opt/devkitpro
-      OUNCE_DEVKIT_VERSION: '20261114'
-      OUNCE_DEVKIT_SHA256: f24d5773b1ee1c2b19317f57e8ae54a60fcdcefe493a0e495297c241c4912f59
+      OUNCE_DEVKIT_VERSION: '20261115b'
+      OUNCE_DEVKIT_SHA256: e6866198bfb44144c8227288c6315772a6a505cacca54b08cd0e6232a84f4729
 
     steps:
       - name: Check out repository

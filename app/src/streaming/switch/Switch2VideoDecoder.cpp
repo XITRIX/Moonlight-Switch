@@ -207,6 +207,7 @@ bool Switch2VideoDecoder::drain(uint64_t timeout)
         }
         const int visibleWidth = output->width, visibleHeight = output->height;
         AVFrameHolder::instance().pushTransferred(output);
+        switch2WakeVideoFrame();
         const uint64_t now      = LiGetMillis();
         const uint32_t copyTime = uint32_t(now - before);
         m_progress.current_decode_time += copyTime;

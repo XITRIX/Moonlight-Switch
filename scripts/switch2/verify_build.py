@@ -140,6 +140,9 @@ def main():
         None,
     )
     assert sdk_version, "SDK version record is missing"
+    assert fingerprint.get("sdk") == sdk_version.read_text().strip(), (
+        "Build fingerprint does not match the active SDK"
+    )
     record = {
         "platform": "Switch 2",
         "sdk": sdk_version.read_text().strip(),

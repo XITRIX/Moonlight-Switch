@@ -315,6 +315,8 @@ Thanks a lot to [Rock88](https://github.com/rock88) and his [Moonlight-NX](https
 
 [Averne](https://github.com/averne) for NVDEC implementation into [FFmpeg](https://github.com/averne/FFmpeg) and useful guidance of how to enable it 
 
+[Azkali](https://gitlab.com/Azkali) and his [Moonlight-NX2](https://gitlab.com/Azkali/moonlight-nx2) for help and assistance with Switch 2 implementation
+
 Also huge thanks to [Cooler3D](https://github.com/Cooler3Ds) for help with Deko3D implementation and solving performance issues
 
 The Switch deko3d upscaling path includes AMD FidelityFX Super Resolution 1.0 EASU and RCAS code translated from the MIT-licensed [GPUOpen FidelityFX-FSR](https://github.com/GPUOpen-Effects/FidelityFX-FSR) reference implementation. Copyright (c) Advanced Micro Devices, Inc. All rights reserved.

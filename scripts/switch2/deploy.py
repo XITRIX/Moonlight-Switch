@@ -16,8 +16,9 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--host", required=True)
     parser.add_argument("--port", type=int, default=5000)
+    parser.add_argument("--build-dir", type=Path, default=Path("build/switch2"))
     args = parser.parse_args()
-    nro = ROOT / "build/switch2/Moonlight-Switch.nro"
+    nro = ROOT / args.build_dir / "Moonlight-Switch.nro"
     data = nro.read_bytes()
     digest = hashlib.sha256(data).hexdigest()
     validation = json.loads((nro.parent / "validation.json").read_text())

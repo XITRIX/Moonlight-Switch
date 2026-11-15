@@ -70,7 +70,7 @@ builds publish both platforms' artifacts in the release.
 
 The Switch 2 job runs on a GitHub-hosted Ubuntu runner in
 `devkitpro/devkita64:20260219`, matching the public devkit's Dockerfile. It installs the public
-[ounce-devkit 20261114 release](https://github.com/ouncebrew/ounce-devkit/releases/tag/devkit-20261114)
+[ounce-devkit 20261115b release](https://github.com/ouncebrew/ounce-devkit/releases/tag/devkit-20261115b)
 after checking the archive against the SHA-256 pinned in the workflow. No private
 SDK access or self-hosted runner is needed. The verifier accepts both the current
 `ounce-devkit-version.txt` record and the earlier `ounce-sdk-version.txt` name.
@@ -311,6 +311,37 @@ the user's explicit native-Vulkan requirement before qualification. Neither
 candidate establishes native Vulkan or zero-copy operation. Those GL renderer
 sources were removed from the active source tree; generic GL platforms and
 Apple Metal remain separate backends.
+
+### Texel sampling and frame-driven presentation
+
+H.264's shared decoder allocation can also expose R8/R8G8 uniform texel-buffer
+views. The video shader reads those views without a frame upload or GPU copy.
+Unsupported formats, view limits or pipeline creation retain direct storage-buffer
+sampling; a rejected texel-capable import retries storage-only import first.
+AV1 and software-decoded frames retain their explicit copy path.
+
+Full-screen video submits on a newly consumed decoded frame, with a 34 ms
+keepalive. Decoder arrivals wake the input/UI loop; that loop continues running
+when an unchanged GPU frame is skipped. Stream menus restore continuous UI
+presentation. A held swapchain acquisition is reused until submission, and its
+semaphore is consumed before swapchain recreation.
+
+`SWITCH2_VULKAN_VIDEO: source=direct-decoder-buffer sampling=texel-buffer` names
+the selected path. `SWITCH2_VULKAN_PRESENT` counts submitted new/repeated video
+frames, direct/copy sources, texel/storage sampling and skipped presentations.
+Command-recording counts are separate and cannot qualify submitted video.
+
+After testing H.264 at 60 and 120 FPS, close Moonlight and reopen FTP:
+
+```sh
+python3 scripts/switch2/capture.py --host 192.168.1.182 \
+  --require-direct-texel --require-frame-driven
+```
+
+For a non-default build directory, pass `--build-dir` to both `deploy.py` and
+`capture.py`. Capture checks the installed NRO hash and the latest startup build
+ID before qualifying the sharing/submission counters. This verifies the
+application's buffer path, not undisclosed driver-internal copies or scanout.
 
 ## Automatic docked output and 4K streaming
 

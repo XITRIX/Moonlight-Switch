@@ -23,7 +23,7 @@ def main():
 
         write(
             "vulkan/vulkan.h",
-            "#pragma once\n#include <stdint.h>\ntypedef uint64_t VkBuffer;\n#define VK_NULL_HANDLE 0\n",
+            "#pragma once\n#include <stdint.h>\ntypedef uint64_t VkBuffer;\ntypedef uint64_t VkBufferView;\n#define VK_NULL_HANDLE 0\n",
         )
         write(
             "switch2/services/gsv.h",
@@ -188,6 +188,7 @@ static VideoDecoderConfig captured{};
 static std::vector<uint8_t> capturedConfig,lastSample;
 void switch2StartImageInterop() {}
 void switch2StopImageInterop() {}
+void switch2WakeVideoFrame() {}
 bool switch2PreimportImage(void*,uint64_t) { return false; }
 Switch2ImportedImage switch2FindImportedImage(void*) { return {}; }
 void switch2UnimportImage(void*) {}

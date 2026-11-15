@@ -32,11 +32,14 @@ VkShaderModule shader(Switch2VulkanContext& ctx, const uint32_t* code, size_t si
 void VulkanVideoRenderer::initialize()
 {
     auto& ctx = *Switch2VulkanContext::current();
-    VkDescriptorSetLayoutBinding binding { 0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_FRAGMENT_BIT,
-        nullptr };
+    VkDescriptorSetLayoutBinding bindings[] {
+        { 0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_FRAGMENT_BIT, nullptr },
+        { 1, VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 1, VK_SHADER_STAGE_FRAGMENT_BIT, nullptr },
+        { 2, VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 1, VK_SHADER_STAGE_FRAGMENT_BIT, nullptr },
+    };
     VkDescriptorSetLayoutCreateInfo descriptorInfo { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO };
-    descriptorInfo.bindingCount = 1;
-    descriptorInfo.pBindings    = &binding;
+    descriptorInfo.bindingCount = ctx.texelBufferSampling ? 3 : 1;
+    descriptorInfo.pBindings    = bindings;
     ctx.check(vkCreateDescriptorSetLayout(ctx.device, &descriptorInfo, nullptr, &descriptors), "video descriptors");
     VkPushConstantRange constants { VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(Params) };
     VkPipelineLayoutCreateInfo layoutInfo { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
@@ -45,11 +48,12 @@ void VulkanVideoRenderer::initialize()
     layoutInfo.pushConstantRangeCount = 1;
     layoutInfo.pPushConstantRanges    = &constants;
     ctx.check(vkCreatePipelineLayout(ctx.device, &layoutInfo, nullptr, &layout), "video layout");
-    VkDescriptorPoolSize size { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 2 };
+    VkDescriptorPoolSize sizes[] { { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 2 },
+        { VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 4 } };
     VkDescriptorPoolCreateInfo poolInfo { VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO };
     poolInfo.maxSets       = 2;
-    poolInfo.poolSizeCount = 1;
-    poolInfo.pPoolSizes    = &size;
+    poolInfo.poolSizeCount = ctx.texelBufferSampling ? 2 : 1;
+    poolInfo.pPoolSizes    = sizes;
     ctx.check(vkCreateDescriptorPool(ctx.device, &poolInfo, nullptr, &pool), "video pool");
     VkDescriptorSetLayout layouts[] { descriptors, descriptors };
     VkDescriptorSetAllocateInfo allocation { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO };
@@ -103,6 +107,17 @@ void VulkanVideoRenderer::initialize()
     info.layout              = layout;
     info.renderPass          = ctx.renderPass;
     auto rc                  = vkCreateGraphicsPipelines(ctx.device, VK_NULL_HANDLE, 1, &info, nullptr, &pipeline);
+    if (rc == VK_SUCCESS && ctx.texelBufferSampling)
+    {
+        const VkShaderModule texel = shader(ctx, video_texel_frag, sizeof(video_texel_frag));
+        stages[1].module           = texel;
+        const VkResult texelResult
+            = vkCreateGraphicsPipelines(ctx.device, VK_NULL_HANDLE, 1, &info, nullptr, &texelPipeline);
+        vkDestroyShaderModule(ctx.device, texel, nullptr);
+        if (texelResult != VK_SUCCESS)
+            brls::Logger::warning("SWITCH2_VULKAN_VIDEO: texel pipeline failed rc={}; direct storage sampling retained",
+                int(texelResult));
+    }
     vkDestroyShaderModule(ctx.device, vert, nullptr);
     vkDestroyShaderModule(ctx.device, frag, nullptr);
     ctx.check(rc, "video pipeline");
@@ -117,6 +132,8 @@ VulkanVideoRenderer::~VulkanVideoRenderer()
     vkDeviceWaitIdle(ctx->device);
     for (auto& upload : uploads)
         ctx->destroyBuffer(upload);
+    if (texelPipeline)
+        vkDestroyPipeline(ctx->device, texelPipeline, nullptr);
     if (pipeline)
         vkDestroyPipeline(ctx->device, pipeline, nullptr);
     if (layout)
@@ -181,8 +198,9 @@ void VulkanVideoRenderer::draw(NVGcontext*, int, int, AVFrame* frame, int)
     }
     if (format != AV_PIX_FMT_NV12 && format != AV_PIX_FMT_YUV420P)
         throw std::runtime_error("Unsupported Vulkan video pixel format");
-    VkBuffer buffer    = imported.buffer;
-    VkDeviceSize bytes = imported.size;
+    VkBuffer buffer       = imported.buffer;
+    VkDeviceSize bytes    = imported.size;
+    VkBufferView lumaView = imported.luma, chromaView = imported.chroma;
     if (!buffer)
     {
         const uint32_t yBytes  = frame->width * frame->height;
@@ -192,7 +210,10 @@ void VulkanVideoRenderer::draw(NVGcontext*, int, int, AVFrame* frame, int)
         if (upload.size < bytes)
         {
             ctx.destroyBuffer(upload);
-            upload = ctx.createBuffer(bytes, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT);
+            VkBufferUsageFlags usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
+            if (ctx.texelBufferSampling)
+                usage |= VK_BUFFER_USAGE_UNIFORM_TEXEL_BUFFER_BIT;
+            upload = ctx.createBuffer(bytes, usage);
         }
         const int count = format == AV_PIX_FMT_NV12 ? 2 : 3;
         uint32_t offset = 0;
@@ -217,7 +238,9 @@ void VulkanVideoRenderer::draw(NVGcontext*, int, int, AVFrame* frame, int)
             }
             offset += width * height;
         }
-        buffer = upload.buffer;
+        buffer     = upload.buffer;
+        lumaView   = upload.luma;
+        chromaView = upload.chroma;
         ++copiedDraws;
     }
     else
@@ -252,12 +275,37 @@ void VulkanVideoRenderer::draw(NVGcontext*, int, int, AVFrame* frame, int)
     write.descriptorCount = 1;
     write.descriptorType  = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
     write.pBufferInfo     = &descriptor;
-    vkUpdateDescriptorSets(ctx.device, 1, &write, 0, nullptr);
+    const bool texel      = texelPipeline && lumaView && chromaView
+        && (format != AV_PIX_FMT_NV12 || !((params.plane[2] | params.plane[3]) & 1));
+    VkWriteDescriptorSet writes[] { write, { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET },
+        { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET } };
+    if (texel)
+    {
+        for (unsigned i = 1; i < 3; ++i)
+        {
+            writes[i].dstSet          = sets[ctx.frameIndex];
+            writes[i].dstBinding      = i;
+            writes[i].descriptorCount = 1;
+            writes[i].descriptorType  = VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER;
+        }
+        writes[1].pTexelBufferView = &lumaView;
+        writes[2].pTexelBufferView = &chromaView;
+    }
+    vkUpdateDescriptorSets(ctx.device, texel ? 3 : 1, writes, 0, nullptr);
+    ctx.videoSource(imported.buffer != VK_NULL_HANDLE, texel);
+    const int source = (imported.buffer ? 2 : 0) | int(texel);
+    if (source != lastSource)
+    {
+        lastSource = source;
+        brls::Logger::info("SWITCH2_VULKAN_VIDEO: source={} sampling={} bufferBytes={} size={}x{}",
+            imported.buffer ? "direct-decoder-buffer" : "cpu-copy", texel ? "texel-buffer" : "storage-buffer", bytes,
+            frame->width, frame->height);
+    }
     VkViewport viewport { 0, 0, float(ctx.extent.width), float(ctx.extent.height), 0, 1 };
     VkRect2D scissor { { 0, 0 }, ctx.extent };
     vkCmdSetViewport(ctx.command(), 0, 1, &viewport);
     vkCmdSetScissor(ctx.command(), 0, 1, &scissor);
-    vkCmdBindPipeline(ctx.command(), VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+    vkCmdBindPipeline(ctx.command(), VK_PIPELINE_BIND_POINT_GRAPHICS, texel ? texelPipeline : pipeline);
     vkCmdBindDescriptorSets(
         ctx.command(), VK_PIPELINE_BIND_POINT_GRAPHICS, layout, 0, 1, &sets[ctx.frameIndex], 0, nullptr);
     vkCmdPushConstants(ctx.command(), layout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(params), &params);
@@ -274,7 +322,7 @@ void VulkanVideoRenderer::draw(NVGcontext*, int, int, AVFrame* frame, int)
         stats.rendered_fps   = float(progress.rendered_frames) * 1000 / elapsed;
         stats.rendering_time = float(progress.total_render_time) / progress.rendered_frames;
         progress             = { };
-        brls::Logger::info("SWITCH2_VULKAN_VIDEO: directBufferDraws={} copyDraws={} renderFPS={}", nativeDraws,
+        brls::Logger::info("SWITCH2_VULKAN_VIDEO: directBufferRecords={} copyRecords={} recordFPS={}", nativeDraws,
             copiedDraws, stats.rendered_fps);
     }
 }

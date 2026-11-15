@@ -92,8 +92,8 @@ class AVFrameHolder : public Singleton<AVFrameHolder> {
         m_frame_queue.pushTransferred(frame);
     }
 
-    void get(const std::function<void(AVFrame*)>& fn) {
-        auto frame = m_frame_queue.pop();
+    void get(const std::function<void(AVFrame*)>& fn, bool* consumed = nullptr) {
+        auto frame = m_frame_queue.pop(consumed);
 
         if (frame) {
             fn(frame);

@@ -159,7 +159,15 @@ AVFrame* AVFrameQueue::pop(bool* consumed) {
         frameCredit = 0.0;
         playoutResyncStat++;
         dueFrames = 1;
-    } else if (arrivalRateSamples == 0 ||
+    }
+#ifdef __SWITCH2__
+    else if (transferOwnership) {
+        // Native Vulkan/VRR presents on arrivals. A second local-clock gate
+        // would delay an already-ready frame until another decoder wakeup.
+        dueFrames = 1;
+    }
+#endif
+    else if (arrivalRateSamples == 0 ||
                adaptiveFrameInterval <= std::chrono::nanoseconds::zero() ||
                averageDrawInterval <= std::chrono::nanoseconds::zero()) {
         // During the short measurement warm-up, consume only above the jitter

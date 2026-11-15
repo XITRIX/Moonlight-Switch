@@ -29,6 +29,11 @@ void switch2RecordGpuRange(uint64_t address, uint64_t size, uint32_t handle)
     if (registering)
         registering->push_back({ address, size, handle });
 }
+void switch2WakeVideoFrame()
+{
+    if (auto* context = Switch2VulkanContext::current())
+        context->wakeFrame();
+}
 bool switch2PreimportImage(void* address, uint64_t size)
 {
     auto* context = Switch2VulkanContext::current();
@@ -42,7 +47,12 @@ bool switch2PreimportImage(void* address, uint64_t size)
         ~Capture() { registering = nullptr; }
     } capture(image.ranges);
     if (!context->importBuffer(address, size, image.buffer))
-        return false;
+    {
+        // A texel-buffer restriction must not disable the original direct SSBO path.
+        image.ranges.clear();
+        if (!context->texelBufferSampling || !context->importBuffer(address, size, image.buffer, false))
+            return false;
+    }
     images.emplace(address, std::move(image));
     return true;
 }
@@ -52,7 +62,8 @@ Switch2ImportedImage switch2FindImportedImage(void* address)
     auto found = images.find(address);
     if (found == images.end())
         return { };
-    return { found->second.buffer.buffer, found->second.buffer.size };
+    const auto& buffer = found->second.buffer;
+    return { buffer.buffer, buffer.size, buffer.luma, buffer.chroma };
 }
 void switch2UnimportImage(void* address)
 {

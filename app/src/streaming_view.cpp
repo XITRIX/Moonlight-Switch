@@ -10,6 +10,9 @@
 #endif
 
 #include "streaming_view.hpp"
+#ifdef __SWITCH2__
+#include "streaming/video/Vulkan/Switch2VulkanContext.hpp"
+#endif
 #include "AVFrameHolder.hpp"
 #include "InputManager.hpp"
 #include "click_gesture_recognizer.hpp"
@@ -239,6 +242,10 @@ StreamingView::StreamingView(const Host& host, const AppInfo& app) : host(host),
 }
 
 void StreamingView::onFocusGained() {
+#ifdef __SWITCH2__
+    if (auto* context = Switch2VulkanContext::current())
+        context->setFrameDriven(true);
+#endif
     Box::onFocusGained();
 
     MoonlightInputManager::instance().setInputEnabled(true);
@@ -264,6 +271,10 @@ void StreamingView::onFocusGained() {
 }
 
 void StreamingView::onFocusLost() {
+#ifdef __SWITCH2__
+    if (auto* context = Switch2VulkanContext::current())
+        context->setFrameDriven(false);
+#endif
     Box::onFocusLost();
 
     MoonlightInputManager::instance().setInputEnabled(false);
@@ -585,6 +596,10 @@ void StreamingView::onLayout() {
 }
 
 StreamingView::~StreamingView() {
+#ifdef __SWITCH2__
+    if (auto* context = Switch2VulkanContext::current())
+        context->setFrameDriven(false);
+#endif
 #ifdef PLATFORM_TVOS
     updatePreferredDisplayMode(false);
 #endif

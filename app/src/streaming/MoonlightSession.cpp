@@ -6,6 +6,7 @@
 #include "borealis.hpp"
 #include <string.h>
 #ifdef __SWITCH2__
+#include "video/Vulkan/Switch2VulkanContext.hpp"
 #include <switch.h>
 #endif
 
@@ -412,10 +413,15 @@ void MoonlightSession::restart() {
 
 void MoonlightSession::draw(NVGcontext* vg, int width, int height) {
     if (m_video_decoder && m_video_renderer) {
+        bool consumed = false;
         AVFrameHolder::instance().get(
             [this, vg, width, height](AVFrame* frame) {
                 m_video_renderer->draw(vg, width, height, frame, m_video_format);
-            });
+            }, &consumed);
+#ifdef __SWITCH2__
+        if (auto* context = Switch2VulkanContext::current())
+            context->videoFrameChanged(consumed);
+#endif
 
         const uint64_t now = LiGetMillis();
         if (m_last_stats_update_ms == 0 || now - m_last_stats_update_ms >= 250) {
