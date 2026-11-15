@@ -2,6 +2,10 @@
 
 Moonlight-Switch is a port of [Moonlight Game Streaming Project](https://github.com/moonlight-stream "Moonlight Game Streaming Project") for Nintendo Switch and Nintendo Switch 2.
 
+GameShare investigation tools, findings, and another-PC setup are collected in
+[GameShare research](docs/GAMESHARE.md). Native initialization works; hosting
+is still under investigation and is not integrated into Moonlight.
+
 ## Screenshots
 <details>
   <summary>Preview</summary>

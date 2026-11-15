@@ -1,0 +1,8 @@
+build/
+dist/
+evidence/
+__pycache__/
+
+# Override Moonlight's broad build* rule for these source entry points.
+!build.py
+!build_research_backend.py

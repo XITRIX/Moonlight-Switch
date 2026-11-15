@@ -1,0 +1,413 @@
+{
+  "origin": "kaiHEN research/gameshare-probe workspace",
+  "files": [
+    {
+      "path": "agent.py",
+      "source_sha256": "843d85b9146fcf084a6ca307471b4d1383ea2a77b942e9db8886858bbd546c0a"
+    },
+    {
+      "path": "build.py",
+      "source_sha256": "664c6be2d0f7c5c8cdff333c3fa224effffcadfbced30a5308e972041f67e38d"
+    },
+    {
+      "path": "build_research_backend.py",
+      "source_sha256": "e615b760e7f1b9c922bdd41006e8896f8bcee98e5a63bc4b8537751f7c9348d8"
+    },
+    {
+      "path": "client.py",
+      "source_sha256": "42d1cf5495efa678d14f817e90274f01e8f1bd81f73a2f0da2a06d419735f927"
+    },
+    {
+      "path": "deploy.py",
+      "source_sha256": "0614a570ac82058480fb0df1e1f13da5f0fa44705274aedce695719873c6ed46"
+    },
+    {
+      "path": "nso_verify.py",
+      "source_sha256": "b54d66e28455637cb50c99d0c819ec09951bf5184f9e136d7f4eb48a1295d2ca"
+    },
+    {
+      "path": "sdk_extract.py",
+      "source_sha256": "ab056005d6a9181a37d04074bfaa608390790a0d93d7503215cacac587687bed"
+    },
+    {
+      "path": "AGENT.md",
+      "source_sha256": "ad28e1182583ca05f663bcd544732a88be5faa30a67132679c444284860a9e0b"
+    },
+    {
+      "path": "FINDINGS.md",
+      "source_sha256": "8ad765caccbbd031695fac759fd6f6ac76e96040c1c6d28ec15a69b3233a0b36"
+    },
+    {
+      "path": "HOST_BRINGUP.md",
+      "source_sha256": "9ef7dbc711538dff6da9d37072db1ef6362621cb73519aa62a9167198fae7fe7"
+    },
+    {
+      "path": "ONLINE_RESEARCH.md",
+      "source_sha256": "36fd94a9f188e6d725b4618fdc96c895696989ce3f59f50091ca6e593767d5f0"
+    },
+    {
+      "path": "PUBLIC_SDK_RESEARCH.md",
+      "source_sha256": "6c6e0aa49091a023829b7fa21ae614ad109b802be55bbce77d41fa2a94c084f8"
+    },
+    {
+      "path": "README.md",
+      "source_sha256": "96b8ae189a8766a106fe90be1038181c8fb6c49d8795b2a0b4f7a31df58ea434"
+    },
+    {
+      "path": "SDK_EXTRACTION.md",
+      "source_sha256": "73d3295b9200c4adfd550d6a730ef091ff016fd6c9252bd69872d7f32945ea71"
+    },
+    {
+      "path": "payload.ld",
+      "source_sha256": "3f314643928ba96f96939c5e07ff9397458cb9f712cdf1a6c01b573cb8cdfafb"
+    },
+    {
+      "path": "payload_runtime.c",
+      "source_sha256": "795b43e43269ad1cf356a4fad47405d768572405b74f1ef7664dd35f59e34ce5"
+    },
+    {
+      "path": ".gitignore",
+      "source_sha256": "cc85f0131d88f2b525f91b19ebc4c0bef6c3493f7df29f052729a0aa9a33d03f"
+    },
+    {
+      "path": "source/agent.c",
+      "source_sha256": "a745fac1d19db96ce1e8d4f00f8e8e3fa2c75965ea7f91b3db14d735c64e9d7c"
+    },
+    {
+      "path": "source/agent.h",
+      "source_sha256": "4253c82551f554dfc974edb4c53b1e89ec0bca0ad2f23bac91eaba3cbbe1191e"
+    },
+    {
+      "path": "source/agent_wire.c",
+      "source_sha256": "6e4d5376295354ba9d2153da776cdca67a6a0b554208eedc54fa29fae654c6e4"
+    },
+    {
+      "path": "source/agent_wire.h",
+      "source_sha256": "d225366ecea42a5aba7528700d78aa95d26712904a83c5a22f7b691afe9b6109"
+    },
+    {
+      "path": "source/main.c",
+      "source_sha256": "daffb1b46ef0fb658446107ff469440a8866adbcaa2c7d209b9e6c4b7f17a622"
+    },
+    {
+      "path": "source/module_scan.c",
+      "source_sha256": "8960e38e13f4acf7aa893c71949b3e9aaae8d4cac26b4b7b46042d8ae59eca26"
+    },
+    {
+      "path": "source/module_scan.h",
+      "source_sha256": "a6b04ecf70bb3e579a99b99f7bb4f5d02b36852d970fac6137c377e4b79c4296"
+    },
+    {
+      "path": "source/research_api.h",
+      "source_sha256": "6d8d8a84eabe09a2e54a837f910e522b363e18ff0d918faefeaf95a490b41c1a"
+    },
+    {
+      "path": "examples/application_inventory.c",
+      "source_sha256": "6e74230859a5c2e40416a1f98d6ca7928665ef30ddda0e72c105b7e4bf90a73b"
+    },
+    {
+      "path": "examples/backup_installed_hen.c",
+      "source_sha256": "3d8db74f7643ba5363dac562e2b6f4818d89ce0db9573e36c07a4ad2a6cd08ef"
+    },
+    {
+      "path": "examples/cartridge_code_path.c",
+      "source_sha256": "15ff12ad62faf99db7ad20de908f81b6350f97b05220f7b0e48b8c3ec899d8c5"
+    },
+    {
+      "path": "examples/chat_code_path.c",
+      "source_sha256": "dfd31ec5b4a558a62343bb4a817c5c412c8bb80cdc934d3cd27b17d100325c7c"
+    },
+    {
+      "path": "examples/civ7_sdk_inventory.js",
+      "source_sha256": "0b5aff7d4027d76bc875be883038ade1f3794af2bf7e0685f9aa198f176e3c5b"
+    },
+    {
+      "path": "examples/close_streamplay.c",
+      "source_sha256": "ed4cd492234e28443cb3047a3dda6dd0d2a743ac72ddc6f0e2a408fe1c51ab7b"
+    },
+    {
+      "path": "examples/create_streamplay.c",
+      "source_sha256": "922397d23b11465f7bced71a6c3cda1c94bfacd118bf02e22e4372395a911056"
+    },
+    {
+      "path": "examples/hello.c",
+      "source_sha256": "bbf6e75f80497c024732e845b698fc89a8d882d0960cc6cfa98f217cac1adba4"
+    },
+    {
+      "path": "examples/hen_plugins.c",
+      "source_sha256": "7dcd1ecaa57e4fea3d41fd796e1fd440dd74ef411fb41f118f1c4e47e17f62fa"
+    },
+    {
+      "path": "examples/hen_readonly.c",
+      "source_sha256": "74554dc9f625985f3ddd01673c5ebcf1f3880dd277c43715c9402751109fa6fb"
+    },
+    {
+      "path": "examples/inspect_overrides.c",
+      "source_sha256": "cf5e632354d99545643f44166b32b2f8373975c52d801bf131ec3d30ca52f868"
+    },
+    {
+      "path": "examples/open_chat_code.c",
+      "source_sha256": "ef08bcf404ba9291f93e3b9ca6109417257764dfede776a2569f65d4a1a0ef23"
+    },
+    {
+      "path": "examples/open_streamplay.c",
+      "source_sha256": "952b69e67e96ce1ced91b01d98e93b88b6a3ca9cf048eeaffddda08ab16abf73"
+    },
+    {
+      "path": "examples/own_vi2_symbols.h",
+      "source_sha256": "e508382e22edc3b979e3a512c8ce17ebd6c945a9ebbee723545f070bef0fd35b"
+    },
+    {
+      "path": "examples/raw_helpers.h",
+      "source_sha256": "ffe760f9e1ddd7d6fd2776f4e0c6c98374b57780ce6eb709b81bc49bf16c3600"
+    },
+    {
+      "path": "examples/sdk_extract.c",
+      "source_sha256": "9f2f970484db96e8a24a4936bf1e87eb75d84d8cb328b272f3e0a9da524cce68"
+    },
+    {
+      "path": "examples/streamplay_cleanup.c",
+      "source_sha256": "6b019f873d3b7d2da78b6a3f319c2a41a01590f0d99f67a3e5d9b45b995ec39a"
+    },
+    {
+      "path": "examples/streamplay_control_property.c",
+      "source_sha256": "05a5e298716ba9b6eda16642c1ed87b1f28d450cb7037e5f09485da7abd6852c"
+    },
+    {
+      "path": "examples/streamplay_control_property_hen.c",
+      "source_sha256": "edf34b33076545940b64e50454732489ff7d8201161861f4d99d967f517f8be8"
+    },
+    {
+      "path": "examples/streamplay_finalize.c",
+      "source_sha256": "8d70ea7c0bd06409b73ffddb6acd5e87f472d9bd11b646b7340ddf37d8055254"
+    },
+    {
+      "path": "examples/streamplay_guest_display.h",
+      "source_sha256": "3e88465aa81f5c2d784192060befde4b652a7a52f365eb621930b16494a2e4f0"
+    },
+    {
+      "path": "examples/streamplay_identity.c",
+      "source_sha256": "c6d23868a20ea6315a6dd4eaa11ed0ab56ebd2fa5b9189494e6f82eca40f9af0"
+    },
+    {
+      "path": "examples/streamplay_initialize.c",
+      "source_sha256": "a979c7e2a685e5a4ee3c724f17db8c0fd25d9404a5326dd806f6537a95c0385b"
+    },
+    {
+      "path": "examples/streamplay_initialize_cycle.c",
+      "source_sha256": "b48c71ca82aff5adfc927d469467507e2e39ca0846532537dadc8af29b69d321"
+    },
+    {
+      "path": "examples/streamplay_memory.c",
+      "source_sha256": "76332a0be3cfd548e56e01831eadf8bd692c57fd0bc0a4319b40fc524f2323f1"
+    },
+    {
+      "path": "examples/streamplay_prepare.c",
+      "source_sha256": "4745875b7fe312322c6043e3c8665e22da7e49b441425c0c4552738caef732f9"
+    },
+    {
+      "path": "examples/streamplay_status.c",
+      "source_sha256": "4e9f998d6723a6ac017d316eda3318a14c0b768a87f259ef5959a866d3b4fe47"
+    },
+    {
+      "path": "examples/streamplay_transport.c",
+      "source_sha256": "e523183377bc5b264ca4c113209e52aacd864b04337bbce5c3ecedb6df6f76fe"
+    },
+    {
+      "path": "examples/system_code_inventory.c",
+      "source_sha256": "dfd9d056c678b85182e0eeff4578c3d90d4836c19436fa40d8f973311ec6bf94"
+    },
+    {
+      "path": "tests/test_agent.py",
+      "source_sha256": "ebf3cba0b965417e529ca62eb85a2d930756728c643a992aa1d5d2431cfa6b1a"
+    },
+    {
+      "path": "tests/test_agent_wire.c",
+      "source_sha256": "265da64ec915c00d7652ca882c218dc5d5c3c442996a3fdc96a1344356bd50cf"
+    },
+    {
+      "path": "tests/test_client.py",
+      "source_sha256": "12d471d8440e1c560311b95cb555927b007f124a0696b2b9b3ac08bec43ca9b8"
+    },
+    {
+      "path": "tests/test_module_scan.c",
+      "source_sha256": "05708fea43f9721ccd7776b650d06754a356009bc0f2297c104db58f77db836c"
+    },
+    {
+      "path": "tests/test_research_codefs.cpp",
+      "source_sha256": "fbf99ff8074a110116ea617bfa74ae449abbf5c5bb738b09ccd40547de2d5205"
+    },
+    {
+      "path": "tests/test_sdk_extract.py",
+      "source_sha256": "177e3be12edd86a1c77dcc2a2d780fefde3e5d3339985edc4f15c68eeb943bd8"
+    },
+    {
+      "path": "research-backend/kaihen/LICENSE",
+      "source_sha256": "8177f97513213526df2cf6184d8ff986c675afb514d4e68a404010521b880643"
+    },
+    {
+      "path": "research-backend/kaihen/UPSTREAM.json",
+      "source_sha256": "9300ba292678c4f57ca492f3ad587ce1bc0882108b16722ce81db29335627ce6"
+    },
+    {
+      "path": "research-backend/kaihen/common/code_mount_request.hpp",
+      "source_sha256": "a94170b3db6ffcad1f28c3ffdcba5622e7eeb4e44f2cc22aa1000acb971db6e6"
+    },
+    {
+      "path": "research-backend/kaihen/common/control.h",
+      "source_sha256": "162f27861345b3d2e47c7f58a24da0c26f658101da990a4bed71f71dd4364496"
+    },
+    {
+      "path": "research-backend/kaihen/common/domain_mount.hpp",
+      "source_sha256": "8c3edb5578d858e04e46e4a43534ce46acc6d40a19bab17fbe8246336a76b77e"
+    },
+    {
+      "path": "research-backend/kaihen/common/game_arm.h",
+      "source_sha256": "72ef68590faccf449aac15f410730ab37e69154f729ea88fd66a39104ea60957"
+    },
+    {
+      "path": "research-backend/kaihen/common/loader_gate.hpp",
+      "source_sha256": "1815ee26d2d0100881387652abad53cb6552cde73ee43fda0593780a475b67e4"
+    },
+    {
+      "path": "research-backend/kaihen/common/package.hpp",
+      "source_sha256": "7b0e68c3c22889f878f61b08d82d19c9f33fae9751d259ef24a33977d2a8a3dc"
+    },
+    {
+      "path": "research-backend/kaihen/common/policy_package.cpp",
+      "source_sha256": "46544232b2e6e75e7d51c15202fd09363eb487caec285f2c08c1d50b6755098d"
+    },
+    {
+      "path": "research-backend/kaihen/common/policy_package.hpp",
+      "source_sha256": "1ebf06532d2d6cb3515ff34b5e35a6179ae725efa67ef413c004c7fd15d3d961"
+    },
+    {
+      "path": "research-backend/kaihen/common/research_codefs.h",
+      "source_sha256": "3a30050534ef3e50da6941ae4ee621db5abd28458cb92de0bea5e2e31fe99714"
+    },
+    {
+      "path": "research-backend/kaihen/common/result.hpp",
+      "source_sha256": "b3e7d820a0e6edabed09811909838a6b034f628f9fea680e061f57ac7ad15cdb"
+    },
+    {
+      "path": "research-backend/kaihen/common/retained_memory.hpp",
+      "source_sha256": "ef3eb2917df0638e433c968e43f1227db828196ed1783562b9a8079d5f32c185"
+    },
+    {
+      "path": "research-backend/kaihen/common/ro_dmnt.h",
+      "source_sha256": "517e5720bf7a5ff7de2434738d25f58e791f1441f897fbece42bbe0e2cc0c567"
+    },
+    {
+      "path": "research-backend/kaihen/common/sd_writer.cpp",
+      "source_sha256": "78f3823d539e76e7e10a781afbef99bc3f8b1fba3a84bacf8ec22fca00e18853"
+    },
+    {
+      "path": "research-backend/kaihen/common/sd_writer.hpp",
+      "source_sha256": "1010502e5ce3168d64f3c829a4659699f570456adcff09e9adf267c64c02e21b"
+    },
+    {
+      "path": "research-backend/kaihen/hen/Makefile",
+      "source_sha256": "f40c7027bc789d04565a4ff0e093332e3b8f7edc3688c60742cbcbd7166cb478"
+    },
+    {
+      "path": "research-backend/kaihen/hen/README.md",
+      "source_sha256": "c697726924a85e36da92339493fbadd6f0616931404bad922bb9df6acef976b6"
+    },
+    {
+      "path": "research-backend/kaihen/hen/test.sh",
+      "source_sha256": "91e21b9129748f3ccabe331f36c2ebfae932f2fcb80c5d04305631fbaf33ab22"
+    },
+    {
+      "path": "research-backend/kaihen/libkaihen/JIT.md",
+      "source_sha256": "5bb7d576878d3e4e78e6c12cbda3249e49e8aec4f68cd1adecb251167f4f8c54"
+    },
+    {
+      "path": "research-backend/kaihen/libkaihen/LICENSE",
+      "source_sha256": "dd76999221b671901d57147c9b917237f63a131af5822496845f9878a3fd6b6e"
+    },
+    {
+      "path": "research-backend/kaihen/libkaihen/Makefile",
+      "source_sha256": "e0eea520aaccd11e57f7f839437481d7e363cfa13732589a0f586f2482c18144"
+    },
+    {
+      "path": "research-backend/kaihen/libkaihen/PLUGINS.md",
+      "source_sha256": "e6eb6177ead3f64c8305fc4cf77ea3d6a6778490af49abe143d076208ef7568b"
+    },
+    {
+      "path": "research-backend/kaihen/hen/source/game_arm.cpp",
+      "source_sha256": "fe446389045f436e24db9137f5a135da608be2077620c586dad107c00efd101c"
+    },
+    {
+      "path": "research-backend/kaihen/hen/source/game_arm.hpp",
+      "source_sha256": "f6c4938f15e31e917b2b253e501a97ca984f127c95a7f47b338f9ec508b7bc80"
+    },
+    {
+      "path": "research-backend/kaihen/hen/source/game_trace.hpp",
+      "source_sha256": "b60f8643a58db2a89b18e99300874104a52c7c8b18e12315047c1e79fb802940"
+    },
+    {
+      "path": "research-backend/kaihen/hen/source/main.cpp",
+      "source_sha256": "a3615e075e9ce2f70bf274ce8e6e8b28537ee1703317ae1f19d2a1fd63a6a977"
+    },
+    {
+      "path": "research-backend/kaihen/hen/source/server.cpp",
+      "source_sha256": "eea7b228cebd75850af3d7ba1c72a6222091fcb025529d22ca2df3e0cf05a7fd"
+    },
+    {
+      "path": "research-backend/kaihen/hen/source/server.hpp",
+      "source_sha256": "0b731ecb062cea14ea89482d9d2fff5bf78a7e15f0407191f62cd010a24cd977"
+    },
+    {
+      "path": "research-backend/kaihen/hen/source/sm_proxy.cpp",
+      "source_sha256": "01337c649ac707559631ddd3566c28a97a1e2cd63f651aeea3445a5c86eca5ff"
+    },
+    {
+      "path": "research-backend/kaihen/hen/source/sm_proxy.hpp",
+      "source_sha256": "762ee59dc68769b61e1fe57031b9669912b4bb738a4cd2eac29045225eec20b9"
+    },
+    {
+      "path": "research-backend/kaihen/hen/source/sm_request.hpp",
+      "source_sha256": "ce09a05905557fa95035d3fdda0dfaf444f345c0f1f7435c0320091ff1f42aa9"
+    },
+    {
+      "path": "research-backend/kaihen/hen/tests/mount_request_test.cpp",
+      "source_sha256": "67f3aab00a91fcc721fed9e595f238caf88480630446e99a16e66d092d279847"
+    },
+    {
+      "path": "research-backend/kaihen/hen/tests/sm_request_test.cpp",
+      "source_sha256": "822ad91278f4cb7012691c82de3869fa295720fd8f924d732c53d6b975e82cfb"
+    },
+    {
+      "path": "research-backend/kaihen/libkaihen/include/kaihen.h",
+      "source_sha256": "c61285be76c4902b8e6b25cdd24314da364a5a1e21d8a5718738334ede6506f4"
+    },
+    {
+      "path": "research-backend/kaihen/libkaihen/source/cmif_server.hpp",
+      "source_sha256": "95f60d16c248fe6ada1dcd630d11d2e29b14a78cc8d9582f50bd16f22eca8b3a"
+    },
+    {
+      "path": "research-backend/kaihen/libkaihen/source/jit.c",
+      "source_sha256": "a10b1fe5d5ea4aef6468d371f68d5adac29c71d612b119f9da248db2c74278eb"
+    },
+    {
+      "path": "research-backend/kaihen/libkaihen/source/plugin_runtime.cpp",
+      "source_sha256": "882d1de66070f472f6e5466e4539a9e6105d21077504f87a842720f7abc45df1"
+    },
+    {
+      "path": "research-backend/kaihen/libkaihen/source/plugin_server.cpp",
+      "source_sha256": "e777e3c3908bb13ab8d8b916f7c6903588311e947250f73caf34340d0d454312"
+    },
+    {
+      "path": "research-backend/kaihen/libkaihen/source/plugin_startup.h",
+      "source_sha256": "8d42c388bdcec855c4fc6eb48e8fc6e263eed389d4abe4675175e81e6a2d79fb"
+    },
+    {
+      "path": "research-backend/kaihen/libkaihen/include/kaihen/plugin.h",
+      "source_sha256": "b933c1e3d73ba0f9cf1b229541ed5d872d382b3690a12faa32b7d00c5041294a"
+    },
+    {
+      "path": "research-backend/kaihen/libkaihen/include/kaihen/protocol.h",
+      "source_sha256": "fa6065c828cf62d8eb23f5f022e5b1836ff37cc47b5a78ea01964f278c57f005"
+    }
+  ]
+}

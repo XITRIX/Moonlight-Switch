@@ -1,0 +1,19 @@
+{
+  "schema": "gameshare-portability-validation-v1",
+  "python_tests": 14,
+  "native_examples_compiled": 25,
+  "host_tests": [
+    "module_scan",
+    "agent_wire",
+    "research_codefs"
+  ],
+  "standalone_nro_build": true,
+  "rebuilt_nro_sha256": "504114b45584e2969126b7b579d8da3a7a3a0e52c76b8c5221e53f2b6938e0a8",
+  "rebuilt_nro_device_executed": false,
+  "installed_profile_exported": true,
+  "elf_nro_mismatch_rejected": true,
+  "zip_required_sources_present": true,
+  "zip_runtime_and_guard_profile_match": true,
+  "actual_pairing_key_excluded": true,
+  "console_requests_during_migration": 0
+}

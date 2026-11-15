@@ -1,0 +1,32 @@
+{
+  "schema": "civ7-sdk-inventory-v1",
+  "evidence": "console_runtime",
+  "scope": "Civ7 Nintendo SDK module only",
+  "base": "0x1d1c2a4000",
+  "dynamic": "0x1d1cdc5900",
+  "symbol_count": 23046,
+  "defined": 23037,
+  "imported": 9,
+  "string_bytes": 1498416,
+  "scanned": 23046,
+  "matches": 2,
+  "truncated": false,
+  "symbols": [
+    {
+      "name": "_ZN2nn2fs9MountCodeEPNS0_20CodeVerificationDataEPKcS4_NS0_17ContentAttributesENS_3ncm9ProgramIdE",
+      "defined": true,
+      "type": 2,
+      "value": "0xb5f70",
+      "size": 448,
+      "address": "0x1d1c359f70"
+    },
+    {
+      "name": "_ZN2nn4util10SdkVersionEv",
+      "defined": true,
+      "type": 2,
+      "value": "0x84030",
+      "size": 12,
+      "address": "0x1d1c328030"
+    }
+  ]
+}

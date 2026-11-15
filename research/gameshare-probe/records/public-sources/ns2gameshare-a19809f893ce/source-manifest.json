@@ -1,0 +1,60 @@
+{
+  "revision": "a19809f893ce03b4958fe09fc0b1be2436c82242",
+  "repository": "mizuyoukanao/NS2GameShare",
+  "files": [
+    {
+      "path": "README.md",
+      "url": "https://github.com/mizuyoukanao/NS2GameShare/blob/a19809f893ce03b4958fe09fc0b1be2436c82242/README.md",
+      "sha256": "ec02b7561e388574d5ea20142a636db36354128db170488eb3d91bb78dd3f185",
+      "size": 2523
+    },
+    {
+      "path": "LICENSE",
+      "url": "https://github.com/mizuyoukanao/NS2GameShare/blob/a19809f893ce03b4958fe09fc0b1be2436c82242/LICENSE",
+      "sha256": "5b4fe22b459f265314aafd48c54ce333c9fd1d8a29c3b37046cc7e1f25f840f3",
+      "size": 1082
+    },
+    {
+      "path": "docs/PROTOCOL.md",
+      "url": "https://github.com/mizuyoukanao/NS2GameShare/blob/a19809f893ce03b4958fe09fc0b1be2436c82242/docs/PROTOCOL.md",
+      "sha256": "ed14351ca8073afec65368eb708e0b7c08626eff505ca956215bd043b1043ec0",
+      "size": 18068
+    },
+    {
+      "path": "docs/DEVELOPMENT.md",
+      "url": "https://github.com/mizuyoukanao/NS2GameShare/blob/a19809f893ce03b4958fe09fc0b1be2436c82242/docs/DEVELOPMENT.md",
+      "sha256": "d243c9d4294ccfde9754abf11bd7f5e35c6445b7296b2954f35b208de84fcc4d",
+      "size": 10942
+    },
+    {
+      "path": "docs/PASSPHRASE.md",
+      "url": "https://github.com/mizuyoukanao/NS2GameShare/blob/a19809f893ce03b4958fe09fc0b1be2436c82242/docs/PASSPHRASE.md",
+      "sha256": "7ef067b825deec4ca1568e4e4a60e2effdeab8ede078f700d437d9f8244df0db",
+      "size": 4486
+    },
+    {
+      "path": "client-windows/src/connect.rs",
+      "url": "https://github.com/mizuyoukanao/NS2GameShare/blob/a19809f893ce03b4958fe09fc0b1be2436c82242/client-windows/src/connect.rs",
+      "sha256": "66ebad1f87f62a4f162c0e2387dd4e171b9d3fc0fc3f415aa09d09e4e1516a6b",
+      "size": 22454
+    },
+    {
+      "path": "client-windows/src/ldn.rs",
+      "url": "https://github.com/mizuyoukanao/NS2GameShare/blob/a19809f893ce03b4958fe09fc0b1be2436c82242/client-windows/src/ldn.rs",
+      "sha256": "c2f39512c4b6fbee1f89cb2228517afcbaee3e62f86b73818b850f941f34eb47",
+      "size": 11697
+    },
+    {
+      "path": "client-windows/src/lrp.rs",
+      "url": "https://github.com/mizuyoukanao/NS2GameShare/blob/a19809f893ce03b4958fe09fc0b1be2436c82242/client-windows/src/lrp.rs",
+      "sha256": "4522a07b1254fcf2a2fb8c545fac8d042d6d04d02a4e81a8aa899bb2074fef4f",
+      "size": 17348
+    },
+    {
+      "path": "client-windows/src/lsp.rs",
+      "url": "https://github.com/mizuyoukanao/NS2GameShare/blob/a19809f893ce03b4958fe09fc0b1be2436c82242/client-windows/src/lsp.rs",
+      "sha256": "9e2be7b26ab953770f8a1d8c982a48ce2c1dd63f3fa53b8ffb9174f8a5348e92",
+      "size": 12020
+    }
+  ]
+}

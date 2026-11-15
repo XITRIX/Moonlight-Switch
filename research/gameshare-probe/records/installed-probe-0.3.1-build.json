@@ -1,0 +1,25 @@
+{
+  "schema": "gameshare-probe-build-v1",
+  "version": "0.3.1",
+  "nro": "gameshare-probe.nro",
+  "nro_sha256": "79ff7da764e2d3de8416912b98fd6644141029f034639d73b305bdf43c2f0392",
+  "nro_bytes": 440517,
+  "elf_sha256": "3405fe15e29911053bf90ca805c7be3c2e86ef1775e52eb6e750388e3c4ac8f1",
+  "compiler": "aarch64-none-elf-gcc.exe (devkitA64) 16.1.0",
+  "sdk_library_sha256": "371e42ce7ddf34169b86adc52180fe08c7c1727e2f462008c51963296e36a1d4",
+  "sdk_cpu_flags_sha256": "08a2c090a8b2e45c923ac50fe55b30466b2c90efb5868f56df7a4009d911d48c",
+  "jit_provider_sha256": "b39f7831f560bb8f543e003b80362aba0105133e179661161a4e2294e86eecc3",
+  "source_sha256": {
+    "source\\agent.c": "a745fac1d19db96ce1e8d4f00f8e8e3fa2c75965ea7f91b3db14d735c64e9d7c",
+    "source\\agent.h": "4253c82551f554dfc974edb4c53b1e89ec0bca0ad2f23bac91eaba3cbbe1191e",
+    "source\\agent_wire.c": "6e4d5376295354ba9d2153da776cdca67a6a0b554208eedc54fa29fae654c6e4",
+    "source\\agent_wire.h": "d225366ecea42a5aba7528700d78aa95d26712904a83c5a22f7b691afe9b6109",
+    "source\\main.c": "daffb1b46ef0fb658446107ff469440a8866adbcaa2c7d209b9e6c4b7f17a622",
+    "source\\module_scan.c": "8960e38e13f4acf7aa893c71949b3e9aaae8d4cac26b4b7b46042d8ae59eca26",
+    "source\\module_scan.h": "a6b04ecf70bb3e579a99b99f7bb4f5d02b36852d970fac6137c377e4b79c4296",
+    "source\\research_api.h": "6d8d8a84eabe09a2e54a837f910e522b363e18ff0d918faefeaf95a490b41c1a"
+  },
+  "device_executed": false,
+  "hardware_qualified": true,
+  "qualification_report": "../HOST_BRINGUP.md"
+}

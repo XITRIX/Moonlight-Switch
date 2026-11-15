@@ -1,0 +1,207 @@
+{
+  "repository": "ouncebrew/kaihen",
+  "tag": "20261114d",
+  "revision": "5ac772560698b325551db014478a5a43e941474c",
+  "files": [
+    {
+      "path": "LICENSE",
+      "sha256": "8177f97513213526df2cf6184d8ff986c675afb514d4e68a404010521b880643",
+      "bytes": 18092
+    },
+    {
+      "path": "common/code_mount_request.hpp",
+      "sha256": "a94170b3db6ffcad1f28c3ffdcba5622e7eeb4e44f2cc22aa1000acb971db6e6",
+      "bytes": 2778
+    },
+    {
+      "path": "common/control.h",
+      "sha256": "162f27861345b3d2e47c7f58a24da0c26f658101da990a4bed71f71dd4364496",
+      "bytes": 5568
+    },
+    {
+      "path": "common/domain_mount.hpp",
+      "sha256": "8c3edb5578d858e04e46e4a43534ce46acc6d40a19bab17fbe8246336a76b77e",
+      "bytes": 4862
+    },
+    {
+      "path": "common/game_arm.h",
+      "sha256": "72ef68590faccf449aac15f410730ab37e69154f729ea88fd66a39104ea60957",
+      "bytes": 1416
+    },
+    {
+      "path": "common/loader_gate.hpp",
+      "sha256": "1815ee26d2d0100881387652abad53cb6552cde73ee43fda0593780a475b67e4",
+      "bytes": 29276
+    },
+    {
+      "path": "common/package.hpp",
+      "sha256": "7b0e68c3c22889f878f61b08d82d19c9f33fae9751d259ef24a33977d2a8a3dc",
+      "bytes": 2517
+    },
+    {
+      "path": "common/policy_package.cpp",
+      "sha256": "46544232b2e6e75e7d51c15202fd09363eb487caec285f2c08c1d50b6755098d",
+      "bytes": 5101
+    },
+    {
+      "path": "common/policy_package.hpp",
+      "sha256": "1ebf06532d2d6cb3515ff34b5e35a6179ae725efa67ef413c004c7fd15d3d961",
+      "bytes": 1074
+    },
+    {
+      "path": "common/result.hpp",
+      "sha256": "b3e7d820a0e6edabed09811909838a6b034f628f9fea680e061f57ac7ad15cdb",
+      "bytes": 1243
+    },
+    {
+      "path": "common/retained_memory.hpp",
+      "sha256": "ef3eb2917df0638e433c968e43f1227db828196ed1783562b9a8079d5f32c185",
+      "bytes": 7184
+    },
+    {
+      "path": "common/ro_dmnt.h",
+      "sha256": "517e5720bf7a5ff7de2434738d25f58e791f1441f897fbece42bbe0e2cc0c567",
+      "bytes": 761
+    },
+    {
+      "path": "common/sd_writer.cpp",
+      "sha256": "78f3823d539e76e7e10a781afbef99bc3f8b1fba3a84bacf8ec22fca00e18853",
+      "bytes": 5100
+    },
+    {
+      "path": "common/sd_writer.hpp",
+      "sha256": "1010502e5ce3168d64f3c829a4659699f570456adcff09e9adf267c64c02e21b",
+      "bytes": 948
+    },
+    {
+      "path": "hen/Makefile",
+      "sha256": "f40c7027bc789d04565a4ff0e093332e3b8f7edc3688c60742cbcbd7166cb478",
+      "bytes": 1621
+    },
+    {
+      "path": "hen/README.md",
+      "sha256": "c697726924a85e36da92339493fbadd6f0616931404bad922bb9df6acef976b6",
+      "bytes": 2647
+    },
+    {
+      "path": "hen/source/game_arm.cpp",
+      "sha256": "1758ec769110ec465332ad12b061d5862e7b81974f4e50932a4c9f2852e92db9",
+      "bytes": 24054
+    },
+    {
+      "path": "hen/source/game_arm.hpp",
+      "sha256": "23867f7d86515c01e91f2be32c1f952c398fa01425d2eb201650aba450a41d2f",
+      "bytes": 3614
+    },
+    {
+      "path": "hen/source/game_trace.hpp",
+      "sha256": "b60f8643a58db2a89b18e99300874104a52c7c8b18e12315047c1e79fb802940",
+      "bytes": 1821
+    },
+    {
+      "path": "hen/source/main.cpp",
+      "sha256": "a3615e075e9ce2f70bf274ce8e6e8b28537ee1703317ae1f19d2a1fd63a6a977",
+      "bytes": 602
+    },
+    {
+      "path": "hen/source/server.cpp",
+      "sha256": "ade9a7b89ff42c1f9c82fa367fc0046b200bb50b1f2a6e1e2a797841b19a72fa",
+      "bytes": 19530
+    },
+    {
+      "path": "hen/source/server.hpp",
+      "sha256": "0b731ecb062cea14ea89482d9d2fff5bf78a7e15f0407191f62cd010a24cd977",
+      "bytes": 4575
+    },
+    {
+      "path": "hen/source/sm_proxy.cpp",
+      "sha256": "01337c649ac707559631ddd3566c28a97a1e2cd63f651aeea3445a5c86eca5ff",
+      "bytes": 5506
+    },
+    {
+      "path": "hen/source/sm_proxy.hpp",
+      "sha256": "762ee59dc68769b61e1fe57031b9669912b4bb738a4cd2eac29045225eec20b9",
+      "bytes": 3300
+    },
+    {
+      "path": "hen/source/sm_request.hpp",
+      "sha256": "ce09a05905557fa95035d3fdda0dfaf444f345c0f1f7435c0320091ff1f42aa9",
+      "bytes": 9809
+    },
+    {
+      "path": "hen/test.sh",
+      "sha256": "91e21b9129748f3ccabe331f36c2ebfae932f2fcb80c5d04305631fbaf33ab22",
+      "bytes": 777
+    },
+    {
+      "path": "hen/tests/mount_request_test.cpp",
+      "sha256": "67f3aab00a91fcc721fed9e595f238caf88480630446e99a16e66d092d279847",
+      "bytes": 6546
+    },
+    {
+      "path": "hen/tests/sm_request_test.cpp",
+      "sha256": "822ad91278f4cb7012691c82de3869fa295720fd8f924d732c53d6b975e82cfb",
+      "bytes": 12625
+    },
+    {
+      "path": "libkaihen/JIT.md",
+      "sha256": "5bb7d576878d3e4e78e6c12cbda3249e49e8aec4f68cd1adecb251167f4f8c54",
+      "bytes": 2466
+    },
+    {
+      "path": "libkaihen/LICENSE",
+      "sha256": "dd76999221b671901d57147c9b917237f63a131af5822496845f9878a3fd6b6e",
+      "bytes": 737
+    },
+    {
+      "path": "libkaihen/Makefile",
+      "sha256": "e0eea520aaccd11e57f7f839437481d7e363cfa13732589a0f586f2482c18144",
+      "bytes": 2218
+    },
+    {
+      "path": "libkaihen/PLUGINS.md",
+      "sha256": "e6eb6177ead3f64c8305fc4cf77ea3d6a6778490af49abe143d076208ef7568b",
+      "bytes": 4549
+    },
+    {
+      "path": "libkaihen/include/kaihen.h",
+      "sha256": "c61285be76c4902b8e6b25cdd24314da364a5a1e21d8a5718738334ede6506f4",
+      "bytes": 6405
+    },
+    {
+      "path": "libkaihen/include/kaihen/plugin.h",
+      "sha256": "b933c1e3d73ba0f9cf1b229541ed5d872d382b3690a12faa32b7d00c5041294a",
+      "bytes": 5884
+    },
+    {
+      "path": "libkaihen/include/kaihen/protocol.h",
+      "sha256": "fa6065c828cf62d8eb23f5f022e5b1836ff37cc47b5a78ea01964f278c57f005",
+      "bytes": 3964
+    },
+    {
+      "path": "libkaihen/source/cmif_server.hpp",
+      "sha256": "95f60d16c248fe6ada1dcd630d11d2e29b14a78cc8d9582f50bd16f22eca8b3a",
+      "bytes": 4851
+    },
+    {
+      "path": "libkaihen/source/jit.c",
+      "sha256": "a10b1fe5d5ea4aef6468d371f68d5adac29c71d612b119f9da248db2c74278eb",
+      "bytes": 5793
+    },
+    {
+      "path": "libkaihen/source/plugin_runtime.cpp",
+      "sha256": "882d1de66070f472f6e5466e4539a9e6105d21077504f87a842720f7abc45df1",
+      "bytes": 8855
+    },
+    {
+      "path": "libkaihen/source/plugin_server.cpp",
+      "sha256": "e777e3c3908bb13ab8d8b916f7c6903588311e947250f73caf34340d0d454312",
+      "bytes": 11842
+    },
+    {
+      "path": "libkaihen/source/plugin_startup.h",
+      "sha256": "8d42c388bdcec855c4fc6eb48e8fc6e263eed389d4abe4675175e81e6a2d79fb",
+      "bytes": 1885
+    }
+  ]
+}

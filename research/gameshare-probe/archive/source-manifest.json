@@ -1,0 +1,27 @@
+[
+  {
+    "path": "civ7/loader-getter.js",
+    "sha256": "5a1a0760ca668747ace56fdde32a743b2f32f1efd1a32dc23e6bde269b41bb58",
+    "scope": "historical own diagnostic JS; runtime base pinned, not a live session"
+  },
+  {
+    "path": "civ7/read-functions.js",
+    "sha256": "8498434f6080cc5cfcc817f6b55f9e9e5530b4ba7f1b45418d09b8c61dbdf2c8",
+    "scope": "historical own diagnostic JS; runtime base pinned, not a live session"
+  },
+  {
+    "path": "civ7/read-sdk-version.js",
+    "sha256": "18a13646de90b9d52d8f13ea6e3d606b96a0b4a8d1527575220fc20d6ca15758",
+    "scope": "historical own diagnostic JS; runtime base pinned, not a live session"
+  },
+  {
+    "path": "civ7/source.js",
+    "sha256": "0b5aff7d4027d76bc875be883038ade1f3794af2bf7e0685f9aa198f176e3c5b",
+    "scope": "historical own diagnostic JS; runtime base pinned, not a live session"
+  },
+  {
+    "path": "inspect_nso.py",
+    "origin_sha256": "594f547be522b3f78a2f395634341785cac934cb6c2ec75c7cc2aa152620780d",
+    "change": "Use installed Capstone rather than the original PC-local package folder"
+  }
+]

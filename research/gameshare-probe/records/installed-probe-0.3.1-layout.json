@@ -1,0 +1,70 @@
+{
+  "schema": "gameshare-probe-layout-v1",
+  "nro_sha256": "79ff7da764e2d3de8416912b98fd6644141029f034639d73b305bdf43c2f0392",
+  "elf_sha256": "3405fe15e29911053bf90ca805c7be3c2e86ef1775e52eb6e750388e3c4ac8f1",
+  "symbols": {
+    "openService": {
+      "offset": 7552,
+      "first_bytes": "1f0000f1241840fa80150054fd7bbaa9"
+    },
+    "vi2OpenDisplay": {
+      "offset": 217024,
+      "first_bytes": "fd7bbca9fd030091f55b02a9f60301aa"
+    },
+    "vi2CloseDisplay": {
+      "offset": 217440,
+      "first_bytes": "fd7bbda9fd030091f35301a9f40300aa"
+    },
+    "vi2CreateEndpoint": {
+      "offset": 217664,
+      "first_bytes": "040080d2050080d2220100b443686438"
+    },
+    "vi2CloseEndpoint": {
+      "offset": 217728,
+      "first_bytes": "1f7c00a9c0035fd60000000000000000"
+    },
+    "vi2CreateLayer": {
+      "offset": 217760,
+      "first_bytes": "fd7bbba9fd030091f35301a9540e8352"
+    },
+    "vi2AttachLayer": {
+      "offset": 218272,
+      "first_bytes": "fd7bbea9fd030091020040f9602180d2"
+    },
+    "vi2SelectLayer": {
+      "offset": 218432,
+      "first_bytes": "fd7bbca9fd030091f35301a974d03bd5"
+    },
+    "vi2ClearLayerSelection": {
+      "offset": 218592,
+      "first_bytes": "fd7bbea9fd030091f30b00f9010040a9"
+    },
+    "vi2DetachLayer": {
+      "offset": 219456,
+      "first_bytes": "fd7bbea9fd030091010040f9802180d2"
+    },
+    "vi2CloseLayer": {
+      "offset": 219616,
+      "first_bytes": "fd7bbda9fd030091f35301a9f30300aa"
+    },
+    "smGetServiceOverride": {
+      "offset": 145312,
+      "first_bytes": "e10b00d0240445f9240200b4e50b00d0"
+    },
+    "private_sm": {
+      "offset": 807056
+    },
+    "fopen": {
+      "offset": 234400,
+      "first_bytes": "fd7bbda9fd030091f30b00f9f30300aa"
+    },
+    "fread": {
+      "offset": 232864,
+      "first_bytes": "fd7bbca9fd030091f30b00f9f30300aa"
+    },
+    "fclose": {
+      "offset": 245088,
+      "first_bytes": "fd7bbea9fd030091e00f00f9453f0094"
+    }
+  }
+}
