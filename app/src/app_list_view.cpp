@@ -133,6 +133,7 @@ void AppListView::updateAppList() {
 
             if (result.isSuccess()) {
                 int currentGame = result.value().currentGame;
+                Logger::info("HOST_DETAILS: currentGame={}", currentGame);
 
                 ASYNC_RETAIN
                 GameStreamClient::instance().applist(
@@ -196,6 +197,7 @@ void AppListView::setCurrentApp(const AppInfo& app) {
 
 void AppListView::willAppear(bool resetState) {
     Box::willAppear(resetState);
+    Logger::info("HOST_DETAILS: refreshing on appear");
     updateAppList();
 }
 
