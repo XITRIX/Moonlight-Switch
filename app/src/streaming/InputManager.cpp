@@ -1,6 +1,7 @@
 
 #ifdef __SWITCH__
 #include <switch.h>
+#include <borealis/platforms/switch/switch_input.hpp>
 #endif
 
 #include "InputManager.hpp"
@@ -343,12 +344,17 @@ GamepadState MoonlightInputManager::getControllerState(int controllerNum,
     brls::ControllerState controller{};
 
     brls::Application::setSwapHalfJoyconStickToDpad(Settings::instance().swap_joycon_stick_to_dpad());
-    brls::Application::getPlatform()->getInputManager()->updateControllerState(
-        &rawController, controllerNum);
+    brls::Application::getPlatform()->getInputManager()->updateControllerState(&rawController, controllerNum);
+#ifdef __SWITCH__
+    auto* switchInput = static_cast<brls::SwitchInputManager*>(brls::Application::getPlatform()->getInputManager());
+    controller = switchInput->isHalfJoyConMappingActive(controllerNum) ? rawController : mapController(rawController);
+#else
     controller = mapController(rawController);
+#endif
 
     // Use axis or button if axis is not available (equals 0)
-    float lzAxis = controller.axes[LEFT_Z] > 0 ? controller.axes[LEFT_Z] : (controller.buttons[brls::BUTTON_LT] ? 1.f : 0.f);
+    float lzAxis
+        = controller.axes[LEFT_Z] > 0 ? controller.axes[LEFT_Z] : (controller.buttons[brls::BUTTON_LT] ? 1.f : 0.f);
     float rzAxis = controller.axes[RIGHT_Z] > 0 ? controller.axes[RIGHT_Z] : (controller.buttons[brls::BUTTON_RT] ? 1.f : 0.f);
 
     // Truncate dead zones

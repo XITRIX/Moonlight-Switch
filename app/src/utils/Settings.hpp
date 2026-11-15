@@ -7,6 +7,9 @@
 #include <string>
 #include <utility>
 #include <vector>
+#ifdef __SWITCH__
+#include <borealis/platforms/switch/half_joycon_mapping.hpp>
+#endif
 
 enum VideoCodec : int { H264, H265, AV1 };
 std::string getVideoCodecName(VideoCodec codec);
@@ -321,6 +324,10 @@ class Settings : public Singleton<Settings> {
 
     int get_current_mapping_layout();
     void set_current_mapping_layout(int layout) { m_current_mapping_layout = layout; }
+#ifdef __SWITCH__
+    const brls::HalfJoyConMapping& get_halfcon_mapping(brls::HalfJoyConSide side) const;
+    void set_halfcon_mapping(brls::HalfJoyConSide side, const brls::HalfJoyConMapping& mapping);
+#endif
 
     std::vector<KeyMappingLayout>* get_mapping_laouts() { return &m_mapping_laouts; }
 
@@ -376,18 +383,22 @@ class Settings : public Singleton<Settings> {
     int m_keyboard_fingers = 3;
     int m_keyboard_locale = 0;
     bool m_volume_amplification = false;
-    int m_mouse_speed_multiplier = 34;
-    int m_mouse_scroll_multiplier = 100;
-    int m_current_mapping_layout = 0;
+    int m_mouse_speed_multiplier               = 34;
+    int m_mouse_scroll_multiplier              = 100;
+    int m_current_mapping_layout               = 0;
+#ifdef __SWITCH__
+    std::array<brls::HalfJoyConMapping, 2> m_halfcon_mappings
+        = { brls::defaultHalfJoyConMapping(brls::HalfJoyConSide::LEFT),
+              brls::defaultHalfJoyConMapping(brls::HalfJoyConSide::RIGHT) };
+#endif
     std::vector<KeyMappingLayout> m_mapping_laouts;
-    KeyComboOptions m_guide_key_options{
+    KeyComboOptions m_guide_key_options {
         .holdTime = 0,
-        .buttons = {},
+        .buttons  = { },
     };
-    KeyComboOptions m_overlay_options{
+    KeyComboOptions m_overlay_options {
         .holdTime = 0,
-        .buttons = {brls::ControllerButton::BUTTON_BACK,
-                    brls::ControllerButton::BUTTON_START},
+        .buttons  = { brls::ControllerButton::BUTTON_BACK, brls::ControllerButton::BUTTON_START },
     };
     KeyComboOptions m_mouse_input_options{
         .holdTime = 0,

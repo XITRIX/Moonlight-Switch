@@ -1,4 +1,14 @@
 {
+    "halfcon": {
+        "title": "Configuration Joy-Con seul",
+        "left": "Joy-Con gauche",
+        "right": "Joy-Con droit",
+        "unmapped": "Non attribué",
+        "reset": "Réinitialiser",
+        "select": "Select",
+        "start": "Start",
+        "guide": "Guide"
+    },
     "about": {
         "about": "Moonlight-Switch est une App de streaming pour Nintendo Switch basée sur Moonlight-Common-C",
         "link_gbatemp": "Page GbaTemp",

@@ -1,4 +1,14 @@
 {
+    "halfcon": {
+        "title": "Joy-Con 단독 버튼 설정",
+        "left": "왼쪽 Joy-Con",
+        "right": "오른쪽 Joy-Con",
+        "unmapped": "할당 없음",
+        "reset": "기본값 복원",
+        "select": "Select",
+        "start": "Start",
+        "guide": "Guide"
+    },
     "about": {
         "about": "Moonlight-Switch는 닌텐도 스위치용 Moonlight-Common-C를 기반으로 하는 타사 게임 스트리밍 클라이언트입니다.",
         "link_gbatemp": "GbaTemp 페이지",

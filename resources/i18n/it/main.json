@@ -1,4 +1,14 @@
 {
+    "halfcon": {
+        "title": "Mappatura Joy-Con singolo",
+        "left": "Joy-Con sinistro",
+        "right": "Joy-Con destro",
+        "unmapped": "Non assegnato",
+        "reset": "Ripristina",
+        "select": "Select",
+        "start": "Start",
+        "guide": "Guide"
+    },
     "about": {
         "about": "Moonlight-Switch è un client di gioco in streaming di terze parti per Nintendo Switch basato su Moonlight-Common-C",
         "link_gbatemp": "Pagina GbaTemp",

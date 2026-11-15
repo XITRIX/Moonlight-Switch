@@ -1,4 +1,14 @@
 {
+    "halfcon": {
+        "title": "Схема кнопок одного Joy-Con",
+        "left": "Левый Joy-Con",
+        "right": "Правый Joy-Con",
+        "unmapped": "Не назначено",
+        "reset": "Сбросить настройки",
+        "select": "Select",
+        "start": "Start",
+        "guide": "Guide"
+    },
     "about": {
         "about": "Moonlight-Switch - это сторонний клиент потоковой передачи игр для Nintendo Switch основанный на Moonlight-Common-C",
         "link_gbatemp": "Страница на GbaTemp",

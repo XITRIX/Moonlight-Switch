@@ -1,4 +1,14 @@
 {
+    "halfcon": {
+        "title": "Joy-Con単体のボタン設定",
+        "left": "左Joy-Con",
+        "right": "右Joy-Con",
+        "unmapped": "割り当てなし",
+        "reset": "初期設定に戻す",
+        "select": "Select",
+        "start": "Start",
+        "guide": "Guide"
+    },
     "about": {
         "about": "Moonlight-Switch is a third-party game streaming client based on Moonlight-Common-C for the Nintendo Switch",
         "link_gbatemp": "GbaTemp Page",

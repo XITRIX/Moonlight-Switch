@@ -16,6 +16,7 @@
 #include "helper.hpp"
 #include "button_selecting_dialog.hpp"
 #include "mapping_layout_editor.hpp"
+#include "halfcon_mapping_view.hpp"
 #include "UpscalingSupport.hpp"
 #include <cmath>
 #include <iomanip>
@@ -436,10 +437,19 @@ SettingsTab::SettingsTab() {
     layouts.push_back("settings/keys_mapping_create_new"_i18n);
 
     swapGame->setText("settings/keys_mapping_title"_i18n);
-    swapGame->setDetailTextColor(
-        Application::getTheme()["brls/list/listItem_value_color"]);
-    swapGame->setDetailText(
-        layouts[Settings::instance().get_current_mapping_layout()]);
+#ifdef __SWITCH__
+    halfconMapping->setText("halfcon/title"_i18n);
+    halfconMapping->registerClickAction(
+        [this](View*)
+        {
+            this->present(new HalfConMappingView());
+            return true;
+        });
+#else
+    halfconMapping->setVisibility(Visibility::GONE);
+#endif
+    swapGame->setDetailTextColor(Application::getTheme()["brls/list/listItem_value_color"]);
+    swapGame->setDetailText(layouts[Settings::instance().get_current_mapping_layout()]);
 
     swapGame->registerClickAction([this](View* view) {
         auto layouts = *Settings::instance().get_mapping_laouts();

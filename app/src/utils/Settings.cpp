@@ -5,7 +5,7 @@
 #include <iomanip>
 #include <climits>
 #include <filesystem>
-#ifdef __SWITCH2__
+#ifdef __SWITCH__
 #include <borealis/platforms/switch/switch_input.hpp>
 #endif
 
@@ -184,12 +184,39 @@ void Settings::load() {
     loadBaseLayouts();
 
     json_t* root = json_load_file(settings_file_path(m_working_dir).c_str(), 0, nullptr);
-    
-    if (root && json_typeof(root) == JSON_OBJECT) {
-        if (json_t* hosts = json_object_get(root, "hosts")) {
+
+    if (root && json_typeof(root) == JSON_OBJECT)
+    {
+#ifdef __SWITCH__
+        if (json_t* half = json_object_get(root, "halfcon_mapping"))
+        {
+            if (json_integer_value(json_object_get(half, "version")) == 1)
+            {
+                const char* names[] = { "left", "right" };
+                for (int side = 0; side < 2; ++side)
+                {
+                    json_t* bindings = json_object_get(half, names[side]);
+                    for (size_t key = 0; key < m_halfcon_mappings[side].size(); ++key)
+                    {
+                        json_t* value = json_array_get(bindings, key);
+                        if (json_is_integer(value))
+                        {
+                            const auto action = json_integer_value(value);
+                            if (action >= -1 && action < brls::BUTTON_NAV_UP)
+                                m_halfcon_mappings[side][key] = static_cast<int>(action);
+                        }
+                    }
+                }
+            }
+        }
+#endif
+        if (json_t* hosts = json_object_get(root, "hosts"))
+        {
             size_t size = json_array_size(hosts);
-            for (size_t i = 0; i < size; i++) {
-                if (json_t* json = json_array_get(hosts, i)) {
+            for (size_t i = 0; i < size; i++)
+            {
+                if (json_t* json = json_array_get(hosts, i))
+                {
                     if (json_typeof(json) == JSON_OBJECT) {
                         Host host;
                         
@@ -251,7 +278,7 @@ void Settings::load() {
                 }
             }
         }
-        
+
         if (json_t* settings = json_object_get(root, "settings")) {
             if (json_t* resolution = json_object_get(settings, "resolution")) {
                 if (json_typeof(resolution) == JSON_INTEGER) {
@@ -541,22 +568,65 @@ void Settings::load() {
     }
     set_mouse_speed_multiplier(m_mouse_speed_multiplier);
     set_mouse_scroll_multiplier(m_mouse_scroll_multiplier);
+#ifdef __SWITCH__
+    set_halfcon_mapping(brls::HalfJoyConSide::LEFT, m_halfcon_mappings[0]);
+    set_halfcon_mapping(brls::HalfJoyConSide::RIGHT, m_halfcon_mappings[1]);
+#endif
 }
 
-void Settings::save() {
+#ifdef __SWITCH__
+const brls::HalfJoyConMapping& Settings::get_halfcon_mapping(brls::HalfJoyConSide side) const
+{
+    return m_halfcon_mappings[side == brls::HalfJoyConSide::LEFT ? 0 : 1];
+}
+
+void Settings::set_halfcon_mapping(brls::HalfJoyConSide side, const brls::HalfJoyConMapping& mapping)
+{
+    if (side == brls::HalfJoyConSide::NONE)
+        return;
+    auto& target = m_halfcon_mappings[side == brls::HalfJoyConSide::LEFT ? 0 : 1];
+    for (size_t i = 0; i < target.size(); ++i)
+        target[i] = brls::validHalfJoyConAction(mapping[i]) ? mapping[i] : brls::HALF_JOYCON_UNMAPPED;
+    static_cast<brls::SwitchInputManager*>(Application::getPlatform()->getInputManager())
+        ->setHalfJoyConMapping(side, target);
+}
+#endif
+
+void Settings::save()
+{
     json_t* root = json_object();
-    
-    if (root) {
-        if (json_t* hosts = json_array()) {
-            for (const auto& host: m_hosts) {
-                if (json_t* json = json_object()) {
+
+    if (root)
+    {
+#ifdef __SWITCH__
+        json_t* half = json_object();
+        json_object_set_new(half, "version", json_integer(1));
+        const char* names[] = { "left", "right" };
+        for (size_t side = 0; side < m_halfcon_mappings.size(); ++side)
+        {
+            json_t* bindings = json_array();
+            for (int action : m_halfcon_mappings[side])
+                json_array_append_new(bindings, json_integer(action));
+            json_object_set_new(half, names[side], bindings);
+        }
+        json_object_set_new(root, "halfcon_mapping", half);
+#endif
+        if (json_t* hosts = json_array())
+        {
+            for (const auto& host : m_hosts)
+            {
+                if (json_t* json = json_object())
+                {
                     json_object_set_new(json, "address", json_string(host.address.c_str()));
                     json_object_set_new(json, "remote_address", json_string(host.remoteAddress.c_str()));
                     json_object_set_new(json, "hostname", json_string(host.hostname.c_str()));
                     json_object_set_new(json, "mac", json_string(host.mac.c_str()));
-                    if (json_t* apps = json_array()) {
-                        for (auto app: host.favorites) {
-                            if (json_t* jsonApp = json_object()) {
+                    if (json_t* apps = json_array())
+                    {
+                        for (auto app : host.favorites)
+                        {
+                            if (json_t* jsonApp = json_object())
+                            {
                                 json_object_set_new(jsonApp, "name", json_string(app.name.c_str()));
                                 json_object_set_new(jsonApp, "id", json_integer(app.app_id));
                                 json_array_append_new(apps, jsonApp);
@@ -569,7 +639,7 @@ void Settings::save() {
             }
             json_object_set_new(root, "hosts", hosts);
         }
-        
+
         if (json_t* settings = json_object()) {
             json_object_set_new(settings, "resolution", json_integer(m_resolution));
             json_object_set_new(settings, "native_resolution_scale", json_integer(m_native_resolution_scale));

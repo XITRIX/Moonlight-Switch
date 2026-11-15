@@ -1,4 +1,14 @@
 {
+    "halfcon": {
+        "title": "Asignación de un Joy-Con",
+        "left": "Joy-Con izquierdo",
+        "right": "Joy-Con derecho",
+        "unmapped": "Sin asignar",
+        "reset": "Restablecer",
+        "select": "Select",
+        "start": "Start",
+        "guide": "Guide"
+    },
     "about": {
         "about": "Moonlight-Switch es un cliente de streaming de juegos third-party basado en Moonlight-Common-C para Nintendo Switch",
         "link_gbatemp": "Página de GbaTemp",

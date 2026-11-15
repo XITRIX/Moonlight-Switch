@@ -21,6 +21,14 @@ excluded from this target. Native H.264 1920x1080 output has been measured at
 119.94 decoded FPS over a 204.466-second high-rate interval. AV1 remains
 unqualified on the device; HDR and upscaling are not enabled.
 
+Borealis UI timing uses the SDK counter conversion for Switch 2's 31.25 MHz
+timer. The former 19.2 MHz conversion made animations and button repeat run
+about 1.63 times too fast. Slider movement, controller scrolling and swipe
+inertia now use measured elapsed time rather than the averaged FPS counter.
+The build runs `extern/borealis/tests/test_timing.py` with simulated Switch 1/2
+clocks at 30/60/120/144 FPS and variable cadence; on-device UI timing still needs
+confirmation.
+
 ## Build on Windows
 
 The other local ports use MSYS2 at `%USERPROFILE%/.dirt2-tools/msys64` and the SDK
@@ -175,6 +183,51 @@ it to the PC, so applications that round small packets still respect sensitivity
 `MOUSE_SCROLL` reports the active multiplier, wheel input, queued units and
 pending fractions. One wheel step is 120 queued units. The native mouse adapter
 and scroll sender regressions run as part of the Switch 2 build.
+
+## Shutdown diagnostics
+
+`Exiting...` marks the start of teardown. `SHUTDOWN: complete` marks the return
+from Borealis platform destruction. Intermediate markers identify activity,
+view, worker and platform teardown; Switch 2 logs the Vulkan idle result before
+views can release textures used by the last submitted frame.
+
+The view deletion queue is drained without retaining deque iterators across
+destructors, which may enqueue more views. Normal frames retain locked views
+and defer newly queued descendants; shutdown drains descendants immediately.
+Duplicate scheduling uses insertion-order lookup rather than binary search on
+an unsorted queue. `test_deletion_queue.py` exercises these paths with checked
+C++ iterators and verifies that shutdown waits for graphics before deleting
+views. The original implementation fails this test with a singular iterator.
+This establishes a code defect, not the precise cause of an unsymbolicated
+console crash. Console exit qualification is required before committing.
+
+## Half-con mapping
+
+Settings → Half-con mapping layout, immediately below Keys mapping layout,
+edits separate left/right horizontal Joy-Con bindings on Switch 1 and Switch 2.
+The diagrams follow Nintendo's [Joy-Con schematic](https://en-americas-support.nintendo.com/app/answers/detail/a_id/22634/)
+and [Joy-Con 2 schematic](https://en-americas-support.nintendo.com/app/answers/detail/a_id/68499/).
+Diagrams follow the current platform: Joy-Con on Switch 1 and Joy-Con 2 on
+Switch 2. The C binding is shown on Switch 2. Displayed actions are host
+controller buttons.
+
+Left Minus defaults to Select and Capture to Start. Right Home defaults to
+Select and Plus to Start. L/ZL, R/ZR and C are unassigned by default. Face buttons,
+stick click and SL/SR retain their previous horizontal defaults. Each side has
+its own reset action. Profiles are stored in `halfcon_mapping` version 1 as
+left/right arrays indexed by `HalfJoyConButton`; missing or invalid entries keep
+their defaults when loading.
+
+Profiles apply only to independently assigned horizontal Joy-Cons while the
+stream has focus. Paired Joy-Cons and full controllers continue using Keys
+mapping layout. A mapped half-con system button takes priority over the overlay
+or Guide override. With that binding unassigned, the existing override applies;
+with both unassigned, the system action remains available. Input ownership is
+latched through release. If the last-active controller cannot produce that
+button, ownership is inferred only when one connected controller can produce it.
+Ambiguous events fall through to the existing override or system handling.
+`HALF_JOYCON` logs active claim masks; `SWITCH_SYSTEM_BUTTON` logs the owner,
+press/release, half-con consumption and fallback mode for console qualification.
 
 ## Native hardware decoder
 

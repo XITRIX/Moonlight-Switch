@@ -1,4 +1,14 @@
 {
+    "halfcon": {
+        "title": "Mapeamento de um Joy-Con",
+        "left": "Joy-Con esquerdo",
+        "right": "Joy-Con direito",
+        "unmapped": "Não atribuído",
+        "reset": "Restaurar padrões",
+        "select": "Select",
+        "start": "Start",
+        "guide": "Guide"
+    },
     "about": {
         "about": "Moonlight-Switch é um aplicativo terceiro para streaming de jogos baseado no Moonlight-Common-C para Nintendo Switch",
         "link_gbatemp": "Página do GbaTemp",

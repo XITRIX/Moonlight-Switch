@@ -1,4 +1,14 @@
 {
+    "halfcon": {
+        "title": "單個 Joy-Con 按鍵配置",
+        "left": "左 Joy-Con",
+        "right": "右 Joy-Con",
+        "unmapped": "未指派",
+        "reset": "恢復預設",
+        "select": "Select",
+        "start": "Start",
+        "guide": "Guide"
+    },
     "about": {
         "about": "Moonlight-Switch是Nintendo Switch平台的一個基於Moonlight-Common-C的第三方遊戲串流用戶端",
         "link_gbatemp": "GbaTemp頁面",

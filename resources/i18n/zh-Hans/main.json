@@ -1,4 +1,14 @@
 {
+    "halfcon": {
+        "title": "单个 Joy-Con 按键映射",
+        "left": "左 Joy-Con",
+        "right": "右 Joy-Con",
+        "unmapped": "未分配",
+        "reset": "恢复默认",
+        "select": "Select",
+        "start": "Start",
+        "guide": "Guide"
+    },
     "about": {
         "about": "Moonlight-Switch是Nintendo Switch平台的一个基于Moonlight-Common-C的第三方游戏串流客户端",
         "link_gbatemp": "GbaTemp页面",
