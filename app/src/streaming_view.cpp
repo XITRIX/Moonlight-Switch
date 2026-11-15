@@ -42,29 +42,49 @@ void setBottomBarStatus(const char *value) {
 #endif
 }
 
-void overrideButtonsIfNeeded(bool value) {
+void overrideButtonsIfNeeded(bool value)
+{
 #ifdef PLATFORM_SWITCH
-    ((SwitchInputManager*) brls::Application::getPlatform()->getInputManager())->setScreenshotButtonOverrideMode(ButtonOverrideMode::NONE);
-    ((SwitchInputManager*) brls::Application::getPlatform()->getInputManager())->setHomeButtonOverrideMode(ButtonOverrideMode::NONE);
-    if (!value) return;
+    auto* input = static_cast<SwitchInputManager*>(brls::Application::getPlatform()->getInputManager());
+    input->setScreenshotButtonOverrideMode(ButtonOverrideMode::NONE);
+    input->setHomeButtonOverrideMode(ButtonOverrideMode::NONE);
+#ifdef __SWITCH2__
+    input->setChatButtonOverrideMode(ButtonOverrideMode::NONE);
+#endif
+    if (!value)
+        return;
 
-    switch (Settings::instance().get_overlay_system_button()) {
-        case ButtonOverrideType::NONE: break;
+    switch (Settings::instance().get_overlay_system_button())
+    {
+        case ButtonOverrideType::NONE:
+            break;
         case ButtonOverrideType::HOME:
-            ((SwitchInputManager*) brls::Application::getPlatform()->getInputManager())->setHomeButtonOverrideMode(ButtonOverrideMode::CUSTOM_EVENT);
-            break;  
+            input->setHomeButtonOverrideMode(ButtonOverrideMode::CUSTOM_EVENT);
+            break;
         case ButtonOverrideType::SCREENSHOT:
-            ((SwitchInputManager*) brls::Application::getPlatform()->getInputManager())->setScreenshotButtonOverrideMode(ButtonOverrideMode::CUSTOM_EVENT);
+            input->setScreenshotButtonOverrideMode(ButtonOverrideMode::CUSTOM_EVENT);
+            break;
+        case ButtonOverrideType::CHAT:
+#ifdef __SWITCH2__
+            input->setChatButtonOverrideMode(ButtonOverrideMode::CUSTOM_EVENT);
+#endif
             break;
     }
 
-    switch (Settings::instance().get_guide_system_button()) {
-        case ButtonOverrideType::NONE: break;
+    switch (Settings::instance().get_guide_system_button())
+    {
+        case ButtonOverrideType::NONE:
+            break;
         case ButtonOverrideType::HOME:
-            ((SwitchInputManager*) brls::Application::getPlatform()->getInputManager())->setHomeButtonOverrideMode(ButtonOverrideMode::GUIDE_BUTTON);
-            break;  
+            input->setHomeButtonOverrideMode(ButtonOverrideMode::GUIDE_BUTTON);
+            break;
         case ButtonOverrideType::SCREENSHOT:
-            ((SwitchInputManager*) brls::Application::getPlatform()->getInputManager())->setScreenshotButtonOverrideMode(ButtonOverrideMode::GUIDE_BUTTON);
+            input->setScreenshotButtonOverrideMode(ButtonOverrideMode::GUIDE_BUTTON);
+            break;
+        case ButtonOverrideType::CHAT:
+#ifdef __SWITCH2__
+            input->setChatButtonOverrideMode(ButtonOverrideMode::GUIDE_BUTTON);
+#endif
             break;
     }
 #endif
@@ -535,6 +555,10 @@ void StreamingView::handleOverlayCombo() {
 
     if (Settings::instance().get_overlay_system_button() == ButtonOverrideType::SCREENSHOT)
         systemButtonOverlayPressed |= ((SwitchInputManager*) Application::getPlatform()->getInputManager())->isScreenshotButtonPressed();
+#ifdef __SWITCH2__
+    if (Settings::instance().get_overlay_system_button() == ButtonOverrideType::CHAT)
+        systemButtonOverlayPressed |= ((SwitchInputManager*) Application::getPlatform()->getInputManager())->isChatButtonPressed();
+#endif
 
     if (oldSystemButtonOverlayPressed != systemButtonOverlayPressed) {
         oldSystemButtonOverlayPressed = systemButtonOverlayPressed;

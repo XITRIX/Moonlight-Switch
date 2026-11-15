@@ -12,6 +12,7 @@
 #include "settings_tab.hpp"
 #include "Settings.hpp"
 #include "MouseScrollSettings.hpp"
+#include "SystemButtonSettings.hpp"
 #include "helper.hpp"
 #include "button_selecting_dialog.hpp"
 #include "mapping_layout_editor.hpp"
@@ -602,7 +603,7 @@ SettingsTab::SettingsTab() {
 #else
     guideBySystemButton->init(
         "settings/use_system_button"_i18n,
-        {"hints/off"_i18n, "settings/buttons/screenshot"_i18n, "settings/buttons/home"_i18n},
+        systemButtonOptions(),
         (int) Settings::instance().get_guide_system_button(), [this](int value) {
             if (value != 0 && Settings::instance().get_overlay_system_button() == (ButtonOverrideType) value) {
                 brls::sync([this, value](){
@@ -624,7 +625,7 @@ SettingsTab::SettingsTab() {
 
     overlayBySystemButton->init(
         "settings/use_system_button"_i18n,
-        {"hints/off"_i18n, "settings/buttons/screenshot"_i18n, "settings/buttons/home"_i18n},
+        systemButtonOptions(),
         (int) Settings::instance().get_overlay_system_button(), [this](int value) {
             if (value != 0 && Settings::instance().get_guide_system_button() == (ButtonOverrideType) value) {
                 brls::sync([this, value](){

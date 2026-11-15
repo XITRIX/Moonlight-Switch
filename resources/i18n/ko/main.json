@@ -106,6 +106,7 @@
         "audio_backend": "오디오 드라이버",
         "av1": "AV1 (실험용)",
         "buttons": {
+            "chat": "채팅(C)",
             "home": "홈",
             "screenshot": "스크린샷"
         },

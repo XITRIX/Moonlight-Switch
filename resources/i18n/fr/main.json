@@ -106,6 +106,7 @@
         "audio_backend": "Driver audio",
         "av1": "AV1 (Expérimental)",
         "buttons": {
+            "chat": "Chat (C)",
             "home": "Home",
             "screenshot": "Capture d'écran"
         },

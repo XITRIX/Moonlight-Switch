@@ -106,6 +106,7 @@
         "audio_backend": "音頻驅動",
         "av1": "AV1 (實驗性)",
         "buttons": {
+            "chat": "聊天（C）",
             "home": "Home",
             "screenshot": "Screenshot"
         },

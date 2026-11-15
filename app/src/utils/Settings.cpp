@@ -49,6 +49,17 @@ std::string make_preferred_path(const fs::path& path) {
 std::string settings_file_path(const std::string& working_dir) {
     return make_preferred_path(fs::path(working_dir) / "settings.json");
 }
+
+ButtonOverrideType system_button_type(json_int_t value)
+{
+#ifdef __SWITCH2__
+    constexpr auto last = ButtonOverrideType::CHAT;
+#else
+    constexpr auto last = ButtonOverrideType::HOME;
+#endif
+    return value >= 0 && value <= static_cast<int>(last) ? static_cast<ButtonOverrideType>(value)
+                                                         : ButtonOverrideType::NONE;
+}
 }
 
 std::string getVideoCodecName(VideoCodec codec) {
@@ -436,13 +447,13 @@ void Settings::load() {
 
             if (json_t* overlay_system_button = json_object_get(settings, "overlay_system_button")) {
                 if (json_typeof(overlay_system_button) == JSON_INTEGER) {
-                    m_overlay_system_button = (ButtonOverrideType) json_integer_value(overlay_system_button);
+                    m_overlay_system_button = system_button_type(json_integer_value(overlay_system_button));
                 }
             }
 
             if (json_t* guide_system_button = json_object_get(settings, "guide_system_button")) {
                 if (json_typeof(guide_system_button) == JSON_INTEGER) {
-                    m_guide_system_button = (ButtonOverrideType) json_integer_value(guide_system_button);
+                    m_guide_system_button = system_button_type(json_integer_value(guide_system_button));
                 }
             }
 

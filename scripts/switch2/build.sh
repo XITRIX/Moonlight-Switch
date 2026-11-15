@@ -15,8 +15,10 @@ python3 scripts/switch2/test_decoder.py
 python3 scripts/switch2/test_presentation.py
 python3 scripts/switch2/test_capture.py
 python3 scripts/switch2/test_mouse_scroll.py
+python3 scripts/switch2/test_system_button_settings.py
 python3 extern/borealis/tests/test_activity_lifecycle.py
 python3 extern/borealis/tests/test_switch_mouse.py
+python3 extern/borealis/tests/test_system_buttons.py
 python3 scripts/switch2/build_vulkan_shaders.py
 cmake -S . -B "$build_dir" -G Ninja -DPLATFORM_SWITCH2=ON \
     -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \

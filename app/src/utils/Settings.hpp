@@ -22,7 +22,7 @@ enum AudioBackend : int {
 
 enum KeyboardType : int { COMPACT, FULLSIZED };
 
-enum class ButtonOverrideType : int { NONE, SCREENSHOT, HOME };
+enum class ButtonOverrideType : int { NONE, SCREENSHOT, HOME, CHAT };
 
 struct KeyMappingLayout {
     std::string title;
