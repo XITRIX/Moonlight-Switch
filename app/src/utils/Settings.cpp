@@ -171,7 +171,14 @@ void Settings::set_mouse_speed_multiplier(int mouse_speed_multiplier)
 #endif
 }
 
-void Settings::set_mouse_scroll_multiplier(int percent) { m_mouse_scroll_multiplier = std::clamp(percent, 10, 200); }
+void Settings::set_mouse_scroll_multiplier(int percent)
+{
+    m_mouse_scroll_multiplier = std::clamp(percent, 10, 200);
+#ifdef __SWITCH2__
+    auto* input = static_cast<brls::SwitchInputManager*>(Application::getPlatform()->getInputManager());
+    input->setMouseScrollSensitivity(get_mouse_scroll_multiplier());
+#endif
+}
 
 void Settings::load() {
     loadBaseLayouts();
@@ -533,6 +540,7 @@ void Settings::load() {
         json_decref(root);
     }
     set_mouse_speed_multiplier(m_mouse_speed_multiplier);
+    set_mouse_scroll_multiplier(m_mouse_scroll_multiplier);
 }
 
 void Settings::save() {

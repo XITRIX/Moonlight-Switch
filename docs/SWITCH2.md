@@ -165,6 +165,8 @@ motion. The existing Mouse acceleration slider controls streamed movement and
 the local Joy-Con cursor; its multiplier is applied once to each path.
 Scroll sensitivity sits beside it in Settings and the in-game options, defaults
 to x1.00, and is saved as `mouse_scroll_multiplier` (10–200 percent).
+The menu keeps its original pixel scroll scale and applies this multiplier live;
+the session applies it separately to normalized wheel clicks.
 
 Joy-Con scroll samples are normalized at 120 native units per wheel click.
 Switch 2 accumulates fractional scrolling into whole wheel steps before sending
