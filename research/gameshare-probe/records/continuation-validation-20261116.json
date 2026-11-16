@@ -1,0 +1,19 @@
+{
+  "schema": "gameshare-continuation-validation-v1",
+  "date_utc": "2026-11-16",
+  "console_jobs": 17,
+  "completed_preparation_attempts": 7,
+  "matchmake_native_result": "0x2fab1f",
+  "host_advertisement_established": false,
+  "guest_connection_established": false,
+  "image_stream_established": false,
+  "python_tests": 18,
+  "native_examples_compiled": 28,
+  "standalone_nro_build": true,
+  "rebuilt_nro_deployed": false,
+  "get_only_recovery_device_verified": true,
+  "last_job_id": 17,
+  "last_job_resources_empty": true,
+  "hen_ro_code_or_files_modified": false,
+  "new_console_sdk_or_firmware_binaries_in_git": false
+}

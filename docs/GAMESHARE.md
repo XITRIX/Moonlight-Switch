@@ -13,3 +13,8 @@ stream. This branch does not add GameShare hosting to Moonlight itself.
 The intended goal is PC -> Moonlight on Switch 2 -> native GameShare guest,
 with guest input returned to the PC as player 2. HEN and RO must remain
 unchanged. See [the latest results](../research/gameshare-probe/HOST_BRINGUP.md).
+
+The [November16 continuation](../research/gameshare-probe/notes/SESSION_2026-11-16.md)
+records further hardware tests and the current evidence boundary. No supported
+configuration change resolved matchmaking, and the active probe cannot read the
+missing SDK/server code through its available read-only interfaces.

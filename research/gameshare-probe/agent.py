@@ -67,6 +67,36 @@ class Agent:
         return self.request("POST","/run",payload)
 
 
+def recover_result(agent, folder):
+    """Read a possibly completed submission; never submit or replay its packet."""
+    folder=Path(folder)
+    previous=json.loads((folder/"request.json").read_text(encoding="utf-8"))
+    data=(folder/"request.bin").read_bytes()
+    if len(data)<24:
+        raise ValueError("Truncated saved request")
+    magic,abi,entry,code_size,input_size,reserved=struct.unpack("<4s5I",data[:24])
+    code=data[24:24+code_size]
+    if (magic!=b"KJIT" or abi!=ABI or reserved or
+        packet(code,entry,data[24+code_size:])!=data or
+        len(data)!=24+code_size+input_size or
+        hashlib.sha256(data).hexdigest()!=previous.get("packet_sha256")):
+        raise ValueError("Saved request failed integrity checks")
+    result=agent.status()
+    if (not previous.get("session_id") or result.get("session_id")!=previous["session_id"] or
+        result.get("job_id")!=previous["previous_job_id"]+1 or
+        result.get("code_size")!=code_size or result.get("entry_offset")!=entry):
+        raise RuntimeError("Current job does not match the saved submission; nothing recovered")
+    if result.get("busy") or not result.get("finished"):
+        raise RuntimeError("Matching job is still active; it was not cancelled or resubmitted")
+    output=bytes.fromhex(result.get("output_hex",""))
+    output_path=folder/"output.bin"
+    if output_path.exists() and output_path.read_bytes()!=output:
+        raise RuntimeError("Refusing to replace different existing output")
+    (folder/"recovered-result.json").write_text(json.dumps(result,indent=2)+"\n",encoding="utf-8")
+    output_path.write_bytes(output)
+    return result
+
+
 def compile_payload(source, output_directory, sdk):
     source=Path(source).resolve()
     directory=Path(output_directory).resolve()
@@ -137,6 +167,8 @@ def main():
     parser.add_argument("--sdk",type=Path,default=default_sdk())
     sub=parser.add_subparsers(dest="command",required=True)
     sub.add_parser("status")
+    recover_cmd=sub.add_parser("recover",help="Collect a matching saved submission with GET only")
+    recover_cmd.add_argument("folder",type=Path)
     compile_cmd=sub.add_parser("compile")
     compile_cmd.add_argument("source",type=Path)
     compile_cmd.add_argument("--output",type=Path,default=ROOT/"build/payload")
@@ -157,6 +189,11 @@ def main():
         agent=Agent(args.host,key,args.port)
         if args.command=="status":
             print(json.dumps(agent.status(),indent=2))
+            return
+        if args.command=="recover":
+            result=recover_result(agent,args.folder)
+            show(result)
+            print(f"Recovered with GET only: {args.folder.resolve()}")
             return
         if not 0<args.timeout<=300:
             raise ValueError("Timeout must be between 0 and 300 seconds")

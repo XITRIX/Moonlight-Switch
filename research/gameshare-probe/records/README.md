@@ -1,9 +1,11 @@
 # Portable research records
 
-- console-jobs.jsonl contains 49 allowlisted console result records and physical
+- console-jobs.jsonl contains 66 allowlisted console result records and physical
   screen confirmations, indexed by capture timestamp and original filename.
   Framework publication result and native return_value are distinct. Raw native
   output bytes are omitted, including NACP and executable/memory data.
+  The final 17 records belong to the November16 autonomous continuation; three
+  use recovered-result.json after network reply loss, without POST replay.
 - installed-probe-0.3.1-layout.json contains only our own probe's symbol offsets
   and byte guards. qualify.py --installed-031 regenerates the required inputs.
 - installed-probe-0.3.1-build.json records original artifact/toolchain hashes;

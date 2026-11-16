@@ -149,6 +149,11 @@ reported as uncertain and is never handled by resending. Query `status` first.
 `sd:/switch/gameshare-probe/agent-last.json` independently journals job stage/log
 changes while the app is running. Keys are omitted from both journals.
 
+`python agent.py recover evidence/jobs/TIMESTAMP` recovers a completed matching
+submission with GET only, before another job replaces it. It verifies packet
+integrity, session ID, next job ID, code size and entry point; active or different
+jobs are refused. It preserves differing existing output and never retries POST.
+
 Host validation covers packet bounds/framing, actual AArch64 snippet compilation,
 the NRO build/parser and local HTTP client tests. Actual console qualification
 requires successful remote command responses.

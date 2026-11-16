@@ -1,5 +1,10 @@
 # Continue the GameShare investigation on another PC
 
+The [November16 continuation](notes/SESSION_2026-11-16.md) adds 17 console jobs,
+read-only access diagnostics and guarded result recovery. Matchmaking remains
+blocked at the same native result; its final section lists the new evidence
+needed before more host attempts are likely to be productive.
+
 ## Current result
 
 The native Switch 2 probe initializes StreamPlay, registers real work memory,
@@ -97,6 +102,11 @@ queue a local network reset after finalization. Probe 0.3.1 also shows recent
 logs and provides X to reconnect while idle. Never automatically resend POST
 after a connection error: execution may have happened. Check status/the physical
 screen first. Do not close an NRO with a worker still executing native code.
+
+If a reply was lost, use `python agent.py recover evidence/jobs/TIMESTAMP`
+before submitting another command. This uses GET only, checks the saved packet
+and session/job/image identity, and refuses mismatches or active work. It never
+replays a POST. A completed native failure is still a completed command.
 
 ## Build a replacement NRO without the old workspace
 

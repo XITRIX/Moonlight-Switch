@@ -33,9 +33,10 @@ uint64_t probe_entry(const ResearchApi *api,ResearchContext *ctx) {
     uint32_t scoped=*(uint32_t *)(ctx->state+12);
     uint32_t *initialized=(uint32_t *)(ctx->state+128);
     WorkMemory *work=(WorkMemory *)(ctx->state+256);
-    uint32_t pctl_root=0,pctl=0; bool communication_started=false;
+    uint32_t pctl_root=0,pctl=0,connection_event=0; bool communication_started=false;
     GuestDisplay *display=(GuestDisplay *)(ctx->state+512);
     bool use_display=false;uint32_t tail_kind=0;
+    uint32_t match_flags=8;uint16_t match_feature=0,match_other=0;uint8_t frame_rate=0;
     if (!scoped || *initialized || work->memory) return 2;
     Allocate allocate=(Allocate)api->resolve("aligned_alloc");
     Release release=(Release)api->resolve("free");
@@ -45,7 +46,22 @@ uint64_t probe_entry(const ResearchApi *api,ResearchContext *ctx) {
     if (!allocate || !release || !create || !close || !reconnect) return 3;
     MemoryConfig cfg={.guests=1};
     uint32_t match_command=504;
-    if (ctx->input_size) {
+    if (ctx->input_size==16) {
+        // Explicit experiment input: type, mode, newer-command, display, zero,
+        // frame-rate, zero[2], u32 flags, u16 feature, u16 other. Keep the
+        // native parental communication check mandatory for every variation.
+        if(ctx->input[0]>1 || ctx->input[1]>1 || ctx->input[2]>1 ||
+           ctx->input[3]>1 || ctx->input[4] || ctx->input[5]>2 ||
+           ctx->input[6] || ctx->input[7])return 4;
+        cfg.type=ctx->input[0];cfg.mode=ctx->input[1];
+        match_command=ctx->input[2]?511:504;use_display=ctx->input[3]!=0;
+        frame_rate=ctx->input[5];
+        __builtin_memcpy(&match_flags,ctx->input+8,4);
+        __builtin_memcpy(&match_feature,ctx->input+12,2);
+        __builtin_memcpy(&match_other,ctx->input+14,2);
+        if(match_flags>=64 || (match_flags&24)==24 || match_feature>=32 ||
+           (match_other!=0 && match_other!=1 && match_other!=3))return 4;
+    } else if (ctx->input_size) {
         if ((ctx->input_size<2 || ctx->input_size>5) || ctx->input[0]>1 || ctx->input[1]>1) return 4;
         cfg.type=ctx->input[0];cfg.mode=ctx->input[1];
         if (ctx->input_size>=3) { if(ctx->input[2]!=1)return 4;match_command=511; }
@@ -75,6 +91,23 @@ uint64_t probe_entry(const ResearchApi *api,ResearchContext *ctx) {
     rc=call(api,scoped,2,&init,16,0,0,0,0,1);
     if(rc)goto cleanup;
     *initialized=1;
+    // The recovered SDK obtains/retains this event during Initialize, before
+    // audio setup. Duplicate only our handle; release it after finalization.
+    ResearchReply event_reply={0};
+    ResearchIpc event_req={.command=7,.output_handle_attributes={1}};
+    rc=api->ipc(scoped,&event_req,&event_reply);
+    api->log_value("connection_event_result",rc);if(rc)goto cleanup;
+    connection_event=event_reply.handles[0];
+    if(!connection_event){rc=13;goto cleanup;}
+    for(uint32_t cmd=502;cmd<=503;cmd++) {
+        uint8_t echoed=255;uint32_t query_rc=call(api,scoped,cmd,0,0,&echoed,1,0,0,0);
+        if(!query_rc)api->log_value("initialized_config_byte",echoed);
+        if(query_rc){rc=query_rc;goto cleanup;}
+        if(echoed!=(cmd==502?cfg.type:cfg.mode)){
+            api->log("Initialized config differs from requested config; stopping before matchmaking");
+            rc=14;goto cleanup;
+        }
+    }
     // Initialize also supplies current audio-output settings before matchmaking.
     struct { uint32_t auto_tune; float speaker,tv,external; } volumes={0,1.0f,1.0f,1.0f};
     rc=call(api,scoped,510,&volumes,16,0,0,0,0,0);if(rc)goto cleanup;
@@ -111,7 +144,12 @@ uint64_t probe_entry(const ResearchApi *api,ResearchContext *ctx) {
     rc=call(api,scoped,506,&guest,32,0,0,&work->handles[1],3,0);if(rc)goto cleanup;
     uint32_t style=7;
     rc=call(api,scoped,25,&style,4,0,0,0,0,0);if(rc)goto cleanup;
-    MatchConfig match={.min_guests=1,.max_guests=1,.min_players=1,.max_players=1,.flags=8};
+    MatchConfig match={.min_guests=1,.max_guests=1,.min_players=1,.max_players=1,
+        .flags=match_flags,.feature=match_feature,.other=match_other};
+    api->log_value("match_flags",match_flags);
+    api->log_value("match_feature",match_feature);
+    api->log_value("match_other",match_other);
+    api->log_value("frame_rate",frame_rate);
     // Explicit layout hypothesis: the opaque final 16 bytes may be account::Uid.
     // Only use the actual local selected user; never log its identifier.
     if(tail_kind==1)__builtin_memcpy(match.reserved,ctx->state+768,16);
@@ -124,6 +162,7 @@ uint64_t probe_entry(const ResearchApi *api,ResearchContext *ctx) {
         __builtin_memcpy(match.reserved+(tail_kind==2?0:8),&own_program,8);
     }
     struct { MatchConfig match; uint8_t frame_config[32]; } match_new={.match=match};
+    match_new.frame_config[0]=frame_rate;
     rc=call(api,scoped,match_command,&match_new,match_command==511?64:32,ctx->output,128,0,0,0);
     if(!rc) { ctx->output_size=128;api->log("Matchmaking arguments obtained; no applet or advertisement started"); }
 cleanup:
@@ -137,6 +176,10 @@ cleanup:
         uint32_t done=call(api,scoped,3,0,0,0,0,0,0,0);
         if(done) { api->log("Finalize failed: retaining buffer and owned handles; do not free while shared");return rc?rc:done; }
         *initialized=0;reconnect();
+    }
+    if(connection_event) {
+        uint32_t done=api->handle_close(connection_event);
+        api->log_value("close_connection_event",done);if(done&&!rc)rc=done;
     }
     if(use_display) { uint32_t done=guest_display_close(api,display);if(done && !rc)rc=done; }
     uint32_t close_error=0;

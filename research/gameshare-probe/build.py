@@ -93,7 +93,7 @@ def main():
     with zipfile.ZipFile(dist / "gameshare-probe.zip", "w", zipfile.ZIP_DEFLATED) as package:
         package.write(nro, "switch/gameshare-probe/gameshare-probe.nro")
         entries = list(ROOT.glob("*.py")) + list(ROOT.glob("*.md")) + [ROOT/"payload.ld", ROOT/"payload_runtime.c", ROOT/".gitignore"]
-        for folder in ("source", "examples", "tests", "records", "research-backend", "archive"):
+        for folder in ("source", "examples", "tests", "records", "research-backend", "archive", "notes"):
             entries.extend(p for p in (ROOT/folder).rglob("*") if p.is_file() and "__pycache__" not in p.parts)
         for entry in sorted(entries):
             if entry == ROOT / "examples/own_vi2_symbols.h":

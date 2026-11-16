@@ -1,6 +1,25 @@
 # Native GameShare bring-up, 2026-11-15
 
-## Latest outcome, 23:12 UTC (November 16 local time)
+## Latest continuation, 2026-11-16 00:16 UTC
+
+[The autonomous continuation report](notes/SESSION_2026-11-16.md) records 17
+new console jobs. Seven complete preparation attempts, including isolated
+flags variations, the recovered SDK's event-before-audio order, and verified
+nonzero mode readback, still return **0x2fab1f**. No host is established.
+
+Read-only Chat PID/module inspection works through existing interfaces, but
+the probe has no inherited loader handle, a new fsp-ldr request still returns
+0x615, and loader hints exclude debug/process-memory SVCs. No such SVC was
+invoked. Public reconstructions supply neither the 6101 condition nor the
+complete writer/server code. Further opaque-field guesses would be circular;
+the report lists the concrete evidence needed to resume productively.
+
+The old ordinary-FS result 0xc56ee202 is now decoded as FS description6001,
+within the public InvalidArgument range, not demonstrated permission denial.
+No HEN/RO, metadata, parental setting, save or boot change was made.
+The probe is idle and clean; all owned test resources were released.
+
+## Previous outcome, November15 23:12 UTC (November16 local time)
 
 **Native initialization succeeds; hosting is not established.** Matchmaking
 commands 504 and 511 consistently return 0x2fab1f (module 287, description
