@@ -12,6 +12,7 @@
 #include "loading_overlay.hpp"
 #include <Settings.hpp>
 #include <borealis.hpp>
+#include <chrono>
 #include <optional>
 #include "GameStreamClient.hpp"
 #include "MoonlightSession.hpp"

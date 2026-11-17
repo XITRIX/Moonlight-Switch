@@ -178,7 +178,9 @@ class AVFrameHolder { public:
 #include <vector>
 
 static uint64_t nowMs=100000;
+static uint64_t acquireDelayMs=0;
 extern "C" uint64_t LiGetMillis(void) { return nowMs; }
+extern "C" uint64_t LiGetMicroseconds(void) { return nowMs * 1000; }
 static int creates=0,closes=0,submits=0,copies=0,releases=0,liveFrames=0;
 static int activeSessions=0,sessionCloses=0;
 static Result createError=0,submitError=0,copyError=0,getError=0;
@@ -235,7 +237,7 @@ Result videoDecoderSubmit(VideoDecoder* d,const void* bytes,size_t size,int64_t 
 Result videoDecoderGetFrame(VideoDecoder*,VideoFrame* f,uint64_t) {
  if(getError)return getError;
  if(pending.empty())return KERNELRESULT(TimedOut);
- *f=pending.front();pending.pop_front();return 0;
+ *f=pending.front();pending.pop_front();nowMs+=acquireDelayMs;return 0;
 }
 Result videoDecoderCopyFrame(VideoDecoder*,const VideoFrame* f,uint8_t* y,size_t yp,uint8_t* uv,size_t uvp) {
  ++copies;if(copyError)return copyError;
@@ -262,6 +264,7 @@ static DECODE_UNIT unit() {
  u.bufferList=&parameters1;u.receiveTimeUs=nowMs*1000;u.presentationTimeUs=1000;return u;
 }
 static void reset() {
+ acquireDelayMs=0;
  assert(liveFrames==0 && activeSessions==0);creates=closes=submits=copies=releases=sessionCloses=0;
  createError=submitError=copyError=getError=0;allocationError=false;rejectFastRegistration=false;forceCopy=false;pending.clear();
  Settings::instance().hw=true;softwareSetups=softwareSubmits=softwareCleanups=0;
@@ -284,6 +287,14 @@ int main() {
   assert(lease->frame.planes[1][0]==128 && releases==0 && copies==0); // Slot remains owned by the queued frame.
   nowMs+=1000;assert(d.video_decode_stats()->total_decoded_frames==1);
   d.cleanup();d.cleanup();assert(closes==1 && liveFrames==0);
+ }
+ reset();
+ {
+  Switch2VideoDecoder d;assert(d.setup(VIDEO_FORMAT_H264,16,16,60,nullptr,0)==0);
+  acquireDelayMs=2;auto u=unit();assert(d.submit_decode_unit(&u)==DR_OK);
+  nowMs+=1000;const auto* stats=d.video_decode_stats();
+  assert(stats->total_decode_time==2000 && stats->current_decode_time==2000);
+  assert(stats->current_decoding_time==2 && stats->session_decoding_time==2);
  }
  reset();
  {

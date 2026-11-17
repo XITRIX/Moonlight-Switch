@@ -2,6 +2,7 @@
 
 #include "GameStreamClient.hpp"
 #include "MoonlightSessionDecoderAndRenderProvider.hpp"
+#include <atomic>
 #include <nanovg.h>
 
 struct SessionStats {
@@ -18,6 +19,7 @@ class MoonlightSession {
     ~MoonlightSession();
 
     static MoonlightSession* activeSession();
+    static void requestRestart();
 
     void start(ServerCallback<bool> callback, bool is_sunshine);
     void stop(int terminate_app);
@@ -87,13 +89,14 @@ class MoonlightSession {
     IVideoRenderer* m_video_renderer = nullptr;
     IAudioRenderer* m_audio_renderer = nullptr;
 
-    bool m_is_active = false;
-    bool m_is_terminated = false;
-    bool m_stop_requested = false;
+    std::atomic<bool> m_is_active{false};
+    std::atomic<bool> m_is_terminated{false};
+    std::atomic<bool> m_stop_requested{false};
     uint64_t m_generation = 0;
     bool m_connection_status_is_poor = false;
     bool m_suspended = false;
     bool m_invalidate_renderer_pending = false;
+    bool m_restart_pending = false;
     bool m_use_hdr = false;
 
     SessionStats m_session_stats = {};

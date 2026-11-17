@@ -158,7 +158,7 @@ bool Switch2VideoDecoder::drain(uint64_t timeout)
     // Limit each batch, allowing the submitter to acquire the mutex at 120 FPS.
     for (unsigned count = 0; count < VIDEO_DECODER_DEFAULT_IMAGES; ++count)
     {
-        const uint64_t before = LiGetMillis();
+        const uint64_t before = LiGetMicroseconds();
         VideoFrame frame { };
         Result rc = videoDecoderGetFrame(&m_pool->decoder, &frame, count ? 0 : timeout);
         if (timedOut(rc))
@@ -209,7 +209,7 @@ bool Switch2VideoDecoder::drain(uint64_t timeout)
         AVFrameHolder::instance().pushTransferred(output);
         switch2WakeVideoFrame();
         const uint64_t now      = LiGetMillis();
-        const uint32_t copyTime = uint32_t(now - before);
+        const uint64_t copyTime = LiGetMicroseconds() - before;
         m_progress.current_decode_time += copyTime;
         m_progress.total_decode_time += copyTime;
         auto timing = std::find_if(m_pending_times.begin(), m_pending_times.end(),
@@ -348,13 +348,13 @@ VideoDecodeStats* Switch2VideoDecoder::video_decode_stats()
         m_snapshot.current_host_fps
             = now > m_started_ms ? float(m_progress.total_frames) * 1000 / float(now - m_started_ms) : 0;
         m_snapshot.current_decoding_time = m_progress.current_decoded_frames
-            ? float(m_progress.current_decode_time) / m_progress.current_decoded_frames
+            ? float(m_progress.current_decode_time) / 1000.0f / m_progress.current_decoded_frames
             : 0;
         m_snapshot.current_decoder_delay = m_progress.current_decoded_frames
             ? float(m_progress.current_decoder_delay_time) / m_progress.current_decoded_frames
             : 0;
         m_snapshot.session_decoding_time = m_progress.total_decoded_frames
-            ? float(m_progress.total_decode_time) / m_progress.total_decoded_frames
+            ? float(m_progress.total_decode_time) / 1000.0f / m_progress.total_decoded_frames
             : 0;
         m_snapshot.session_decoder_delay = m_progress.total_decoded_frames
             ? float(m_progress.total_decoder_delay_time) / m_progress.total_decoded_frames

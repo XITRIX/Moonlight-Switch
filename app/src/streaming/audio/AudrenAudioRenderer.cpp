@@ -57,12 +57,18 @@ int AudrenAudioRenderer::init(int audio_configuration,
                        m_channel_count, m_sample_rate, m_frame_samples);
 
     m_decoded_buffer = (s16*)malloc(m_buffer_size);
+    if (!m_decoded_buffer)
+        return -1;
 
     int error;
     m_decoder = opus_multistream_decoder_create(
         opus_config->sampleRate, opus_config->channelCount,
         opus_config->streams, opus_config->coupledStreams, opus_config->mapping,
         &error);
+    if (!m_decoder || error != OPUS_OK) {
+        cleanup();
+        return -1;
+    }
 
     memset(&m_driver, 0, sizeof(m_driver));
     memset(m_wavebufs, 0, sizeof(m_wavebufs));
@@ -94,6 +100,7 @@ int AudrenAudioRenderer::init(int audio_configuration,
         cleanup();
         return -1;
     }
+    m_inited_driver = true;
 
     for (int i = 0; i < BUFFER_COUNT; i++) {
         m_wavebufs[i].data_raw = mempool_ptr;
@@ -112,6 +119,8 @@ int AudrenAudioRenderer::init(int audio_configuration,
     rc = audrenStartAudioRenderer();
     if (R_FAILED(rc)) {
         brls::Logger::error("Audren: audrenStartAudioRenderer: {:x}", rc);
+        cleanup();
+        return -1;
     }
 
     audrvVoiceInit(&m_driver, 0, m_channel_count, PcmFormat_Int16,

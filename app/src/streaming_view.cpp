@@ -417,7 +417,7 @@ void StreamingView::draw(NVGcontext* vg, float x, float y, float width,
 
 std::string StreamingView::buildStatsText() {
     auto stats = session->session_stats();
-    
+
     auto statistics = fmt::format(
                 "Estimated host PC frame rate: {:.{}f} FPS\n"
                     "Incoming frame rate from network: {:.{}f} FPS\n"
@@ -427,7 +427,7 @@ std::string StreamingView::buildStatsText() {
                 stats->video_decode_stats.current_received_fps, 2,
                 stats->video_decode_stats.current_decoded_fps, 2,
                 stats->video_render_stats.rendered_fps, 2);
-    
+
     statistics += fmt::format("Frames dropped by your network connection: {}\n"
                               "Average receive time: {:.{}f} | {:.{}f} ms\n"
                               "Average decode time: {:.{}f} | {:.{}f} ms\n"
@@ -441,12 +441,12 @@ std::string StreamingView::buildStatsText() {
                               stats->video_decode_stats.current_decoder_delay, 2,
                               stats->video_decode_stats.session_decoder_delay, 2,
                               stats->video_render_stats.rendering_time, 2);
-    
+
     if (stats->video_render_stats.gpu_timed_frames > 0) {
         statistics += fmt::format("Average GPU render time: {:.{}f} ms\n",
                                   stats->video_render_stats.gpu_rendering_time, 2);
     }
-    
+
     if (stats->video_render_stats.post_processed_frames > 0) {
         statistics += fmt::format(
             "Average post-processing pass time: {:.{}f} ms (D:{:.{}f} | U:{:.{}f} | S:{:.{}f})\n",
@@ -458,7 +458,7 @@ std::string StreamingView::buildStatsText() {
             /*stats->video_render_stats.post_processed_frames, */
             /*stats->video_render_stats.rendered_frames*/);
     }
-    
+
     statistics += fmt::format("Frames queue underflows | skipped: {} | {}\n"
                               "Queue empty | startup holds: {} | {}\n"
                               "Queue overflow | paced skips: {} | {}\n"
@@ -676,7 +676,7 @@ StreamingView::~StreamingView() {
 #ifdef PLATFORM_TVOS
     updatePreferredDisplayMode(false);
 #endif
-    
+
     Application::getPlatform()->disableScreenDimming(false);
     Application::getWindowFocusChangedEvent()->unsubscribe(
         windowFocusSubscription);

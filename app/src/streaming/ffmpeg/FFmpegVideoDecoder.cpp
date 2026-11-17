@@ -694,6 +694,8 @@ void FFmpegVideoDecoder::cleanup() {
 }
 
 int FFmpegVideoDecoder::submit_decode_unit(PDECODE_UNIT decode_unit) {
+    if (!decode_unit || decode_unit->fullLength <= 0)
+        return DR_NEED_IDR;
     // Grow the reassembly buffer for oversized frames (large keyframes at high
     // bitrate) instead of dropping them, which left the picture corrupted
     // until the host happened to send another keyframe.
@@ -768,10 +770,14 @@ int FFmpegVideoDecoder::submit_decode_unit(PDECODE_UNIT decode_unit) {
 
         int length = 0;
         while (entry != nullptr) {
+            if (entry->length < 0 || entry->length > decode_unit->fullLength - length)
+                return DR_NEED_IDR;
             memcpy(m_ffmpeg_buffer + length, entry->data, entry->length);
             length += entry->length;
             entry = entry->next;
         }
+        if (length != decode_unit->fullLength)
+            return DR_NEED_IDR;
         memset(m_ffmpeg_buffer + length, 0, AV_INPUT_BUFFER_PADDING_SIZE);
 
         m_video_decode_stats_progress.current_reassembly_time += LiGetMillis() - (decode_unit->receiveTimeUs / 1000);
@@ -877,10 +883,7 @@ int FFmpegVideoDecoder::submit_decode_unit(PDECODE_UNIT decode_unit) {
             if (reconnect && !m_reconnect_requested) {
                 m_reconnect_requested = true;
                 brls::Logger::error("FFmpeg: Decoder keeps failing, reconnecting");
-                brls::sync([] {
-                    if (MoonlightSession::activeSession() != nullptr)
-                        MoonlightSession::activeSession()->restart();
-                });
+                MoonlightSession::requestRestart();
             }
             return DR_NEED_IDR;
         }
