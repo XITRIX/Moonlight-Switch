@@ -25,7 +25,7 @@ Borealis UI timing uses the SDK counter conversion for Switch 2's 31.25 MHz
 timer. The former 19.2 MHz conversion made animations and button repeat run
 about 1.63 times too fast. Slider movement, controller scrolling and swipe
 inertia now use measured elapsed time rather than the averaged FPS counter.
-The build runs `extern/borealis/tests/test_timing.py` with simulated Switch 1/2
+With `--run-tests`, the build runs `extern/borealis/tests/test_timing.py` with simulated Switch 1/2
 clocks at 30/60/120/144 FPS and variable cadence; on-device UI timing still needs
 confirmation.
 
@@ -36,8 +36,10 @@ at `../devkitPro`. Run from this repository in PowerShell:
 
 ```powershell
 ./scripts/switch2/build.ps1
-# After dependencies have built:
-./scripts/switch2/build.ps1 -Target app
+# Include host regression tests:
+./scripts/switch2/build.ps1 -RunTests
+# Rebuild dependencies and the app from scratch:
+./scripts/switch2/build.ps1 -CleanBuild
 ```
 
 Use `-MsysRoot` and `-DevkitProDirectory` for different installations. Host tools
@@ -52,8 +54,18 @@ the candidate, and `validation.json` records its uncommitted dependencies.
 All ABI, shader and linker checks still run. Normal builds and CI require
 committed dependency changes.
 
-On Linux/MSYS2, export `DEVKITPRO`, then run `bash scripts/switch2/build.sh`.
-`libraries` builds just dependencies; `app` builds the application. Outputs:
+On macOS/Linux/MSYS2, export `DEVKITPRO`, then run `bash scripts/switch2/build.sh`.
+Every build automatically reuses cached dependencies and app objects. There are
+no separate app/dependency build modes. Add `--clean-build` to remove Switch 2
+dependency builds, extracted dependency sources, generated shaders and app
+outputs before rebuilding. Downloaded source archives and other platform builds
+are retained. A custom `MOONLIGHT_SWITCH2_BUILD_DIR` must be under `build/` to
+use `--clean-build`.
+Host regression tests are skipped by default. Add `--run-tests` to run them,
+for example `bash scripts/switch2/build.sh --run-tests`. CI uses `--run-tests`
+and restores its dependency cache. SDK identification,
+shader compilation/validation and final NRO verification still run on regular
+app builds. Outputs:
 
 - `build/deps/switch2`: static dependencies and headers, rebuilt for libounce.
 - `build/switch2/Moonlight-Switch.nro`: NRO with embedded resources.
@@ -89,6 +101,10 @@ The Switch 2 job runs on a GitHub-hosted Ubuntu runner in
 after checking the archive against the SHA-256 pinned in the workflow. No private
 SDK access or self-hosted runner is needed. The verifier accepts both the current
 `ounce-devkit-version.txt` record and the earlier `ounce-sdk-version.txt` name.
+Package-based installations are identified by the installed `libounce` and
+`ouncevk` versions in the selected devkitPro installation's package database.
+The build checks SDK identity before building dependencies and prints the final
+NRO path after successful verification.
 
 The job caches project-local dependencies using the SDK checksum and dependency
 build inputs. It runs the host regressions, compiles and validates shaders, and

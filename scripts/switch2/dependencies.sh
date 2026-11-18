@@ -14,22 +14,28 @@ toolchain="$DEVKITPRO/libounce/cmake/Switch2.cmake"
 mkdir -p "$src" "$work" "$prefix"
 fetch() {
     local name=$1 url=$2
-    if [ ! -f "$src/$name.tar" ]; then
-        curl --fail --location --retry 3 "$url" -o "$src/$name.tar"
-    fi
-    local checksum
-    checksum=$(awk -v file="$name.tar" '$2 == file { print }' "$root/scripts/switch2/sources.sha256")
+    local archive="$src/$name.tar" checksum download
+    checksum=$(awk -v file="$name.tar" '$2 == file { print $1 }' "$root/scripts/switch2/sources.sha256")
     [ -n "$checksum" ] || {
         echo "No checksum for $name" >&2
         exit 1
     }
-    (
-        cd "$src"
-        printf '%s\n' "$checksum" | sha256sum --check --status
-    )
+    if [ ! -f "$archive" ] || ! printf '%s  %s\n' "$checksum" "$archive" | sha256sum --check --status; then
+        download=$(mktemp "$archive.XXXXXX")
+        if ! curl --fail --location --retry 3 "$url" -o "$download"; then
+            rm -f "$download"
+            return 1
+        fi
+        if ! printf '%s  %s\n' "$checksum" "$download" | sha256sum --check --status; then
+            echo "SHA-256 mismatch for $name downloaded from $url" >&2
+            rm -f "$download"
+            return 1
+        fi
+        mv -f "$download" "$archive"
+    fi
     if [ ! -d "$src/$name" ]; then
         mkdir -p "$src/$name"
-        tar -xf "$src/$name.tar" -C "$src/$name" --strip-components=1 \
+        tar -xf "$archive" -C "$src/$name" --strip-components=1 \
             --exclude='*/tests/cli-tests/bin'
     fi
 }
@@ -52,7 +58,7 @@ lib() {
         touch "$work/$name.done"
     fi
 }
-fetch zlib https://zlib.net/fossils/zlib-1.3.1.tar.gz
+fetch zlib https://github.com/madler/zlib/releases/download/v1.3.1/zlib-1.3.1.tar.gz
 lib zlib -DZLIB_BUILD_EXAMPLES=OFF
 fetch mbedtls https://github.com/Mbed-TLS/mbedtls/archive/refs/tags/v2.28.10.tar.gz
 if [ ! -f "$src/mbedtls/.moonlight-entropy" ]; then
@@ -60,7 +66,17 @@ if [ ! -f "$src/mbedtls/.moonlight-entropy" ]; then
     printf '\ntarget_sources(mbedcrypto PRIVATE "%s/scripts/switch2/mbedtls_entropy.c")\n' "$root" >>"$src/mbedtls/library/CMakeLists.txt"
     touch "$src/mbedtls/.moonlight-entropy"
 fi
-sed -i -E 's/^#define (MBEDTLS_TIMING_C|MBEDTLS_HAVEGE_C|MBEDTLS_NET_C)$/\/\/ #define \1/' "$src/mbedtls/include/mbedtls/config.h"
+python3 - "$src/mbedtls/include/mbedtls/config.h" <<'PY'
+import re
+import sys
+from pathlib import Path
+
+config = Path(sys.argv[1])
+config.write_text(re.sub(
+    r"^#define (MBEDTLS_TIMING_C|MBEDTLS_HAVEGE_C|MBEDTLS_NET_C)$",
+    r"// #define \1", config.read_text(), flags=re.MULTILINE,
+))
+PY
 lib mbedtls -DENABLE_PROGRAMS=OFF -DENABLE_TESTING=OFF
 fetch curl https://curl.se/download/curl-8.14.1.tar.xz
 lib curl -DBUILD_CURL_EXE=OFF -DBUILD_TESTING=OFF -DCURL_USE_MBEDTLS=ON \

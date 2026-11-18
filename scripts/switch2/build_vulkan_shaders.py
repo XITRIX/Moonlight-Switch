@@ -9,8 +9,14 @@ import shutil
 import struct
 import subprocess
 from pathlib import Path
+from sdk_identity import sdk_identity
 
 ROOT = Path(__file__).resolve().parents[2]
+
+
+def write_if_changed(path, content):
+    if not path.is_file() or path.read_text() != content:
+        path.write_text(content)
 
 
 def main():
@@ -68,8 +74,8 @@ def main():
             [validator, "--target-env", "vulkan1.1", str(binary)], check=True
         )
         record[source.relative_to(ROOT).as_posix()] = hashlib.sha256(data).hexdigest()
-    (output / "video_spirv.hpp").write_text(header)
-    (output / "shader-validation.json").write_text(json.dumps(record, indent=2) + "\n")
+    write_if_changed(output / "video_spirv.hpp", header)
+    write_if_changed(output / "shader-validation.json", json.dumps(record, indent=2) + "\n")
     fingerprint = hashlib.sha256()
     inputs = [ROOT / "CMakeLists.txt", ROOT / "extern/cmake/toolchain.cmake"]
     for folder in (
@@ -110,28 +116,15 @@ def main():
         fingerprint.update(name.encode() + revision.encode())
         fingerprint.update(subprocess.check_output(git + ["diff", "HEAD", "--"]))
     sdk_root = Path(os.environ["DEVKITPRO"])
-    sdk_version = next(
-        (
-            path
-            for path in (
-                sdk_root / "ounce-devkit-version.txt",
-                sdk_root / "ounce-sdk-version.txt",
-            )
-            if path.is_file()
-        ),
-        None,
-    )
-    if not sdk_version:
-        raise SystemExit("SDK version record is missing")
-    sdk_identity = sdk_version.read_text().strip()
-    fingerprint.update(b"sdk\0" + sdk_identity.encode())
+    sdk_version = sdk_identity(sdk_root)
+    fingerprint.update(b"sdk\0" + sdk_version.encode())
     build_id = fingerprint.hexdigest()[:20]
-    (output / "switch2_build_id.hpp").write_text(
+    write_if_changed(output / "switch2_build_id.hpp",
         '#define MOONLIGHT_SWITCH2_BUILD_ID "' + build_id + '"\n'
     )
-    (output / "source-fingerprint.json").write_text(
+    write_if_changed(output / "source-fingerprint.json",
         json.dumps(
-            {"buildId": build_id, "dependencies": dependencies, "sdk": sdk_identity},
+            {"buildId": build_id, "dependencies": dependencies, "sdk": sdk_version},
             indent=2,
         )
         + "\n"

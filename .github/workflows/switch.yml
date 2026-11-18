@@ -117,7 +117,7 @@ jobs:
 
       - name: Build and validate native Vulkan NRO
         if: matrix.platform == 'switch2'
-        run: bash scripts/switch2/build.sh all
+        run: bash scripts/switch2/build.sh --run-tests
 
       - name: Package the SD card installation
         if: matrix.platform == 'switch2'

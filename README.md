@@ -161,6 +161,10 @@ bash scripts/switch2/build.sh
 ```
 
 The resulting package is written to `build/switch2/Moonlight-Switch.nro`.
+Add `--run-tests` to include host regression tests; regular builds skip them.
+Builds automatically reuse downloaded sources, compiled dependencies and app objects.
+Add `--clean-build` to rebuild dependencies and the app from scratch; downloaded
+source archives are retained.
 
 ### PS Vita
 

@@ -7,6 +7,7 @@ import json
 import os
 import subprocess
 from pathlib import Path
+from sdk_identity import sdk_identity
 
 ROOT = Path(__file__).resolve().parents[2]
 BUILD = ROOT / os.environ.get("MOONLIGHT_SWITCH2_BUILD_DIR", "build/switch2")
@@ -139,24 +140,13 @@ def main():
         ).strip()
         assert args.allow_dirty_dependencies or not dirty, name + " must be committed"
         dependency_changes[name] = bool(dirty)
-    sdk_version = next(
-        (
-            path
-            for path in (
-                sdk / "ounce-devkit-version.txt",
-                sdk / "ounce-sdk-version.txt",
-            )
-            if path.is_file()
-        ),
-        None,
-    )
-    assert sdk_version, "SDK version record is missing"
-    assert fingerprint.get("sdk") == sdk_version.read_text().strip(), (
+    sdk_version = sdk_identity(sdk)
+    assert fingerprint.get("sdk") == sdk_version, (
         "Build fingerprint does not match the active SDK"
     )
     record = {
         "platform": "Switch 2",
-        "sdk": sdk_version.read_text().strip(),
+        "sdk": sdk_version,
         "renderer": "Native Vulkan UI and video over OunceVK; no GL, EGL or Zink",
         "decoder": "SDK hardware H.264 leased NV12; AV1 copy-back; HEVC FFmpeg software",
         "nativeVulkanOnly": True,
