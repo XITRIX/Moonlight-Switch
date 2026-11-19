@@ -10,6 +10,7 @@
 #include "gestures/fingers_gesture_recognizer.hpp"
 #include "keyboard_view.hpp"
 #include "loading_overlay.hpp"
+#include "onscreen_gamepad.hpp"
 #include <Settings.hpp>
 #include <borealis.hpp>
 #include <chrono>
@@ -44,6 +45,8 @@ class StreamingView : public brls::Box {
     LoadingOverlay* loader = nullptr;
     Box* keyboardHolder = nullptr;
     KeyboardView* keyboard = nullptr;
+    OnscreenGamepad onscreenGamepad;
+    bool onscreenGamepadShown = false;
     bool blocked = false;
     bool terminated = false;
     bool tempInputLock = false;
@@ -63,6 +66,8 @@ class StreamingView : public brls::Box {
     float statsBounds[4] = {0, 0, 0, 0};
 
     void handleInput();
+    void updateOnscreenGamepad(float width);
+    bool onscreenGamepadHeld() const;
     void handleOverlayCombo();
     void handleMouseInputCombo();
     void addKeyboard();

@@ -13,6 +13,7 @@
 #include <atomic>
 #include <chrono>
 #include <optional>
+#include <set>
 
 // Moonlight ready gamepad
 struct GamepadState {
@@ -61,6 +62,8 @@ class MoonlightInputManager : public Singleton<MoonlightInputManager> {
     void updateTouchScreenPanDelta(brls::PanGestureStatus panStatus);
     void reloadButtonMappingLayout();
     void setInputEnabled(bool enabled) { inputEnabled = enabled; }
+    void setOnscreenPad(std::optional<GamepadState> state) { onscreenPad = state; }
+    void setOnscreenPadTouches(std::set<int> touches) { onscreenPadTouches = std::move(touches); }
     static void leftMouseClick();
     static void rightMouseClick();
 
@@ -72,7 +75,9 @@ class MoonlightInputManager : public Singleton<MoonlightInputManager> {
     };
 
     RumbleValues rumbleCache[GAMEPADS_MAX];
-    GamepadState lastGamepadStates[GAMEPADS_MAX];
+    GamepadState lastGamepadStates[GAMEPADS_MAX + 1];
+    std::optional<GamepadState> onscreenPad;
+    std::set<int> onscreenPadTouches;
     brls::ControllerButton mappingButtons[brls::_BUTTON_MAX];
     std::optional<brls::PanGestureStatus> panStatus;
     std::map<uint32_t, bool> activeTouchIDs;
@@ -91,7 +96,7 @@ class MoonlightInputManager : public Singleton<MoonlightInputManager> {
     bool inputDropped = false;
     bool inputEnabled = true;
     std::atomic<bool> resetControllers = true;
-    int announcedControllerCount = -1;
+    short announcedControllers = 0;
 
     brls::ControllerState mapController(brls::ControllerState controller);
     static short glfwKeyToVKKey(brls::BrlsKeyboardScancode key);
@@ -101,5 +106,5 @@ class MoonlightInputManager : public Singleton<MoonlightInputManager> {
     GamepadState getControllerState(int controllerNum, bool specialKey);
     void handleControllers(bool specialKey);
 
-    static short controllersToMap();
+    static short connectedControllers();
 };

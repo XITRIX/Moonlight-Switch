@@ -245,6 +245,12 @@ OptionsTab::OptionsTab(StreamingView* streamView) : streamView(streamView) {
                                [](bool value) {
                                    Settings::instance().set_touchscreen_mouse_mode(value);
                                });
+
+    onscreenGamepad->init("settings/onscreen_gamepad"_i18n,
+                          Settings::instance().onscreen_gamepad(),
+                          [](bool value) {
+                              Settings::instance().set_onscreen_gamepad(value);
+                          });
     
     swapStickToDpad->init("settings/swap_stick_to_dpad"_i18n, Settings::instance().swap_joycon_stick_to_dpad(),
                           [](bool value) { Settings::instance().set_swap_joycon_stick_to_dpad(value); });

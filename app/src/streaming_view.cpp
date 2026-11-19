@@ -6,6 +6,7 @@
 //
 
 #ifdef __SWITCH__
+#include <switch.h>
 #include <borealis/platforms/switch/switch_input.hpp>
 #endif
 
@@ -145,11 +146,13 @@ StreamingView::StreamingView(const Host& host, const AppInfo& app) : host(host),
     static bool lMouseKeyUsed = false;
     addGestureRecognizer(new FingersGestureRecognizer([](){
                              return Settings::instance().get_keyboard_fingers();
-                         }, [this] { addKeyboard(); }));
+                         }, [this] {
+                             if (!onscreenGamepadHeld()) addKeyboard();
+                         }));
 
     addGestureRecognizer(
-        new ClickGestureRecognizer(1, [](TapGestureStatus status) {
-            if (Settings::instance().touchscreen_mouse_mode()) return;
+        new ClickGestureRecognizer(1, [this](TapGestureStatus status) {
+            if (Settings::instance().touchscreen_mouse_mode() || onscreenGamepadHeld()) return;
 
             if (status.state == brls::GestureState::END) {
                 Logger::debug("Left mouse click");
@@ -160,8 +163,8 @@ StreamingView::StreamingView(const Host& host, const AppInfo& app) : host(host),
         }));
 
     addGestureRecognizer(
-        new ClickGestureRecognizer(2, [](TapGestureStatus status) {
-            if (Settings::instance().touchscreen_mouse_mode()) return;
+        new ClickGestureRecognizer(2, [this](TapGestureStatus status) {
+            if (Settings::instance().touchscreen_mouse_mode() || onscreenGamepadHeld()) return;
 
             if (status.state == brls::GestureState::END) {
                 Logger::debug("Right mouse click");
@@ -181,13 +184,14 @@ StreamingView::StreamingView(const Host& host, const AppInfo& app) : host(host),
 
             // Open overlay by swipe from left screen corner
             bool hasControllers = Application::getPlatform()->getInputManager()->getControllersConnectedCount() > 0;
-            if (!hasControllers && !overlayTriggered && status.state == brls::GestureState::STAY && status.startPosition.x < 100 && status.position.x > 200) {
+            bool onPad = onscreenGamepadShown && onscreenGamepad.hit(status.startPosition, getWidth());
+            if (!hasControllers && !onPad && !overlayTriggered && status.state == brls::GestureState::STAY && status.startPosition.x < 100 && status.position.x > 200) {
                 overlayTriggered = true;
                 auto overlay = new IngameOverlay(this);
                 Application::pushActivity(new Activity(overlay));
             }
 
-            if (Settings::instance().touchscreen_mouse_mode()) return;
+            if (Settings::instance().touchscreen_mouse_mode() || onscreenGamepadHeld()) return;
 
             if (status.state == brls::GestureState::UNSURE && lMouseKeyGate) {
                 lMouseKeyGate = false;
@@ -218,7 +222,7 @@ StreamingView::StreamingView(const Host& host, const AppInfo& app) : host(host),
 
     scrollTouchRecognizer = new TwoFingerScrollGestureRecognizer(
             [this](TwoFingerScrollState state) {
-                if (Settings::instance().touchscreen_mouse_mode()) return;
+                if (Settings::instance().touchscreen_mouse_mode() || onscreenGamepadHeld()) return;
 
                 if (state.state == brls::GestureState::START)
                     this->touchScrollCounter = 0;
@@ -354,6 +358,7 @@ void StreamingView::draw(NVGcontext* vg, float x, float y, float width,
 
     session->draw(vg, (int) width, (int) height);
 
+    updateOnscreenGamepad(width);
     if (!tempInputLock && session->is_active())
         handleInput();
     handleOverlayCombo();
@@ -412,7 +417,35 @@ void StreamingView::draw(NVGcontext* vg, float x, float y, float width,
         nvgTextBox(vg, 20, 30, width, statsText.c_str(), nullptr);
     }
 
+    if (onscreenGamepadShown)
+        onscreenGamepad.draw(vg, width);
+
     Box::draw(vg, x, y, width, height, style, ctx);
+}
+
+void StreamingView::updateOnscreenGamepad(float width) {
+#ifdef __SWITCH__
+    const bool handheld = appletGetOperationMode() == AppletOperationMode_Handheld;
+#else
+    const bool handheld = true;
+#endif
+    onscreenGamepadShown = Settings::instance().onscreen_gamepad() && handheld &&
+                           !keyboard && session->is_active();
+
+    if (onscreenGamepadShown && this->focused)
+        onscreenGamepad.update(Application::currentTouchState, width);
+    else
+        onscreenGamepad.release();
+
+    auto& input = MoonlightInputManager::instance();
+    input.setOnscreenPad(onscreenGamepadShown
+                             ? std::optional<GamepadState>(onscreenGamepad.state())
+                             : std::nullopt);
+    input.setOnscreenPadTouches(onscreenGamepad.touches());
+}
+
+bool StreamingView::onscreenGamepadHeld() const {
+    return onscreenGamepadShown && onscreenGamepad.holding();
 }
 
 std::string StreamingView::buildStatsText() {
