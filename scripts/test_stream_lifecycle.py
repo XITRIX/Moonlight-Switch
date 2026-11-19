@@ -170,7 +170,7 @@ CONTROLLERS = r"""
 #include <map>
 #include <optional>
 constexpr int GAMEPADS_MAX=5,LI_CTYPE_UNKNOWN=0;
-constexpr int LI_CCAP_RUMBLE=1,LI_CCAP_ACCEL=2,LI_CCAP_GYRO=4;
+constexpr int LI_CCAP_RUMBLE=1,LI_CCAP_TRIGGER_RUMBLE=2,LI_CCAP_ACCEL=4,LI_CCAP_GYRO=8;
 static int controllerCount=1,arrivals=0,states=0,failArrival=0;
 namespace brls {
 struct Point {float x=0,y=0;};

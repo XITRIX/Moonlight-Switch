@@ -43,10 +43,10 @@ struct MouseStateS {
 };
 
 struct RumbleValues {
-    unsigned short lowFreqMotor;
-    unsigned short highFreqMotor;
-    uint16_t leftTriggerMotor;
-    uint16_t rightTriggerMotor;
+    unsigned short lowFreqMotor = 0;
+    unsigned short highFreqMotor = 0;
+    uint16_t leftTriggerMotor = 0;
+    uint16_t rightTriggerMotor = 0;
 };
 
 class MoonlightInputManager : public Singleton<MoonlightInputManager> {
@@ -61,6 +61,7 @@ class MoonlightInputManager : public Singleton<MoonlightInputManager> {
     void updateTouchScreenPanDelta(brls::PanGestureStatus panStatus);
     void reloadButtonMappingLayout();
     void setInputEnabled(bool enabled) { inputEnabled = enabled; }
+    void setRumbleEnabled(bool enabled);
     static void leftMouseClick();
     static void rightMouseClick();
 
@@ -90,6 +91,7 @@ class MoonlightInputManager : public Singleton<MoonlightInputManager> {
     std::chrono::steady_clock::time_point lastDesktopScrollEvent;
     bool inputDropped = false;
     bool inputEnabled = true;
+    std::atomic<bool> rumbleEnabled = true;
     std::atomic<bool> resetControllers = true;
     int announcedControllerCount = -1;
 

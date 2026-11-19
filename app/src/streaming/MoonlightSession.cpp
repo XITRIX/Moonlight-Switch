@@ -170,7 +170,7 @@ void MoonlightSession::connection_rumble_triggers(uint16_t controllerNumber,
                                                   uint16_t leftTriggerMotor, 
                                                   uint16_t rightTriggerMotor) 
 {
-    // MoonlightInputManager::instance().handleRumbleTriggers(controllerNumber, leftTriggerMotor, rightTriggerMotor);                                                
+    MoonlightInputManager::instance().handleRumbleTriggers(controllerNumber, leftTriggerMotor, rightTriggerMotor);
 }
 
 void MoonlightSession::connection_status_update(int connection_status) {
