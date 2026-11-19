@@ -14,6 +14,8 @@
 using namespace brls::literals;
 
 namespace {
+constexpr brls::Time HOST_POLL_INTERVAL_MS = 10000;
+
 std::string host_subtitle(const Host& host) {
     std::string subtitle = host.address;
     if (!host.remoteAddress.empty() && host.remoteAddress != host.address) {
@@ -30,6 +32,8 @@ HostTab::HostTab(const Host& host) : host(host) {
 
     remove->setText("common/remove"_i18n);
     remove->title->setTextColor(RGB(229, 57, 53));
+
+    pollTimer.setCallback([this] { pollHost(); });
 
     reloadHost();
 
@@ -117,7 +121,18 @@ HostTab::HostTab(const Host& host) : host(host) {
     });
 }
 
+void HostTab::willAppear(bool resetState) {
+    Box::willAppear(resetState);
+    pollTimer.start(HOST_POLL_INTERVAL_MS);
+}
+
+void HostTab::willDisappear(bool resetState) {
+    Box::willDisappear(resetState);
+    pollTimer.stop();
+}
+
 void HostTab::reloadHost() {
+    reloadGeneration++;
     state = FETCHING;
     header->setTitle("host/status"_i18n + ": " + "host/fetching"_i18n);
     header->setSubtitle(host_subtitle(host));
@@ -138,10 +153,43 @@ void HostTab::reloadHost() {
                 connect->setText("host/connect"_i18n);
                 state = AVAILABLE;
             } else {
-                header->setTitle("host/status"_i18n + ": " +
-                                 "host/unable"_i18n);
-                connect->setText("host/wake_up"_i18n);
-                state = UNAVAILABLE;
+                showUnavailable();
+            }
+        });
+}
+
+void HostTab::showUnavailable() {
+    header->setTitle("host/status"_i18n + ": " + "host/unable"_i18n);
+    header->setSubtitle(host_subtitle(host));
+    connect->setText("host/wake_up"_i18n);
+    state = UNAVAILABLE;
+}
+
+void HostTab::pollHost() {
+    if (polling || state == FETCHING)
+        return;
+
+    auto activities = Application::getActivitiesStack();
+    if (activities.empty() || activities.back() != getParentActivity())
+        return;
+
+    polling = true;
+    const auto generation = reloadGeneration;
+
+    ASYNC_RETAIN
+    GameStreamClient::instance().check_online(
+        host, [ASYNC_TOKEN, generation](const GSResult<bool>& result) {
+            ASYNC_RELEASE
+
+            polling = false;
+            if (generation != reloadGeneration || state == FETCHING)
+                return;
+
+            const bool online = result.isSuccess() && result.value();
+            if (online && state == UNAVAILABLE) {
+                reloadHost();
+            } else if (!online && state == AVAILABLE) {
+                showUnavailable();
             }
         });
 }
