@@ -10,6 +10,9 @@
 #include "Settings.hpp"
 #include "streaming_view.hpp"
 
+static const int BOXART_FETCH_ATTEMPTS = 3;
+static const long BOXART_RETRY_DELAY_MS = 2000;
+
 AppCell::AppCell(const Host& host, const AppInfo& app, int currentApp) {
     this->inflateFromXMLRes("xml/cells/app_cell.xml");
     this->setFavorite(false);
@@ -37,20 +40,33 @@ AppCell::AppCell(const Host& host, const AppInfo& app, int currentApp) {
     if (BoxArtManager::instance().has_boxart(app.app_id))
         image->setImageFromFile(
             BoxArtManager::get_texture_path(app.app_id));
-    else {
-        ASYNC_RETAIN
-        GameStreamClient::instance().app_boxart(
-            host, app.app_id, [ASYNC_TOKEN, host, app](auto result) {
-                ASYNC_RELEASE
+    else
+        fetchBoxArt(host, app.app_id, 1);
+}
 
-                if (result.isSuccess()) {
-                    BoxArtManager::instance().set_data(result.value(),
-                                                       app.app_id);
-                    image->setImageFromFile(
-                        BoxArtManager::get_texture_path(app.app_id));
-                }
-            });
-    }
+void AppCell::fetchBoxArt(const Host& host, int appId, int attempt) {
+    ASYNC_RETAIN
+    GameStreamClient::instance().app_boxart(
+        host, appId, [ASYNC_TOKEN, host, appId, attempt](auto result) {
+            ASYNC_RELEASE
+
+            if (result.isSuccess()) {
+                BoxArtManager::instance().set_data(result.value(), appId);
+                image->setImageFromFile(
+                    BoxArtManager::get_texture_path(appId));
+            } else if (attempt < BOXART_FETCH_ATTEMPTS) {
+                retryBoxArt(host, appId, attempt);
+            }
+        });
+}
+
+void AppCell::retryBoxArt(const Host& host, int appId, int attempt) {
+    ASYNC_RETAIN
+    brls::delay(BOXART_RETRY_DELAY_MS * attempt,
+                [ASYNC_TOKEN, host, appId, attempt] {
+                    ASYNC_RELEASE
+                    fetchBoxArt(host, appId, attempt + 1);
+                });
 }
 
 void AppCell::setFavorite(bool favorite) {
