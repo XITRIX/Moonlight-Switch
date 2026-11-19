@@ -274,6 +274,11 @@ void MoonlightSession::start(ServerCallback<bool> callback, bool is_sunshine) {
     LiInitializeStreamConfiguration(&m_config);
 
     int resolution = Settings::instance().resolution();
+#ifdef __SWITCH2__
+    // Sizes above 1080p are docked only; the saved choice is kept for docking.
+    if (resolution > 1080 && appletGetOperationMode() == AppletOperationMode_Handheld)
+        resolution = 1080;
+#endif
     int h = resolution;
     int w = h * 16 / 9;
     if (resolution == -1) {
@@ -309,6 +314,8 @@ void MoonlightSession::start(ServerCallback<bool> callback, bool is_sunshine) {
     m_config.height = h;
     m_config.fps = Settings::instance().fps();
 #ifdef __SWITCH2__
+    if (m_config.height >= 2160 && m_config.fps > 60)
+        m_config.fps = 60;
     m_config.colorSpace = COLORSPACE_REC_709;
     m_config.colorRange = COLOR_RANGE_LIMITED;
 #endif

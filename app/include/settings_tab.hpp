@@ -18,6 +18,8 @@ class SettingsTab : public brls::Box {
     void willAppear(bool resetState = false) override;
 
     BRLS_BIND(brls::SelectorCell, resolution, "resolution");
+    BRLS_BIND(brls::Label, resolutionHint, "resolution_hint");
+    BRLS_BIND(brls::Label, fpsHint, "fps_hint");
     BRLS_BIND(brls::SelectorCell, resolutionScale, "resolution_scale");
     BRLS_BIND(brls::Header, imageAdjustmentsHeader, "image_adjustments_header");
     BRLS_BIND(BooleanSliderCell, dithering, "dithering");
@@ -69,4 +71,7 @@ class SettingsTab : public brls::Box {
     std::string getTextFromButtons(std::vector<brls::ControllerButton> buttons);
     NVGcolor getColorFromButtons(std::vector<brls::ControllerButton> buttons);
     void updateDeadZoneItems();
+#ifdef __SWITCH2__
+    void updateFpsHint();
+#endif
 };
