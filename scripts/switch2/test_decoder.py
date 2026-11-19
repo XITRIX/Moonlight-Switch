@@ -299,6 +299,19 @@ int main() {
  reset();
  {
   Switch2VideoDecoder d;assert(d.setup(VIDEO_FORMAT_H264,16,16,60,nullptr,0)==0);
+  getError=KERNELRESULT(TimedOut);auto u=unit();assert(d.submit_decode_unit(&u)==DR_OK);
+  nowMs+=5;u.frameNumber=2;u.frameType=FRAME_TYPE_PFRAME;u.presentationTimeUs+=16666;
+  assert(d.submit_decode_unit(&u)==DR_OK);
+  getError=0;acquireDelayMs=1;u.frameNumber=3;u.presentationTimeUs+=16666;
+  assert(d.submit_decode_unit(&u)==DR_OK && AVFrameHolder::instance().queued.size()==3);
+  nowMs+=1000;const auto* stats=d.video_decode_stats();
+  // 6 ms for the first frame, then 1 ms each once the frame ahead came out;
+  // the second frame's wait behind the first is decoder delay, not decode time.
+  assert(stats->total_decode_time==8000 && stats->total_decoder_delay_time==9);
+ }
+ reset();
+ {
+  Switch2VideoDecoder d;assert(d.setup(VIDEO_FORMAT_H264,16,16,60,nullptr,0)==0);
   auto u=unit();u.fullLength++;assert(d.submit_decode_unit(&u)==DR_NEED_IDR && creates==0);
   u=unit();u.fullLength=1;assert(d.submit_decode_unit(&u)==DR_NEED_IDR && creates==0);
   u=unit();u.bufferList=&picture;u.fullLength=sizeof pic;
