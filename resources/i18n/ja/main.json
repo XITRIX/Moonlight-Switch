@@ -215,6 +215,8 @@
         "mouse_input": "マウス入力モードに入る",
         "mouse_speed": "マウスの加速",
         "options": "設定",
+        "reconnected": "PCに再接続しました",
+        "reconnecting": "PCとの接続が切れました。再接続しています…",
         "show_logs": "ログを表示する",
         "terminate": "アプリを終了します",
         "volume": "音量"

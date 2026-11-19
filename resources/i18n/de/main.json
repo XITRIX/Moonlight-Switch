@@ -215,6 +215,8 @@
         "mouse_input": "Mauseingabemodus starten",
         "mouse_speed": "Mausbeschleunigung",
         "options": "Einstellungen",
+        "reconnected": "Wieder mit dem PC verbunden",
+        "reconnecting": "Die Verbindung zum PC wurde unterbrochen. Verbinde erneut…",
         "show_logs": "Protokolle anzeigen",
         "terminate": "Programm beenden",
         "volume": "Lautstärke"

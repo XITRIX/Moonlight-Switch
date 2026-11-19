@@ -375,6 +375,8 @@ void StreamingView::draw(NVGcontext* vg, float x, float y, float width,
         nvgText(vg, 50, height - 28, "\uE140 Bad connection...", nullptr);
     }
 
+    updateReconnectNotice(vg, height);
+
     if (session->use_hdr() != m_use_hdr) {
         m_use_hdr = session->use_hdr();
 
@@ -414,6 +416,27 @@ void StreamingView::draw(NVGcontext* vg, float x, float y, float width,
     }
 
     Box::draw(vg, x, y, width, height, style, ctx);
+}
+
+void StreamingView::updateReconnectNotice(NVGcontext* vg, float height) {
+    if (wasReconnecting && !session->is_reconnecting() && session->is_active())
+        brls::Application::notify("streaming/reconnected"_i18n);
+    wasReconnecting = session->is_reconnecting();
+    if (!wasReconnecting)
+        return;
+
+    const std::string notice = "streaming/reconnecting"_i18n;
+    nvgFontSize(vg, 20);
+    nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+    nvgFontFaceId(vg, Application::getFont(FONT_REGULAR));
+
+    nvgFontBlur(vg, 3);
+    nvgFillColor(vg, nvgRGBA(0, 0, 0, 255));
+    nvgText(vg, 50, height - 56, notice.c_str(), nullptr);
+
+    nvgFontBlur(vg, 0);
+    nvgFillColor(vg, nvgRGBA(255, 255, 255, 255));
+    nvgText(vg, 50, height - 56, notice.c_str(), nullptr);
 }
 
 void StreamingView::updateBitrateAdapter() {

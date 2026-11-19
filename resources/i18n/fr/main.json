@@ -215,6 +215,8 @@
         "mouse_input": "Utiliser le mode souris",
         "mouse_speed": "Vitesse de la souris",
         "options": "Options",
+        "reconnected": "Reconnecté au PC",
+        "reconnecting": "La connexion au PC a été perdue. Reconnexion…",
         "show_logs": "Voir les logs",
         "terminate": "Fermer l'application",
         "volume": "Volume"

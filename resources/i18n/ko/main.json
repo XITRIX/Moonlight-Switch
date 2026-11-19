@@ -215,6 +215,8 @@
         "mouse_input": "마우스 입력 모드 진입",
         "mouse_speed": "마우스 가속",
         "options": "옵션",
+        "reconnected": "PC에 다시 연결되었습니다",
+        "reconnecting": "PC와의 연결이 끊어졌습니다. 다시 연결하는 중…",
         "show_logs": "정보 표시",
         "terminate": "앱 종료",
         "volume": "볼륨"

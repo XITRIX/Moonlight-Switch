@@ -215,6 +215,8 @@
         "mouse_input": "Enter mouse input mode",
         "mouse_speed": "Mouse acceleration",
         "options": "Options",
+        "reconnected": "Reconnected to the PC",
+        "reconnecting": "The connection to the PC was lost. Reconnecting…",
         "show_logs": "Show logs",
         "terminate": "Terminate app",
         "volume": "Volume"

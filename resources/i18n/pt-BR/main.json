@@ -215,6 +215,8 @@
         "mouse_input": "Entrar no modo de mouse",
         "mouse_speed": "Aceleração do mouse",
         "options": "Opções",
+        "reconnected": "Reconectado ao PC",
+        "reconnecting": "A conexão com o PC foi perdida. Reconectando…",
         "show_logs": "Mostrar logs",
         "terminate": "Encerrar aplicativo",
         "volume": "Volume"

@@ -27,6 +27,7 @@ def method(source, signature):
 
 
 FIXTURE = r"""
+#include <algorithm>
 #include <atomic>
 #include <cassert>
 #include <cstdint>
@@ -111,7 +112,8 @@ struct Switch2VulkanContext {
 void LiStopConnection(){
     assert(std::this_thread::get_id()==mainThread);events.push_back("stop");
 }
-uint64_t LiGetMillis(){return 1000;}
+static uint64_t nowMs=1000;
+uint64_t LiGetMillis(){return nowMs;}
 #define ML_ERROR_NO_VIDEO_TRAFFIC -100
 #define ML_ERROR_NO_VIDEO_FRAME -101
 #define ML_ERROR_UNEXPECTED_EARLY_TERMINATION -102
@@ -191,9 +193,40 @@ int main() {
     MoonlightSession::connection_started();startFails=true;
     std::thread([]{MoonlightSession::connection_terminated(-1);}).join();
     brls::drain();brls::drain();
-    assert(starts==3&&s->is_terminated()); // a cut-off stream retries once
+    assert(starts==3&&!s->is_terminated()&&s->is_reconnecting());
+    s->draw(nullptr,1280,720);assert(starts==3); // waits before the next try
+    nowMs+=1000;s->draw(nullptr,1280,720);brls::drain();assert(starts==4);
+    nowMs+=1999;s->draw(nullptr,1280,720);assert(starts==4); // backs off
+    nowMs+=1;s->draw(nullptr,1280,720);brls::drain();assert(starts==5);
+    while(!s->is_terminated()){nowMs+=15000;s->draw(nullptr,1280,720);brls::drain();}
+    assert(nowMs-1000>=180000&&nowMs-1000<200000); // gives up after the limit
     assert(s->m_reconnect_failed&&s->m_reconnect_error=="refused");
+    assert(!s->is_reconnecting());
     startFails=false;
+    delete s;
+
+    s=new MoonlightSession("host",1);
+    for(int cut=0;cut<3;++cut){
+        MoonlightSession::connection_started();
+        std::thread([]{MoonlightSession::connection_terminated(-1);}).join();
+        brls::drain();brls::drain();
+        assert(!s->is_terminated()&&!s->is_reconnecting()); // reconnected
+        nowMs+=5000;
+    }
+    MoonlightSession::connection_started();
+    std::thread([]{MoonlightSession::connection_terminated(-1);}).join();
+    brls::drain();
+    assert(s->is_terminated()&&s->m_reconnect_failed); // a fourth cut in a minute
+    delete s;
+
+    s=new MoonlightSession("host",1);
+    for(int cut=0;cut<5;++cut){
+        MoonlightSession::connection_started();
+        std::thread([]{MoonlightSession::connection_terminated(-1);}).join();
+        brls::drain();brls::drain();
+        nowMs+=60000;
+    }
+    assert(!s->is_terminated()); // a stream that runs a minute between cuts
     delete s;
 }
 """
@@ -373,6 +406,8 @@ def main():
         "void MoonlightSession::handle_connection_terminated(",
         "void MoonlightSession::stop(",
         "void MoonlightSession::restart()",
+        "void MoonlightSession::retry_later(",
+        "void MoonlightSession::give_up(",
         "void MoonlightSession::set_suspended(",
         "void MoonlightSession::draw(",
     )

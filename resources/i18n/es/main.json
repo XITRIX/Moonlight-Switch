@@ -215,6 +215,8 @@
         "mouse_input": "Activar modo ratón",
         "mouse_speed": "Aceleración del ratón",
         "options": "Ajustes",
+        "reconnected": "Reconectado al PC",
+        "reconnecting": "Se perdió la conexión con el PC. Reconectando…",
         "show_logs": "Mostrar logs",
         "terminate": "Cerrar aplicación",
         "volume": "Volumen"

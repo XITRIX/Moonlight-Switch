@@ -215,6 +215,8 @@
         "mouse_input": "Entra in modalità input del mouse",
         "mouse_speed": "Accelerazione Mouse",
         "options": "Opzioni",
+        "reconnected": "Riconnesso al PC",
+        "reconnecting": "La connessione al PC si è interrotta. Riconnessione…",
         "show_logs": "Mostra log",
         "terminate": "Termina app",
         "volume": "Volume"

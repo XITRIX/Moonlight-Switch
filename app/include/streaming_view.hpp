@@ -60,6 +60,8 @@ class StreamingView : public brls::Box {
     std::chrono::steady_clock::time_point bitrateSampleTime;
 
     void updateBitrateAdapter();
+    bool wasReconnecting = false;
+    void updateReconnectNotice(NVGcontext* vg, float height);
 
     void onWindowFocusChanged(bool focused);
     void reportTermination();

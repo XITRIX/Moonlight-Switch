@@ -5,6 +5,7 @@
 #include "InputManager.hpp"
 #include "Settings.hpp"
 #include "borealis.hpp"
+#include <algorithm>
 #include <atomic>
 #include <string.h>
 #ifdef __SWITCH2__
@@ -22,6 +23,15 @@ int m_video_format;
 static MoonlightSession* m_active_session = nullptr;
 static std::atomic<uint64_t> m_session_generation{0};
 static MoonlightSessionDecoderAndRenderProvider* m_provider = nullptr;
+
+// A cut stream is reconnected at once, then after these pauses (the last one
+// repeats) until the outage has lasted RECONNECT_LIMIT_MS.
+static const uint64_t RECONNECT_DELAYS_MS[] = {1000, 2000, 4000, 8000, 15000};
+static const uint64_t RECONNECT_LIMIT_MS = 180000;
+// A stream that keeps being cut gets this many reconnects in a row, and
+// gets them back once it has run for RECONNECT_STABLE_MS.
+static const int RECONNECT_CUTS = 3;
+static const uint64_t RECONNECT_STABLE_MS = 60000;
 
 
 MoonlightSession* MoonlightSession::activeSession() {
@@ -182,7 +192,19 @@ void MoonlightSession::handle_connection_terminated(int error_code) {
     }
 
     if (error_code != 0) {
+        const uint64_t now = LiGetMillis();
+        if (now - m_last_cut_ms >= RECONNECT_STABLE_MS)
+            m_cuts = 0;
+        m_last_cut_ms = now;
+        if (++m_cuts > RECONNECT_CUTS) {
+            brls::Logger::info("MoonlightSession: Connection keeps dropping, giving up");
+            give_up("");
+            return;
+        }
+
         brls::Logger::info("MoonlightSession: Reconnection attempt");
+        if (m_outage_since_ms == 0)
+            m_outage_since_ms = now;
         restart();
         return;
     }
@@ -507,15 +529,42 @@ void MoonlightSession::restart() {
                 return;
             if (result.isSuccess()) {
                 brls::Logger::info("MoonlightSession: Reconnected");
+                m_active_session->m_outage_since_ms = 0;
+                m_active_session->m_reconnect_attempt = 0;
             } else {
                 brls::Logger::info("MoonlightSession: Reconnection failed");
-                m_active_session->m_reconnect_failed = true;
-                m_active_session->m_reconnect_error = result.error();
-                m_active_session->m_is_active = false;
-                m_active_session->m_is_terminated = true;
+                m_active_session->retry_later(result.error());
             }
         });
     }, m_is_sunshine);
+}
+
+void MoonlightSession::retry_later(const std::string& error) {
+    if (m_stop_requested)
+        return;
+
+    const uint64_t now = LiGetMillis();
+    if (m_outage_since_ms == 0)
+        m_outage_since_ms = now;
+    if (now - m_outage_since_ms >= RECONNECT_LIMIT_MS) {
+        give_up(error);
+        return;
+    }
+
+    const size_t last = sizeof(RECONNECT_DELAYS_MS) / sizeof(*RECONNECT_DELAYS_MS) - 1;
+    const uint64_t delay = RECONNECT_DELAYS_MS[std::min(m_reconnect_attempt, last)];
+    ++m_reconnect_attempt;
+    m_retry_at_ms = now + delay;
+    brls::Logger::info("MoonlightSession: Next reconnection in {} ms", delay);
+}
+
+void MoonlightSession::give_up(const std::string& error) {
+    m_reconnect_failed = true;
+    m_reconnect_error = error;
+    m_outage_since_ms = 0;
+    m_retry_at_ms = 0;
+    m_is_active = false;
+    m_is_terminated = true;
 }
 
 void MoonlightSession::follow_display_size() {
@@ -564,6 +613,11 @@ void MoonlightSession::draw(NVGcontext* vg, int width, int height) {
 
     if (m_restart_pending)
         restart();
+
+    if (m_retry_at_ms != 0 && LiGetMillis() >= m_retry_at_ms) {
+        m_retry_at_ms = 0;
+        restart();
+    }
 
     if (!m_is_active)
         return;

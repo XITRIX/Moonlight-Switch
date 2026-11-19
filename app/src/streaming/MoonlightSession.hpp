@@ -42,6 +42,8 @@ class MoonlightSession {
 
     bool is_active() const { return m_is_active; }
     bool is_terminated() const { return m_is_terminated; }
+    // The connection was cut and is being brought back.
+    bool is_reconnecting() const { return m_outage_since_ms != 0; }
     int termination_error() const { return m_termination_error; }
     // Why the stream ended, or empty when the host or the user ended it.
     std::string termination_message() const;
@@ -65,6 +67,8 @@ class MoonlightSession {
     static void connection_started();
     static void connection_terminated(int);
     void handle_connection_terminated(int error_code);
+    void retry_later(const std::string& error);
+    void give_up(const std::string& error);
     void follow_display_size();
     static void connection_log_message(const char* format, ...);
     static void connection_rumble(unsigned short, unsigned short,
@@ -107,6 +111,11 @@ class MoonlightSession {
     std::atomic<int> m_failed_stage{0};
     bool m_reconnect_failed = false;
     std::string m_reconnect_error;
+    uint64_t m_outage_since_ms = 0;
+    uint64_t m_retry_at_ms = 0;
+    size_t m_reconnect_attempt = 0;
+    uint64_t m_last_cut_ms = 0;
+    int m_cuts = 0;
     bool m_connection_status_is_poor = false;
     float m_bitrate_scale = 1.0f;
     bool m_suspended = false;
