@@ -318,18 +318,10 @@ void MoonlightSession::audio_renderer_decode_and_play_sample(
 
 // MARK: MoonlightSession
 
-void MoonlightSession::start(ServerCallback<bool> callback, bool is_sunshine) {
-    m_is_sunshine = is_sunshine;
-    m_stop_requested = false;
-    m_is_terminated = false;
-    m_termination_error = 0;
-    m_failed_stage = STAGE_NONE;
-
-    LiInitializeStreamConfiguration(&m_config);
-
+static void stream_size(int& w, int& h) {
     int resolution = Settings::instance().resolution();
-    int h = resolution;
-    int w = h * 16 / 9;
+    h = resolution;
+    w = h * 16 / 9;
     if (resolution == -1) {
 #ifdef __SWITCH2__
         u32 nativeWidth = Application::windowWidth, nativeHeight = Application::windowHeight;
@@ -358,9 +350,19 @@ void MoonlightSession::start(ServerCallback<bool> callback, bool is_sunshine) {
     if ((w & 1) == 1) {
         w += 1;
     }
+}
 
-    m_config.width = w;
-    m_config.height = h;
+void MoonlightSession::start(ServerCallback<bool> callback, bool is_sunshine) {
+    m_is_sunshine = is_sunshine;
+    m_stop_requested = false;
+    m_is_terminated = false;
+    m_termination_error = 0;
+    m_failed_stage = STAGE_NONE;
+    m_display_size_changed_ms = 0;
+
+    LiInitializeStreamConfiguration(&m_config);
+
+    stream_size(m_config.width, m_config.height);
     m_config.fps = Settings::instance().fps();
 #ifdef __SWITCH2__
     m_config.colorSpace = COLORSPACE_REC_709;
@@ -507,6 +509,30 @@ void MoonlightSession::restart() {
     }, m_is_sunshine);
 }
 
+void MoonlightSession::follow_display_size() {
+    // With the Native resolution the stream follows the display, so docking
+    // or undocking reconnects at the new size once it has settled.
+    if (Settings::instance().resolution() != -1)
+        return;
+
+    int width, height;
+    stream_size(width, height);
+    if (width == m_config.width && height == m_config.height) {
+        m_display_size_changed_ms = 0;
+        return;
+    }
+
+    const uint64_t now = LiGetMillis();
+    if (m_display_size_changed_ms == 0)
+        m_display_size_changed_ms = now;
+    if (now - m_display_size_changed_ms < 1000)
+        return;
+
+    brls::Logger::info("MoonlightSession: display changed from {}x{} to {}x{}, reconnecting",
+                       m_config.width, m_config.height, width, height);
+    restart();
+}
+
 void MoonlightSession::set_suspended(bool suspended) {
     if (m_suspended == suspended)
         return;
@@ -532,6 +558,10 @@ void MoonlightSession::draw(NVGcontext* vg, int width, int height) {
 
     if (!m_is_active)
         return;
+
+#ifdef PLATFORM_SWITCH
+    follow_display_size();
+#endif
 
     if (m_video_decoder && m_video_renderer) {
         if (m_invalidate_renderer_pending) {
