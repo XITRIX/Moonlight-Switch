@@ -134,10 +134,11 @@ private enum MoonlightGameStore {
         ).first?.appendingPathComponent("Moonlight-Switch", isDirectory: true)
     }
 
-    static func boxArtURL(appID: String) -> URL? {
+    static func boxArtURL(host: String, appID: String) -> URL? {
+        let owner = String(host.map { $0.isASCII && ($0.isLetter || $0.isNumber || $0 == ".") ? $0 : "_" })
         guard let boxArtURL = workingDirectoryURL?
             .appendingPathComponent("boxart", isDirectory: true)
-            .appendingPathComponent("\(appID).png") else {
+            .appendingPathComponent("\(owner)-\(appID).png") else {
             return nil
         }
 
@@ -161,7 +162,7 @@ private enum MoonlightGameStore {
             appID: trimmedAppID,
             appName: trimmedAppName.isEmpty ? trimmedAppID : trimmedAppName,
             displayHost: displayHost?.trimmingCharacters(in: .whitespacesAndNewlines).nonEmpty ?? trimmedHost,
-            boxArtPath: boxArtURL(appID: trimmedAppID)?.path
+            boxArtPath: boxArtURL(host: trimmedHost, appID: trimmedAppID)?.path
         )
     }
 
