@@ -42,6 +42,22 @@ struct MouseStateS {
     bool r_pressed = 0;
 };
 
+// Keeps the buttons of a local combo, like the overlay one, away from the
+// host. A lone combo button is held back for a moment in case the rest of the
+// combo follows; once the whole combo is down, its buttons stay held back
+// until they are let go.
+class ComboHold {
+  public:
+    uint32_t update(uint32_t buttons, uint32_t combo,
+                    std::chrono::steady_clock::time_point now);
+
+  private:
+    uint32_t forwarded = 0;
+    uint32_t waiting = 0;
+    uint32_t suppressed = 0;
+    std::chrono::steady_clock::time_point since;
+};
+
 struct RumbleValues {
     unsigned short lowFreqMotor;
     unsigned short highFreqMotor;
@@ -73,6 +89,7 @@ class MoonlightInputManager : public Singleton<MoonlightInputManager> {
 
     RumbleValues rumbleCache[GAMEPADS_MAX];
     GamepadState lastGamepadStates[GAMEPADS_MAX];
+    ComboHold comboHolds[GAMEPADS_MAX][3];
     brls::ControllerButton mappingButtons[brls::_BUTTON_MAX];
     std::optional<brls::PanGestureStatus> panStatus;
     std::map<uint32_t, bool> activeTouchIDs;
@@ -99,6 +116,7 @@ class MoonlightInputManager : public Singleton<MoonlightInputManager> {
     void handleDesktopMouseScroll(brls::Point scroll);
 
     GamepadState getControllerState(int controllerNum, bool specialKey);
+    void holdBackLocalCombos(int controllerNum, brls::ControllerState& controller);
     void handleControllers(bool specialKey);
 
     static short controllersToMap();

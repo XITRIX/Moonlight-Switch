@@ -21,6 +21,7 @@
 #include "streaming_input_overlay.hpp"
 #include "two_finger_scroll_recognizer.hpp"
 #include <Limelight.h>
+#include <algorithm>
 #include <chrono>
 #include <nanovg.h>
 
@@ -564,15 +565,32 @@ void StreamingView::handleInput() {
     }
 }
 
+// A combo counts only when one controller holds all of its buttons, so two
+// players can't open the overlay by pressing half of it each.
+static bool comboHeld(const std::vector<ControllerButton>& buttons) {
+    if (buttons.empty())
+        return false;
+
+    auto* input = Application::getPlatform()->getInputManager();
+    int controllers = std::min<int>(input->getControllersConnectedCount(), GAMEPADS_MAX);
+    for (int i = 0; i < controllers; i++) {
+        ControllerState controller{};
+        input->updateControllerState(&controller, i);
+
+        bool held = true;
+        for (auto button : buttons)
+            held &= controller.buttons[button];
+        if (held)
+            return true;
+    }
+    return false;
+}
+
 void StreamingView::handleOverlayCombo() {
     if (!this->focused)
         return;
 
     KeyComboOptions options = Settings::instance().overlay_options();
-
-    static ControllerState controller;
-    Application::getPlatform()->getInputManager()->updateUnifiedControllerState(
-        &controller);
 
     static std::chrono::high_resolution_clock::time_point clock_counter;
     static bool buttonState = false;
@@ -581,10 +599,7 @@ void StreamingView::handleOverlayCombo() {
     auto duration = std::chrono::duration_cast<std::chrono::seconds>(
         std::chrono::high_resolution_clock::now() - clock_counter);
 
-    bool buttonsPressed = true;
-    for (auto button : options.buttons) {
-        buttonsPressed &= controller.buttons[button];
-    }
+    bool buttonsPressed = comboHeld(options.buttons);
     buttonsPressed &= !disconnectComboHeld;
 
     if (!buttonState && buttonsPressed) {
@@ -631,10 +646,6 @@ void StreamingView::handleMouseInputCombo() {
     if (options.buttons.empty())
         return;
 
-    static ControllerState controller;
-    Application::getPlatform()->getInputManager()->updateUnifiedControllerState(
-        &controller);
-
     static std::chrono::high_resolution_clock::time_point clock_counter;
     static bool buttonState = false;
     static bool used = false;
@@ -642,10 +653,7 @@ void StreamingView::handleMouseInputCombo() {
     auto duration = std::chrono::duration_cast<std::chrono::seconds>(
         std::chrono::high_resolution_clock::now() - clock_counter);
 
-    bool buttonsPressed = true;
-    for (auto button : options.buttons) {
-        buttonsPressed &= controller.buttons[button];
-    }
+    bool buttonsPressed = comboHeld(options.buttons);
 
     if (!buttonState && buttonsPressed) {
         buttonState = true;
@@ -670,10 +678,6 @@ void StreamingView::handleDisconnectCombo() {
     if (options.buttons.empty())
         return;
 
-    static ControllerState controller;
-    Application::getPlatform()->getInputManager()->updateUnifiedControllerState(
-        &controller);
-
     static std::chrono::high_resolution_clock::time_point clock_counter;
     static bool buttonState = false;
     static bool used = false;
@@ -681,10 +685,7 @@ void StreamingView::handleDisconnectCombo() {
     auto duration = std::chrono::duration_cast<std::chrono::seconds>(
         std::chrono::high_resolution_clock::now() - clock_counter);
 
-    bool buttonsPressed = true;
-    for (auto button : options.buttons) {
-        buttonsPressed &= controller.buttons[button];
-    }
+    bool buttonsPressed = comboHeld(options.buttons);
     disconnectComboHeld = buttonsPressed;
 
     if (!buttonState && buttonsPressed) {
