@@ -224,6 +224,13 @@ void MoonlightSession::video_decoder_cleanup() {
 
 int MoonlightSession::video_decoder_submit_decode_unit(
     PDECODE_UNIT decode_unit) {
+    const uint64_t now = LiGetMicroseconds();
+    const auto age = std::chrono::microseconds(
+        now > decode_unit->receiveTimeUs ? now - decode_unit->receiveTimeUs : 0);
+    AVFrameHolder::instance().recordArrival(
+        int64_t(decode_unit->presentationTimeUs) * 1000,
+        std::chrono::steady_clock::now() - age);
+
     if (m_active_session && m_active_session->m_video_decoder) {
         return m_active_session->m_video_decoder->submit_decode_unit(
             decode_unit);

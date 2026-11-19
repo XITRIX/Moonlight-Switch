@@ -397,8 +397,8 @@ void StreamingView::draw(NVGcontext* vg, float x, float y, float width,
         if (statsText.empty() ||
             statsNow - statsTextTime >= std::chrono::milliseconds(250)) {
             statsText = statsMode == StreamStatsMode::COMPACT
-                            ? buildCompactStatsText()
-                            : buildStatsText();
+                            ? buildCompactStatsText() + "\n" + buildFrameCounterText()
+                            : buildFrameCounterText() + "\n" + buildStatsText();
             statsTextTime = statsNow;
             nvgTextBoxBounds(vg, 20, 30, width, statsText.c_str(), nullptr,
                              statsBounds);
@@ -454,6 +454,23 @@ std::string StreamingView::buildCompactStatsText() {
         !(session->stream_format() & requestedCodec)) {
         text += fmt::format(" (requested {}p{} {})", requested.height,
                             requested.fps, videoFormatName(requestedCodec));
+    }
+    return text;
+}
+
+std::string StreamingView::buildFrameCounterText() {
+    const auto counter = AVFrameHolder::instance().getFrameCounter();
+    const uint32_t lost = session->session_stats()->video_decode_stats.network_dropped_frames;
+    if (counter.second != frameCounterSecond) {
+        frameCounterLost = lost >= frameCounterLostBase ? lost - frameCounterLostBase : lost;
+        frameCounterLostBase = lost;
+        frameCounterSecond = counter.second;
+    }
+
+    auto text = fmt::format("Frames per second: {} shown | {} skipped | {} lost",
+                            counter.presented, counter.skipped, frameCounterLost);
+    if (counter.latencyMs >= 0) {
+        text += fmt::format(" | arrival to draw {:.1f} ms", counter.latencyMs);
     }
     return text;
 }

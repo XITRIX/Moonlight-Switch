@@ -786,6 +786,7 @@ int FFmpegVideoDecoder::submit_decode_unit(PDECODE_UNIT decode_unit) {
         // Microseconds: hardware decode usually takes well under 1 ms.
         const uint64_t before_decode = LiGetMicroseconds();
 
+        m_packet->pts = int64_t(decode_unit->presentationTimeUs) * 1000;
         const int decoded_frames = decode(m_ffmpeg_buffer, length);
         if (decoded_frames >= 0) {
             m_consecutive_decode_errors = 0;

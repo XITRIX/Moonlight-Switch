@@ -105,6 +105,7 @@ AVFrame* AVFrameQueue::pop(bool* consumed) {
     }
 
     const auto now = std::chrono::steady_clock::now();
+    updateFrameCounterLocked(now);
     if (!drawClockStarted) {
         lastDraw = now;
         drawClockStarted = true;
@@ -240,6 +241,7 @@ AVFrame* AVFrameQueue::pop(bool* consumed) {
         *consumed = true;
     }
     localClockPacedFrameStat++;
+    countPresentedLocked(bufferFrame, now);
 
     return bufferFrame;
 }
@@ -461,8 +463,64 @@ void AVFrameQueue::trimToPlayoutWindowLocked() {
     }
 }
 
+void AVFrameQueue::recordArrival(int64_t pts, std::chrono::steady_clock::time_point arrival) {
+    std::lock_guard<std::mutex> lock(m_mutex);
+    arrivals[nextArrival] = {pts, arrival};
+    nextArrival = (nextArrival + 1) % arrivals.size();
+}
+
+FrameCounter AVFrameQueue::frameCounter() const {
+    std::lock_guard<std::mutex> lock(m_mutex);
+    return lastFrameCounter;
+}
+
+void AVFrameQueue::updateFrameCounterLocked(std::chrono::steady_clock::time_point now) {
+    if (counterStart == std::chrono::steady_clock::time_point{}) {
+        counterStart = now;
+        counterSkippedBase = framesDroppedStat;
+        return;
+    }
+    if (now - counterStart < std::chrono::seconds(1)) {
+        return;
+    }
+
+    lastFrameCounter.second++;
+    lastFrameCounter.presented = counterPresented;
+    lastFrameCounter.skipped = framesDroppedStat - counterSkippedBase;
+    if (counterLatencySamples > 0) {
+        lastFrameCounter.latencyMs =
+            std::chrono::duration<double, std::milli>(counterLatency).count() / counterLatencySamples;
+    }
+
+    counterStart = now;
+    counterPresented = 0;
+    counterSkippedBase = framesDroppedStat;
+    counterLatency = std::chrono::nanoseconds::zero();
+    counterLatencySamples = 0;
+}
+
+void AVFrameQueue::countPresentedLocked(const AVFrame* frame, std::chrono::steady_clock::time_point now) {
+    counterPresented++;
+    for (auto& arrival : arrivals) {
+        if (arrival.pts == frame->pts && arrival.time != std::chrono::steady_clock::time_point{}) {
+            counterLatency += now - arrival.time;
+            counterLatencySamples++;
+            arrival = {};
+            break;
+        }
+    }
+}
+
 void AVFrameQueue::cleanup() {
     std::lock_guard<std::mutex> lock(m_mutex);
+    arrivals = {};
+    nextArrival = 0;
+    counterStart = {};
+    counterPresented = 0;
+    counterSkippedBase = 0;
+    counterLatency = std::chrono::nanoseconds::zero();
+    counterLatencySamples = 0;
+    lastFrameCounter = {};
     fakeFrameUsedStat = 0;
     framesDroppedStat = 0;
     emptyQueueStat = 0;
