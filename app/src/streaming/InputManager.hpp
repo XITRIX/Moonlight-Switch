@@ -53,11 +53,12 @@ class MoonlightInputManager : public Singleton<MoonlightInputManager> {
   public:
     MoonlightInputManager();
     void dropInput();
-    void resetControllerState() { resetControllers = true; }
+    void resetControllerState();
     void handleInput(bool ignoreTouch = false);
     void sendMouseScroll(brls::Point scroll);
     void handleRumble(unsigned short controller, unsigned short lowFreqMotor, unsigned short highFreqMotor);
     void handleRumbleTriggers(unsigned short controller, unsigned short lowFreqMotor, unsigned short highFreqMotor);
+    void setMotionEventState(uint16_t controller, uint8_t motionType, uint16_t reportRateHz);
     void updateTouchScreenPanDelta(brls::PanGestureStatus panStatus);
     void reloadButtonMappingLayout();
     void setInputEnabled(bool enabled) { inputEnabled = enabled; }
@@ -72,6 +73,8 @@ class MoonlightInputManager : public Singleton<MoonlightInputManager> {
     };
 
     RumbleValues rumbleCache[GAMEPADS_MAX];
+    std::atomic<uint16_t> motionRates[GAMEPADS_MAX][2] = {};
+    std::chrono::steady_clock::time_point nextMotion[GAMEPADS_MAX][2] = {};
     GamepadState lastGamepadStates[GAMEPADS_MAX];
     brls::ControllerButton mappingButtons[brls::_BUTTON_MAX];
     std::optional<brls::PanGestureStatus> panStatus;
@@ -97,6 +100,7 @@ class MoonlightInputManager : public Singleton<MoonlightInputManager> {
     static short glfwKeyToVKKey(brls::BrlsKeyboardScancode key);
     void sendRelativeMouseMove(brls::Point offset);
     void handleDesktopMouseScroll(brls::Point scroll);
+    bool motionDue(int controller, uint8_t motionType);
 
     GamepadState getControllerState(int controllerNum, bool specialKey);
     void handleControllers(bool specialKey);

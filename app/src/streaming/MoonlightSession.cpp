@@ -186,6 +186,12 @@ void MoonlightSession::connection_set_hdr_mode(bool use_hdr) {
     }
 }
 
+void MoonlightSession::connection_set_motion_event_state(
+    uint16_t controllerNumber, uint8_t motionType, uint16_t reportRateHz) {
+    MoonlightInputManager::instance().setMotionEventState(
+        controllerNumber, motionType, reportRateHz);
+}
+
 // MARK: Video decoder callbacks
 
 int MoonlightSession::video_decoder_setup(int video_format, int width,
@@ -347,6 +353,8 @@ void MoonlightSession::start(ServerCallback<bool> callback, bool is_sunshine) {
     m_connection_callbacks.rumbleTriggers = connection_rumble_triggers;
     m_connection_callbacks.connectionStatusUpdate = connection_status_update;
     m_connection_callbacks.setHdrMode = connection_set_hdr_mode;
+    m_connection_callbacks.setMotionEventState =
+        connection_set_motion_event_state;
 
     LiInitializeVideoCallbacks(&m_video_callbacks);
     m_video_callbacks.setup = video_decoder_setup;
