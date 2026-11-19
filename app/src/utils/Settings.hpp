@@ -277,6 +277,9 @@ class Settings : public Singleton<Settings> {
     void set_mouse_input_options(KeyComboOptions options) { m_mouse_input_options = std::move(options); }
     [[nodiscard]] KeyComboOptions mouse_input_options() const { return m_mouse_input_options; }
 
+    void set_disconnect_options(KeyComboOptions options) { m_disconnect_options = std::move(options); }
+    [[nodiscard]] KeyComboOptions disconnect_options() const { return m_disconnect_options; }
+
     void set_volume_amplification(bool allow) { m_volume_amplification = allow; }
     [[nodiscard]] bool get_volume_amplification() const { return m_volume_amplification; }
 
@@ -401,6 +404,10 @@ class Settings : public Singleton<Settings> {
         .buttons  = { brls::ControllerButton::BUTTON_BACK, brls::ControllerButton::BUTTON_START },
     };
     KeyComboOptions m_mouse_input_options{
+        .holdTime = 0,
+        .buttons = {},
+    };
+    KeyComboOptions m_disconnect_options{
         .holdTime = 0,
         .buttons = {},
     };
