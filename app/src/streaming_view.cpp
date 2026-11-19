@@ -356,6 +356,7 @@ void StreamingView::draw(NVGcontext* vg, float x, float y, float width,
 
     if (!tempInputLock && session->is_active())
         handleInput();
+    updateBitrateAdapter();
     handleOverlayCombo();
     handleMouseInputCombo();
 
@@ -413,6 +414,44 @@ void StreamingView::draw(NVGcontext* vg, float x, float y, float width,
     }
 
     Box::draw(vg, x, y, width, height, style, ctx);
+}
+
+void StreamingView::updateBitrateAdapter() {
+    if (!Settings::instance().bitrate_auto() ||
+        !Settings::instance().bitrate_adaptive())
+        return;
+
+    if (!session->is_active()) {
+        bitrateAdapter.restartWindow();
+        return;
+    }
+
+    const auto now = std::chrono::steady_clock::now();
+    if (now - bitrateSampleTime < std::chrono::seconds(1))
+        return;
+    bitrateSampleTime = now;
+
+    BitrateAdapter::Second second;
+    second.bitrate = session->bitrate();
+    second.poor = session->connection_status_is_poor();
+    LiGetEstimatedRttInfo(&second.rtt_ms, nullptr);
+    second.dropped_frames =
+        session->session_stats()->video_decode_stats.network_dropped_frames;
+    second.idr_requests = session->idr_requests();
+    second.pending_frames = LiGetPendingVideoFrames();
+
+    auto change = bitrateAdapter.update(second);
+    if (change == BitrateAdapter::Change::NONE)
+        return;
+
+    brls::Logger::info("StreamingView: {} bitrate, scale {}",
+                       change == BitrateAdapter::Change::LOWER ? "lowering" : "restoring",
+                       bitrateAdapter.scale());
+    brls::Application::notify(change == BitrateAdapter::Change::LOWER
+                                  ? "streaming/bitrate_lowered"_i18n
+                                  : "streaming/bitrate_restored"_i18n);
+    session->set_bitrate_scale(bitrateAdapter.scale());
+    session->restart();
 }
 
 std::string StreamingView::buildStatsText() {
