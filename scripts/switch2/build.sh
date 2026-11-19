@@ -33,6 +33,7 @@ if [ "$run_tests" = true ]; then
     python3 scripts/switch2/test_mouse_scroll.py
     python3 scripts/switch2/test_system_button_settings.py
     python3 scripts/test_stream_lifecycle.py
+    python3 scripts/test_audio_crossfade.py
     python3 extern/borealis/tests/test_activity_lifecycle.py
     python3 extern/borealis/tests/test_deletion_queue.py
     python3 extern/borealis/tests/test_timing.py

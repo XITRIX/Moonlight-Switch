@@ -1,6 +1,7 @@
 #ifdef __SWITCH__
 
 #include "AudrenAudioRenderer.hpp"
+#include "AudioCrossfade.hpp"
 #include <Settings.hpp>
 #include <borealis.hpp>
 #include <algorithm>
@@ -20,6 +21,10 @@ namespace {
 // pending limit matches the desktop Moonlight clients.
 constexpr int MAX_PENDING_MS = 30;
 constexpr int MAX_QUEUED_MS = 40;
+
+// 1.5 ms at 48 kHz: the audio after a drop fades in from where the dropped
+// packet would have started.
+constexpr int FADE_FRAMES = 72;
 
 void applyVolume(s16* buffer, size_t sampleCount, int volume) {
     if (volume == 100)
@@ -52,6 +57,8 @@ int AudrenAudioRenderer::init(int audio_configuration,
                           : AUDREN_SAMPLES_PER_FRAME_48KHZ;
     m_buffer_size = m_frame_samples * m_channel_count * sizeof(s16);
     m_dropped_packets = 0;
+    m_fade_frames = 0;
+    m_fade.assign(static_cast<size_t>(FADE_FRAMES) * m_channel_count, 0);
 
     brls::Logger::info("Audren: Init with channels: {}, sample rate: {}, frame: {} samples",
                        m_channel_count, m_sample_rate, m_frame_samples);
@@ -208,7 +215,18 @@ void AudrenAudioRenderer::decode_and_play_sample(char* data, int length) {
         queued_ms() > MAX_QUEUED_MS ||
         (index = free_wavebuf_index()) < 0) {
         m_dropped_packets++;
+        if (m_fade_frames == 0) {
+            m_fade_frames = std::min(decoded, FADE_FRAMES);
+            memcpy(m_fade.data(), m_decoded_buffer,
+                   static_cast<size_t>(m_fade_frames) * m_channel_count * sizeof(s16));
+        }
         return;
+    }
+
+    if (m_fade_frames > 0) {
+        crossfadeAudio(m_fade.data(), m_decoded_buffer,
+                       std::min(decoded, m_fade_frames), m_channel_count);
+        m_fade_frames = 0;
     }
 
     applyVolume(m_decoded_buffer, static_cast<size_t>(decoded) * m_channel_count,
