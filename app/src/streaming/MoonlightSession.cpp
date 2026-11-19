@@ -66,6 +66,10 @@ MoonlightSession::~MoonlightSession() {
         delete m_audio_renderer;
     }
 
+#ifdef __SWITCH2__
+    if (auto* context = Switch2VulkanContext::current())
+        context->setDockedHighRefresh(false);
+#endif
     m_active_session = nullptr;
 }
 
@@ -309,6 +313,8 @@ void MoonlightSession::start(ServerCallback<bool> callback, bool is_sunshine) {
     m_config.height = h;
     m_config.fps = Settings::instance().fps();
 #ifdef __SWITCH2__
+    if (auto* context = Switch2VulkanContext::current())
+        context->setDockedHighRefresh(m_config.fps >= 120 && m_config.height <= 1440);
     m_config.colorSpace = COLORSPACE_REC_709;
     m_config.colorRange = COLOR_RANGE_LIMITED;
 #endif
