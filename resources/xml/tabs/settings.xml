@@ -24,6 +24,16 @@
                 
             <brls:SelectorCell
                 id="fps"/>
+
+            <brls:Label
+                id="fps_hint"
+                width="auto"
+                height="auto"
+                fontSize="15"
+                textColor="@theme/brls/header/subtitle"
+                marginLeft="@style/brls/listitem/descriptionIndent"
+                marginBottom="8"
+                visibility="gone"/>
                     
             <brls:SelectorCell
                 id="resolution"/>

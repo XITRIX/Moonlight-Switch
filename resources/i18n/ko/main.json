@@ -130,6 +130,8 @@
         "debugging_view": "디버깅 보기 표시",
         "decoder_threads": "디코더 스레드",
         "fps": "FPS",
+        "fps_fixed_for_4k": "4K는 60 FPS로 스트리밍됩니다",
+        "fps_needs_120hz": "120 FPS에는 120Hz 디스플레이가 필요합니다. 이 디스플레이는 60Hz로 작동합니다",
         "guide_key": "가이드 키 (즉시 클릭)",
         "guide_key_buttons": "버튼 조합",
         "guide_key_setup_message": "가이드 버튼을 누르는 데 사용할 키 누르세요:\n\n",

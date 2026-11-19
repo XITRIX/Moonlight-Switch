@@ -130,6 +130,8 @@
         "debugging_view": "Afficher la vue Debug",
         "decoder_threads": "Threads de décodage",
         "fps": "FPS",
+        "fps_fixed_for_4k": "La 4K est diffusée à 60 FPS",
+        "fps_needs_120hz": "120 FPS nécessite un écran 120 Hz ; celui-ci fonctionne à 60 Hz",
         "guide_key": "Bouton Guide (s'ouvre immédiatement)",
         "guide_key_buttons": "Combinaison de boutons",
         "guide_key_setup_message": "Appuyez sur les boutons à utiliser pour le bouton Guide :\n\n",

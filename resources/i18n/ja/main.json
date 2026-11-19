@@ -130,6 +130,8 @@
         "debugging_view": "デバッグビューを表示する",
         "decoder_threads": "デコーダースレッド",
         "fps": "FPS",
+        "fps_fixed_for_4k": "4K は 60 FPS で配信されます",
+        "fps_needs_120hz": "120 FPS には 120 Hz のディスプレイが必要です（このディスプレイは 60 Hz です）",
         "guide_key": "ガイドキー (すぐにクリック)",
         "guide_key_buttons": "ボタンの組み合わせ",
         "guide_key_setup_message": "ガイドボタンを押すために使用したいキーを押します:\n\n",

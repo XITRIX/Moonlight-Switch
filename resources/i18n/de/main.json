@@ -130,6 +130,8 @@
         "debugging_view": "Debugansicht anzeigen",
         "decoder_threads": "Decoder Threads",
         "fps": "FPS",
+        "fps_fixed_for_4k": "4K wird mit 60 FPS gestreamt",
+        "fps_needs_120hz": "120 FPS braucht ein 120-Hz-Display, dieses läuft mit 60 Hz",
         "guide_key": "Guide Taste (keine Verzögerung)",
         "guide_key_buttons": "Tastenkombination",
         "guide_key_setup_message": "Drücken Sie die Tasten, die Sie benutzen wollen, um die Guide Taste zu drücken:\n\n\n",

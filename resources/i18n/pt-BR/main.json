@@ -130,6 +130,8 @@
         "debugging_view": "Mostrar janela de debug",
         "decoder_threads": "Decor Threads",
         "fps": "FPS",
+        "fps_fixed_for_4k": "4K é transmitido a 60 FPS",
+        "fps_needs_120hz": "120 FPS requer uma tela de 120 Hz; esta funciona a 60 Hz",
         "guide_key": "Tecla Guia (Clique imediato)",
         "guide_key_buttons": "Combinação de botões",
         "guide_key_setup_message": "Pressione as teclas que você gostaria de usar para o botão Guia:\n\n",

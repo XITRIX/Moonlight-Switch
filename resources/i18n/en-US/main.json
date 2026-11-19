@@ -130,6 +130,8 @@
         "debugging_view": "Show debugging view",
         "decoder_threads": "Decoder Threads",
         "fps": "FPS",
+        "fps_fixed_for_4k": "4K streams at 60 FPS",
+        "fps_needs_120hz": "120 FPS needs a 120 Hz display; this one runs at 60 Hz",
         "guide_key": "Guide key (clicks immediately)",
         "guide_key_buttons": "Buttons combination",
         "guide_key_setup_message": "Press keys you'd like to use to press Guide button:\n\n",

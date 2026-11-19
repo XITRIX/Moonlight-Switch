@@ -70,6 +70,23 @@ std::string getDitheringStrengthText(float strength) {
 std::string getRcasStrengthText(float strength) {
     return std::to_string(int(strength * 100.0f)) + "%";
 }
+
+#ifdef __SWITCH2__
+// The console's own screen runs at 120 Hz. A TV reports what it switched to
+// for the 120 Hz request the app makes from the start.
+bool displayRunsAt120Hz() {
+    if (appletGetOperationMode() == AppletOperationMode_Handheld)
+        return true;
+
+    Vi2Display* display = nullptr;
+    u32 hz = 0;
+    bool vrr = false;
+    if (R_FAILED(nwindowGetVi2Display(nwindowGetDefault(), &display)) || !display ||
+        R_FAILED(vi2QueryDisplayRefreshRate(display, &hz, &vrr)))
+        return true;
+    return hz == 120;
+}
+#endif
 }
 
 #if defined(__SWITCH__)
@@ -345,10 +362,12 @@ SettingsTab::SettingsTab() {
         fps->setFocusable(!at2160p);
         fps->title->setTextColor(
             theme[at2160p ? "brls/text_disabled" : "brls/text"]);
+        updateFpsHint();
     };
     limitFpsAt2160p();
     resolution->getEvent()->subscribe(
         [limitFpsAt2160p](int) { limitFpsAt2160p(); });
+    fps->getEvent()->subscribe([this](int) { updateFpsHint(); });
 #endif
 
     std::vector<std::string> decoders = {"settings/zero_threads"_i18n, "2", "3",
@@ -899,3 +918,17 @@ SettingsTab::getColorFromButtons(std::vector<brls::ControllerButton> buttons) {
 SettingsTab::~SettingsTab() { Settings::instance().save(); }
 
 brls::View* SettingsTab::create() { return new SettingsTab(); }
+
+#ifdef __SWITCH2__
+void SettingsTab::updateFpsHint() {
+    std::string hint;
+    if (Settings::instance().resolution() == 2160)
+        hint = "settings/fps_fixed_for_4k"_i18n;
+    else if (Settings::instance().fps() > 60 && !displayRunsAt120Hz())
+        hint = "settings/fps_needs_120hz"_i18n;
+
+    fpsHint->setText(hint);
+    fpsHint->setVisibility(hint.empty() ? brls::Visibility::GONE
+                                        : brls::Visibility::VISIBLE);
+}
+#endif
