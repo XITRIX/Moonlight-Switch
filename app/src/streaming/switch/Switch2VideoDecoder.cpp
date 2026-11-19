@@ -124,6 +124,15 @@ bool Switch2VideoDecoder::openHardware(const std::vector<uint8_t>& config)
     options.color_policy      = 3; // The session explicitly requests limited-range Rec.709.
     options.codec_config      = config.empty() ? nullptr : config.data();
     options.codec_config_size = config.size();
+    if (m_format == VIDEO_FORMAT_AV1_MAIN8)
+    {
+        // The sequence header stays in band. Every AV1 stream decoded on the
+        // console so far (moonlight-nx2) configured the decoder with this
+        // NUL-terminated string; an empty configuration is untested there.
+        static constexpr char kAv1Config[] = "video/av1";
+        options.codec_config      = kAv1Config;
+        options.codec_config_size = sizeof(kAv1Config);
+    }
     Result rc                 = videoDecoderCreate(&m_pool->decoder, &options);
     if (R_FAILED(rc))
     {
