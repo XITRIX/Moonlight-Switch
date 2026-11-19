@@ -12,6 +12,7 @@
 #include "streaming_view.hpp"
 #ifdef __SWITCH2__
 #include "streaming/video/Vulkan/Switch2VulkanContext.hpp"
+#include "Switch2Clocks.hpp"
 #endif
 #include "AVFrameHolder.hpp"
 #include "InputManager.hpp"
@@ -93,6 +94,9 @@ void overrideButtonsIfNeeded(bool value)
 
 StreamingView::StreamingView(const Host& host, const AppInfo& app) : host(host), app(app) {
     Application::getPlatform()->disableScreenDimming(true);
+#ifdef __SWITCH2__
+    clocks = std::make_unique<Switch2Clocks>();
+#endif
 
     setFocusable(true);
     setHideHighlight(true);
@@ -335,6 +339,11 @@ void StreamingView::onWindowFocusChanged(bool focused) {
         MoonlightInputManager::instance().dropInput();
     }
 
+#ifdef __SWITCH2__
+    if (!focused)
+        clocks->release("focus");
+#endif
+
     session->set_suspended(!focused);
 }
 
@@ -353,6 +362,9 @@ void StreamingView::draw(NVGcontext* vg, float x, float y, float width,
     }
 
     session->draw(vg, (int) width, (int) height);
+#ifdef __SWITCH2__
+    updateClocks();
+#endif
 
     if (!tempInputLock && session->is_active())
         handleInput();
@@ -474,6 +486,29 @@ std::string StreamingView::buildFrameCounterText() {
     }
     return text;
 }
+
+#ifdef __SWITCH2__
+void StreamingView::updateClocks() {
+    if (!session->is_active()) {
+        clocks->release("stream-end");
+        return;
+    }
+
+    const auto& config = session->requested_config();
+    StreamMode mode;
+    mode.width = config.width;
+    mode.height = config.height;
+    mode.fps = config.fps;
+    mode.docked = appletGetOperationMode() == AppletOperationMode_Console;
+
+    const auto profile = Settings::instance().power_profile();
+    const bool lower = profile == PowerProfile::BATTERY_SAVER ||
+                       (profile == PowerProfile::AUTO && !mode.docked);
+    clocks->update(mode, lower, !focused || keyboard != nullptr,
+                  AVFrameHolder::instance().getFrameCounter(),
+                  session->session_stats()->video_decode_stats.network_dropped_frames);
+}
+#endif
 
 std::string StreamingView::buildStatsText() {
     auto stats = session->session_stats();

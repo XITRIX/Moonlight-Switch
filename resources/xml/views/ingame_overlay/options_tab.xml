@@ -116,6 +116,9 @@
 
             <BooleanSliderCell
                 id="rcas"/>
+
+            <brls:SelectorCell
+                id="power_profile"/>
             
             <brls:Header
                 title="@i18n/settings/debug"

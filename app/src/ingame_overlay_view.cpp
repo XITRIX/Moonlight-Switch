@@ -264,6 +264,18 @@ OptionsTab::OptionsTab(StreamingView* streamView) : streamView(streamView) {
                               (StreamStatsMode)selected);
                       });
 
+#ifdef __SWITCH2__
+    powerProfileButton->init("settings/power"_i18n,
+                             {"settings/power_auto"_i18n, "settings/power_battery_saver"_i18n,
+                              "settings/power_performance"_i18n},
+                             (int)Settings::instance().power_profile(),
+                             [](int selected) {
+                                 Settings::instance().set_power_profile((PowerProfile)selected);
+                             });
+#else
+    powerProfileButton->removeFromSuperView(true);
+#endif
+
 #ifdef SUPPORT_UPSCALING
     if (!isVideoUpscalingSupported()) {
         imageAdjustmentsHeader->removeFromSuperView(true);

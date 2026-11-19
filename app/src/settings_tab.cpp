@@ -382,6 +382,18 @@ SettingsTab::SettingsTab() {
     hwDecoding->setEnabled(false);
 #endif
 
+#ifdef __SWITCH2__
+    powerProfile->init("settings/power"_i18n,
+                       {"settings/power_auto"_i18n, "settings/power_battery_saver"_i18n,
+                        "settings/power_performance"_i18n},
+                       (int)Settings::instance().power_profile(),
+                       [](int selected) {
+                           Settings::instance().set_power_profile((PowerProfile)selected);
+                       });
+#else
+    powerProfile->removeFromSuperView(true);
+#endif
+
 #if defined(__PSV__)
     const float mbpsMaxLimit = 20000;
 #elif defined(PLATFORM_SWITCH)

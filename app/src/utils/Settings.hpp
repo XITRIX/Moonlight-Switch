@@ -29,6 +29,8 @@ enum class ButtonOverrideType : int { NONE, SCREENSHOT, HOME, CHAT };
 
 enum class StreamStatsMode : int { OFF, COMPACT, DETAILED };
 
+enum class PowerProfile : int { AUTO, BATTERY_SAVER, PERFORMANCE };
+
 struct KeyMappingLayout {
     std::string title;
     bool editable;
@@ -258,6 +260,9 @@ class Settings : public Singleton<Settings> {
     void set_stream_stats_mode(StreamStatsMode mode) { m_stream_stats_mode = mode; }
     [[nodiscard]] StreamStatsMode stream_stats_mode() const { return m_stream_stats_mode; }
 
+    void set_power_profile(PowerProfile profile) { m_power_profile = profile; }
+    [[nodiscard]] PowerProfile power_profile() const { return m_power_profile; }
+
     void set_swap_ui_keys(bool swap_ui_keys) { m_swap_ui_keys = swap_ui_keys; }
     [[nodiscard]] bool swap_ui_keys() const { return m_swap_ui_keys; }
 
@@ -375,6 +380,7 @@ class Settings : public Singleton<Settings> {
     bool m_play_audio = false;
     bool m_write_log = false;
     StreamStatsMode m_stream_stats_mode = StreamStatsMode::OFF;
+    PowerProfile m_power_profile = PowerProfile::AUTO;
     bool m_swap_ui_keys = false;
     bool m_swap_joycon_stick_to_dpad = false;
     bool m_touchscreen_mouse_mode = false;

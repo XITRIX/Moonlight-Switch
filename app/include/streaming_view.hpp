@@ -17,6 +17,11 @@
 #include "GameStreamClient.hpp"
 #include "MoonlightSession.hpp"
 #include "two_finger_scroll_recognizer.hpp"
+#ifdef __SWITCH2__
+#include <memory>
+
+class Switch2Clocks;
+#endif
 
 class StreamingView : public brls::Box {
   public:
@@ -61,6 +66,10 @@ class StreamingView : public brls::Box {
     uint64_t frameCounterSecond = 0;
     uint32_t frameCounterLostBase = 0;
     uint32_t frameCounterLost = 0;
+#ifdef __SWITCH2__
+    std::unique_ptr<Switch2Clocks> clocks;
+    void updateClocks();
+#endif
     std::string statsText;
     std::chrono::steady_clock::time_point statsTextTime{};
     float statsBounds[4] = {0, 0, 0, 0};
