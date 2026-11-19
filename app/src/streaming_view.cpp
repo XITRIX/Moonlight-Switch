@@ -356,6 +356,9 @@ void StreamingView::draw(NVGcontext* vg, float x, float y, float width,
 
     if (!tempInputLock && session->is_active())
         handleInput();
+    handleDisconnectCombo();
+    if (terminated)
+        return;
     handleOverlayCombo();
     handleMouseInputCombo();
 
@@ -582,6 +585,7 @@ void StreamingView::handleOverlayCombo() {
     for (auto button : options.buttons) {
         buttonsPressed &= controller.buttons[button];
     }
+    buttonsPressed &= !disconnectComboHeld;
 
     if (!buttonState && buttonsPressed) {
         buttonState = true;
@@ -654,6 +658,44 @@ void StreamingView::handleMouseInputCombo() {
 
         auto overlay = new StreamingInputOverlay(this);
         Application::pushActivity(new Activity(overlay));
+    }
+}
+
+void StreamingView::handleDisconnectCombo() {
+    disconnectComboHeld = false;
+    if (!this->focused)
+        return;
+
+    KeyComboOptions options = Settings::instance().disconnect_options();
+    if (options.buttons.empty())
+        return;
+
+    static ControllerState controller;
+    Application::getPlatform()->getInputManager()->updateUnifiedControllerState(
+        &controller);
+
+    static std::chrono::high_resolution_clock::time_point clock_counter;
+    static bool buttonState = false;
+    static bool used = false;
+
+    auto duration = std::chrono::duration_cast<std::chrono::seconds>(
+        std::chrono::high_resolution_clock::now() - clock_counter);
+
+    bool buttonsPressed = true;
+    for (auto button : options.buttons) {
+        buttonsPressed &= controller.buttons[button];
+    }
+    disconnectComboHeld = buttonsPressed;
+
+    if (!buttonState && buttonsPressed) {
+        buttonState = true;
+        clock_counter = std::chrono::high_resolution_clock::now();
+    } else if (buttonState && !buttonsPressed) {
+        buttonState = false;
+        used = false;
+    } else if (buttonState && duration.count() >= options.holdTime && !used) {
+        used = true;
+        terminate(false);
     }
 }
 
