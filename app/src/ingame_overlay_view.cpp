@@ -202,6 +202,12 @@ OptionsTab::OptionsTab(StreamingView* streamView) : streamView(streamView) {
         return true;
     });
 
+    typeTextButton->setText("streaming/type_text"_i18n);
+    typeTextButton->registerClickAction([this](View*) {
+        this->dismiss([this]() { this->streamView->typeText(); });
+        return true;
+    });
+
     std::vector<std::string> keyboardTypes = {
         "settings/keyboard_compact"_i18n, "settings/keyboard_fullsized"_i18n};
     keyboardType->setText("settings/keyboard_type"_i18n);

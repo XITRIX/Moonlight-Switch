@@ -198,6 +198,8 @@
         "options": "选项",
         "show_logs": "显示日志",
         "terminate": "终止应用程序",
+        "type_text": "在主机上输入文本",
+        "type_text_header": "要发送到主机的文本",
         "volume": "音量"
     },
     "tabs": {

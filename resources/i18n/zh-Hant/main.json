@@ -198,6 +198,8 @@
         "options": "選項",
         "show_logs": "顯示日誌",
         "terminate": "終止應用程式",
+        "type_text": "在主機上輸入文字",
+        "type_text_header": "要傳送到主機的文字",
         "volume": "音量"
     },
     "tabs": {

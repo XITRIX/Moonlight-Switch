@@ -198,6 +198,8 @@
         "options": "設定",
         "show_logs": "ログを表示する",
         "terminate": "アプリを終了します",
+        "type_text": "ホストに文字を入力",
+        "type_text_header": "ホストに送信するテキスト",
         "volume": "音量"
     },
     "tabs": {

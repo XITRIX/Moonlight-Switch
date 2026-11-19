@@ -198,6 +198,8 @@
         "options": "Opzioni",
         "show_logs": "Mostra log",
         "terminate": "Termina app",
+        "type_text": "Scrivi testo sull'host",
+        "type_text_header": "Testo da inviare all'host",
         "volume": "Volume"
     },
     "tabs": {

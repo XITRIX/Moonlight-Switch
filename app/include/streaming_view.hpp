@@ -30,6 +30,7 @@ class StreamingView : public brls::Box {
     void onLayout() override;
 
     void terminate(bool terminateApp);
+    void typeText();
 
     bool draw_stats = false;
 
@@ -47,6 +48,7 @@ class StreamingView : public brls::Box {
     bool blocked = false;
     bool terminated = false;
     bool tempInputLock = false;
+    size_t tempInputLockTask = -1;
     brls::Event<brls::KeyState>::Subscription keysSubscription;
     int touchScrollCounter = 0;
     size_t bottombarDelayTask = -1;
@@ -62,6 +64,7 @@ class StreamingView : public brls::Box {
     std::chrono::steady_clock::time_point statsTextTime{};
     float statsBounds[4] = {0, 0, 0, 0};
 
+    void lockInputBriefly();
     void handleInput();
     void handleOverlayCombo();
     void handleMouseInputCombo();
