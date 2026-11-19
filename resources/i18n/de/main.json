@@ -113,6 +113,7 @@
         "title": "Mauseingabemodus"
     },
     "settings": {
+        "appearance": "Darstellung",
         "audio_backend": "Audio driver",
         "av1": "AV1 (Experimentell)",
         "buttons": {
@@ -166,6 +167,11 @@
         "resolution_scale": "Skalierung",
         "image_adjustments": "Bildanpassungen",
         "dithering": "Dithering",
+        "theme": "Design",
+        "theme_dark": "Dunkel",
+        "theme_light": "Hell",
+        "theme_restart": "Das Design ändert sich beim nächsten Start von Moonlight",
+        "theme_system": "System",
         "upscaling": "Niedrige Auflösungen hochskalieren",
         "rcas_sharpening": "RCAS-Schärfung",
         "rumble_force": "Rumble force",

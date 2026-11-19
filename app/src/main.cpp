@@ -95,6 +95,14 @@ void preferSwitchCore(int ordinal) {
 } // namespace
 #endif
 
+// System keeps the variant the platform read from the console or desktop.
+static void applyTheme(ThemePreference theme) {
+    if (theme == ThemePreference::DARK)
+        brls::Application::getPlatform()->setThemeVariant(brls::ThemeVariant::DARK);
+    else if (theme == ThemePreference::LIGHT)
+        brls::Application::getPlatform()->setThemeVariant(brls::ThemeVariant::LIGHT);
+}
+
 int main(int argc, char* argv[]) {
 #ifdef __SWITCH2__
     // Keep diagnostics available after a failed launch or streaming session.
@@ -182,6 +190,8 @@ int main(int argc, char* argv[]) {
     brls::getStyle().addMetric("about/padding_top_bottom", 50);
     brls::getStyle().addMetric("about/padding_sides", 75);
     brls::getStyle().addMetric("about/description_margin", 50);
+
+    applyTheme(Settings::instance().theme());
 
     // Create and push the main activity to the stack if cannot run game from arguments
     if (!startFromArgs(argc, argv)) {

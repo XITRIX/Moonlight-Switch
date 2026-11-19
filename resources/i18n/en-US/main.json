@@ -113,6 +113,7 @@
         "title": "Mouse input mode"
     },
     "settings": {
+        "appearance": "Appearance",
         "audio_backend": "Audio driver",
         "av1": "AV1 (Experimental)",
         "buttons": {
@@ -166,6 +167,11 @@
         "resolution_scale": "Scale",
         "image_adjustments": "Image Adjustments",
         "dithering": "Dithering",
+        "theme": "Theme",
+        "theme_dark": "Dark",
+        "theme_light": "Light",
+        "theme_restart": "The theme changes the next time Moonlight starts",
+        "theme_system": "System",
         "upscaling": "Upscale lower resolutions",
         "rcas_sharpening": "RCAS sharpening",
         "rumble_force": "Rumble force",

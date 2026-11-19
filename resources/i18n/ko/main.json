@@ -113,6 +113,7 @@
         "title": "마우스 입력 모드"
     },
     "settings": {
+        "appearance": "모양",
         "audio_backend": "오디오 드라이버",
         "av1": "AV1 (실험용)",
         "buttons": {
@@ -166,6 +167,11 @@
         "resolution_scale": "배율",
         "image_adjustments": "이미지 조정",
         "dithering": "디더링",
+        "theme": "테마",
+        "theme_dark": "어둡게",
+        "theme_light": "밝게",
+        "theme_restart": "테마는 다음에 Moonlight를 시작할 때 바뀝니다",
+        "theme_system": "시스템",
         "upscaling": "저해상도 업스케일링",
         "rcas_sharpening": "RCAS 선명화",
         "rumble_force": "진동 강도",

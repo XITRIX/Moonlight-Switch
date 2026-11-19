@@ -90,6 +90,13 @@
                 id="volume_amplification"/>
                 
             <brls:Header
+                title="@i18n/settings/appearance"
+                paddingTop="60"/>
+                
+            <brls:SelectorCell
+                id="theme"/>
+                
+            <brls:Header
                 title="@i18n/settings/keys"
                 paddingTop="60"/>
                 

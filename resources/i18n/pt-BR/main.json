@@ -113,6 +113,7 @@
         "title": "Modo mouse"
     },
     "settings": {
+        "appearance": "Aparência",
         "audio_backend": "Audio driver",
         "av1": "AV1 (Experimental)",
         "buttons": {
@@ -166,6 +167,11 @@
         "resolution_scale": "Escala",
         "image_adjustments": "Ajustes de imagem",
         "dithering": "Dithering",
+        "theme": "Tema",
+        "theme_dark": "Escuro",
+        "theme_light": "Claro",
+        "theme_restart": "O tema muda na próxima vez que o Moonlight iniciar",
+        "theme_system": "Sistema",
         "upscaling": "Melhorar resoluções baixas",
         "rcas_sharpening": "Nitidez RCAS",
         "rumble_force": "Rumble force",
