@@ -316,7 +316,8 @@ void MoonlightSession::start(ServerCallback<bool> callback, bool is_sunshine) {
     m_config.packetSize = 1392;
     m_config.streamingRemotely = STREAM_CFG_AUTO;
     m_config.bitrate = Settings::instance().bitrate();
-    m_config.encryptionFlags = m_is_sunshine ? ENCFLG_ALL : ENCFLG_VIDEO;
+    // Video is still encrypted when Sunshine requires it.
+    m_config.encryptionFlags = m_is_sunshine ? ENCFLG_AUDIO : ENCFLG_VIDEO;
 
     switch (Settings::instance().video_codec()) {
     case H264:
