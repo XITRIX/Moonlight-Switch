@@ -88,6 +88,7 @@
         "rename": "이름 변경",
         "rename_title": "호스트 이름 변경",
         "remove_message": "이 호스트를 제거하겠습니까?",
+        "remove_hint": "PC에는 페어링이 그대로 남습니다. 이 콘솔을 해제하려면 Sunshine 웹 UI의 문제 해결에서 기기 페어링 해제를 사용하세요.",
         "status": "상태",
         "unable": "할 수 없음",
         "wait": "기다려 주세요...",

@@ -88,6 +88,7 @@
         "rename": "Umbenennen",
         "rename_title": "Host umbenennen",
         "remove_message": "Wollen Sie diesen Host wirklich entfernen?",
+        "remove_hint": "Der PC bleibt gekoppelt. Um diese Konsole zu entkoppeln, öffne die Sunshine-Weboberfläche, gehe zu Fehlerbehebung und nutze unter Geräte entkoppeln die Option Entkoppeln.",
         "status": "Status",
         "unable": "Nicht verfügbar",
         "wait": "Warten...",

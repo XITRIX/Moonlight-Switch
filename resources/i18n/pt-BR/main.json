@@ -88,6 +88,7 @@
         "rename": "Renomear",
         "rename_title": "Renomear host",
         "remove_message": "Tem certeza que deseja remover esse host?",
+        "remove_hint": "O PC continua pareado. Para desparear este console, abra a interface web do Sunshine, vá em Solução de problemas e use Desparear em Desparear dispositivos.",
         "status": "Status",
         "unable": "Impossível",
         "wait": "Aguarde...",

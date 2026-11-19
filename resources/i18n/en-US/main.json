@@ -88,6 +88,7 @@
         "rename": "Rename",
         "rename_title": "Rename host",
         "remove_message": "Are you sure you want to remove this host?",
+        "remove_hint": "The PC stays paired. To unpair this console, open the Sunshine web UI, go to Troubleshooting and use Unpair under Unpair Devices.",
         "status": "Status",
         "unable": "Unable",
         "wait": "Wait...",
