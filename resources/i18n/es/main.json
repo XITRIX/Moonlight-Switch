@@ -29,6 +29,7 @@
         "connect": "Añadir",
         "host_ip": "IP del servidor",
         "manual": "Manual",
+        "pair_expires": "El PIN caduca en {}",
         "pair_in_progress": "Otro dispositivo ya se está emparejando con este servidor",
         "pair_postfix": " en el servidor",
         "pair_prefix": "Emparejar\n\nConfirmar ",

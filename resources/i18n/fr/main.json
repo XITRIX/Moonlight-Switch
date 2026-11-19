@@ -29,6 +29,7 @@
         "connect": "Se connecter",
         "host_ip": "IP de l'hôte",
         "manual": "Manuel",
+        "pair_expires": "Le code PIN expire dans {}",
         "pair_in_progress": "Un autre appareil est déjà en cours d'appairage avec cet hôte",
         "pair_postfix": " sur la machine hôte",
         "pair_prefix": "Appairage\n\nEntrez ",

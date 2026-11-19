@@ -29,6 +29,7 @@
         "connect": "Conectar",
         "host_ip": "Host IP",
         "manual": "Manual",
+        "pair_expires": "O PIN expira em {}",
         "pair_in_progress": "Outro dispositivo já está emparelhando com este host",
         "pair_postfix": " no dispositivo host",
         "pair_prefix": "Emparelhar\n\nPressione ",

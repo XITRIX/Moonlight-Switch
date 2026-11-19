@@ -29,6 +29,7 @@
         "connect": "연결",
         "host_ip": "호스트 IP",
         "manual": "수동",
+        "pair_expires": "PIN 만료까지 {} 남음",
         "pair_in_progress": "다른 기기가 이미 이 호스트와 페어링 중입니다",
         "pair_postfix": " 호스트 장치",
         "pair_prefix": "페어링\n\n진입 ",

@@ -29,6 +29,7 @@
         "connect": "连接",
         "host_ip": "主机IP",
         "manual": "手动",
+        "pair_expires": "PIN 将在 {} 后过期",
         "pair_in_progress": "另一台设备正在与此主机配对",
         "pair_postfix": " 在计算机设备上输入",
         "pair_prefix": "配对\n\n在主机设备上输入 ",

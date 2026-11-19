@@ -29,6 +29,7 @@
         "connect": "Verbinden",
         "host_ip": "Host IP",
         "manual": "Manuell",
+        "pair_expires": "Die PIN läuft in {} ab",
         "pair_in_progress": "Ein anderes Gerät wird bereits mit diesem Host gekoppelt",
         "pair_postfix": " auf dem Host ein",
         "pair_prefix": "Koppeln\n\nGeben Sie ",

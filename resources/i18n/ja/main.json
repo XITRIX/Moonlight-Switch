@@ -29,6 +29,7 @@
         "connect": "接続",
         "host_ip": "ホストIP",
         "manual": "手動",
+        "pair_expires": "PINの有効期限まで残り {}",
         "pair_in_progress": "別のデバイスがこのホストとペアリング中です",
         "pair_postfix": " ホストデバイス上",
         "pair_prefix": "ペアリング\n\n入力　",

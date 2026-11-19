@@ -29,6 +29,7 @@
         "connect": "連接",
         "host_ip": "主機IP",
         "manual": "手動",
+        "pair_expires": "PIN 將在 {} 後過期",
         "pair_in_progress": "另一台裝置正在與此主機配對",
         "pair_postfix": " on your host device",
         "pair_prefix": "配對\n\n在主機裝置上輸入 ",

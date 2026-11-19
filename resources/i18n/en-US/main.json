@@ -29,6 +29,7 @@
         "connect": "Connect",
         "host_ip": "Host IP",
         "manual": "Manual",
+        "pair_expires": "The PIN expires in {}",
         "pair_in_progress": "Another device is already pairing with this host",
         "pair_postfix": " on your host device",
         "pair_prefix": "Pair up\n\nEnter ",

@@ -6,8 +6,10 @@
 //
 
 #include "add_host_tab.hpp"
+#include "CryptoManager.hpp"
 #include "DiscoverManager.hpp"
 #include "helper.hpp"
+#include "http.h"
 #include "main_tabs_view.hpp"
 
 #if defined(_WIN32)
@@ -18,12 +20,39 @@
 #include <sys/socket.h>
 #endif
 
+#include <algorithm>
+#include <cstring>
+
 #if defined(PLATFORM_IOS) || defined(PLATFORM_TVOS) || defined(PLATFORM_VISIONOS)
 extern void darwin_mdns_start(ServerCallback<std::vector<Host>>& callback);
 extern void darwin_mdns_stop();
 #endif
 
 namespace {
+std::string random_pin() {
+    // Drop the top of the range so that every PIN is equally likely
+    const uint32_t limit = UINT32_MAX - UINT32_MAX % 10000;
+    while (true) {
+        Data bytes = CryptoManager::random_bytes(sizeof(uint32_t));
+        if (bytes.size() != sizeof(uint32_t)) {
+            return "";
+        }
+
+        uint32_t value;
+        memcpy(&value, bytes.bytes(), sizeof(value));
+        if (value < limit) {
+            return fmt::format("{:04}", value % 10000);
+        }
+    }
+}
+
+std::string pin_expires_text(brls::Time deadline) {
+    brls::Time left = std::max<brls::Time>(deadline - brls::getCPUTimeUsec(), 0);
+    int seconds = (int)((left + 999999) / 1000000);
+    return brls::getStr("add_host/pair_expires",
+                        fmt::format("{}:{:02}", seconds / 60, seconds % 60));
+}
+
 std::string strip_ipv4_port(const std::string& address) {
     const auto firstColon = address.find(':');
     if (firstColon == std::string::npos) {
@@ -212,28 +241,46 @@ void AddHostTab::connectHost(const Host& host) {
                         return;
                     }
 
-                    auto pin = fmt::format("{}{}{}{}", (int)rand() % 10, (int)rand() % 10,
-                            (int)rand() % 10, (int)rand() % 10);
+                    auto pin = random_pin();
+                    if (pin.empty()) {
+                        showError("error/unknown_error"_i18n,
+                                  [] { AddHostTab::startSearching(); });
+                        return;
+                    }
 
                     auto cancelled = std::make_shared<bool>(false);
+                    auto countdown = std::make_shared<brls::RepeatingTimer>();
                     brls::Dialog* dialog = createLoadingDialog(
                         "add_host/pair_prefix"_i18n + pin +
                             "add_host/pair_postfix"_i18n,
-                        [cancelled] {
+                        [cancelled, countdown] {
                             *cancelled = true;
+                            countdown->stop();
                             GameStreamClient::instance().cancel_pair();
                             AddHostTab::startSearching();
                         });
+
+                    auto* label = (brls::Label*)dialog->getView("loading_text");
+                    std::string text = label->getFullText();
+                    brls::Time deadline = brls::getCPUTimeUsec() +
+                        (brls::Time)HTTPRequestTimeoutPairing * 1000000;
+                    label->setText(text + "\n" + pin_expires_text(deadline));
+                    countdown->setCallback([label, text, deadline] {
+                        label->setText(text + "\n" + pin_expires_text(deadline));
+                    });
+                    countdown->start(1000);
                     dialog->open();
 
                     ASYNC_RETAIN
                     GameStreamClient::instance().pair(
                         pairedHost, pin,
-                        [ASYNC_TOKEN, pairedHost, dialog, cancelled](const GSResult<bool>& result) {
+                        [ASYNC_TOKEN, pairedHost, dialog, cancelled,
+                         countdown](const GSResult<bool>& result) {
                             ASYNC_RELEASE
                             if (*cancelled) {
                                 return;
                             }
+                            countdown->stop();
                             dialog->dismiss([result, pairedHost] {
                                 if (result.isSuccess()) {
                                     Settings::instance().add_host(pairedHost);
