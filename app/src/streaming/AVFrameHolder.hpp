@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Singleton.hpp"
+#include <array>
 #include <chrono>
 #include <functional>
 #include "Settings.hpp"
@@ -10,6 +11,13 @@
 extern "C" {
 #include <libavcodec/avcodec.h>
 }
+
+struct FrameCounter {
+    uint64_t second = 0;
+    size_t presented = 0;
+    size_t skipped = 0;
+    double latencyMs = -1.0;
+};
 
 class AVFrameQueue {
 public:
@@ -39,6 +47,9 @@ public:
     [[nodiscard]] size_t getPlayoutResyncStat() const;
     [[nodiscard]] double getEstimatedSourceFps() const;
 
+    void recordArrival(int64_t pts, std::chrono::steady_clock::time_point arrival);
+    [[nodiscard]] FrameCounter frameCounter() const;
+
     void cleanup();
 
 private:
@@ -48,6 +59,21 @@ private:
     void recordArrivalLocked(std::chrono::steady_clock::time_point now);
     void resetArrivalRateEstimatorLocked();
     void trimToPlayoutWindowLocked();
+    void updateFrameCounterLocked(std::chrono::steady_clock::time_point now);
+    void countPresentedLocked(const AVFrame* frame, std::chrono::steady_clock::time_point now);
+
+    struct Arrival {
+        int64_t pts = 0;
+        std::chrono::steady_clock::time_point time{};
+    };
+    std::array<Arrival, 64> arrivals{};
+    size_t nextArrival = 0;
+    std::chrono::steady_clock::time_point counterStart{};
+    size_t counterPresented = 0;
+    size_t counterSkippedBase = 0;
+    std::chrono::nanoseconds counterLatency{0};
+    size_t counterLatencySamples = 0;
+    FrameCounter lastFrameCounter;
     size_t limit = 0;
     std::queue<AVFrame*> queue;
     std::queue<AVFrame*> freeQueue;
@@ -131,6 +157,11 @@ class AVFrameHolder : public Singleton<AVFrameHolder> {
     [[nodiscard]] size_t getFrameQueueLocalClockPacedFrameStat() const { return m_frame_queue.getLocalClockPacedFrameStat(); }
     [[nodiscard]] size_t getFrameQueuePlayoutResyncStat() const { return m_frame_queue.getPlayoutResyncStat(); }
     [[nodiscard]] double getFrameQueueEstimatedSourceFps() const { return m_frame_queue.getEstimatedSourceFps(); }
+
+    void recordArrival(int64_t pts, std::chrono::steady_clock::time_point arrival) {
+        m_frame_queue.recordArrival(pts, arrival);
+    }
+    [[nodiscard]] FrameCounter getFrameCounter() const { return m_frame_queue.frameCounter(); }
 
   private:
     AVFrameQueue m_frame_queue;

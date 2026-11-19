@@ -255,9 +255,14 @@ OptionsTab::OptionsTab(StreamingView* streamView) : streamView(streamView) {
                                 brls::Application::enableDebuggingView(value);
                             });
 
-    debugButton->init(
-        "streaming/debug_info"_i18n, streamView->draw_stats,
-        [streamView](bool value) { streamView->draw_stats = value; });
+    debugButton->init("settings/stream_stats"_i18n,
+                      {"hints/off"_i18n, "settings/stream_stats_compact"_i18n,
+                       "settings/stream_stats_detailed"_i18n},
+                      (int)Settings::instance().stream_stats_mode(),
+                      [](int selected) {
+                          Settings::instance().set_stream_stats_mode(
+                              (StreamStatsMode)selected);
+                      });
 
 #ifdef SUPPORT_UPSCALING
     if (!isVideoUpscalingSupported()) {

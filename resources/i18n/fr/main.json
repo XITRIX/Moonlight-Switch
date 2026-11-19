@@ -166,6 +166,9 @@
         "resolution_scale": "Échelle",
         "image_adjustments": "Ajustements d'image",
         "dithering": "Tramage",
+        "stream_stats": "Statistiques du stream",
+        "stream_stats_compact": "Compactes",
+        "stream_stats_detailed": "Détaillées",
         "upscaling": "Mettre à l'échelle les basses résolutions",
         "rcas_sharpening": "Netteté RCAS",
         "rumble_force": "Force de vibration",
@@ -187,7 +190,6 @@
     },
     "streaming": {
         "connection": "Connexion",
-        "debug_info": "Infos de Debug",
         "disconnect": "Déconnecter",
         "esc": "Esc",
         "input": "Modes de saisie",

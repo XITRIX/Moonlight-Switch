@@ -31,8 +31,6 @@ class StreamingView : public brls::Box {
 
     void terminate(bool terminateApp);
 
-    bool draw_stats = false;
-
     Host getHost() { return host; }
 
     AppInfo getApp() { return app; }
@@ -58,6 +56,11 @@ class StreamingView : public brls::Box {
     void onWindowFocusChanged(bool focused);
 
     std::string buildStatsText();
+    std::string buildCompactStatsText();
+    std::string buildFrameCounterText();
+    uint64_t frameCounterSecond = 0;
+    uint32_t frameCounterLostBase = 0;
+    uint32_t frameCounterLost = 0;
     std::string statsText;
     std::chrono::steady_clock::time_point statsTextTime{};
     float statsBounds[4] = {0, 0, 0, 0};
