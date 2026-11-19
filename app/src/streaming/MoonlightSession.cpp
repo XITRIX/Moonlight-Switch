@@ -221,8 +221,11 @@ void MoonlightSession::video_decoder_cleanup() {
 int MoonlightSession::video_decoder_submit_decode_unit(
     PDECODE_UNIT decode_unit) {
     if (m_active_session && m_active_session->m_video_decoder) {
-        return m_active_session->m_video_decoder->submit_decode_unit(
+        int result = m_active_session->m_video_decoder->submit_decode_unit(
             decode_unit);
+        if (result == DR_NEED_IDR)
+            m_active_session->m_idr_requests++;
+        return result;
     }
     return DR_OK;
 }

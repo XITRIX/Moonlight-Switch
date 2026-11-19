@@ -431,7 +431,16 @@ void StreamingView::updateBitrateAdapter() {
         return;
     bitrateSampleTime = now;
 
-    auto change = bitrateAdapter.update(session->connection_status_is_poor());
+    BitrateAdapter::Second second;
+    second.bitrate = session->bitrate();
+    second.poor = session->connection_status_is_poor();
+    LiGetEstimatedRttInfo(&second.rtt_ms, nullptr);
+    second.dropped_frames =
+        session->session_stats()->video_decode_stats.network_dropped_frames;
+    second.idr_requests = session->idr_requests();
+    second.pending_frames = LiGetPendingVideoFrames();
+
+    auto change = bitrateAdapter.update(second);
     if (change == BitrateAdapter::Change::NONE)
         return;
 

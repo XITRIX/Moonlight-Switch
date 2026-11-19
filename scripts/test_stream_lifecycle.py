@@ -55,7 +55,7 @@ struct VideoDecodeStats {};
 struct VideoRenderStats {};
 struct NVGcontext {};
 struct AVFrame {};
-struct STREAM_CONFIGURATION {};
+struct STREAM_CONFIGURATION { int bitrate; };
 struct CONNECTION_LISTENER_CALLBACKS {};
 struct DECODER_RENDERER_CALLBACKS {};
 struct AUDIO_RENDERER_CALLBACKS {};
