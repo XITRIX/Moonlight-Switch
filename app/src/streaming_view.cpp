@@ -506,12 +506,13 @@ void StreamingView::reportTermination() {
         return;
     terminationReported = true;
 
-    if (session->termination_error() != ML_ERROR_NO_VIDEO_TRAFFIC) {
+    std::string message = session->termination_message();
+    if (message.empty()) {
         terminate(false);
         return;
     }
 
-    showError("error/no_video"_i18n, [this]() { terminate(false); });
+    showError(message, [this]() { terminate(false); });
 }
 
 void StreamingView::terminate(bool terminateApp) {

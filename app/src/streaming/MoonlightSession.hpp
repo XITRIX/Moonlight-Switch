@@ -37,6 +37,8 @@ class MoonlightSession {
     bool is_active() const { return m_is_active; }
     bool is_terminated() const { return m_is_terminated; }
     int termination_error() const { return m_termination_error; }
+    // Why the stream ended, or empty when the host or the user ended it.
+    std::string termination_message() const;
 
     bool connection_status_is_poor() const {
         return m_connection_status_is_poor;
@@ -95,6 +97,9 @@ class MoonlightSession {
     std::atomic<bool> m_stop_requested{false};
     uint64_t m_generation = 0;
     int m_termination_error = 0;
+    std::atomic<int> m_failed_stage{0};
+    bool m_reconnect_failed = false;
+    std::string m_reconnect_error;
     bool m_connection_status_is_poor = false;
     bool m_suspended = false;
     bool m_invalidate_renderer_pending = false;

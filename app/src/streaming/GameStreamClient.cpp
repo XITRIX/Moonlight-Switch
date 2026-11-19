@@ -649,6 +649,17 @@ static std::string pair_error(int status) {
     }
 }
 
+static std::string start_error(int status) {
+    switch (status) {
+    case GS_TIMEOUT:
+        return "error/host_timeout"_i18n;
+    case GS_NOT_SUPPORTED_4K:
+        return "error/no_4k"_i18n;
+    default:
+        return gs_error();
+    }
+}
+
 void GameStreamClient::pair(const std::string& address, const std::string& pin,
                             ServerCallback<bool>& callback) {
     auto cancelled = std::make_shared<std::atomic_bool>(false);
@@ -772,7 +783,8 @@ void GameStreamClient::start(const std::string& address,
                 if (status == GS_OK) {
                     callback(GSResult<STREAM_CONFIGURATION>::success(m_config));
                 } else {
-                    callback(GSResult<STREAM_CONFIGURATION>::failure(gs_error()));
+                    callback(GSResult<STREAM_CONFIGURATION>::failure(
+                        start_error(status)));
                 }
             });
         });

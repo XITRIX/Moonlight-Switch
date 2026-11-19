@@ -71,29 +71,64 @@ MoonlightSession::~MoonlightSession() {
 
 // MARK: Connection callbacks
 
-static const char* stages[] = {"STAGE_NONE",
-                               "STAGE_PLATFORM_INIT",
-                               "STAGE_NAME_RESOLUTION",
-                               "STAGE_RTSP_HANDSHAKE",
-                               "STAGE_CONTROL_STREAM_INIT",
-                               "STAGE_VIDEO_STREAM_INIT",
-                               "STAGE_AUDIO_STREAM_INIT",
-                               "STAGE_INPUT_STREAM_INIT",
-                               "STAGE_CONTROL_STREAM_START",
-                               "STAGE_VIDEO_STREAM_START",
-                               "STAGE_AUDIO_STREAM_START",
-                               "STAGE_INPUT_STREAM_START"};
-
 void MoonlightSession::connection_stage_starting(int stage) {
-    brls::Logger::info("MoonlightSession: Starting: {}", stages[stage]);
+    brls::Logger::info("MoonlightSession: Starting: {}", LiGetStageName(stage));
 }
 
 void MoonlightSession::connection_stage_complete(int stage) {
-    brls::Logger::info("MoonlightSession: Complete: {}", stages[stage]);
+    brls::Logger::info("MoonlightSession: Complete: {}", LiGetStageName(stage));
 }
 
 void MoonlightSession::connection_stage_failed(int stage, int error_code) {
-    brls::Logger::error("MoonlightSession: Failed: {} with error code: {}", stages[stage], error_code);
+    brls::Logger::error("MoonlightSession: Failed: {} with error code: {}",
+                        LiGetStageName(stage), error_code);
+    if (m_active_session)
+        m_active_session->m_failed_stage = stage;
+}
+
+static std::string stage_error(int stage) {
+    switch (stage) {
+    case STAGE_NAME_RESOLUTION:
+        return "error/stage_address"_i18n;
+    case STAGE_RTSP_HANDSHAKE:
+        return "error/stage_rtsp"_i18n;
+    case STAGE_CONTROL_STREAM_INIT:
+    case STAGE_CONTROL_STREAM_START:
+        return "error/stage_control"_i18n;
+    case STAGE_VIDEO_STREAM_INIT:
+    case STAGE_VIDEO_STREAM_START:
+    case STAGE_AUDIO_STREAM_INIT:
+    case STAGE_AUDIO_STREAM_START:
+    case STAGE_INPUT_STREAM_INIT:
+    case STAGE_INPUT_STREAM_START:
+        return "error/stage_media"_i18n;
+    default:
+        return "error/stream_start"_i18n;
+    }
+}
+
+std::string MoonlightSession::termination_message() const {
+    if (m_reconnect_failed) {
+        std::string message = "error/connection_lost"_i18n;
+        if (!m_reconnect_error.empty())
+            message += "\n\n" + m_reconnect_error;
+        return message;
+    }
+
+    switch (m_termination_error) {
+    case ML_ERROR_NO_VIDEO_TRAFFIC:
+        return "error/no_video"_i18n;
+    case ML_ERROR_NO_VIDEO_FRAME:
+        return "error/no_video_frame"_i18n;
+    case ML_ERROR_UNEXPECTED_EARLY_TERMINATION:
+        return "error/early_termination"_i18n;
+    case ML_ERROR_PROTECTED_CONTENT:
+        return "error/protected_content"_i18n;
+    case ML_ERROR_FRAME_CONVERSION:
+        return "error/frame_conversion"_i18n;
+    default:
+        return "";
+    }
 }
 
 void MoonlightSession::connection_started() {
@@ -128,14 +163,21 @@ void MoonlightSession::handle_connection_terminated(int error_code) {
         return;
     }
 
-    // No video packet ever arrived, so a reconnect would only wait again.
-    // Usually the PC's firewall is dropping the video port.
-    if (error_code == ML_ERROR_NO_VIDEO_TRAFFIC) {
-        brls::Logger::info("MoonlightSession: No video traffic from the host");
+    // These come from the start of a stream or from the host itself, so a
+    // reconnect would fail the same way. Report them instead.
+    switch (error_code) {
+    case ML_ERROR_NO_VIDEO_TRAFFIC:
+    case ML_ERROR_NO_VIDEO_FRAME:
+    case ML_ERROR_UNEXPECTED_EARLY_TERMINATION:
+    case ML_ERROR_PROTECTED_CONTENT:
+    case ML_ERROR_FRAME_CONVERSION:
+        brls::Logger::info("MoonlightSession: Ended by error {}", error_code);
         m_termination_error = error_code;
         m_is_active = false;
         m_is_terminated = true;
         return;
+    default:
+        break;
     }
 
     if (error_code != 0) {
@@ -281,6 +323,7 @@ void MoonlightSession::start(ServerCallback<bool> callback, bool is_sunshine) {
     m_stop_requested = false;
     m_is_terminated = false;
     m_termination_error = 0;
+    m_failed_stage = STAGE_NONE;
 
     LiInitializeStreamConfiguration(&m_config);
 
@@ -396,8 +439,8 @@ void MoonlightSession::start(ServerCallback<bool> callback, bool is_sunshine) {
 
                     if (result != 0) {
                         LiStopConnection();
-                        callback(
-                            GSResult<bool>::failure("error/stream_start"_i18n));
+                        callback(GSResult<bool>::failure(
+                            stage_error(m_failed_stage)));
                     } else {
                         callback(GSResult<bool>::success(true));
                     }
@@ -455,6 +498,8 @@ void MoonlightSession::restart() {
                 brls::Logger::info("MoonlightSession: Reconnected");
             } else {
                 brls::Logger::info("MoonlightSession: Reconnection failed");
+                m_active_session->m_reconnect_failed = true;
+                m_active_session->m_reconnect_error = result.error();
                 m_active_session->m_is_active = false;
                 m_active_session->m_is_terminated = true;
             }
