@@ -56,6 +56,7 @@ class MoonlightSession {
     static void connection_started();
     static void connection_terminated(int);
     void handle_connection_terminated(int error_code);
+    void follow_display_size();
     static void connection_log_message(const char* format, ...);
     static void connection_rumble(unsigned short, unsigned short,
                                   unsigned short);
@@ -101,4 +102,5 @@ class MoonlightSession {
 
     SessionStats m_session_stats = {};
     uint64_t m_last_stats_update_ms = 0;
+    uint64_t m_display_size_changed_ms = 0;
 };
