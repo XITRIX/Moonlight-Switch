@@ -131,6 +131,11 @@ class Settings : public Singleton<Settings> {
     [[nodiscard]] int fps() const { return m_fps; }
     void set_fps(int fps) { m_fps = fps; }
 
+#ifdef __SWITCH2__
+    [[nodiscard]] int fps_before_2160p() const { return m_fps_before_2160p; }
+    void set_fps_before_2160p(int fps) { m_fps_before_2160p = fps; }
+#endif
+
     [[nodiscard]] VideoCodec video_codec() const { return m_video_codec; }
     void set_video_codec(VideoCodec video_codec) { m_video_codec = video_codec; }
 
@@ -332,6 +337,9 @@ class Settings : public Singleton<Settings> {
     std::vector<KeyMappingLayout>* get_mapping_laouts() { return &m_mapping_laouts; }
 
     void load();
+    // Every setting back to its default. Hosts, favorites and custom
+    // mapping layouts are kept.
+    void reset_to_defaults();
     void save();
 
   private:
@@ -346,6 +354,9 @@ class Settings : public Singleton<Settings> {
     int m_resolution = 720;
     int m_native_resolution_scale = 100;
     int m_fps = 60;
+#ifdef __SWITCH2__
+    int m_fps_before_2160p = 0;
+#endif
 #if defined(__PSV__) || defined(__SWITCH2__)
     VideoCodec m_video_codec = H264;
 #else
