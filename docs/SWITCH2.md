@@ -340,6 +340,42 @@ capture hash and the test limits. Source capture:
 `device-hardware-registration-20261113-212724.log`. This qualifies H.264;
 AV1 hardware output and HEVC software performance remain separate checks.
 
+### AV1 on the device, from an independent client
+
+These AV1 measurements were taken on a Switch 2 with a different client,
+moonlight-nx2, not with `Switch2VideoDecoder`. That client submits AV1 temporal
+units to the same SDK `VideoDecoder` service (Main8, 10-byte codec
+configuration) and presents with its own renderer. The results show what the
+hardware and service do. They do not show that this backend's AV1 path works,
+so AV1 here stays unqualified until it is run from this tree.
+
+Measured on the console with Sunshine as the host. The 1080p run was handheld
+and the others docked. The rows come from one test build's runtime logs, with
+zero dropped units and zero decoder errors in each:
+
+| Stream | Result |
+| --- | --- |
+| 1920x1080 AV1, 120 fps | decoded and presented 119-120 frames/s over several minutes; service time per frame averaged about 8.3 ms, never above about 12 ms |
+| 2560x1440 AV1, 120 fps | 21,723 of 21,732 units presented over about 181 s, display 119-120/s; service time about 8.3 ms (max about 10.6 ms) |
+| 3840x2160 AV1, 60 fps | 443 of 445 units presented, display 59-60/s; service time about 9.9 ms (max about 11.4 ms) in a short window of about 60 frames |
+
+The SDK header's 60 fps ceiling and pixel budget did not stop 1440p120 in this
+test: the client registered the decoder at 60 fps for a 120 fps stream (30 for a 60 fps
+stream at 4K), as this backend does, and the service decoded the 120 fps stream. The 4K60 sample is short, so a longer 4K AV1 run is still needed.
+For comparison, the same client measured about 96 decoded frames per second for
+1440p H.264 at 120 fps, so it offers 1440p H.264 at 60 fps only.
+
+Known failures on the same hardware:
+
+- An AV1 probe that registered decoder image memory through the native image
+  path was refused with `0x280f3` (the plain backing attachment failed the same
+  way), and produced no frames. AV1 worked only through the decoder service's own
+  buffers with a CPU copy-back, which is what this backend also does.
+- At 4K the client's input buffer is 4 MiB. A larger AV1 keyframe was skipped
+  and a new one requested, which showed as a short stall; a lower bitrate avoids it.
+
+Not measured: end-to-end latency, HDR, and AV1 above 8 bits.
+
 ## Console qualification
 
 Copy the NRO to its own folder, for example
