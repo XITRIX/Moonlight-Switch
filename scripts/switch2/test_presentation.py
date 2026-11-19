@@ -28,7 +28,8 @@ def main():
         )
         (tmp / "Settings.hpp").write_text(
             '#pragma once\n#include "Singleton.hpp"\n'
-            "class Settings:public Singleton<Settings>{public:int frames_queue_size(){return 1;}};\n"
+            "class Settings:public Singleton<Settings>{public:int frames_queue_size(){return 1;}"
+            "bool low_latency_video(){return false;}};\n"
         )
         (tmp / "test.cpp").write_text(
             r"""
@@ -77,6 +78,20 @@ int main(){
         for(int i=5;i<30;++i)push(i);
         assert(queue.size()<=queue.capacity());
     }
+    {
+        AVFrameQueue queue;
+        queue.configure(1,120,true,4,true);
+        auto push=[&](int64_t pts){auto* f=queue.acquireWriteFrame();f->pts=pts;assert(queue.pushTransferred(f));};
+        bool consumed=false;
+        push(1);
+        assert(queue.pop(&consumed)->pts==1 && consumed); // no jitter reserve
+        push(2);push(3);push(4);
+        assert(queue.pop(&consumed)->pts==4 && consumed); // newest frame wins
+        assert(queue.size()==0);
+        assert(queue.pop(&consumed)->pts==4 && !consumed);
+        push(5);
+        assert(queue.pop(&consumed)->pts==5 && consumed);
+    }
     assert(live==0);
 }
 """
@@ -99,7 +114,7 @@ int main(){
             check=True,
         )
         subprocess.run([str(binary)], check=True)
-    print("Native queue arrival pacing and VRR presentation policy passed")
+    print("Native queue arrival pacing, low latency mode and VRR presentation policy passed")
 
 
 if __name__ == "__main__":

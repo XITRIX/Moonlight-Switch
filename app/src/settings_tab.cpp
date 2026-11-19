@@ -382,6 +382,9 @@ SettingsTab::SettingsTab() {
     hwDecoding->setEnabled(false);
 #endif
 
+    lowLatencyVideo->init("settings/low_latency_video"_i18n, Settings::instance().low_latency_video(),
+                          [](bool value) { Settings::instance().set_low_latency_video(value); });
+
 #if defined(__PSV__)
     const float mbpsMaxLimit = 20000;
 #elif defined(PLATFORM_SWITCH)

@@ -148,6 +148,7 @@
         "keys_mapping_new_title": "New layout",
         "keys_mapping_swap": "Switch (Swap / and /)",
         "keys_mapping_title": "Keys mapping layout",
+        "low_latency_video": "低遅延ビデオ",
         "mouse": "マウス",
         "mouse_input": "Mouse input mode",
         "mouse_input_setup_message": "Press keys you'd like to use to open Mouse input mode:\n\n",

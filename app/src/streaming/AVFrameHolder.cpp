@@ -159,6 +159,10 @@ AVFrame* AVFrameQueue::pop(bool* consumed) {
         frameCredit = 0.0;
         playoutResyncStat++;
         dueFrames = 1;
+    } else if (latestOnly) {
+        // Low latency mode shows the newest decoded frame on every draw and
+        // drops anything older instead of pacing it out.
+        dueFrames = std::max<size_t>(queue.size(), 1);
     }
 #ifdef __SWITCH2__
     else if (transferOwnership) {
@@ -255,7 +259,8 @@ void AVFrameQueue::recycleWriteFrame(AVFrame*& frame) {
 }
 
 void AVFrameQueue::configure(
-    size_t queueLimit, int configuredStreamFps, bool transferOwnershipEnabled, size_t capacityLimit)
+    size_t queueLimit, int configuredStreamFps, bool transferOwnershipEnabled, size_t capacityLimit,
+    bool latestOnlyEnabled)
 {
     std::lock_guard<std::mutex> lock(m_mutex);
     const size_t configuredDepth = std::max<size_t>(queueLimit, 1);
@@ -266,6 +271,7 @@ void AVFrameQueue::configure(
         configuredDepth > 1 ? std::min<size_t>(configuredDepth - 1, 2) : 0;
     targetBufferedFrames  = std::min(targetBufferedFrames, limit - 1);
     transferOwnership = transferOwnershipEnabled;
+    latestOnly = latestOnlyEnabled;
     streamFps = configuredStreamFps;
     adaptiveFrameInterval = std::chrono::nanoseconds::zero();
     drawClockStarted = false;
