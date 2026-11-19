@@ -198,6 +198,7 @@
         "options": "Opzioni",
         "show_logs": "Mostra log",
         "terminate": "Termina app",
+        "touch_unsupported": "Questo PC non accetta l'input touch, quindi il tocco muove il mouse",
         "volume": "Volume"
     },
     "tabs": {

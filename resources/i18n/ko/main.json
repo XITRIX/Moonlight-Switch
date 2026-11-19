@@ -198,6 +198,7 @@
         "options": "옵션",
         "show_logs": "정보 표시",
         "terminate": "앱 종료",
+        "touch_unsupported": "이 PC는 터치 입력을 받지 않으므로 터치로 마우스를 움직입니다",
         "volume": "볼륨"
     },
     "tabs": {

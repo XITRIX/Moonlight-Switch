@@ -198,6 +198,7 @@
         "options": "Ajustes",
         "show_logs": "Mostrar logs",
         "terminate": "Cerrar aplicación",
+        "touch_unsupported": "Este PC no acepta entrada táctil, así que el toque mueve el ratón",
         "volume": "Volumen"
     },
     "tabs": {

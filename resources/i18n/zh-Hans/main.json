@@ -198,6 +198,7 @@
         "options": "选项",
         "show_logs": "显示日志",
         "terminate": "终止应用程序",
+        "touch_unsupported": "此电脑不支持触摸输入，触摸将改为移动鼠标",
         "volume": "音量"
     },
     "tabs": {

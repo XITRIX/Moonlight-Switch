@@ -632,9 +632,19 @@ void MoonlightInputManager::handleInput(bool ignoreTouch) {
                 activeTouchIDs.erase(touch.fingerId);
             }
 
-            if (LiSendTouchEvent(eventType, touch.fingerId, touch.position.x / (float) Application::contentWidth,
-                                 touch.position.y / (float) Application::contentHeight, 0, 0, 0, LI_ROT_UNKNOWN) ==
+            const float width = Application::contentWidth;
+            const float height = Application::contentHeight;
+            const uint16_t rotation = touch.rotation < 0 ? LI_ROT_UNKNOWN : touch.rotation;
+            if (LiSendTouchEvent(eventType, touch.fingerId, touch.position.x / width,
+                                 touch.position.y / height, touch.pressure,
+                                 touch.contactSize.width / width,
+                                 touch.contactSize.height / height, rotation) ==
                 LI_ERR_UNSUPPORTED && i == 0) {
+                if (!touchFallbackNoticeShown.exchange(true)) {
+                    brls::Logger::info("Host takes no touch input, touch moves the mouse instead");
+                    brls::Application::notify("streaming/touch_unsupported"_i18n);
+                }
+
                 // Fallback to move cursor and click if touch unsupported
                 if (touch.phase != TouchPhase::NONE) {
                     LiSendMousePositionEvent(touch.position.x, touch.position.y, Application::contentWidth,

@@ -198,6 +198,7 @@
         "options": "Einstellungen",
         "show_logs": "Protokolle anzeigen",
         "terminate": "Programm beenden",
+        "touch_unsupported": "Dieser PC nimmt keine Toucheingabe an, Berührungen bewegen stattdessen die Maus",
         "volume": "Lautstärke"
     },
     "tabs": {
