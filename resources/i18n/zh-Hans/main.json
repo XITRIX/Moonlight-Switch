@@ -115,6 +115,7 @@
     "settings": {
         "audio_backend": "音频驱动",
         "av1": "AV1 (实验性)",
+        "bitrate_auto": "自动",
         "buttons": {
             "chat": "聊天（C）",
             "home": "Home",

@@ -115,6 +115,7 @@
     "settings": {
         "audio_backend": "Driver audio",
         "av1": "AV1 (Expérimental)",
+        "bitrate_auto": "Automatique",
         "buttons": {
             "chat": "Chat (C)",
             "home": "Home",
