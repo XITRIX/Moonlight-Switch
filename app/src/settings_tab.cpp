@@ -18,6 +18,9 @@
 #include "mapping_layout_editor.hpp"
 #include "halfcon_mapping_view.hpp"
 #include "UpscalingSupport.hpp"
+#ifdef __SWITCH2__
+#include "Switch2VideoDecoder.hpp"
+#endif
 #include <cmath>
 #include <iomanip>
 #include <sstream>
@@ -66,6 +69,19 @@ std::string getDitheringStrengthText(float strength) {
 std::string getRcasStrengthText(float strength) {
     return std::to_string(int(strength * 100.0f)) + "%";
 }
+
+#ifdef __SWITCH2__
+int codecFormats(VideoCodec codec) {
+    switch (codec) {
+    case H265:
+        return VIDEO_FORMAT_MASK_H265;
+    case AV1:
+        return VIDEO_FORMAT_MASK_AV1;
+    default:
+        return VIDEO_FORMAT_MASK_H264;
+    }
+}
+#endif
 }
 
 #if defined(__SWITCH__)
@@ -322,21 +338,28 @@ SettingsTab::SettingsTab() {
         }
     });
 
+#ifdef __SWITCH2__
+    // Offer the codecs the decoder takes, in hardware or through FFmpeg.
+    std::vector<VideoCodec> supportedCodecs;
+    for (VideoCodec candidate : {H264, H265, AV1}) {
+        if (codecFormats(candidate) & (Switch2VideoDecoder::hardwareFormats() |
+                                       Switch2VideoDecoder::softwareFormats()))
+            supportedCodecs.push_back(candidate);
+    }
+#else
     std::vector<VideoCodec> supportedCodecs = {
         H264,
 #if !defined(__PSV__)
         H265,
 #endif
-#ifdef __SWITCH2__
-        AV1,
-#endif
     };
+#endif
 
     std::vector<std::string> supportedCodecNames;
     for (int i = 0; i < supportedCodecs.size(); i++) {
         std::string name = getVideoCodecName(supportedCodecs[i]);
 #ifdef __SWITCH2__
-        if (supportedCodecs[i] == H265)
+        if (!(codecFormats(supportedCodecs[i]) & Switch2VideoDecoder::hardwareFormats()))
             name += " (software)";
 #endif
         supportedCodecNames.push_back(name);
@@ -355,8 +378,7 @@ SettingsTab::SettingsTab() {
         {
             Settings::instance().set_video_codec(supportedCodecs[selected]);
 #ifdef __SWITCH2__
-            hwDecoding->setOn(supportedCodecs[selected] != H265 && Settings::instance().use_hw_decoding());
-            hwDecoding->setEnabled(supportedCodecs[selected] != H265);
+            updateHwDecoding(supportedCodecs[selected]);
 #endif
         });
 
@@ -367,15 +389,11 @@ SettingsTab::SettingsTab() {
     requestHdr->removeFromSuperView(true);
  #endif
 
-    hwDecoding->init("settings/use_hw_decoding"_i18n,
-#ifdef __SWITCH2__
-        Settings::instance().video_codec() != H265 &&
-#endif
-            Settings::instance().use_hw_decoding(),
+    hwDecoding->init("settings/use_hw_decoding"_i18n, Settings::instance().use_hw_decoding(),
         [](bool value) { Settings::instance().set_use_hw_decoding(value); });
 
 #if defined(__SWITCH2__)
-    hwDecoding->setEnabled(Settings::instance().video_codec() != H265);
+    updateHwDecoding(supportedCodecs[selected]);
 #elif defined(__linux__) && defined(PLATFORM_DESKTOP)
     hwDecoding->setEnabled(true);
 #else
@@ -849,3 +867,12 @@ SettingsTab::getColorFromButtons(std::vector<brls::ControllerButton> buttons) {
 SettingsTab::~SettingsTab() { Settings::instance().save(); }
 
 brls::View* SettingsTab::create() { return new SettingsTab(); }
+
+#ifdef __SWITCH2__
+void SettingsTab::updateHwDecoding(VideoCodec selectedCodec) {
+    const bool hardware = codecFormats(selectedCodec) & Switch2VideoDecoder::hardwareFormats();
+    const bool software = codecFormats(selectedCodec) & Switch2VideoDecoder::softwareFormats();
+    hwDecoding->setOn(hardware && (!software || Settings::instance().use_hw_decoding()));
+    hwDecoding->setEnabled(hardware && software);
+}
+#endif

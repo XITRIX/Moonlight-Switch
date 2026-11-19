@@ -8,6 +8,7 @@
 #include <string.h>
 #ifdef __SWITCH2__
 #include "video/Vulkan/Switch2VulkanContext.hpp"
+#include "Switch2VideoDecoder.hpp"
 #include <switch.h>
 #endif
 
@@ -335,6 +336,15 @@ void MoonlightSession::start(ServerCallback<bool> callback, bool is_sunshine) {
     default:
         break;
     }
+
+#ifdef __SWITCH2__
+    m_config.supportedVideoFormats &=
+        Switch2VideoDecoder::hardwareFormats() | Switch2VideoDecoder::softwareFormats();
+    if (!m_config.supportedVideoFormats) {
+        brls::Logger::warning("No decoder for the selected codec, using H.264");
+        m_config.supportedVideoFormats = VIDEO_FORMAT_H264;
+    }
+#endif
 
     LiInitializeConnectionCallbacks(&m_connection_callbacks);
     m_connection_callbacks.stageStarting = connection_stage_starting;
