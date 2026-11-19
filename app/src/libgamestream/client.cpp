@@ -245,7 +245,7 @@ static int gs_pair_cleanup(int ret, PSERVER_DATA server, std::string* result) {
     return ret;
 }
 
-int gs_pair(PSERVER_DATA server, char* pin) {
+int gs_pair(PSERVER_DATA server, char* pin, const std::atomic_bool* cancelled) {
     int ret = GS_OK;
     Data data;
     std::string result;
@@ -280,7 +280,7 @@ int gs_pair(PSERVER_DATA server, char* pin) {
              unique_id.c_str(), salt.hex().bytes(),
              CryptoManager::cert_data().hex().bytes());
 
-    if ((ret = http_request(url, &data, HTTPRequestTimeoutLong)) != GS_OK) {
+    if ((ret = http_request(url, &data, HTTPRequestTimeoutPairing, cancelled)) != GS_OK) {
         return gs_pair_cleanup(ret, server, &result);
     }
 
@@ -289,6 +289,13 @@ int gs_pair(PSERVER_DATA server, char* pin) {
     }
 
     if ((ret = xml_search(data, "plaincert", &result)) != GS_OK) {
+        return gs_pair_cleanup(ret, server, &result);
+    }
+
+    // GFE sends an empty certificate while another client is pairing
+    if (result.empty()) {
+        gs_set_error("Another device is already pairing with the host");
+        ret = GS_PAIR_IN_PROGRESS;
         return gs_pair_cleanup(ret, server, &result);
     }
 
@@ -320,7 +327,7 @@ int gs_pair(PSERVER_DATA server, char* pin) {
         unique_id.c_str(),
         encryptedChallenge.hex().bytes());
 
-    if ((ret = http_request(url, &data, HTTPRequestTimeoutLong)) != GS_OK) {
+    if ((ret = http_request(url, &data, HTTPRequestTimeoutLong, cancelled)) != GS_OK) {
         return gs_pair_cleanup(ret, server, &result);
     }
 
@@ -369,7 +376,7 @@ int gs_pair(PSERVER_DATA server, char* pin) {
         unique_id.c_str(),
         challengeRespEncrypted.hex().bytes());
 
-    if ((ret = http_request(url, &data, HTTPRequestTimeoutLong)) != GS_OK) {
+    if ((ret = http_request(url, &data, HTTPRequestTimeoutLong, cancelled)) != GS_OK) {
         return gs_pair_cleanup(ret, server, &result);
     }
 
@@ -410,6 +417,14 @@ int gs_pair(PSERVER_DATA server, char* pin) {
             CryptoManager::SHA1_hash_data(serverChallengeRespHashInput);
     }
 
+    if (serverChallengeRespHash.size() != serverResponse.size() ||
+        memcmp(serverChallengeRespHash.bytes(), serverResponse.bytes(),
+               serverResponse.size()) != 0) {
+        gs_set_error("Incorrect PIN");
+        ret = GS_PAIR_WRONG_PIN;
+        return gs_pair_cleanup(ret, server, &result);
+    }
+
     Data clientPairingSecret = clientSecret.append(
         CryptoManager::sign_data(clientSecret, CryptoManager::key_data()));
 
@@ -421,7 +436,7 @@ int gs_pair(PSERVER_DATA server, char* pin) {
         server->httpPort,
         unique_id.c_str(),
         clientPairingSecret.hex().bytes());
-    if ((ret = http_request(url, &data, HTTPRequestTimeoutLong)) != GS_OK) {
+    if ((ret = http_request(url, &data, HTTPRequestTimeoutLong, cancelled)) != GS_OK) {
         return gs_pair_cleanup(ret, server, &result);
     }
 
@@ -436,7 +451,7 @@ int gs_pair(PSERVER_DATA server, char* pin) {
         "https://%s:%u/"
         "pair?uniqueid=%s&devicename=roth&updateState=1&phrase=pairchallenge",
         server->serverInfo.address, server->httpsPort, unique_id.c_str());
-    if ((ret = http_request(url, &data, HTTPRequestTimeoutLong)) != GS_OK) {
+    if ((ret = http_request(url, &data, HTTPRequestTimeoutLong, cancelled)) != GS_OK) {
         return gs_pair_cleanup(ret, server, &result);
     }
 
