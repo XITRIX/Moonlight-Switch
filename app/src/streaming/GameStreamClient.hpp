@@ -80,6 +80,7 @@ class GameStreamClient : public Singleton<GameStreamClient> {
     void connect(const std::string& address,
                  ServerCallback<SERVER_DATA>& callback);
     void connect(const Host& host, ServerCallback<SERVER_DATA>& callback);
+    void check_online(const Host& host, ServerCallback<bool>& callback);
     void pair(const std::string& address, const std::string& pin,
               ServerCallback<bool>& callback);
     void pair(const Host& host, const std::string& pin,

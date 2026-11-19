@@ -636,6 +636,21 @@ void GameStreamClient::connect(const Host& host,
     connect_to_addresses(host.connection_addresses(), host_key(host), callback);
 }
 
+void GameStreamClient::check_online(const Host& host,
+                                    ServerCallback<bool>& callback) {
+    brls::async([addresses = host.connection_addresses(), callback] {
+        std::string connectedAddress;
+        std::string error;
+        SERVER_DATA server{};
+        const bool online = connect_to_addresses_sync(
+            addresses, connectedAddress, server, error);
+
+        brls::sync([callback, online] {
+            callback(GSResult<bool>::success(online));
+        });
+    });
+}
+
 void GameStreamClient::pair(const std::string& address, const std::string& pin,
                             ServerCallback<bool>& callback) {
     with_cached_server_data<bool>(
