@@ -382,6 +382,12 @@ void StreamingView::draw(NVGcontext* vg, float x, float y, float width,
 #endif
     }
 
+    const auto now = std::chrono::steady_clock::now();
+    if (session->is_active() && now - statsLogTime >= std::chrono::seconds(1)) {
+        statsLogTime = now;
+        logStreamStats();
+    }
+
     if (draw_stats) {
         // The stats only change a few times a second; formatting them and
         // laying the text out twice (blurred shadow + text) every frame cost
@@ -413,6 +419,26 @@ void StreamingView::draw(NVGcontext* vg, float x, float y, float width,
     }
 
     Box::draw(vg, x, y, width, height, style, ctx);
+}
+
+void StreamingView::logStreamStats() {
+    auto stats = session->session_stats();
+    const auto& decode = stats->video_decode_stats;
+    const auto& render = stats->video_render_stats;
+    auto& frames = AVFrameHolder::instance();
+
+    brls::Logger::info(
+        "stream: fps host={:.1f} net={:.1f} decoded={:.1f} rendered={:.1f} "
+        "net_dropped={} receive_ms={:.2f} decode_ms={:.2f} "
+        "decoder_delay_ms={:.2f} render_ms={:.2f} underflows={} skipped={} "
+        "queue={}/{}",
+        decode.current_host_fps, decode.current_received_fps,
+        decode.current_decoded_fps, render.rendered_fps,
+        decode.network_dropped_frames, decode.current_receive_time,
+        decode.current_decoding_time, decode.current_decoder_delay,
+        render.rendering_time, frames.getFakeFrameStat(),
+        frames.getFrameDropStat(), frames.getFrameQueueSize(),
+        frames.getFrameQueueTargetDepth());
 }
 
 std::string StreamingView::buildStatsText() {

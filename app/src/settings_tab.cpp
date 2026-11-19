@@ -14,6 +14,7 @@
 #include "MouseScrollSettings.hpp"
 #include "SystemButtonSettings.hpp"
 #include "helper.hpp"
+#include "LogFile.hpp"
 #include "button_selecting_dialog.hpp"
 #include "mapping_layout_editor.hpp"
 #include "halfcon_mapping_view.hpp"
@@ -791,6 +792,16 @@ SettingsTab::SettingsTab() {
                        Settings::instance().set_write_log(value);
                        brls::Application::enableDebuggingView(value);
                    });
+
+    exportLog->setText("settings/export_log"_i18n);
+    exportLog->registerClickAction([](View*) {
+        auto directory = Settings::instance().working_dir() + "/logs";
+        auto path = LogFile::save_copy(directory);
+        showAlert(path.empty() ? "settings/export_log_failed"_i18n
+                               : fmt::format(fmt::runtime(
+                                     "settings/export_log_done"_i18n), path));
+        return true;
+    });
 }
 
 void SettingsTab::willAppear(bool resetState)

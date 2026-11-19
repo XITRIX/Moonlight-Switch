@@ -38,6 +38,7 @@ unsigned int sceLibcHeapSize             = 24 * 1024 * 1024;
 #include "views/boolean_slider_cell.hpp"
 
 #include "DiscoverManager.hpp"
+#include "LogFile.hpp"
 #include "MoonlightSession.hpp"
 #include "SwitchMoonlightSessionDecoderAndRenderProvider.hpp"
 
@@ -96,6 +97,7 @@ void preferSwitchCore(int ordinal) {
 #endif
 
 int main(int argc, char* argv[]) {
+    LogFile::start();
 #ifdef __SWITCH2__
     // Keep diagnostics available after a failed launch or streaming session.
     mkdir("sdmc:/switch/Moonlight-Switch", 0777);
@@ -156,6 +158,7 @@ int main(int argc, char* argv[]) {
     auto home = Application::getPlatform()->getHomeDirectory("Moonlight-Switch");
     Settings::instance().set_working_dir(home);
     Settings::instance().set_launch_path(argc > 0 ? argv[0] : "");
+    LogFile::open(Settings::instance().log_path());
     brls::Logger::info("Working dir, {}", home);
 
     // Have the application register an action on every activity that will quit
