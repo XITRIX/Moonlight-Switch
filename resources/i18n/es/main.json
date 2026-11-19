@@ -85,6 +85,7 @@
         "submit": "Done"
     },
     "host": {
+        "cert_changed": "El certificado del host ha cambiado\nElimina este host y vuelve a emparejarlo",
         "connect": "Conectar",
         "fetching": "Buscando...",
         "ready": "Listo",

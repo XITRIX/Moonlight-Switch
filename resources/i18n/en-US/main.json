@@ -85,6 +85,7 @@
         "submit": "Done"
     },
     "host": {
+        "cert_changed": "The host's certificate has changed\nRemove this host and pair it again",
         "connect": "Connect",
         "fetching": "Fetching...",
         "ready": "Ready",

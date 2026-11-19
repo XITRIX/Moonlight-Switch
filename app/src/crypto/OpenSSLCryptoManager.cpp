@@ -149,6 +149,36 @@ Data OpenSSLCryptoManager::signature(Data cert) {
     return sig;
 }
 
+std::string OpenSSLCryptoManager::public_key_pin(Data cert) {
+    BIO* bio = BIO_new_mem_buf(cert.bytes(), cert.size());
+    X509* x509 = PEM_read_bio_X509(bio, NULL, NULL, NULL);
+    BIO_free(bio);
+
+    if (!x509) {
+        return "";
+    }
+
+    std::string pin;
+    EVP_PKEY* key = X509_get_pubkey(x509);
+    int size = key ? i2d_PUBKEY(key, NULL) : 0;
+    if (size > 0) {
+        unsigned char* der = (unsigned char*)malloc(size);
+        unsigned char* end = der;
+        unsigned char hash[SHA256_DIGEST_LENGTH];
+        unsigned char base64[64];
+
+        i2d_PUBKEY(key, &end);
+        SHA256(der, size, hash);
+        int base64_size = EVP_EncodeBlock(base64, hash, sizeof(hash));
+        pin = "sha256//" + std::string((char*)base64, base64_size);
+        free(der);
+    }
+
+    EVP_PKEY_free(key);
+    X509_free(x509);
+    return pin;
+}
+
 bool OpenSSLCryptoManager::verify_signature(Data data, Data signature, Data cert) {
     BIO* bio = BIO_new_mem_buf(cert.bytes(), cert.size());
     X509* x509 = PEM_read_bio_X509(bio, NULL, NULL, NULL);

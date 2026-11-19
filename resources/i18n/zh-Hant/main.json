@@ -85,6 +85,7 @@
         "submit": "完成"
     },
     "host": {
+        "cert_changed": "主機憑證已變更\n請移除此主機並重新配對",
         "connect": "連接",
         "fetching": "收取中……",
         "ready": "準備完成",

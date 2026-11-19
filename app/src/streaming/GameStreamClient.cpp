@@ -128,39 +128,47 @@ std::string ipv4_port_suffix(const std::string& address) {
     return address.substr(firstColon);
 }
 
-bool connect_to_addresses_sync(const std::vector<std::string>& addresses,
-                               std::string& connectedAddress,
-                               SERVER_DATA& connectedServer,
-                               std::string& error) {
+int connect_to_addresses_sync(const std::vector<std::string>& addresses,
+                              const std::string& serverCert,
+                              std::string& connectedAddress,
+                              SERVER_DATA& connectedServer,
+                              std::string& error) {
     if (std::none_of(addresses.begin(), addresses.end(),
                      [](const std::string& address) {
                          return !address.empty();
                      })) {
         error = "Address is Empty";
-        return false;
+        return GS_FAILED;
     }
 
     error = "Address is Empty";
     connectedAddress.clear();
     connectedServer = SERVER_DATA{};
 
+    int result = GS_FAILED;
     for (const auto& address : addresses) {
         if (address.empty()) {
             continue;
         }
 
         SERVER_DATA serverData{};
-        const int status = gs_init(&serverData, address);
+        const int status = gs_init(&serverData, address, serverCert);
         if (status == GS_OK) {
             connectedAddress = address;
             connectedServer = serverData;
-            return true;
+            return GS_OK;
         }
 
+        // Another address failing must not hide a changed certificate
+        if (result == GS_CERT_MISMATCH) {
+            continue;
+        }
+
+        result = status;
         error = gs_error();
     }
 
-    return false;
+    return result;
 }
 
 constexpr int WAKE_POLL_ATTEMPTS = 20;
@@ -547,8 +555,8 @@ void GameStreamClient::wake_up_host(const Host& host,
 
         for (int attempt = 0; attempt < WAKE_POLL_ATTEMPTS; attempt++) {
             if (connect_to_addresses_sync(host.connection_addresses(),
-                                          connectedAddress, connectedServer,
-                                          error)) {
+                                          host.serverCert, connectedAddress,
+                                          connectedServer, error) == GS_OK) {
                 auto& client = GameStreamClient::instance();
                 client.cache_server_data(connectedAddress, connectedServer);
                 client.m_active_addresses[host_key(host)] = connectedAddress;
@@ -583,7 +591,7 @@ void GameStreamClient::cache_server_data(const std::string& address,
 
 void GameStreamClient::connect_to_addresses(
     const std::vector<std::string>& addresses, const std::string& activeKey,
-    ServerCallback<SERVER_DATA>& callback) {
+    const std::string& serverCert, ServerCallback<SERVER_DATA>& callback) {
     if (std::none_of(addresses.begin(), addresses.end(),
                      [](const std::string& address) {
                          return !address.empty();
@@ -592,17 +600,21 @@ void GameStreamClient::connect_to_addresses(
         return;
     }
 
-    brls::async([this, addresses, activeKey, callback] {
+    brls::async([this, addresses, activeKey, serverCert, callback] {
         std::string connectedAddress;
         std::string error;
         SERVER_DATA connectedServer{};
-        connect_to_addresses_sync(addresses, connectedAddress, connectedServer,
-                                  error);
+        int status = connect_to_addresses_sync(addresses, serverCert,
+                                               connectedAddress,
+                                               connectedServer, error);
 
         brls::sync([this, callback, activeKey, connectedAddress,
-                    connectedServer, error] {
+                    connectedServer, error, status] {
             if (connectedAddress.empty()) {
-                callback(GSResult<SERVER_DATA>::failure(error));
+                callback(GSResult<SERVER_DATA>::failure(
+                    status == GS_CERT_MISMATCH ? "host/cert_changed"_i18n
+                                               : error,
+                    status));
                 return;
             }
 
@@ -619,7 +631,7 @@ void GameStreamClient::connect_to_addresses(
 
 void GameStreamClient::connect(const std::string& address,
                                ServerCallback<SERVER_DATA>& callback) {
-    connect_to_addresses({address}, "", callback);
+    connect_to_addresses({address}, "", "", callback);
 }
 
 std::string GameStreamClient::active_address(const Host& host) const {
@@ -633,7 +645,8 @@ std::string GameStreamClient::active_address(const Host& host) const {
 
 void GameStreamClient::connect(const Host& host,
                                ServerCallback<SERVER_DATA>& callback) {
-    connect_to_addresses(host.connection_addresses(), host_key(host), callback);
+    connect_to_addresses(host.connection_addresses(), host_key(host),
+                         host.serverCert, callback);
 }
 
 static std::string pair_error(int status) {

@@ -3,6 +3,7 @@
 #include "MbedTLSCryptoManager.hpp"
 #include "Settings.hpp"
 #include <mbedtls/aes.h>
+#include <mbedtls/base64.h>
 #include <mbedtls/ctr_drbg.h>
 #include <mbedtls/entropy.h>
 #include <mbedtls/error.h>
@@ -199,6 +200,35 @@ Data MbedTLSCryptoManager::signature(Data cert) {
     Data data = _mbedtls_cert_signature(x509);
     mbedtls_x509_crt_free(&x509);
     return data;
+}
+
+std::string MbedTLSCryptoManager::public_key_pin(Data cert) {
+    mbedtls_x509_crt x509;
+    mbedtls_x509_crt_init(&x509);
+
+    std::string pin;
+    unsigned char der[4096];
+    unsigned char hash[32];
+    unsigned char base64[64];
+    size_t base64_size = 0;
+
+    if (mbedtls_x509_crt_parse(&x509, cert.bytes(), cert.size() + 1) == 0) {
+#if defined(MBEDTLS_VERSION_MAJOR) && MBEDTLS_VERSION_MAJOR >= 3
+        int size = mbedtls_pk_write_pubkey_der(&x509.MBEDTLS_PRIVATE(pk), der,
+                                               sizeof(der));
+#else
+        int size = mbedtls_pk_write_pubkey_der(&x509.pk, der, sizeof(der));
+#endif
+        if (size > 0 &&
+            _mbedtls_sha256(der + sizeof(der) - size, size, hash) == 0 &&
+            mbedtls_base64_encode(base64, sizeof(base64), &base64_size, hash,
+                                  sizeof(hash)) == 0) {
+            pin = "sha256//" + std::string((char*)base64, base64_size);
+        }
+    }
+
+    mbedtls_x509_crt_free(&x509);
+    return pin;
 }
 
 bool MbedTLSCryptoManager::verify_signature(Data data, Data signature,

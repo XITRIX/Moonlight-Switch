@@ -31,5 +31,6 @@ enum HTTPRequestTimeout : long {
 
 int http_init(const std::string& key_directory);
 int http_request(const std::string& url, Data* data, HTTPRequestTimeout timeout,
-                 const std::atomic_bool* cancelled = nullptr);
+                 const std::atomic_bool* cancelled = nullptr,
+                 const std::string& pinned_key = "");
 

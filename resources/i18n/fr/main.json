@@ -85,6 +85,7 @@
         "submit": "Terminé"
     },
     "host": {
+        "cert_changed": "Le certificat de l'hôte a changé\nSupprimez cet hôte et refaites l'appairage",
         "connect": "Se connecter",
         "fetching": "Récupération...",
         "ready": "Prêt",

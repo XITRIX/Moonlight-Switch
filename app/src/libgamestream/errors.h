@@ -34,3 +34,4 @@
 #define GS_CANCELLED -12
 #define GS_PAIR_WRONG_PIN -13
 #define GS_PAIR_IN_PROGRESS -14
+#define GS_CERT_MISMATCH -15

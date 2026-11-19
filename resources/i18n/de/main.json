@@ -85,6 +85,7 @@
         "submit": "Done"
     },
     "host": {
+        "cert_changed": "Das Zertifikat des Hosts hat sich geändert\nEntfernen Sie diesen Host und koppeln Sie ihn erneut",
         "connect": "Verbinden",
         "fetching": "Wird abgerufen...",
         "ready": "Bereit",

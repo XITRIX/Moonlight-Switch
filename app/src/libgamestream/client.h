@@ -43,13 +43,16 @@ typedef struct _SERVER_DATA {
     SERVER_INFORMATION serverInfo;
     unsigned short httpPort;
     unsigned short httpsPort;
+    std::string serverCert;
+    std::string pinnedKey;
     bool isSunshine();
 } SERVER_DATA, *PSERVER_DATA;
 
 void gs_set_error(std::string error);
 std::string gs_error();
 
-int gs_init(PSERVER_DATA server, const std::string address);
+int gs_init(PSERVER_DATA server, const std::string address,
+            const std::string& serverCert = "");
 int gs_app_boxart(PSERVER_DATA server, int app_id, Data* out);
 int gs_start_app(PSERVER_DATA server, PSTREAM_CONFIGURATION config, int appId, bool sops, bool localaudio, int gamepad_mask);
 int gs_applist(PSERVER_DATA server, PAPP_LIST* app_list);

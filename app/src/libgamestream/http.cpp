@@ -107,7 +107,8 @@ void freeCurl(CURL* curl) {
 }
 
 int http_request(const std::string& url, Data* data,
-                 HTTPRequestTimeout timeout, const std::atomic_bool* cancelled) {
+                 HTTPRequestTimeout timeout, const std::atomic_bool* cancelled,
+                 const std::string& pinned_key) {
     brls::Logger::info("Curl: Request:\n{}", url.c_str());
 
     auto* http_data = (HTTP_DATA*)malloc(sizeof(HTTP_DATA));
@@ -127,6 +128,12 @@ int http_request(const std::string& url, Data* data,
         curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0L);
     }
 
+    if (!pinned_key.empty() &&
+        curl_easy_setopt(curl, CURLOPT_PINNEDPUBLICKEY, pinned_key.c_str()) !=
+            CURLE_OK) {
+        brls::Logger::warning("Curl: this TLS backend can't pin the host key");
+    }
+
     CURLcode res = curl_easy_perform(curl);
 
     if (res != CURLE_OK) {
@@ -139,6 +146,10 @@ int http_request(const std::string& url, Data* data,
             return GS_TIMEOUT;
         if (res == CURLE_ABORTED_BY_CALLBACK)
             return GS_CANCELLED;
+        if (res == CURLE_SSL_PINNEDPUBKEYNOTMATCH) {
+            gs_set_error("The host's certificate changed, pair it again");
+            return GS_CERT_MISMATCH;
+        }
         return GS_FAILED;
     } else if (http_data->memory == nullptr) {
         brls::Logger::error("Curl: memory = NULL");

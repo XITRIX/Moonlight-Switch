@@ -234,8 +234,12 @@ void AddHostTab::connectHost(const Host& host) {
                             if (*cancelled) {
                                 return;
                             }
-                            dialog->dismiss([result, pairedHost] {
+                            dialog->dismiss([result, pairedHost]() mutable {
                                 if (result.isSuccess()) {
+                                    pairedHost.serverCert =
+                                        GameStreamClient::instance()
+                                            .server_data(pairedHost)
+                                            .serverCert;
                                     Settings::instance().add_host(pairedHost);
                                     MainTabs::getInstanse()->refillTabs();
                                     AddHostTab::startSearching();

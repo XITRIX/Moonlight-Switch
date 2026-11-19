@@ -11,7 +11,7 @@
 #include <borealis.hpp>
 #include <cstdint>
 
-enum HostState { FETCHING, AVAILABLE, UNAVAILABLE };
+enum HostState { FETCHING, AVAILABLE, UNAVAILABLE, CERT_CHANGED };
 
 class HostTab : public brls::Box {
   public:

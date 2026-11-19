@@ -16,8 +16,10 @@ template <typename T> struct GSResult {
   public:
     static GSResult success(T value) { return result(value, "", true); }
 
-    static GSResult failure(std::string error) {
-        return result(T(), error, false);
+    static GSResult failure(std::string error, int code = GS_FAILED) {
+        GSResult failed = result(T(), error, false);
+        failed._code = code;
+        return failed;
     }
 
     [[nodiscard]] bool isSuccess() const { return _isSuccess; }
@@ -25,6 +27,8 @@ template <typename T> struct GSResult {
     T value() const { return _value; }
 
     [[nodiscard]] std::string error() const { return _error; }
+
+    [[nodiscard]] int code() const { return _code; }
 
   private:
     static GSResult result(T value, const std::string& error, bool isSuccess) {
@@ -37,6 +41,7 @@ template <typename T> struct GSResult {
 
     T _value;
     std::string _error;
+    int _code = GS_OK;
     bool _isSuccess = false;
 };
 
@@ -120,6 +125,7 @@ class GameStreamClient : public Singleton<GameStreamClient> {
     void cache_server_data(const std::string& address, const SERVER_DATA& data);
     void connect_to_addresses(const std::vector<std::string>& addresses,
                               const std::string& activeKey,
+                              const std::string& serverCert,
                               ServerCallback<SERVER_DATA>& callback);
 
     std::map<std::string, SERVER_DATA> m_server_data;

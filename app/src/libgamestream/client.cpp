@@ -83,10 +83,15 @@ static int load_serverinfo(PSERVER_DATA server, bool https) {
 
     Data data;
 
-    if (http_request(url, &data, HTTPRequestTimeoutLow) != GS_OK) {
+    ret = http_request(url, &data, HTTPRequestTimeoutLow, nullptr,
+                       server->pinnedKey);
+    if (ret == GS_CERT_MISMATCH) {
+        goto cleanup;
+    } else if (ret != GS_OK) {
         ret = GS_IO_ERROR;
         goto cleanup;
     }
+    ret = GS_INVALID;
 
     if (xml_status(data) == GS_ERROR) {
         ret = GS_ERROR;
@@ -174,7 +179,7 @@ static int load_server_status(PSERVER_DATA server) {
     // make another request over HTTP if the HTTPS request fails. We can't just use HTTP
     // for everything because it doesn't accurately tell us if we're paired.
     ret = GS_INVALID;
-    for (i = 0; i < 2 && ret != GS_OK; i++) {
+    for (i = 0; i < 2 && ret != GS_OK && ret != GS_CERT_MISMATCH; i++) {
         ret = load_serverinfo(server, i == 0);
     }
 
@@ -302,6 +307,12 @@ int gs_pair(PSERVER_DATA server, char* pin, const std::atomic_bool* cancelled) {
     brls::Logger::info("Client: Start pairing stage #2");
 
     Data plainCert = Data((char*)result.c_str(), result.size());
+    Data serverCert = plainCert.hex_to_bytes();
+    std::string pinnedKey = CryptoManager::public_key_pin(serverCert);
+    if (pinnedKey.empty()) {
+        gs_set_error("The host sent an invalid certificate");
+        return gs_pair_cleanup(GS_FAILED, server, &result);
+    }
     Data aesKey;
 
     // Gen 7 servers use SHA256 to get the key
@@ -451,7 +462,8 @@ int gs_pair(PSERVER_DATA server, char* pin, const std::atomic_bool* cancelled) {
         "https://%s:%u/"
         "pair?uniqueid=%s&devicename=roth&updateState=1&phrase=pairchallenge",
         server->serverInfo.address, server->httpsPort, unique_id.c_str());
-    if ((ret = http_request(url, &data, HTTPRequestTimeoutLong, cancelled)) != GS_OK) {
+    if ((ret = http_request(url, &data, HTTPRequestTimeoutLong, cancelled,
+                            pinnedKey)) != GS_OK) {
         return gs_pair_cleanup(ret, server, &result);
     }
 
@@ -460,6 +472,8 @@ int gs_pair(PSERVER_DATA server, char* pin, const std::atomic_bool* cancelled) {
     }
 
     server->paired = true;
+    server->serverCert = std::string((char*)serverCert.bytes(), serverCert.size());
+    server->pinnedKey = pinnedKey;
 
     return gs_pair_cleanup(ret, server, &result);
 }
@@ -472,7 +486,8 @@ int gs_applist(PSERVER_DATA server, PAPP_LIST* list) {
     snprintf(url, sizeof(url), "https://%s:%u/applist?uniqueid=%s",
              server->serverInfo.address, server->httpsPort, unique_id.c_str());
 
-    if (http_request(url, &data, HTTPRequestTimeoutMedium) != GS_OK)
+    if (http_request(url, &data, HTTPRequestTimeoutMedium, nullptr,
+                     server->pinnedKey) != GS_OK)
         ret = GS_IO_ERROR;
     else if (xml_status(data) == GS_ERROR)
         ret = GS_ERROR;
@@ -491,7 +506,8 @@ int gs_app_boxart(PSERVER_DATA server, int app_id, Data* out) {
         "https://%s:%u/appasset?uniqueid=%s&appid=%d&AssetType=2&AssetIdx=0",
         server->serverInfo.address, server->httpsPort, unique_id.c_str(), app_id);
 
-    if (http_request(url, &data, HTTPRequestTimeoutMedium) != GS_OK) {
+    if (http_request(url, &data, HTTPRequestTimeoutMedium, nullptr,
+                     server->pinnedKey) != GS_OK) {
         ret = GS_IO_ERROR;
     } else {
         *out = data;
@@ -542,7 +558,8 @@ int gs_start_app(PSERVER_DATA server, STREAM_CONFIGURATION* config, int appId,
                  rand.hex().bytes(), rikeyid, LiGetLaunchUrlQueryParameters());
     }
 
-    if ((ret = http_request(url, &data, HTTPRequestTimeoutLong)) == GS_OK) {
+    if ((ret = http_request(url, &data, HTTPRequestTimeoutLong, nullptr,
+                            server->pinnedKey)) == GS_OK) {
         server->currentGame = appId;
     } else {
         goto exit;
@@ -579,7 +596,8 @@ int gs_quit_app(PSERVER_DATA server) {
 
     snprintf(url, sizeof(url), "https://%s:%u/cancel?uniqueid=%s",
              server->serverInfo.address, server->httpsPort, unique_id.c_str());
-    if ((ret = http_request(url, &data, HTTPRequestTimeoutMedium)) != GS_OK)
+    if ((ret = http_request(url, &data, HTTPRequestTimeoutMedium, nullptr,
+                            server->pinnedKey)) != GS_OK)
         goto exit;
 
     if ((ret = xml_status(data) != GS_OK)) {
@@ -597,7 +615,8 @@ exit:
     return ret;
 }
 
-int gs_init(PSERVER_DATA server, const std::string address) {
+int gs_init(PSERVER_DATA server, const std::string address,
+            const std::string& serverCert) {
     std::stringstream addressStream(address);
     std::string segment;
     std::vector<std::string> seglist;
@@ -629,6 +648,16 @@ int gs_init(PSERVER_DATA server, const std::string address) {
     server->serverInfo.address = server->address.c_str();
     server->httpPort = httpPort;
     server->httpsPort = 0; /* Populated by load_server_status() */
+    server->serverCert = serverCert;
+    server->pinnedKey.clear();
+    if (!serverCert.empty()) {
+        server->pinnedKey = CryptoManager::public_key_pin(
+            Data((char*)serverCert.c_str(), serverCert.size()));
+        if (server->pinnedKey.empty()) {
+            gs_set_error("The host's certificate changed, pair it again");
+            return GS_CERT_MISMATCH;
+        }
+    }
 
     int result = load_server_status(server);
     server->serverInfo.serverInfoAppVersion =
