@@ -149,6 +149,8 @@
         "keyboard_fingers": "Taps to open keyboard",
         "keyboard_fullsized": "Tamaño completo",
         "keyboard_type": "TIpo de teclado",
+        "reset_defaults": "Restablecer valores predeterminados",
+        "reset_defaults_message": "¿Restablecer todos los ajustes a sus valores predeterminados?\n\nSe conservan los PC guardados, los favoritos y las distribuciones de botones personalizadas.",
         "select_language": "Seleccionar idioma",
         "keys": "Orden de los botones / y /",
         "keys_mapping": "Asignación de botones",

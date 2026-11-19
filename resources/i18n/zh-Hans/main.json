@@ -149,6 +149,8 @@
         "keyboard_fingers": "点击打开键盘",
         "keyboard_fullsized": "完整",
         "keyboard_type": "键盘类型",
+        "reset_defaults": "恢复默认设置",
+        "reset_defaults_message": "将所有设置恢复为默认值？\n\n已保存的电脑、收藏和自定义按键布局会保留。",
         "select_language": "选择语言",
         "keys": "手柄按键",
         "keys_mapping": "游戏按键映射",

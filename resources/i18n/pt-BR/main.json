@@ -149,6 +149,8 @@
         "keyboard_fingers": "Taps to open keyboard",
         "keyboard_fullsized": "Full-sized",
         "keyboard_type": "Keyboard type",
+        "reset_defaults": "Restaurar padrões",
+        "reset_defaults_message": "Restaurar todas as configurações para o padrão?\n\nPCs salvos, favoritos e layouts de botões personalizados são mantidos.",
         "select_language": "Selecionar idioma",
         "keys": "Teclas de controle",
         "keys_mapping": "Mapear teclas de jogo",

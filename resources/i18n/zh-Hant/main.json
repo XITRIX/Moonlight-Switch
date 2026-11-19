@@ -149,6 +149,8 @@
         "keyboard_fingers": "Taps to open keyboard",
         "keyboard_fullsized": "完整",
         "keyboard_type": "鍵盤類型",
+        "reset_defaults": "恢復預設設定",
+        "reset_defaults_message": "將所有設定恢復為預設值？\n\n已儲存的電腦、我的最愛和自訂按鍵配置會保留。",
         "select_language": "選擇語言",
         "keys": "手把按鍵",
         "keys_mapping": "遊戲按鍵映射",

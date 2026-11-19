@@ -337,6 +337,9 @@ class Settings : public Singleton<Settings> {
     std::vector<KeyMappingLayout>* get_mapping_laouts() { return &m_mapping_laouts; }
 
     void load();
+    // Every setting back to its default. Hosts, favorites and custom
+    // mapping layouts are kept.
+    void reset_to_defaults();
     void save();
 
   private:

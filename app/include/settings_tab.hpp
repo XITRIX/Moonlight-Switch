@@ -71,6 +71,7 @@ class SettingsTab : public brls::Box {
     std::string getTextFromButtons(std::vector<brls::ControllerButton> buttons);
     NVGcolor getColorFromButtons(std::vector<brls::ControllerButton> buttons);
     void updateDeadZoneItems();
+    static void confirmReset();
     // A line under a row that says what it does.
     void addHint(brls::View* row, const std::string& text);
 #ifdef __SWITCH2__

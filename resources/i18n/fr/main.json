@@ -149,6 +149,8 @@
         "keyboard_fingers": "Taps sur écran pour ouvrir le clavier",
         "keyboard_fullsized": "Pleine largeur",
         "keyboard_type": "Type de clavier",
+        "reset_defaults": "Réinitialiser les réglages",
+        "reset_defaults_message": "Réinitialiser tous les réglages ?\n\nLes PC enregistrés, les favoris et les dispositions de boutons personnalisées sont conservés.",
         "select_language": "Choisir la langue",
         "keys": "Touches de la manette",
         "keys_mapping": "Configuration des boutons",

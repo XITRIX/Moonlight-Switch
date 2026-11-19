@@ -149,6 +149,8 @@
         "keyboard_fingers": "Taps to open keyboard",
         "keyboard_fullsized": "Full-sized",
         "keyboard_type": "Keyboard type",
+        "reset_defaults": "Auf Standard zurücksetzen",
+        "reset_defaults_message": "Alle Einstellungen auf Standard zurücksetzen?\n\nGespeicherte PCs, Favoriten und eigene Tastenbelegungen bleiben erhalten.",
         "select_language": "Sprache auswählen",
         "keys": "/ und / Tasten",
         "keys_mapping": "Tastenlayout",

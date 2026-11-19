@@ -149,6 +149,8 @@
         "keyboard_fingers": "키보드를 열려면 클릭",
         "keyboard_fullsized": "전체 크기",
         "keyboard_type": "키보드 유형",
+        "reset_defaults": "기본값으로 재설정",
+        "reset_defaults_message": "모든 설정을 기본값으로 되돌릴까요?\n\n저장된 PC, 즐겨찾기, 사용자 버튼 배치는 유지됩니다.",
         "select_language": "언어 선택",
         "keys": "컨트롤러 키",
         "keys_mapping": "게임 키 매핑",

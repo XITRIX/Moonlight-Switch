@@ -18,6 +18,7 @@
 #include "MouseScrollSettings.hpp"
 #include "SystemButtonSettings.hpp"
 #include "helper.hpp"
+#include "main_tabs_view.hpp"
 #include "button_selecting_dialog.hpp"
 #include "mapping_layout_editor.hpp"
 #include "halfcon_mapping_view.hpp"
@@ -109,6 +110,11 @@ std::vector<std::string> audio_backends;
 SettingsTab::SettingsTab() {
     // Inflate the tab from the XML file
     this->inflateFromXMLRes("xml/tabs/settings.xml");
+
+    registerAction("settings/reset_defaults"_i18n, BUTTON_Y, [](View*) {
+        confirmReset();
+        return true;
+    });
 
     std::vector<std::string> resolutions = {
         "settings/resolution_native"_i18n,
@@ -934,6 +940,19 @@ SettingsTab::getColorFromButtons(std::vector<brls::ControllerButton> buttons) {
     Theme theme = Application::getTheme();
     return buttons.empty() ? theme["brls/text_disabled"]
                            : theme["brls/list/listItem_value_color"];
+}
+
+void SettingsTab::confirmReset() {
+    auto* dialog = new brls::Dialog("settings/reset_defaults_message"_i18n);
+    dialog->addButton("common/cancel"_i18n, [] {});
+    dialog->addButton("settings/reset_defaults"_i18n, [] {
+        Settings::instance().reset_to_defaults();
+        brls::Application::enableDebuggingView(Settings::instance().write_log());
+        brls::Application::setSwapInputKeys(Settings::instance().swap_ui_keys());
+        // Rebuild the tabs so this one shows the defaults.
+        brls::sync([] { MainTabs::getInstanse()->refillTabs(); });
+    });
+    dialog->open();
 }
 
 SettingsTab::~SettingsTab() { Settings::instance().save(); }

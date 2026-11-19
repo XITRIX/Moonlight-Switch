@@ -149,6 +149,8 @@
         "keyboard_fingers": "Taps to open keyboard",
         "keyboard_fullsized": "Full-sized",
         "keyboard_type": "Keyboard type",
+        "reset_defaults": "Ripristina predefiniti",
+        "reset_defaults_message": "Ripristinare tutte le impostazioni predefinite?\n\nI PC salvati, i preferiti e i layout dei pulsanti personalizzati vengono mantenuti.",
         "select_language": "Seleziona lingua",
         "keys": "Tasti Controller",
         "keys_mapping": "Mappatura tasti gioco",

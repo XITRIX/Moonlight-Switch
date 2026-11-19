@@ -149,6 +149,8 @@
         "keyboard_fingers": "Taps to open keyboard",
         "keyboard_fullsized": "Full-sized",
         "keyboard_type": "Keyboard type",
+        "reset_defaults": "初期設定に戻す",
+        "reset_defaults_message": "すべての設定を初期状態に戻しますか？\n\n保存した PC、お気に入り、カスタムのボタン配置はそのまま残ります。",
         "select_language": "言語を選択",
         "keys": "/ and / キー",
         "keys_mapping": "Game keys mapping",

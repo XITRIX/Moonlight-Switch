@@ -582,6 +582,59 @@ void Settings::load() {
 #endif
 }
 
+void Settings::reset_to_defaults() {
+    Settings defaults;
+    m_resolution = defaults.m_resolution;
+    m_native_resolution_scale = defaults.m_native_resolution_scale;
+    m_fps = defaults.m_fps;
+#ifdef __SWITCH2__
+    m_fps_before_2160p = defaults.m_fps_before_2160p;
+#endif
+    m_video_codec = defaults.m_video_codec;
+    m_audio_backend = defaults.m_audio_backend;
+    m_bitrate = defaults.m_bitrate;
+    m_enable_hdr = defaults.m_enable_hdr;
+    m_upscaling_mode = defaults.m_upscaling_mode;
+    m_enable_dithering = defaults.m_enable_dithering;
+    m_dithering_strength = defaults.m_dithering_strength;
+    m_enable_rcas = defaults.m_enable_rcas;
+    m_rcas_strength = defaults.m_rcas_strength;
+    m_click_by_tap = defaults.m_click_by_tap;
+    m_decoder_threads = defaults.m_decoder_threads;
+    m_frames_queue_size = defaults.m_frames_queue_size;
+    m_sops = defaults.m_sops;
+    m_play_audio = defaults.m_play_audio;
+    m_write_log = defaults.m_write_log;
+    m_swap_ui_keys = defaults.m_swap_ui_keys;
+    m_swap_joycon_stick_to_dpad = defaults.m_swap_joycon_stick_to_dpad;
+    m_touchscreen_mouse_mode = defaults.m_touchscreen_mouse_mode;
+    m_swap_mouse_keys = defaults.m_swap_mouse_keys;
+    m_swap_mouse_scroll = defaults.m_swap_mouse_scroll;
+    m_rumble_force = defaults.m_rumble_force;
+    m_volume = defaults.m_volume;
+    m_use_hw_decoding = defaults.m_use_hw_decoding;
+    m_keyboard_type = defaults.m_keyboard_type;
+    m_overlay_system_button = defaults.m_overlay_system_button;
+    m_guide_system_button = defaults.m_guide_system_button;
+    m_keyboard_fingers = defaults.m_keyboard_fingers;
+    m_keyboard_locale = defaults.m_keyboard_locale;
+    m_volume_amplification = defaults.m_volume_amplification;
+    m_current_mapping_layout = defaults.m_current_mapping_layout;
+    m_guide_key_options = defaults.m_guide_key_options;
+    m_overlay_options = defaults.m_overlay_options;
+    m_mouse_input_options = defaults.m_mouse_input_options;
+    m_deadzone_stick_left = defaults.m_deadzone_stick_left;
+    m_deadzone_stick_right = defaults.m_deadzone_stick_right;
+
+    set_mouse_speed_multiplier(defaults.m_mouse_speed_multiplier);
+    set_mouse_scroll_multiplier(defaults.m_mouse_scroll_multiplier);
+#ifdef __SWITCH__
+    set_halfcon_mapping(brls::HalfJoyConSide::LEFT, defaults.m_halfcon_mappings[0]);
+    set_halfcon_mapping(brls::HalfJoyConSide::RIGHT, defaults.m_halfcon_mappings[1]);
+#endif
+    save();
+}
+
 #ifdef __SWITCH__
 const brls::HalfJoyConMapping& Settings::get_halfcon_mapping(brls::HalfJoyConSide side) const
 {
