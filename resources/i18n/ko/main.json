@@ -67,6 +67,7 @@
         "dialog_header": "오류",
         "host_not_found": "호스트 PC를 찾을 수 없음...",
         "ip_not_obtained": "IP 주소를 얻을 수 없음...",
+        "no_video": "PC에서 영상을 보내지 않았습니다\nPC 방화벽이 영상 포트를 허용하는지 확인한 후 다시 시도하세요",
         "stream_start": "스트림 시작 실패...",
         "unknown_error": "알 수 없는 문제가 발생..."
     },

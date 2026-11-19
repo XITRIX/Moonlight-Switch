@@ -67,6 +67,7 @@
         "dialog_header": "エラー",
         "host_not_found": "Host PC not found...",
         "ip_not_obtained": "Can't obtain IP address...",
+        "no_video": "PCから映像が届きませんでした\nPCのファイアウォールが映像用ポートを許可しているか確認して、もう一度お試しください",
         "stream_start": "Failed to start stream...",
         "unknown_error": "Unknown problem has been occured..."
     },

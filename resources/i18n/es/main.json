@@ -67,6 +67,7 @@
         "dialog_header": "Error",
         "host_not_found": "PC Anfitrión (Host) no encontrado...",
         "ip_not_obtained": "No se pudo obtener la dirección IP...",
+        "no_video": "El PC no envió vídeo\nComprueba que su cortafuegos deja pasar el puerto de vídeo y vuelve a intentarlo",
         "stream_start": "Fallo al iniciar stream...",
         "unknown_error": "Ha ocurrido un problema desconocido..."
     },
