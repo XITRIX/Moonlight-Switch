@@ -130,6 +130,7 @@
     "settings": {
         "audio_backend": "Audio driver",
         "av1": "AV1 (Experimental)",
+        "bitrate_auto": "Automático",
         "buttons": {
             "chat": "Bate-papo (C)",
             "home": "Home",

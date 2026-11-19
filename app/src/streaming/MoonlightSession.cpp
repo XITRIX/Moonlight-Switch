@@ -318,10 +318,10 @@ void MoonlightSession::audio_renderer_decode_and_play_sample(
 
 // MARK: MoonlightSession
 
-static void stream_size(int& w, int& h) {
+void MoonlightSession::stream_resolution(int* width, int* height) {
     int resolution = Settings::instance().resolution();
-    h = resolution;
-    w = h * 16 / 9;
+    int h = resolution;
+    int w = h * 16 / 9;
     if (resolution == -1) {
 #ifdef __SWITCH2__
         u32 nativeWidth = Application::windowWidth, nativeHeight = Application::windowHeight;
@@ -350,6 +350,9 @@ static void stream_size(int& w, int& h) {
     if ((w & 1) == 1) {
         w += 1;
     }
+
+    *width = w;
+    *height = h;
 }
 
 void MoonlightSession::start(ServerCallback<bool> callback, bool is_sunshine) {
@@ -362,7 +365,7 @@ void MoonlightSession::start(ServerCallback<bool> callback, bool is_sunshine) {
 
     LiInitializeStreamConfiguration(&m_config);
 
-    stream_size(m_config.width, m_config.height);
+    stream_resolution(&m_config.width, &m_config.height);
     m_config.fps = Settings::instance().fps();
 #ifdef __SWITCH2__
     m_config.colorSpace = COLORSPACE_REC_709;
@@ -371,7 +374,9 @@ void MoonlightSession::start(ServerCallback<bool> callback, bool is_sunshine) {
     m_config.audioConfiguration = AUDIO_CONFIGURATION_STEREO;
     m_config.packetSize = 1392;
     m_config.streamingRemotely = STREAM_CFG_AUTO;
-    m_config.bitrate = Settings::instance().bitrate();
+    m_config.bitrate = Settings::instance().bitrate_auto()
+        ? Settings::default_bitrate(m_config.width, m_config.height, m_config.fps)
+        : Settings::instance().bitrate();
     m_config.encryptionFlags = m_is_sunshine ? ENCFLG_ALL : ENCFLG_VIDEO;
 
     switch (Settings::instance().video_codec()) {
@@ -516,7 +521,7 @@ void MoonlightSession::follow_display_size() {
         return;
 
     int width, height;
-    stream_size(width, height);
+    stream_resolution(&width, &height);
     if (width == m_config.width && height == m_config.height) {
         m_display_size_changed_ms = 0;
         return;

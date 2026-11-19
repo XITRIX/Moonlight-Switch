@@ -21,6 +21,9 @@ class MoonlightSession {
     static MoonlightSession* activeSession();
     static void requestRestart();
 
+    // The stream size the current settings ask for, with Native resolved.
+    static void stream_resolution(int* width, int* height);
+
     void start(ServerCallback<bool> callback, bool is_sunshine);
     void stop(int terminate_app);
     void set_address(const std::string& address) { m_address = address; }

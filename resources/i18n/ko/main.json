@@ -130,6 +130,7 @@
     "settings": {
         "audio_backend": "오디오 드라이버",
         "av1": "AV1 (실험용)",
+        "bitrate_auto": "자동",
         "buttons": {
             "chat": "채팅(C)",
             "home": "홈",

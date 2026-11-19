@@ -130,6 +130,7 @@
     "settings": {
         "audio_backend": "Audio driver",
         "av1": "AV1 (実験的)",
+        "bitrate_auto": "自動",
         "buttons": {
             "chat": "チャット（C）",
             "home": "Home",

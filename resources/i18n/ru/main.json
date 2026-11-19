@@ -130,6 +130,7 @@
     "settings": {
         "audio_backend": "Аудио драйвер",
         "av1": "AV1 (Экспериментальный)",
+        "bitrate_auto": "Автоматически",
         "buttons": {
             "chat": "Чат (C)",
             "home": "Домой",
