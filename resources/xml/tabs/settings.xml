@@ -166,6 +166,16 @@
                 id="mouse_input_buttons"/>
 
             <brls:Header
+                title="@i18n/settings/disconnect"
+                paddingTop="60"/>
+
+            <brls:SelectorCell
+                id="disconnect_time"/>
+
+            <brls:DetailCell
+                id="disconnect_buttons"/>
+
+            <brls:Header
                 title="@i18n/settings/keyboard"
                 paddingTop="60"/>
 

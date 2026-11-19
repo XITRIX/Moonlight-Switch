@@ -430,6 +430,12 @@ void Settings::load() {
                     m_mouse_input_options.holdTime = (int)json_integer_value(mouse_input_hold_time);
                 }
             }
+
+            if (json_t* disconnect_hold_time = json_object_get(settings, "disconnect_hold_time")) {
+                if (json_typeof(disconnect_hold_time) == JSON_INTEGER) {
+                    m_disconnect_options.holdTime = (int)json_integer_value(disconnect_hold_time);
+                }
+            }
             
             if (json_t* mouse_speed_multiplier = json_object_get(settings, "mouse_speed_multiplier")) {
                 if (json_typeof(mouse_speed_multiplier) == JSON_INTEGER) {
@@ -514,6 +520,20 @@ void Settings::load() {
                         if (json_typeof(j_button) == JSON_INTEGER) {
                             button = (brls::ControllerButton)json_integer_value(j_button);
                             m_mouse_input_options.buttons.push_back(button);
+                        }
+                    }
+                }
+            }
+
+            if (json_t* buttons = json_object_get(settings, "disconnect_buttons")) {
+                m_disconnect_options.buttons.clear();
+                size_t size = json_array_size(buttons);
+                for (size_t i = 0; i < size; i++) {
+                    if (json_t* j_button = json_array_get(buttons, i)) {
+                        brls::ControllerButton button;
+                        if (json_typeof(j_button) == JSON_INTEGER) {
+                            button = (brls::ControllerButton)json_integer_value(j_button);
+                            m_disconnect_options.buttons.push_back(button);
                         }
                     }
                 }
@@ -670,6 +690,7 @@ void Settings::save()
             json_object_set_new(settings, "stream_volume", json_integer(m_volume));
             json_object_set_new(settings, "overlay_hold_time", json_integer(m_overlay_options.holdTime));
             json_object_set_new(settings, "mouse_input_hold_time", json_integer(m_mouse_input_options.holdTime));
+            json_object_set_new(settings, "disconnect_hold_time", json_integer(m_disconnect_options.holdTime));
             json_object_set_new(settings, "mouse_speed_multiplier", json_integer(m_mouse_speed_multiplier));
             json_object_set_new(settings, "mouse_scroll_multiplier", json_integer(m_mouse_scroll_multiplier));
             json_object_set_new(settings, "deadzone_stick_left", json_integer(int(m_deadzone_stick_left * 100.f)));
@@ -693,6 +714,13 @@ void Settings::save()
                     json_array_append_new(mouseInputButtons, json_integer(button));
                 }
                 json_object_set_new(settings, "mouse_input_buttons", mouseInputButtons);
+            }
+
+            if (json_t* disconnectButtons = json_array()) {
+                for (auto button: m_disconnect_options.buttons) {
+                    json_array_append_new(disconnectButtons, json_integer(button));
+                }
+                json_object_set_new(settings, "disconnect_buttons", disconnectButtons);
             }
             
             if (json_t* guideKeyButtons = json_array()) { 
