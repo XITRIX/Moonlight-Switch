@@ -38,6 +38,7 @@
         "try_connect": "Verbindung mit Host wird hergestellt"
     },
     "app_list": {
+        "other_app_running": " läuft noch auf dem PC.\n\nBeende es zuerst: ",
         "reload_app_list": "Neu laden",
         "run_current": "Aktuelles Programm fortsetzen",
         "running": "Läuft",

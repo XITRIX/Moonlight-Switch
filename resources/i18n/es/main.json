@@ -38,6 +38,7 @@
         "try_connect": "Intentando conectar al servidor"
     },
     "app_list": {
+        "other_app_running": " sigue en ejecución en el PC.\n\nCiérralo primero: ",
         "reload_app_list": "Recargar",
         "run_current": "Ejecutar aplicación iniciada",
         "running": "Ejecutándose",

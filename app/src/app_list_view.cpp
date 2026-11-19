@@ -162,12 +162,17 @@ void AppListView::updateAppList() {
                                     return lScore > rScore;
                                 });
 
+                            std::string currentGameName;
                             for (const AppInfo& app : sortedApps) {
-                                if (app.app_id == currentGame)
+                                if (app.app_id == currentGame) {
                                     setCurrentApp(app);
+                                    currentGameName = app.name;
+                                }
+                            }
 
-                                auto* cell =
-                                    new AppCell(host, app, currentGame);
+                            for (const AppInfo& app : sortedApps) {
+                                auto* cell = new AppCell(host, app, currentGame,
+                                                         currentGameName);
                                 cell->setFavorite(
                                     Settings::instance().is_favorite(
                                         host, app.app_id));

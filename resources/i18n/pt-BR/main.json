@@ -38,6 +38,7 @@
         "try_connect": "Tentando conectar ao host"
     },
     "app_list": {
+        "other_app_running": " ainda está em execução no PC.\n\nEncerre-o primeiro: ",
         "reload_app_list": "Recarregar",
         "run_current": "Executar aplicativo atual",
         "running": "Em execução",

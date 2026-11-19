@@ -38,6 +38,7 @@
         "try_connect": "ホストに接続しようとしています"
     },
     "app_list": {
+        "other_app_running": " はPCで実行中です。\n\n先に終了してください: ",
         "reload_app_list": "リロード",
         "run_current": "現在のアプリを実行する",
         "running": "実行中",

@@ -8,9 +8,11 @@
 #include "app_cell.hpp"
 #include "BoxArtManager.hpp"
 #include "Settings.hpp"
+#include "helper.hpp"
 #include "streaming_view.hpp"
 
-AppCell::AppCell(const Host& host, const AppInfo& app, int currentApp) {
+AppCell::AppCell(const Host& host, const AppInfo& app, int currentApp,
+                 const std::string& currentAppName) {
     this->inflateFromXMLRes("xml/cells/app_cell.xml");
     this->setFavorite(false);
 
@@ -24,7 +26,15 @@ AppCell::AppCell(const Host& host, const AppInfo& app, int currentApp) {
         currentApp == app.app_id ? Visibility::VISIBLE : Visibility::GONE);
 
     this->addGestureRecognizer(new TapGestureRecognizer(this));
-    this->registerClickAction([host, app](View* view) {
+    this->registerClickAction([host, app, isUnactive,
+                               currentAppName](View* view) {
+        if (isUnactive) {
+            showAlert(currentAppName + "app_list/other_app_running"_i18n +
+                      brls::Hint::getKeyIcon(ControllerButton::BUTTON_BACK) +
+                      "  " + "app_list/terminate_current_app"_i18n);
+            return true;
+        }
+
         auto* frame = new AppletFrame(new StreamingView(host, app));
         frame->setBackground(ViewBackground::NONE);
         frame->setHeaderVisibility(brls::Visibility::GONE);
@@ -32,7 +42,6 @@ AppCell::AppCell(const Host& host, const AppInfo& app, int currentApp) {
         Application::pushActivity(new Activity(frame));
         return true;
     });
-    this->setActionAvailable(BUTTON_A, !isUnactive);
 
     if (BoxArtManager::instance().has_boxart(app.app_id))
         image->setImageFromFile(
