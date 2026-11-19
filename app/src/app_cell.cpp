@@ -37,9 +37,9 @@ AppCell::AppCell(const Host& host, const AppInfo& app, int currentApp) {
     });
     this->setActionAvailable(BUTTON_A, !isUnactive);
 
-    if (BoxArtManager::instance().has_boxart(app.app_id))
+    if (BoxArtManager::instance().has_boxart(host, app.app_id))
         image->setImageFromFile(
-            BoxArtManager::get_texture_path(app.app_id));
+            BoxArtManager::get_texture_path(host, app.app_id));
     else
         fetchBoxArt(host, app.app_id, 1);
 }
@@ -51,9 +51,10 @@ void AppCell::fetchBoxArt(const Host& host, int appId, int attempt) {
             ASYNC_RELEASE
 
             if (result.isSuccess()) {
-                BoxArtManager::instance().set_data(result.value(), appId);
+                BoxArtManager::instance().set_data(result.value(), host,
+                                                   appId);
                 image->setImageFromFile(
-                    BoxArtManager::get_texture_path(appId));
+                    BoxArtManager::get_texture_path(host, appId));
             } else if (attempt < BOXART_FETCH_ATTEMPTS) {
                 retryBoxArt(host, appId, attempt);
             }

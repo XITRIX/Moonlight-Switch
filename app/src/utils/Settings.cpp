@@ -1,4 +1,5 @@
 #include "Settings.hpp"
+#include "BoxArtManager.hpp"
 #include <jansson.h>
 #include <algorithm>
 #include <cstring>
@@ -109,6 +110,7 @@ void Settings::remove_host(const Host& host) {
     });
     
     if (it != m_hosts.end()) {
+        BoxArtManager::instance().remove_host(*it);
         m_hosts.erase(it);
         save();
     }
