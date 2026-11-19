@@ -20,13 +20,17 @@
 #pragma once
 
 #include "Data.hpp"
+#include <atomic>
 
 enum HTTPRequestTimeout : long {
     HTTPRequestTimeoutLow = 1,
     HTTPRequestTimeoutMedium = 5,
-    HTTPRequestTimeoutLong = 120
+    HTTPRequestTimeoutLong = 120,
+    HTTPRequestTimeoutPairing = 600
 };
 
 int http_init(const std::string& key_directory);
-int http_request(const std::string& url, Data* data, HTTPRequestTimeout timeout);
+int http_request(const std::string& url, Data* data, HTTPRequestTimeout timeout,
+                 const std::atomic_bool* cancelled = nullptr,
+                 const std::string& pinned_key = "");
 

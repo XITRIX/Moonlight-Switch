@@ -215,19 +215,31 @@ void AddHostTab::connectHost(const Host& host) {
                     auto pin = fmt::format("{}{}{}{}", (int)rand() % 10, (int)rand() % 10,
                             (int)rand() % 10, (int)rand() % 10);
 
+                    auto cancelled = std::make_shared<bool>(false);
                     brls::Dialog* dialog = createLoadingDialog(
                         "add_host/pair_prefix"_i18n + pin +
-                        "add_host/pair_postfix"_i18n);
-                    dialog->setCancelable(false);
+                            "add_host/pair_postfix"_i18n,
+                        [cancelled] {
+                            *cancelled = true;
+                            GameStreamClient::instance().cancel_pair();
+                            AddHostTab::startSearching();
+                        });
                     dialog->open();
 
                     ASYNC_RETAIN
                     GameStreamClient::instance().pair(
                         pairedHost, pin,
-                        [ASYNC_TOKEN, pairedHost, dialog](const GSResult<bool>& result) {
+                        [ASYNC_TOKEN, pairedHost, dialog, cancelled](const GSResult<bool>& result) {
                             ASYNC_RELEASE
-                            dialog->dismiss([result, pairedHost] {
+                            if (*cancelled) {
+                                return;
+                            }
+                            dialog->dismiss([result, pairedHost]() mutable {
                                 if (result.isSuccess()) {
+                                    pairedHost.serverCert =
+                                        GameStreamClient::instance()
+                                            .server_data(pairedHost)
+                                            .serverCert;
                                     Settings::instance().add_host(pairedHost);
                                     MainTabs::getInstanse()->refillTabs();
                                     AddHostTab::startSearching();

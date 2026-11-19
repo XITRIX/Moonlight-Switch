@@ -5,6 +5,7 @@
 #include "errors.h"
 #include <functional>
 #include <map>
+#include <memory>
 #include <string>
 #include <utility>
 #include <vector>
@@ -15,8 +16,10 @@ template <typename T> struct GSResult {
   public:
     static GSResult success(T value) { return result(value, "", true); }
 
-    static GSResult failure(std::string error) {
-        return result(T(), error, false);
+    static GSResult failure(std::string error, int code = GS_FAILED) {
+        GSResult failed = result(T(), error, false);
+        failed._code = code;
+        return failed;
     }
 
     [[nodiscard]] bool isSuccess() const { return _isSuccess; }
@@ -24,6 +27,8 @@ template <typename T> struct GSResult {
     T value() const { return _value; }
 
     [[nodiscard]] std::string error() const { return _error; }
+
+    [[nodiscard]] int code() const { return _code; }
 
   private:
     static GSResult result(T value, const std::string& error, bool isSuccess) {
@@ -36,6 +41,7 @@ template <typename T> struct GSResult {
 
     T _value;
     std::string _error;
+    int _code = GS_OK;
     bool _isSuccess = false;
 };
 
@@ -84,6 +90,7 @@ class GameStreamClient : public Singleton<GameStreamClient> {
               ServerCallback<bool>& callback);
     void pair(const Host& host, const std::string& pin,
               ServerCallback<bool>& callback);
+    void cancel_pair();
     void applist(const std::string& address,
                  ServerCallback<AppInfoList>& callback);
     void applist(const Host& host, ServerCallback<AppInfoList>& callback);
@@ -118,9 +125,11 @@ class GameStreamClient : public Singleton<GameStreamClient> {
     void cache_server_data(const std::string& address, const SERVER_DATA& data);
     void connect_to_addresses(const std::vector<std::string>& addresses,
                               const std::string& activeKey,
+                              const std::string& serverCert,
                               ServerCallback<SERVER_DATA>& callback);
 
     std::map<std::string, SERVER_DATA> m_server_data;
     std::map<std::string, std::string> m_active_addresses;
+    std::shared_ptr<std::atomic_bool> m_pair_cancelled;
     STREAM_CONFIGURATION m_config;
 };

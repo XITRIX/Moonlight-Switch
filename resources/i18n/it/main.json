@@ -29,8 +29,11 @@
         "connect": "Connetti",
         "host_ip": "IP Host",
         "manual": "Manuale",
+        "pair_in_progress": "Un altro dispositivo si sta già accoppiando con questo host",
         "pair_postfix": " nel tuo dispositivo host",
         "pair_prefix": "Accoppia\n\nInserisci ",
+        "pair_timeout": "Tempo di accoppiamento scaduto\nInserisci il PIN nel tuo dispositivo host e riprova",
+        "pair_wrong_pin": "PIN errato\nRiprova ad accoppiare",
         "paired_error": "Già accoppiato\nLa configurazione è stata aggiornata",
         "search": "Cerca",
         "search_error": "Ricerca non disponibile",
@@ -82,6 +85,7 @@
         "submit": "Done"
     },
     "host": {
+        "cert_changed": "Il certificato dell'host è cambiato\nRimuovi questo host e associalo di nuovo",
         "connect": "Connetti",
         "fetching": "Ottenimento...",
         "ready": "Pronto",

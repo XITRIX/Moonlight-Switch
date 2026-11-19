@@ -48,6 +48,7 @@ struct Host {
     std::string remoteAddress;
     std::string hostname;
     std::string mac;
+    std::string serverCert;
     std::vector<App> favorites;
 
     [[nodiscard]] std::vector<std::string> connection_addresses() const {

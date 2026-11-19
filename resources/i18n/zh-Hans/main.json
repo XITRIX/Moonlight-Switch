@@ -29,8 +29,11 @@
         "connect": "连接",
         "host_ip": "主机IP",
         "manual": "手动",
+        "pair_in_progress": "另一台设备正在与此主机配对",
         "pair_postfix": " 在计算机设备上输入",
         "pair_prefix": "配对\n\n在主机设备上输入 ",
+        "pair_timeout": "配对超时\n请在主机上输入 PIN 后重试",
+        "pair_wrong_pin": "PIN 不正确\n请重新配对",
         "paired_error": "已配对\n配置已经更新",
         "search": "搜索",
         "search_error": "不可使用搜索",
@@ -82,6 +85,7 @@
         "submit": "完成"
     },
     "host": {
+        "cert_changed": "主机证书已更改\n请移除此主机并重新配对",
         "connect": "连接",
         "fetching": "收取中……",
         "ready": "准备完成",

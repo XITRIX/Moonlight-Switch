@@ -38,6 +38,8 @@ void merge_host(Host& target, const Host& source) {
         target.hostname = source.hostname;
     if (!source.mac.empty())
         target.mac = source.mac;
+    if (!source.serverCert.empty())
+        target.serverCert = source.serverCert;
 }
 
 std::string make_preferred_path(const fs::path& path) {
@@ -245,6 +247,12 @@ void Settings::load() {
                         if (json_t* mac = json_object_get(json, "mac")) {
                             if (json_typeof(mac) == JSON_STRING) {
                                 host.mac = json_string_value(mac);
+                            }
+                        }
+
+                        if (json_t* serverCert = json_object_get(json, "server_cert")) {
+                            if (json_typeof(serverCert) == JSON_STRING) {
+                                host.serverCert = json_string_value(serverCert);
                             }
                         }
 
@@ -621,6 +629,8 @@ void Settings::save()
                     json_object_set_new(json, "remote_address", json_string(host.remoteAddress.c_str()));
                     json_object_set_new(json, "hostname", json_string(host.hostname.c_str()));
                     json_object_set_new(json, "mac", json_string(host.mac.c_str()));
+                    if (!host.serverCert.empty())
+                        json_object_set_new(json, "server_cert", json_string(host.serverCert.c_str()));
                     if (json_t* apps = json_array())
                     {
                         for (auto app : host.favorites)

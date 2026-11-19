@@ -29,8 +29,11 @@
         "connect": "Se connecter",
         "host_ip": "IP de l'hôte",
         "manual": "Manuel",
+        "pair_in_progress": "Un autre appareil est déjà en cours d'appairage avec cet hôte",
         "pair_postfix": " sur la machine hôte",
         "pair_prefix": "Appairage\n\nEntrez ",
+        "pair_timeout": "Délai d'appairage dépassé\nEntrez le PIN sur la machine hôte et réessayez",
+        "pair_wrong_pin": "PIN incorrect\nRéessayez l'appairage",
         "paired_error": "Déjà appairé\nConfiguration mise à jour",
         "search": "Rechercher",
         "search_error": "La recherche n'est pas disponible",
@@ -82,6 +85,7 @@
         "submit": "Terminé"
     },
     "host": {
+        "cert_changed": "Le certificat de l'hôte a changé\nSupprimez cet hôte et refaites l'appairage",
         "connect": "Se connecter",
         "fetching": "Récupération...",
         "ready": "Prêt",

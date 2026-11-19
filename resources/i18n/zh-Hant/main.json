@@ -29,8 +29,11 @@
         "connect": "連接",
         "host_ip": "主機IP",
         "manual": "手動",
+        "pair_in_progress": "另一台裝置正在與此主機配對",
         "pair_postfix": " on your host device",
         "pair_prefix": "配對\n\n在主機裝置上輸入 ",
+        "pair_timeout": "配對逾時\n請在主機上輸入 PIN 後重試",
+        "pair_wrong_pin": "PIN 不正確\n請重新配對",
         "paired_error": "已配對\n配置已經更新",
         "search": "搜尋",
         "search_error": "不可使用搜尋",
@@ -82,6 +85,7 @@
         "submit": "完成"
     },
     "host": {
+        "cert_changed": "主機憑證已變更\n請移除此主機並重新配對",
         "connect": "連接",
         "fetching": "收取中……",
         "ready": "準備完成",

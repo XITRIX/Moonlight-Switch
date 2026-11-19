@@ -29,8 +29,11 @@
         "connect": "Conectar",
         "host_ip": "Host IP",
         "manual": "Manual",
+        "pair_in_progress": "Outro dispositivo já está emparelhando com este host",
         "pair_postfix": " no dispositivo host",
         "pair_prefix": "Emparelhar\n\nPressione ",
+        "pair_timeout": "O emparelhamento expirou\nDigite o PIN no dispositivo host e tente novamente",
+        "pair_wrong_pin": "PIN incorreto\nTente emparelhar novamente",
         "paired_error": "Emparelhado\nA configuração foi atualizada",
         "search": "Pesquisar",
         "search_error": "Pesquisa indisponível",
@@ -82,6 +85,7 @@
         "submit": "Done"
     },
     "host": {
+        "cert_changed": "O certificado do host mudou\nRemova este host e pareie-o novamente",
         "connect": "Conectar",
         "fetching": "Buscando...",
         "ready": "Pronto",

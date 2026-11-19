@@ -98,6 +98,9 @@ HostTab::HostTab(const Host& host) : host(host) {
                     });
             }
             break;
+        case CERT_CHANGED:
+            showError("host/cert_changed"_i18n);
+            break;
         case FETCHING:
             break;
         }
@@ -137,6 +140,11 @@ void HostTab::reloadHost() {
                                         : connectedAddress);
                 connect->setText("host/connect"_i18n);
                 state = AVAILABLE;
+            } else if (result.code() == GS_CERT_MISMATCH) {
+                header->setTitle("host/status"_i18n + ": " +
+                                 "host/unable"_i18n);
+                connect->setText("host/connect"_i18n);
+                state = CERT_CHANGED;
             } else {
                 header->setTitle("host/status"_i18n + ": " +
                                  "host/unable"_i18n);
