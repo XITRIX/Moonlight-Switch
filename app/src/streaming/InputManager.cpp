@@ -27,6 +27,9 @@ constexpr uint32_t SUPPORTED_BUTTONS =
     RS_CLK_FLAG | SPECIAL_FLAG;
 constexpr uint16_t CONTROLLER_CAPABILITIES =
     LI_CCAP_RUMBLE | LI_CCAP_ACCEL | LI_CCAP_GYRO;
+constexpr int ONSCREEN_PAD = GAMEPADS_MAX;
+constexpr int CONTROLLER_SLOTS = GAMEPADS_MAX + 1;
+constexpr uint32_t ONSCREEN_PAD_BUTTONS = SUPPORTED_BUTTONS & ~SPECIAL_FLAG;
 
 float applyStickScrollDeadzone(float axis, float configuredDeadzone) {
     float deadzone = std::fmax(STICK_SCROLL_DEADZONE, configuredDeadzone);
@@ -308,7 +311,7 @@ void MoonlightInputManager::dropInput() {
 
     bool res = true;
     // Drop gamepad state
-    for (short i = 0; i < GAMEPADS_MAX; i++) {
+    for (short i = 0; i < CONTROLLER_SLOTS; i++) {
         if (announcedControllers & (1 << i))
             res &= LiSendMultiControllerEvent(i, announcedControllers, 0, 0, 0,
                                               0, 0, 0, 0) == 0;
@@ -449,25 +452,29 @@ void MoonlightInputManager::handleControllers(bool specialKey) {
     const short connected = connectedControllers();
     // Player 1 stays on the host, so a game keeps its pad while controllers
     // are swapped.
-    const short mask = connected | 0x1;
+    const short mask = connected | 0x1 | (onscreenPad ? 1 << ONSCREEN_PAD : 0);
 
     if (newStream) {
         // Free any pad an earlier session left on the host, then announce
         // every player again with its type and capabilities.
-        for (int i = 0; i < GAMEPADS_MAX; i++)
+        for (int i = 0; i < CONTROLLER_SLOTS; i++)
             LiSendMultiControllerEvent(i, 0, 0, 0, 0, 0, 0, 0, 0);
         announcedControllers = 0;
     }
 
-    for (int i = 0; i < GAMEPADS_MAX; i++) {
+    for (int i = 0; i < CONTROLLER_SLOTS; i++) {
         const short bit = 1 << i;
         const bool present = mask & bit;
         const bool announced = announcedControllers & bit;
 
         if (present && !announced) {
-            if (LiSendControllerArrivalEvent(i, mask, LI_CTYPE_UNKNOWN,
-                                             SUPPORTED_BUTTONS,
-                                             CONTROLLER_CAPABILITIES) == 0) {
+            // The on-screen pad has no motion sensors or motors of its own,
+            // so it goes to the host as a plain Xbox controller.
+            const bool onscreen = i == ONSCREEN_PAD;
+            if (LiSendControllerArrivalEvent(
+                    i, mask, onscreen ? LI_CTYPE_XBOX : LI_CTYPE_UNKNOWN,
+                    onscreen ? ONSCREEN_PAD_BUTTONS : SUPPORTED_BUTTONS,
+                    onscreen ? 0 : CONTROLLER_CAPABILITIES) == 0) {
                 announcedControllers |= bit;
                 lastGamepadStates[i] = {};
                 Logger::info("StreamingView: player {} arrived, mask {:#x}", i + 1, mask);
@@ -483,13 +490,15 @@ void MoonlightInputManager::handleControllers(bool specialKey) {
         }
     }
 
-    for (int i = 0; i < GAMEPADS_MAX; i++) {
+    for (int i = 0; i < CONTROLLER_SLOTS; i++) {
         if (!(announcedControllers & (1 << i)))
             continue;
 
-        GamepadState gamepadState = connected & (1 << i)
-                                        ? getControllerState(i, specialKey)
-                                        : GamepadState{};
+        GamepadState gamepadState;
+        if (i == ONSCREEN_PAD)
+            gamepadState = onscreenPad.value_or(GamepadState{});
+        else if (connected & (1 << i))
+            gamepadState = getControllerState(i, specialKey);
 
         if (newStream || !gamepadState.is_equal(lastGamepadStates[i])) {
             lastGamepadStates[i] = gamepadState;

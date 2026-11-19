@@ -169,11 +169,11 @@ CONTROLLERS = r"""
 #include <cstdint>
 #include <map>
 #include <optional>
-constexpr int GAMEPADS_MAX=5,LI_CTYPE_UNKNOWN=0;
-constexpr uint32_t SUPPORTED_BUTTONS=0x7FF;
+constexpr int GAMEPADS_MAX=5,LI_CTYPE_UNKNOWN=0,LI_CTYPE_XBOX=1;
+constexpr uint32_t SUPPORTED_BUTTONS=0x7FF,SPECIAL_FLAG=0x400;
 constexpr uint16_t CONTROLLER_CAPABILITIES=7;
 static unsigned connectedMask=1;
-static int arrivals=0,states=0,removals=0,failArrival=0;
+static int arrivals=0,states=0,removals=0,failArrival=0,arrivedType=-1;
 namespace brls {
 struct Point {float x=0,y=0;};
 struct PanGestureStatus {};
@@ -191,8 +191,8 @@ struct Application {static Platform* getPlatform(){static Platform p;return &p;}
 }
 using namespace brls;
 template<class T> class Singleton {};
-template<class... T> int LiSendControllerArrivalEvent(int,short,T...){
-    ++arrivals;return failArrival ? --failArrival,-1 : 0;
+template<class... T> int LiSendControllerArrivalEvent(int,short,int type,T...){
+    ++arrivals;arrivedType=type;return failArrival ? --failArrival,-1 : 0;
 }
 template<class... T> int LiSendMultiControllerEvent(int i,int mask,T...){
     ++states;removals+=!(mask&(1<<i));return 0;
@@ -209,18 +209,26 @@ GamepadState MoonlightInputManager::getControllerState(int,bool){return {};}
 int main(){
     MoonlightInputManager input;
     // A new stream frees every pad, then announces player 1 and sends its state.
-    input.handleControllers(false);assert(sent(1,GAMEPADS_MAX+1,GAMEPADS_MAX));
+    // The extra slot past the console's players belongs to the on-screen pad.
+    constexpr int SLOTS=GAMEPADS_MAX+1;
+    input.handleControllers(false);assert(sent(1,SLOTS+1,SLOTS));
     input.handleControllers(false);assert(sent(0,0,0));
     input.resetControllerState();input.handleControllers(false);
-    assert(sent(1,GAMEPADS_MAX+1,GAMEPADS_MAX)); // neutral buttons, new stream
+    assert(sent(1,SLOTS+1,SLOTS)); // neutral buttons, new stream
     input.resetControllerState();failArrival=1;input.handleControllers(false);
-    assert(sent(1,GAMEPADS_MAX,GAMEPADS_MAX));
+    assert(sent(1,SLOTS,SLOTS));
     input.handleControllers(false);assert(sent(1,0,0)); // retried
     connectedMask=0b011;input.handleControllers(false);assert(sent(1,0,0));
     // Player 2 leaves and player 3 arrives: only player 2 is removed.
     connectedMask=0b101;input.handleControllers(false);assert(sent(1,1,1));
     // Player 1 stays on the host with nothing connected.
     connectedMask=0;input.handleControllers(false);assert(sent(0,1,1));
+    // The on-screen pad arrives as an Xbox pad, sends changes, and leaves.
+    input.setOnscreenPad(GamepadState{});input.handleControllers(false);
+    assert(sent(1,0,0)&&arrivedType==LI_CTYPE_XBOX);
+    GamepadState pressed;pressed.buttonFlags=1;
+    input.setOnscreenPad(pressed);input.handleControllers(false);assert(sent(0,1,0));
+    input.setOnscreenPad(std::nullopt);input.handleControllers(false);assert(sent(0,1,1));
     connectedMask=0x7F;input.handleControllers(false);
     assert(sent(GAMEPADS_MAX-1,0,0)); // a fifth pad gets its bit, nothing past it
 }
@@ -358,7 +366,10 @@ def main():
     harness += "\n".join(method(source, signature) for signature in signatures)
     harness += SCENARIOS
     input_source = (ROOT / "app/src/streaming/InputManager.cpp").read_text()
-    controllers = CONTROLLERS + "\n#define private public\n"
+    controllers = CONTROLLERS + "\n".join(re.findall(
+        r"^constexpr \w+ (?:ONSCREEN_PAD\w*|CONTROLLER_SLOTS) =[^;]*;",
+        input_source, flags=re.M))
+    controllers += "\n#define private public\n"
     controllers += stripped_header(ROOT / "app/src/streaming/InputManager.hpp")
     controllers += "\n#undef private\n"
     controllers += method(input_source, "void MoonlightInputManager::handleControllers(")
