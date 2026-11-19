@@ -184,6 +184,8 @@ void Settings::set_mouse_scroll_multiplier(int percent)
 int Settings::max_bitrate() {
 #if defined(__PSV__)
     return 20000;
+#elif defined(__SWITCH2__)
+    return 150000;
 #elif defined(PLATFORM_SWITCH)
     return 100000;
 #else
