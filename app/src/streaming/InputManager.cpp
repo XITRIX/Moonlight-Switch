@@ -70,6 +70,7 @@ MoonlightInputManager::MoonlightInputManager() {
             if (!inputEnabled) return;
 
             int vkKey = MoonlightInputManager::glfwKeyToVKKey(state.key);
+            if (vkKey == 0) return;
             char modifiers = state.mods;
             LiSendKeyboardEvent(vkKey,
                                 state.pressed ? KEY_ACTION_DOWN : KEY_ACTION_UP,
@@ -332,7 +333,8 @@ void MoonlightInputManager::dropInput() {
     // Drop keyboard state
     for (int i = BRLS_KBD_KEY_SPACE; i < BrlsKeyboardScancode::BRLS_KBD_KEY_LAST; i++)  {
         short vkKey = MoonlightInputManager::glfwKeyToVKKey((BrlsKeyboardScancode)i);
-        LiSendKeyboardEvent(vkKey, KEY_ACTION_UP, 0);
+        if (vkKey != 0)
+            LiSendKeyboardEvent(vkKey, KEY_ACTION_UP, 0);
     }
 
     inputDropped = res;
@@ -698,6 +700,9 @@ short MoonlightInputManager::glfwKeyToVKKey(BrlsKeyboardScancode key) {
     if (BRLS_KBD_KEY_F1 <= key && key <= BRLS_KBD_KEY_F12)
         return key - BRLS_KBD_KEY_F1 + 0x70;
 
+    if (BRLS_KBD_KEY_F13 <= key && key <= BRLS_KBD_KEY_F24)
+        return key - BRLS_KBD_KEY_F13 + 0x7C;
+
     if (BRLS_KBD_KEY_KP_0 <= key && key <= BRLS_KBD_KEY_KP_9)
         return key - BRLS_KBD_KEY_KP_0 + 0x60;
 
@@ -762,6 +767,8 @@ short MoonlightInputManager::glfwKeyToVKKey(BrlsKeyboardScancode key) {
         return 0x6F;
     case BRLS_KBD_KEY_KP_MULTIPLY:
         return 0x6A;
+    case BRLS_KBD_KEY_KP_SUBTRACT:
+        return 0x6D;
     case BRLS_KBD_KEY_KP_ENTER:
         return 0x0D;
     case BRLS_KBD_KEY_NUM_LOCK:
@@ -786,12 +793,22 @@ short MoonlightInputManager::glfwKeyToVKKey(BrlsKeyboardScancode key) {
         return 0x28;
     case BRLS_KBD_KEY_PRINT_SCREEN:
         return 0x2C;
+    case BRLS_KBD_KEY_PAUSE:
+        return 0x13;
+    case BRLS_KBD_KEY_MENU:
+        return 0x5D;
     case BRLS_KBD_KEY_INSERT:
         return 0x2D;
     case BRLS_KBD_KEY_DELETE:
         return 0x2E;
 
     default:
-        return key;
+        // Space, digits and letters share their codes with the virtual
+        // keys. Anything else has no key on the host, so it isn't sent.
+        if (key == BRLS_KBD_KEY_SPACE ||
+            (BRLS_KBD_KEY_0 <= key && key <= BRLS_KBD_KEY_9) ||
+            (BRLS_KBD_KEY_A <= key && key <= BRLS_KBD_KEY_Z))
+            return key;
+        return 0;
     }
 }
