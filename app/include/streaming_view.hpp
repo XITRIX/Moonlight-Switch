@@ -46,6 +46,7 @@ class StreamingView : public brls::Box {
     KeyboardView* keyboard = nullptr;
     bool blocked = false;
     bool terminated = false;
+    bool terminationReported = false;
     bool tempInputLock = false;
     brls::Event<brls::KeyState>::Subscription keysSubscription;
     int touchScrollCounter = 0;
@@ -56,6 +57,7 @@ class StreamingView : public brls::Box {
     bool windowFocused = true;
 
     void onWindowFocusChanged(bool focused);
+    void reportTermination();
 
     std::string buildStatsText();
     std::string statsText;

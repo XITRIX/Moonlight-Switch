@@ -63,8 +63,11 @@ struct OPUS_MULTISTREAM_CONFIGURATION {};
 using POPUS_MULTISTREAM_CONFIGURATION=OPUS_MULTISTREAM_CONFIGURATION*;
 using PDECODE_UNIT=void*;
 template<class T> struct GSResult {
-    bool ok; static GSResult success(T){return {true};}
+    bool ok; std::string message;
+    static GSResult success(T){return {true,""};}
+    static GSResult failure(std::string m){return {false,m};}
     bool isSuccess()const{return ok;}
+    std::string error()const{return message;}
 };
 template<class T> using ServerCallback=const std::function<void(GSResult<T>)>;
 struct IFFmpegVideoDecoder {
@@ -109,11 +112,18 @@ void LiStopConnection(){
     assert(std::this_thread::get_id()==mainThread);events.push_back("stop");
 }
 uint64_t LiGetMillis(){return 1000;}
+#define ML_ERROR_NO_VIDEO_TRAFFIC -100
+#define ML_ERROR_NO_VIDEO_FRAME -101
+#define ML_ERROR_UNEXPECTED_EARLY_TERMINATION -102
+#define ML_ERROR_PROTECTED_CONTENT -103
+#define ML_ERROR_FRAME_CONVERSION -104
+static bool startFails=false;
 """
 
 SCENARIOS = r"""
 void MoonlightSession::start(ServerCallback<bool> cb,bool sunshine) {
     ++starts;events.push_back("start");m_is_sunshine=sunshine;
+    if(startFails){cb(GSResult<bool>::failure("refused"));return;}
     connection_started();cb(GSResult<bool>::success(true));
 }
 int main() {
@@ -158,6 +168,32 @@ int main() {
     MoonlightSession::requestRestart();delete old;
     s=new MoonlightSession("host",1);events.clear();brls::drain();
     assert(events.empty()); // stale decoder reconnect cannot reach a new session
+
+    MoonlightSession::connection_started();
+    std::thread([]{
+        MoonlightSession::connection_terminated(ML_ERROR_NO_VIDEO_TRAFFIC);
+    }).join();
+    brls::drain();
+    assert(events.empty()&&starts==2); // no video at all is reported, not retried
+    assert(s->is_terminated()&&s->termination_error()==ML_ERROR_NO_VIDEO_TRAFFIC);
+    delete s;
+
+    s=new MoonlightSession("host",1);
+    MoonlightSession::connection_started();
+    std::thread([]{
+        MoonlightSession::connection_terminated(ML_ERROR_PROTECTED_CONTENT);
+    }).join();
+    brls::drain();
+    assert(starts==2&&s->termination_error()==ML_ERROR_PROTECTED_CONTENT);
+    delete s;
+
+    s=new MoonlightSession("host",1);
+    MoonlightSession::connection_started();startFails=true;
+    std::thread([]{MoonlightSession::connection_terminated(-1);}).join();
+    brls::drain();brls::drain();
+    assert(starts==3&&s->is_terminated()); // a cut-off stream retries once
+    assert(s->m_reconnect_failed&&s->m_reconnect_error=="refused");
+    startFails=false;
     delete s;
 }
 """

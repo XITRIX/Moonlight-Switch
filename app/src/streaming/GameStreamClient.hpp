@@ -5,6 +5,7 @@
 #include "errors.h"
 #include <functional>
 #include <map>
+#include <memory>
 #include <string>
 #include <utility>
 #include <vector>
@@ -84,6 +85,7 @@ class GameStreamClient : public Singleton<GameStreamClient> {
               ServerCallback<bool>& callback);
     void pair(const Host& host, const std::string& pin,
               ServerCallback<bool>& callback);
+    void cancel_pair();
     void applist(const std::string& address,
                  ServerCallback<AppInfoList>& callback);
     void applist(const Host& host, ServerCallback<AppInfoList>& callback);
@@ -122,5 +124,6 @@ class GameStreamClient : public Singleton<GameStreamClient> {
 
     std::map<std::string, SERVER_DATA> m_server_data;
     std::map<std::string, std::string> m_active_addresses;
+    std::shared_ptr<std::atomic_bool> m_pair_cancelled;
     STREAM_CONFIGURATION m_config;
 };
