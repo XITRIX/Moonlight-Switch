@@ -256,13 +256,13 @@ FFMPEG = r"""
 #include <cstring>
 #include <vector>
 constexpr int DR_OK=0,DR_NEED_IDR=-1,AV_INPUT_BUFFER_PADDING_SIZE=64;
-struct AVFrame {};struct AVPacket {};struct AVBufferRef {};struct AVCodec {};
+struct AVFrame {};struct AVPacket {int64_t pts;};struct AVBufferRef {};struct AVCodec {};
 struct AVCodecContext {};
 enum AVCodecID {AV_CODEC_ID_NONE};
 struct LENTRY {LENTRY* next;char* data;int length;};
 using PLENTRY=LENTRY*;
 struct DECODE_UNIT {
-    int fullLength;PLENTRY bufferList;uint32_t frameNumber;uint64_t receiveTimeUs;
+    int fullLength;PLENTRY bufferList;uint32_t frameNumber;uint64_t receiveTimeUs;uint64_t presentationTimeUs;
 };
 using PDECODE_UNIT=DECODE_UNIT*;
 static int decodedResult=1,decodeCalls=0,flushes=0,restarts=0;
@@ -281,6 +281,7 @@ FFMPEG_SCENARIOS = r"""
 FFmpegVideoDecoder::FFmpegVideoDecoder(){
     m_decoder_ready=true;m_stream_fps=60;
     static AVCodecContext context;m_decoder_context=&context;
+    static AVPacket packet;m_packet=&packet;
 }
 FFmpegVideoDecoder::~FFmpegVideoDecoder(){free(m_ffmpeg_buffer);}
 int FFmpegVideoDecoder::setup(int,int,int,int,void*,int){return 0;}
@@ -297,7 +298,7 @@ int main(){
     assert(d.submit_decode_unit(nullptr)==DR_NEED_IDR);
     std::vector<char> bytes(2*1024*1024,42);
     LENTRY entry{nullptr,bytes.data(),int(bytes.size())};
-    DECODE_UNIT unit{entry.length,&entry,1,LiGetMicroseconds()};
+    DECODE_UNIT unit{entry.length,&entry,1,LiGetMicroseconds(),0};
     assert(d.submit_decode_unit(&unit)==DR_OK&&decodeCalls==1);
     assert(d.m_ffmpeg_buffer_capacity>=bytes.size());
     assert(std::memcmp(d.m_ffmpeg_buffer,bytes.data(),bytes.size())==0);
