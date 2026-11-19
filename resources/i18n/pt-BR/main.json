@@ -196,6 +196,7 @@
         "mouse_input": "Entrar no modo de mouse",
         "mouse_speed": "Aceleração do mouse",
         "options": "Opções",
+        "oversize_keyframes": "Os quadros-chave do host são grandes demais para o decodificador. Reduza a taxa de bits.",
         "show_logs": "Mostrar logs",
         "terminate": "Encerrar aplicativo",
         "volume": "Volume"

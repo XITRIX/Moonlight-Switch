@@ -196,6 +196,7 @@
         "mouse_input": "마우스 입력 모드 진입",
         "mouse_speed": "마우스 가속",
         "options": "옵션",
+        "oversize_keyframes": "호스트의 키프레임이 디코더에 비해 너무 큽니다. 비트레이트를 낮추세요.",
         "show_logs": "정보 표시",
         "terminate": "앱 종료",
         "volume": "볼륨"

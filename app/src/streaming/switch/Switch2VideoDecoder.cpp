@@ -16,8 +16,15 @@ namespace
 constexpr size_t kMaxSample  = 4 * 1024 * 1024;
 constexpr uint64_t kPollNs   = 2000000; // Bounded waits keep stop/join responsive.
 constexpr uint64_t kSubmitNs = 50000000; // Allow a large 4K IDR to traverse all SDK input chunks.
+// Keyframe requests after this many oversized units in a row back off from
+// 1 s, doubling up to 8 s: each request only brings another big keyframe.
+constexpr unsigned kOversizeStreak = 3;
+constexpr uint64_t kIdrRetryMs     = 500;
+constexpr uint64_t kIdrRetryMaxMs  = 8000;
 bool timedOut(Result rc) { return R_VALUE(rc) == KERNELRESULT(TimedOut); }
 }
+
+using namespace brls::literals;
 
 Switch2VideoDecoder::~Switch2VideoDecoder() { cleanup(); }
 
@@ -48,6 +55,9 @@ int Switch2VideoDecoder::setup(int format, int width, int height, int fps, void*
     m_snapshot   = { };
     m_started_ms = m_window_ms             = LiGetMillis();
     m_retry_after_ms                       = 0;
+    m_idr_requested_ms                     = 0;
+    m_oversized                            = 0;
+    m_skip_to_idr                          = false;
     m_progress.measurement_start_timestamp = m_started_ms;
     m_have_last_frame                      = false;
     m_first_frame                          = false;
@@ -251,8 +261,13 @@ int Switch2VideoDecoder::submit_decode_unit(PDECODE_UNIT unit)
 {
     if (m_software)
         return m_software->submit_decode_unit(unit);
-    if (!unit || unit->fullLength <= 0 || size_t(unit->fullLength) > kMaxSample)
+    if (!unit || unit->fullLength <= 0)
         return DR_NEED_IDR;
+    if (size_t(unit->fullLength) > kMaxSample)
+    {
+        std::lock_guard<std::mutex> lock(m_mutex);
+        return dropOversized(unit->fullLength);
+    }
     std::vector<uint8_t> sample, sps, pps;
     sample.reserve(unit->fullLength);
     unsigned entries = 0;
@@ -284,6 +299,12 @@ int Switch2VideoDecoder::submit_decode_unit(PDECODE_UNIT unit)
     const auto reassembly   = uint32_t(now >= received ? std::min<uint64_t>(now - received, 60000) : 0);
     m_progress.current_reassembly_time += reassembly;
     m_progress.total_reassembly_time += reassembly;
+    if (m_skip_to_idr)
+    {
+        if (unit->frameType != FRAME_TYPE_IDR)
+            return requestIdr();
+        m_skip_to_idr = false;
+    }
     if (m_need_idr)
     {
         if (now < m_retry_after_ms)
@@ -324,6 +345,7 @@ int Switch2VideoDecoder::submit_decode_unit(PDECODE_UNIT unit)
         return DR_NEED_IDR;
     }
     m_pending_times.emplace_back(stamp, now);
+    m_oversized = 0;
     if (m_pending_times.size() > 64)
     {
         fail("output stalled", KERNELRESULT(TimedOut));
@@ -331,6 +353,30 @@ int Switch2VideoDecoder::submit_decode_unit(PDECODE_UNIT unit)
     }
     drain(0);
     return m_need_idr ? DR_NEED_IDR : DR_OK;
+}
+
+int Switch2VideoDecoder::dropOversized(int bytes)
+{
+    m_skip_to_idr = true;
+    if (++m_oversized == kOversizeStreak)
+    {
+        brls::Logger::warning("SWITCH2_HWDEC: {} units in a row above {} bytes (last {}); spacing out keyframe requests",
+            m_oversized, kMaxSample, bytes);
+        brls::sync([] { brls::Application::notify("streaming/oversize_keyframes"_i18n); });
+    }
+    return requestIdr();
+}
+
+int Switch2VideoDecoder::requestIdr()
+{
+    uint64_t wait = 0;
+    if (m_oversized >= kOversizeStreak)
+        wait = std::min(kIdrRetryMs << std::min(m_oversized - kOversizeStreak + 1, 8u), kIdrRetryMaxMs);
+    const uint64_t now = LiGetMillis();
+    if (m_idr_requested_ms && now - m_idr_requested_ms < wait)
+        return DR_OK; // Dropped; the last frame stays on screen until the next request.
+    m_idr_requested_ms = now;
+    return DR_NEED_IDR;
 }
 
 int Switch2VideoDecoder::capabilities() const { return CAPABILITY_SLICES_PER_FRAME(4); }

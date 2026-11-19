@@ -118,11 +118,19 @@ class Settings { public:
             "borealis.hpp",
             r"""
 #pragma once
+#include <cstddef>
+#include <string>
+#include <vector>
 namespace brls { struct Logger {
  template<class... T> static void info(const char*,T...) {}
  template<class... T> static void error(const char*,T...) {}
  template<class... T> static void warning(const char*,T...) {}
-}; }
+};
+inline std::vector<std::string> notifications;
+template<class F> void sync(F f) { f(); }
+struct Application { static void notify(const std::string& text) { notifications.push_back(text); } };
+namespace literals { inline std::string operator""_i18n(const char* s,size_t n) { return std::string(s,n); } }
+}
 """,
         )
         write(
@@ -167,6 +175,7 @@ class AVFrameHolder { public:
             r"""
 #include "FFmpegVideoDecoder.hpp"
 #include "Switch2VideoDecoder.hpp"
+#include <borealis.hpp>
 #include "Switch2ImageInterop.hpp"
 #include "Switch2FrameReferences.hpp"
 #include <borealis/core/frame_resources.hpp>
@@ -322,6 +331,26 @@ int main() {
   for(int i=2;i<=120;++i) {u.frameNumber=i;u.presentationTimeUs+=8333;assert(d.submit_decode_unit(&u)==DR_OK);}
   nowMs+=1000;assert(d.video_decode_stats()->total_decoded_frames==120);
   assert(submits==120 && copies==0 && releases>=115); // Registration fallback must not drop half the stream.
+ }
+ reset();
+ {
+  Switch2VideoDecoder d;assert(d.setup(VIDEO_FORMAT_H264,16,16,60,nullptr,0)==0);
+  auto u=unit();assert(d.submit_decode_unit(&u)==DR_OK && submits==1);
+  auto big=unit();big.fullLength=4*1024*1024+1;auto p=unit();p.frameType=FRAME_TYPE_PFRAME;
+  brls::notifications.clear();
+  assert(d.submit_decode_unit(&big)==DR_NEED_IDR && d.submit_decode_unit(&big)==DR_NEED_IDR);
+  assert(brls::notifications.empty());
+  assert(d.submit_decode_unit(&big)==DR_OK); // Third in a row: wait 1 s before the next request.
+  assert(brls::notifications.size()==1 && brls::notifications[0]=="streaming/oversize_keyframes");
+  nowMs+=500;assert(d.submit_decode_unit(&p)==DR_OK && submits==1); // Dropped until the keyframe.
+  nowMs+=500;assert(d.submit_decode_unit(&p)==DR_NEED_IDR);
+  assert(d.submit_decode_unit(&big)==DR_OK);
+  nowMs+=1999;assert(d.submit_decode_unit(&p)==DR_OK);
+  nowMs+=1;assert(d.submit_decode_unit(&p)==DR_NEED_IDR); // Doubled to 2 s.
+  for(int i=0;i<8;++i) {assert(d.submit_decode_unit(&big)==DR_OK);nowMs+=8000;assert(d.submit_decode_unit(&p)==DR_NEED_IDR);}
+  assert(brls::notifications.size()==1 && submits==1);
+  assert(d.submit_decode_unit(&u)==DR_OK && submits==2); // A keyframe that fits ends the back-off.
+  assert(d.submit_decode_unit(&big)==DR_NEED_IDR);
  }
  reset();
  {

@@ -196,6 +196,7 @@
         "mouse_input": "Utiliser le mode souris",
         "mouse_speed": "Vitesse de la souris",
         "options": "Options",
+        "oversize_keyframes": "Les images clés de l'hôte sont trop grandes pour le décodeur. Réduisez le débit.",
         "show_logs": "Voir les logs",
         "terminate": "Fermer l'application",
         "volume": "Volume"

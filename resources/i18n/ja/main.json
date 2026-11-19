@@ -196,6 +196,7 @@
         "mouse_input": "マウス入力モードに入る",
         "mouse_speed": "マウスの加速",
         "options": "設定",
+        "oversize_keyframes": "ホストのキーフレームがデコーダーには大きすぎます。ビットレートを下げてください。",
         "show_logs": "ログを表示する",
         "terminate": "アプリを終了します",
         "volume": "音量"

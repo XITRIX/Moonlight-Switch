@@ -40,6 +40,8 @@ class Switch2VideoDecoder : public IFFmpegVideoDecoder
     bool drain(uint64_t timeout); // All SDK access is serialized by m_mutex.
     void readFrames();
     void fail(const char* operation, Result rc);
+    int dropOversized(int bytes);
+    int requestIdr();
 
     std::shared_ptr<Switch2DecoderPool> m_pool;
     bool m_open        = false;
@@ -50,6 +52,9 @@ class Switch2VideoDecoder : public IFFmpegVideoDecoder
     bool m_have_last_frame = false;
     uint64_t m_started_ms = 0, m_window_ms = 0;
     uint64_t m_retry_after_ms = 0;
+    uint64_t m_idr_requested_ms = 0;
+    unsigned m_oversized = 0;
+    bool m_skip_to_idr   = false;
     std::unique_ptr<FFmpegVideoDecoder> m_software;
     std::atomic<bool> m_stopped { true };
     std::thread m_reader;

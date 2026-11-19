@@ -196,6 +196,7 @@
         "mouse_input": "进入鼠标输入模式",
         "mouse_speed": "鼠标速度",
         "options": "选项",
+        "oversize_keyframes": "主机的关键帧对解码器来说太大。请降低码率。",
         "show_logs": "显示日志",
         "terminate": "终止应用程序",
         "volume": "音量"

@@ -196,6 +196,7 @@
         "mouse_input": "Activar modo ratón",
         "mouse_speed": "Aceleración del ratón",
         "options": "Ajustes",
+        "oversize_keyframes": "Los fotogramas clave del host son demasiado grandes para el decodificador. Baja la tasa de bits.",
         "show_logs": "Mostrar logs",
         "terminate": "Cerrar aplicación",
         "volume": "Volumen"
