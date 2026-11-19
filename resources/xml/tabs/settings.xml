@@ -181,6 +181,9 @@
 
             <brls:BooleanCell
                 id="touchscreen_mouse_mode"/>
+
+            <brls:BooleanCell
+                id="onscreen_gamepad"/>
                 
             <brls:BooleanCell
                 id="swap_mouse_keys"/>

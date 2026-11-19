@@ -762,6 +762,12 @@ SettingsTab::SettingsTab() {
                                    Settings::instance().set_touchscreen_mouse_mode(value);
                                });
 
+    onscreenGamepad->init("settings/onscreen_gamepad"_i18n,
+                          Settings::instance().onscreen_gamepad(),
+                          [](bool value) {
+                              Settings::instance().set_onscreen_gamepad(value);
+                          });
+
     swapMouseKeys->init("settings/swap_mouse_keys"_i18n,
                         Settings::instance().swap_mouse_keys(),
                         [this](bool value) {

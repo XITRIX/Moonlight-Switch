@@ -169,6 +169,7 @@ CONTROLLERS = r"""
 #include <cstdint>
 #include <map>
 #include <optional>
+#include <set>
 constexpr int GAMEPADS_MAX=5,LI_CTYPE_UNKNOWN=0,LI_CTYPE_XBOX=1;
 constexpr uint32_t SUPPORTED_BUTTONS=0x7FF,SPECIAL_FLAG=0x400;
 constexpr uint16_t CONTROLLER_CAPABILITIES=7;

@@ -263,6 +263,9 @@ class Settings : public Singleton<Settings> {
     [[nodiscard]] bool touchscreen_mouse_mode() const { return m_touchscreen_mouse_mode; }
 
     void set_touchscreen_mouse_mode(bool touchscreen_mouse_mode) { m_touchscreen_mouse_mode = touchscreen_mouse_mode; }
+
+    [[nodiscard]] bool onscreen_gamepad() const { return m_onscreen_gamepad; }
+    void set_onscreen_gamepad(bool onscreen_gamepad) { m_onscreen_gamepad = onscreen_gamepad; }
     [[nodiscard]] bool swap_mouse_keys() const { return m_swap_mouse_keys; }
 
     void set_swap_mouse_scroll(bool swap_mouse_scroll) { m_swap_mouse_scroll = swap_mouse_scroll; }
@@ -372,6 +375,7 @@ class Settings : public Singleton<Settings> {
     bool m_swap_ui_keys = false;
     bool m_swap_joycon_stick_to_dpad = false;
     bool m_touchscreen_mouse_mode = false;
+    bool m_onscreen_gamepad = false;
     bool m_swap_mouse_keys = false;
     bool m_swap_mouse_scroll = false;
     int m_rumble_force = 100;

@@ -530,7 +530,10 @@ void MoonlightInputManager::handleInput(bool ignoreTouch) {
     brls::Application::getPlatform()->getInputManager()->updateTouchStates(&states);
 
     //Do not use gamepad for mouse controll assist if touchscreen mode enabled
-    bool specialKey = !ignoreTouch && !Settings::instance().touchscreen_mouse_mode() && states.size() == 1;
+    const auto freeTouches = std::count_if(states.begin(), states.end(), [this](const brls::RawTouchState& touch) {
+        return !onscreenPadTouches.count(touch.fingerId);
+    });
+    bool specialKey = !ignoreTouch && !Settings::instance().touchscreen_mouse_mode() && freeTouches == 1;
 
     handleControllers(specialKey);
 
@@ -626,6 +629,7 @@ void MoonlightInputManager::handleInput(bool ignoreTouch) {
         for (int i = 0; i < touches.size(); i++) {
             auto touch = touches[i];
             if (touch.view && touch.view->hasParent() && dynamic_cast<StreamingView*>(touch.view->getParent()) == nullptr) return;
+            if (onscreenPadTouches.count(touch.fingerId)) continue;
 
             switch (touch.phase) {
                 case TouchPhase::START:
