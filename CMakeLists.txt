@@ -145,6 +145,43 @@ add_definitions(
         -Dcimg_no_system_calls
         -DBRLS_I18N_PREFIX=\"main/\")
 
+# The runtime log names the commit a build came from. Detected from git at
+# configure time unless given, then from GitHub Actions, else "unknown".
+set(APP_COMMIT "" CACHE STRING "Commit written to the runtime log")
+set(_moonlight_commit "${APP_COMMIT}")
+if (NOT _moonlight_commit)
+    find_package(Git QUIET)
+    if (GIT_FOUND)
+        execute_process(
+            COMMAND "${GIT_EXECUTABLE}" -c "safe.directory=${CMAKE_CURRENT_SOURCE_DIR}"
+                    rev-parse --short=12 HEAD
+            WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+            OUTPUT_VARIABLE _moonlight_commit
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+            ERROR_QUIET)
+        execute_process(
+            COMMAND "${GIT_EXECUTABLE}" -c "safe.directory=${CMAKE_CURRENT_SOURCE_DIR}"
+                    rev-parse --absolute-git-dir
+            WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+            OUTPUT_VARIABLE _moonlight_git_dir
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+            ERROR_QUIET)
+        if (EXISTS "${_moonlight_git_dir}/logs/HEAD")
+            set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
+                "${_moonlight_git_dir}/logs/HEAD")
+        endif ()
+    endif ()
+endif ()
+if (NOT _moonlight_commit AND DEFINED ENV{GITHUB_SHA})
+    string(SUBSTRING "$ENV{GITHUB_SHA}" 0 12 _moonlight_commit)
+endif ()
+if (NOT _moonlight_commit)
+    set(_moonlight_commit "unknown")
+endif ()
+message(STATUS "Moonlight commit: ${_moonlight_commit}")
+set_source_files_properties(app/src/utils/LogFile.cpp PROPERTIES
+    COMPILE_DEFINITIONS "APP_COMMIT=\"${_moonlight_commit}\"")
+
 if (PLATFORM_PSV OR PLATFORM_ANDROID)
     set(USE_OPENSSL_CRYPTO ON)
 else ()

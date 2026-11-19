@@ -61,6 +61,9 @@ class StreamingView : public brls::Box {
     std::string statsText;
     std::chrono::steady_clock::time_point statsTextTime{};
     float statsBounds[4] = {0, 0, 0, 0};
+    std::chrono::steady_clock::time_point statsLogTime{};
+
+    void logStreamStats();
 
     void handleInput();
     void handleOverlayCombo();

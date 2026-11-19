@@ -219,6 +219,9 @@
                 
             <brls:BooleanCell
                 id="writeLog"/>
+
+            <brls:DetailCell
+                id="exportLog"/>
             
         </brls:Box>
 
