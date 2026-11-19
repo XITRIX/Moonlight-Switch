@@ -93,7 +93,9 @@
         "wait": "等待中……",
         "wake_up": "唤醒",
         "wake_up_error": "无法唤醒主机",
-        "wake_up_message": "发送唤醒请求"
+        "wake_up_message": "发送唤醒请求",
+        "wake_up_timeout": "主机在 {} 秒内没有响应。请检查 BIOS 和网卡设置中是否已启用网络唤醒 (Wake-on-LAN)。",
+        "wake_up_waiting": "正在唤醒主机... {} 秒"
     },
     "mapping_layout_editor": {
         "remove": "移除布局",

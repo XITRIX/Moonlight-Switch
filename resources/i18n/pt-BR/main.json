@@ -93,7 +93,9 @@
         "wait": "Aguarde...",
         "wake_up": "Despertar",
         "wake_up_error": "Não foi possível despertar o host",
-        "wake_up_message": "Despertando"
+        "wake_up_message": "Despertando",
+        "wake_up_timeout": "O host não respondeu em {} segundos. Verifique se o Wake-on-LAN está ativado na BIOS e nas configurações do adaptador de rede.",
+        "wake_up_waiting": "Despertando o host... {} s"
     },
     "mapping_layout_editor": {
         "remove": "Remover layout",

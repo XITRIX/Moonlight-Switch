@@ -54,48 +54,7 @@ HostTab::HostTab(const Host& host) : host(host) {
             break;
         case UNAVAILABLE:
             if (GameStreamClient::can_wake_up_host(this->host)) {
-                const auto wakeRequestId = ++this->wakeRequestGeneration;
-                this->canceledWakeRequestGeneration = 0;
-
-                Dialog* loader =
-                    createLoadingDialog("host/wake_up_message"_i18n,
-                                        [this, wakeRequestId] {
-                                            if (this->wakeRequestGeneration ==
-                                                wakeRequestId) {
-                                                this->canceledWakeRequestGeneration =
-                                                    wakeRequestId;
-                                            }
-                                        });
-                loader->open();
-
-                ASYNC_RETAIN
-                GameStreamClient::wake_up_host(
-                    this->host,
-                    [ASYNC_TOKEN, loader, wakeRequestId](
-                        const GSResult<bool>& result) {
-                        ASYNC_RELEASE
-
-                        if (wakeRequestId != this->wakeRequestGeneration) {
-                            return;
-                        }
-
-                        if (this->canceledWakeRequestGeneration ==
-                            wakeRequestId) {
-                            return;
-                        }
-
-                        loader->close([this, result, wakeRequestId] {
-                            if (wakeRequestId != this->wakeRequestGeneration) {
-                                return;
-                            }
-
-                            if (result.isSuccess()) {
-                                reloadHost();
-                            } else {
-                                showError("host/wake_up_error"_i18n);
-                            }
-                        });
-                    });
+                wakeUpHost();
             }
             break;
         case FETCHING:
@@ -137,11 +96,58 @@ void HostTab::reloadHost() {
                                         : connectedAddress);
                 connect->setText("host/connect"_i18n);
                 state = AVAILABLE;
+                if (openAppsWhenReady) {
+                    openAppsWhenReady = false;
+                    this->present(new AppListView(this->host));
+                }
             } else {
                 header->setTitle("host/status"_i18n + ": " +
                                  "host/unable"_i18n);
                 connect->setText("host/wake_up"_i18n);
                 state = UNAVAILABLE;
+                openAppsWhenReady = false;
             }
+        });
+}
+
+void HostTab::wakeUpHost() {
+    const auto wakeRequestId = ++this->wakeRequestGeneration;
+    auto cancelled = std::make_shared<std::atomic_bool>(false);
+
+    Dialog* loader = createLoadingDialog(
+        "host/wake_up_message"_i18n, [cancelled] { *cancelled = true; });
+    auto* label = dynamic_cast<Label*>(loader->getView("loading_text"));
+    loader->open();
+
+    ASYNC_RETAIN
+    GameStreamClient::wake_up_host(
+        this->host,
+        [ASYNC_TOKEN, loader, wakeRequestId,
+         cancelled](const GSResult<bool>& result) {
+            ASYNC_RELEASE
+
+            if (wakeRequestId != this->wakeRequestGeneration || *cancelled) {
+                return;
+            }
+
+            loader->close([this, result, wakeRequestId] {
+                if (wakeRequestId != this->wakeRequestGeneration) {
+                    return;
+                }
+
+                if (result.isSuccess()) {
+                    openAppsWhenReady = true;
+                    reloadHost();
+                } else {
+                    showError(result.error());
+                }
+            });
+        },
+        cancelled,
+        [token, label, cancelled](int secondsLeft) {
+            if (*token || *cancelled || !label) {
+                return;
+            }
+            label->setText(brls::getStr("host/wake_up_waiting", secondsLeft));
         });
 }

@@ -93,7 +93,9 @@
         "wait": "等待中……",
         "wake_up": "喚醒",
         "wake_up_error": "無法喚醒主機",
-        "wake_up_message": "發送喚醒請求"
+        "wake_up_message": "發送喚醒請求",
+        "wake_up_timeout": "主機在 {} 秒內沒有回應。請檢查 BIOS 與網路卡設定中是否已啟用網路喚醒 (Wake-on-LAN)。",
+        "wake_up_waiting": "正在喚醒主機... {} 秒"
     },
     "mapping_layout_editor": {
         "remove": "移除佈局",

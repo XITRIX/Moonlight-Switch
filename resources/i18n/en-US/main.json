@@ -93,7 +93,9 @@
         "wait": "Wait...",
         "wake_up": "Wake up",
         "wake_up_error": "Could not wake up the host",
-        "wake_up_message": "Sending Wake Up"
+        "wake_up_message": "Sending Wake Up",
+        "wake_up_timeout": "The host did not answer within {} seconds. Check that Wake-on-LAN is enabled in its BIOS and network adapter settings.",
+        "wake_up_waiting": "Waking up the host... {} s"
     },
     "mapping_layout_editor": {
         "remove": "Remove layout",
