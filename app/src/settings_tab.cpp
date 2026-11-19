@@ -9,6 +9,10 @@
 #include <borealis/platforms/switch/switch_input.hpp>
 #endif
 
+#ifdef __SWITCH2__
+#include <switch.h>
+#endif
+
 #include "settings_tab.hpp"
 #include "Settings.hpp"
 #include "MouseScrollSettings.hpp"
@@ -66,6 +70,23 @@ std::string getDitheringStrengthText(float strength) {
 std::string getRcasStrengthText(float strength) {
     return std::to_string(int(strength * 100.0f)) + "%";
 }
+
+#ifdef __SWITCH2__
+// The console's own screen runs at 120 Hz. A TV reports what it switched to
+// for the 120 Hz request the app makes from the start.
+bool displayRunsAt120Hz() {
+    if (appletGetOperationMode() == AppletOperationMode_Handheld)
+        return true;
+
+    Vi2Display* display = nullptr;
+    u32 hz = 0;
+    bool vrr = false;
+    if (R_FAILED(nwindowGetVi2Display(nwindowGetDefault(), &display)) || !display ||
+        R_FAILED(vi2QueryDisplayRefreshRate(display, &hz, &vrr)))
+        return true;
+    return hz == 120;
+}
+#endif
 }
 
 #if defined(__SWITCH__)
@@ -120,6 +141,24 @@ SettingsTab::SettingsTab() {
 #endif
         DEFAULT;
     }
+
+#ifdef __SWITCH2__
+    // 1440p and 2160p, the last two entries, are only offered when docked.
+    // A saved docked size is kept and streams 1080p in handheld mode.
+    if (appletGetOperationMode() == AppletOperationMode_Handheld) {
+        const int dockedOnly = 6;
+        const int saved = Settings::instance().resolution();
+        if (saved == 1440 || saved == 2160) {
+            const std::string savedName = resolutions[saved == 1440 ? 6 : 7];
+            resolution->setSelection(dockedOnly - 1, true);
+            resolution->setDetailText(brls::getStr("settings/resolution_when_docked",
+                                                   resolutions[dockedOnly - 1], savedName));
+        }
+        resolutions.resize(dockedOnly);
+        resolution->setData(resolutions);
+        resolutionHint->setVisibility(brls::Visibility::VISIBLE);
+    }
+#endif
 
     std::vector<std::string> nativeResolutionScales = {
         "0.5x", "0.75x", "1.0x",
@@ -300,6 +339,36 @@ SettingsTab::SettingsTab() {
             DEFAULT;
         }
     });
+
+#ifdef __SWITCH2__
+    // 2160p streams at 60 FPS. The previous rate comes back at a smaller size.
+    auto limitFpsAt2160p = [this, fpss]() {
+        auto& settings = Settings::instance();
+        const bool at2160p = settings.resolution() == 2160;
+        if (at2160p && settings.fps() != 60) {
+            settings.set_fps_before_2160p(settings.fps());
+            settings.set_fps(60);
+        } else if (!at2160p && settings.fps_before_2160p() > 0) {
+            settings.set_fps(settings.fps_before_2160p());
+            settings.set_fps_before_2160p(0);
+        }
+
+        auto it = std::find(fpss.begin(), fpss.end(),
+                            std::to_string(settings.fps()));
+        if (it != fpss.end())
+            fps->setSelection(int(it - fpss.begin()), true);
+
+        auto theme = brls::Application::getTheme();
+        fps->setFocusable(!at2160p);
+        fps->title->setTextColor(
+            theme[at2160p ? "brls/text_disabled" : "brls/text"]);
+        updateFpsHint();
+    };
+    limitFpsAt2160p();
+    resolution->getEvent()->subscribe(
+        [limitFpsAt2160p](int) { limitFpsAt2160p(); });
+    fps->getEvent()->subscribe([this](int) { updateFpsHint(); });
+#endif
 
     std::vector<std::string> decoders = {"settings/zero_threads"_i18n, "2", "3",
                                          "4"};
@@ -791,6 +860,27 @@ SettingsTab::SettingsTab() {
                        Settings::instance().set_write_log(value);
                        brls::Application::enableDebuggingView(value);
                    });
+
+    addHint(resolution, "settings/hint_resolution"_i18n);
+    addHint(codec, "settings/hint_codec"_i18n);
+    addHint(optimal, "settings/hint_optimal"_i18n);
+    addHint(pcAudio, "settings/hint_pc_audio"_i18n);
+    addHint(overlayButtons, "settings/hint_overlay_buttons"_i18n);
+    addHint(touchscreenMouseMode, "settings/hint_touchscreen_mouse_mode"_i18n);
+}
+
+void SettingsTab::addHint(brls::View* row, const std::string& text) {
+    brls::Box* parent = row->getParent();
+    auto& children = parent->getChildren();
+    auto position = std::find(children.begin(), children.end(), row);
+
+    auto* hint = new brls::Label();
+    hint->setFontSize(15);
+    hint->setTextColor(brls::Application::getTheme()["brls/header/subtitle"]);
+    hint->setMarginLeft(brls::Application::getStyle()["brls/listitem/descriptionIndent"]);
+    hint->setMarginBottom(8);
+    hint->setText(text);
+    parent->addView(hint, position - children.begin() + 1);
 }
 
 void SettingsTab::willAppear(bool resetState)
@@ -849,3 +939,15 @@ SettingsTab::getColorFromButtons(std::vector<brls::ControllerButton> buttons) {
 SettingsTab::~SettingsTab() { Settings::instance().save(); }
 
 brls::View* SettingsTab::create() { return new SettingsTab(); }
+
+#ifdef __SWITCH2__
+void SettingsTab::updateFpsHint() {
+    std::string hint = "settings/hint_fps"_i18n;
+    if (Settings::instance().resolution() == 2160)
+        hint = "settings/fps_fixed_for_4k"_i18n;
+    else if (Settings::instance().fps() > 60 && !displayRunsAt120Hz())
+        hint = "settings/fps_needs_120hz"_i18n;
+
+    fpsHint->setText(hint);
+}
+#endif
