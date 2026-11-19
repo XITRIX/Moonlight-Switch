@@ -149,7 +149,7 @@ StreamingView::StreamingView(const Host& host, const AppInfo& app) : host(host),
 
     addGestureRecognizer(
         new ClickGestureRecognizer(1, [](TapGestureStatus status) {
-            if (Settings::instance().touchscreen_mouse_mode()) return;
+            if (Settings::instance().direct_touch()) return;
 
             if (status.state == brls::GestureState::END) {
                 Logger::debug("Left mouse click");
@@ -161,7 +161,7 @@ StreamingView::StreamingView(const Host& host, const AppInfo& app) : host(host),
 
     addGestureRecognizer(
         new ClickGestureRecognizer(2, [](TapGestureStatus status) {
-            if (Settings::instance().touchscreen_mouse_mode()) return;
+            if (Settings::instance().direct_touch()) return;
 
             if (status.state == brls::GestureState::END) {
                 Logger::debug("Right mouse click");
@@ -187,7 +187,7 @@ StreamingView::StreamingView(const Host& host, const AppInfo& app) : host(host),
                 Application::pushActivity(new Activity(overlay));
             }
 
-            if (Settings::instance().touchscreen_mouse_mode()) return;
+            if (Settings::instance().direct_touch()) return;
 
             if (status.state == brls::GestureState::UNSURE && lMouseKeyGate) {
                 lMouseKeyGate = false;
@@ -218,7 +218,7 @@ StreamingView::StreamingView(const Host& host, const AppInfo& app) : host(host),
 
     scrollTouchRecognizer = new TwoFingerScrollGestureRecognizer(
             [this](TwoFingerScrollState state) {
-                if (Settings::instance().touchscreen_mouse_mode()) return;
+                if (Settings::instance().direct_touch()) return;
 
                 if (state.state == brls::GestureState::START)
                     this->touchScrollCounter = 0;

@@ -166,6 +166,7 @@
         "resolution_scale": "Escala",
         "image_adjustments": "Ajustes de imagen",
         "dithering": "Dithering",
+        "touch_as_mouse": "El toque mueve el puntero del ratón",
         "upscaling": "Reescalar resoluciones bajas",
         "rcas_sharpening": "Nitidez RCAS",
         "rumble_force": "Rumble force",
@@ -198,6 +199,7 @@
         "options": "Ajustes",
         "show_logs": "Mostrar logs",
         "terminate": "Cerrar aplicación",
+        "touch_unsupported": "Este PC no acepta entrada táctil, así que el toque mueve el ratón",
         "volume": "Volumen"
     },
     "tabs": {

@@ -166,6 +166,7 @@
         "resolution_scale": "배율",
         "image_adjustments": "이미지 조정",
         "dithering": "디더링",
+        "touch_as_mouse": "터치로 마우스 포인터 이동",
         "upscaling": "저해상도 업스케일링",
         "rcas_sharpening": "RCAS 선명화",
         "rumble_force": "진동 강도",
@@ -198,6 +199,7 @@
         "options": "옵션",
         "show_logs": "정보 표시",
         "terminate": "앱 종료",
+        "touch_unsupported": "이 PC는 터치 입력을 받지 않으므로 터치로 마우스를 움직입니다",
         "volume": "볼륨"
     },
     "tabs": {

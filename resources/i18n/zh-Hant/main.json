@@ -166,6 +166,7 @@
         "resolution_scale": "縮放",
         "image_adjustments": "影像調整",
         "dithering": "抖動",
+        "touch_as_mouse": "觸控移動滑鼠指標",
         "upscaling": "將低解析度升尺度",
         "rcas_sharpening": "RCAS 銳化",
         "rumble_force": "震動力度",
@@ -198,6 +199,7 @@
         "options": "選項",
         "show_logs": "顯示日誌",
         "terminate": "終止應用程式",
+        "touch_unsupported": "此電腦不支援觸控輸入，觸控將改為移動滑鼠",
         "volume": "音量"
     },
     "tabs": {

@@ -166,6 +166,7 @@
         "resolution_scale": "倍率",
         "image_adjustments": "画像調整",
         "dithering": "ディザリング",
+        "touch_as_mouse": "タッチでマウスポインターを移動",
         "upscaling": "低解像度をアップスケール",
         "rcas_sharpening": "RCAS シャープ化",
         "rumble_force": "Rumble force",
@@ -198,6 +199,7 @@
         "options": "設定",
         "show_logs": "ログを表示する",
         "terminate": "アプリを終了します",
+        "touch_unsupported": "このPCはタッチ入力に対応していないため、タッチでマウスを操作します",
         "volume": "音量"
     },
     "tabs": {

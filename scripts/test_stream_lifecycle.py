@@ -175,6 +175,7 @@ static int controllerCount=1,arrivals=0,states=0,failArrival=0;
 namespace brls {
 struct Point {float x=0,y=0;};
 struct PanGestureStatus {};
+struct TouchState {};
 enum ControllerButton {_BUTTON_MAX=32};
 enum BrlsKeyboardScancode {};
 struct ControllerState {};

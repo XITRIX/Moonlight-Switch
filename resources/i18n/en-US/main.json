@@ -166,6 +166,7 @@
         "resolution_scale": "Scale",
         "image_adjustments": "Image Adjustments",
         "dithering": "Dithering",
+        "touch_as_mouse": "Touch moves the mouse pointer",
         "upscaling": "Upscale lower resolutions",
         "rcas_sharpening": "RCAS sharpening",
         "rumble_force": "Rumble force",
@@ -198,6 +199,7 @@
         "options": "Options",
         "show_logs": "Show logs",
         "terminate": "Terminate app",
+        "touch_unsupported": "This PC doesn't take touch input, so touch moves the mouse instead",
         "volume": "Volume"
     },
     "tabs": {
