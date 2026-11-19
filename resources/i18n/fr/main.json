@@ -63,6 +63,7 @@
         "no_ip": "Impossible de récupérer l'adresse IP"
     },
     "error": {
+        "app_not_running": "L'application ne tourne plus sur le PC",
         "applet_not_supported": "Le mode Applet n'est pas pris en charge. \n\nVeuillez lancer cette application à l'aide de la redirection de titre (par défaut, maintenez la touche  enfoncée et démarrez n'importe quel jeu).",
         "connection_lost": "La connexion au PC a été perdue",
         "dialog_header": "Erreur",
@@ -74,6 +75,7 @@
         "no_4k": "Ce PC ne peut pas diffuser en 4K\nChoisissez une résolution plus basse",
         "no_video": "Le PC n'a envoyé aucune vidéo\nVérifiez que son pare-feu laisse passer le port vidéo, puis réessayez",
         "no_video_frame": "La vidéo n'est jamais arrivée en entier\nVérifiez la connexion ou baissez le débit, puis réessayez",
+        "other_app_running": "Une autre application tourne maintenant sur le PC",
         "protected_content": "Le PC a arrêté la diffusion car un contenu protégé est affiché à l'écran",
         "stage_address": "L'adresse du PC n'a pas pu être résolue",
         "stage_control": "Le canal de contrôle du PC n'a pas répondu\nVérifiez que son pare-feu laisse passer les ports de diffusion",

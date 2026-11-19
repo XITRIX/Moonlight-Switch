@@ -523,6 +523,41 @@ void MoonlightSession::restart() {
     LiStopConnection();
     m_generation = ++m_session_generation;
 
+    // After a cut, and above all after a sleep, the PC may have closed the app
+    // in the meantime. Ask it first, so a resume isn't retried for nothing.
+    if (is_reconnecting()) {
+        GameStreamClient::instance().connect(
+            m_address, [generation = m_generation](GSResult<SERVER_DATA> result) {
+                if (m_active_session && m_active_session->m_generation == generation)
+                    m_active_session->resume_if_running(result);
+            });
+        return;
+    }
+
+    reconnect();
+}
+
+void MoonlightSession::resume_if_running(const GSResult<SERVER_DATA>& result) {
+    if (m_stop_requested)
+        return;
+
+    if (!result.isSuccess()) {
+        retry_later(result.error());
+        return;
+    }
+
+    const int running = result.value().currentGame;
+    if (running != m_app_id) {
+        brls::Logger::info("MoonlightSession: Host runs app {}, not {}", running, m_app_id);
+        give_up(running == 0 ? "error/app_not_running"_i18n
+                             : "error/other_app_running"_i18n);
+        return;
+    }
+
+    reconnect();
+}
+
+void MoonlightSession::reconnect() {
     start([generation = m_generation](const GSResult<bool>& result) {
         brls::sync([generation, result] {
             if (!m_active_session || m_active_session->m_generation != generation)

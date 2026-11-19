@@ -63,6 +63,7 @@
         "no_ip": "Can't obtain IP address"
     },
     "error": {
+        "app_not_running": "The app is no longer running on the PC",
         "applet_not_supported": "Applet Mode is unsupported\n\nPlease, launch this app using Title Redirection (By default it's hold  and start any game)",
         "connection_lost": "The connection to the PC was lost",
         "dialog_header": "Error",
@@ -74,6 +75,7 @@
         "no_4k": "This PC can't stream in 4K\nPick a lower resolution",
         "no_video": "The PC sent no video\nCheck that its firewall lets the video port through, then try again",
         "no_video_frame": "The video never came through in full\nCheck the connection or lower the bitrate, then try again",
+        "other_app_running": "Another app is now running on the PC",
         "protected_content": "The PC stopped the stream because protected content is on its screen",
         "stage_address": "The PC's address could not be resolved",
         "stage_control": "The PC's control channel did not answer\nCheck that its firewall lets the stream ports through",

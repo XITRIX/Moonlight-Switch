@@ -63,6 +63,7 @@
         "no_ip": "無法獲取IP位址"
     },
     "error": {
+        "app_not_running": "該應用程式已不在電腦上執行",
         "applet_not_supported": "Applet Mode is unsupported\n\nPlease, launch this app using Title Redirection (By default it's hold  and start any game)",
         "connection_lost": "與電腦的連線已中斷",
         "dialog_header": "錯誤",
@@ -74,6 +75,7 @@
         "no_4k": "這台電腦無法以 4K 串流\n請選擇較低的解析度",
         "no_video": "電腦沒有傳送影像\n請檢查電腦的防火牆是否放行影像連接埠，然後再試一次",
         "no_video_frame": "影像始終沒有完整送達\n請檢查連線或降低位元率，然後再試一次",
+        "other_app_running": "電腦上現在執行的是另一個應用程式",
         "protected_content": "電腦畫面上有受保護的內容，因此停止了串流",
         "stage_address": "無法解析電腦的位址",
         "stage_control": "電腦的控制通道沒有回應\n請檢查電腦的防火牆是否放行串流連接埠",

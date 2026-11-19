@@ -63,6 +63,7 @@
         "no_ip": "无法获取IP地址"
     },
     "error": {
+        "app_not_running": "该应用已不在电脑上运行",
         "applet_not_supported": "不支持在 Applet 下运行\n\n请按住  打开任意游戏启动",
         "connection_lost": "与电脑的连接已断开",
         "dialog_header": "错误",
@@ -74,6 +75,7 @@
         "no_4k": "这台电脑无法以 4K 串流\n请选择较低的分辨率",
         "no_video": "电脑没有发送视频\n请检查电脑的防火墙是否放行视频端口，然后重试",
         "no_video_frame": "视频始终没有完整到达\n请检查连接或降低码率，然后重试",
+        "other_app_running": "电脑上现在运行的是另一个应用",
         "protected_content": "电脑屏幕上有受保护的内容，因此停止了串流",
         "stage_address": "无法解析电脑的地址",
         "stage_control": "电脑的控制通道没有响应\n请检查电脑的防火墙是否放行串流端口",

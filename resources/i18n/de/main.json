@@ -63,6 +63,7 @@
         "no_ip": "IP Adresse kann nicht abgerufen werden"
     },
     "error": {
+        "app_not_running": "Die App läuft auf dem PC nicht mehr",
         "applet_not_supported": "Applet Mode is unsupported\n\nPlease, launch this app using Title Redirection (By default it's hold  and start any game)",
         "connection_lost": "Die Verbindung zum PC wurde unterbrochen",
         "dialog_header": "Fehler",
@@ -74,6 +75,7 @@
         "no_4k": "Dieser PC kann nicht in 4K streamen\nWähle eine niedrigere Auflösung",
         "no_video": "Der PC hat kein Video gesendet\nPrüfe, ob seine Firewall den Videoport durchlässt, und versuche es erneut",
         "no_video_frame": "Das Video kam nie vollständig an\nPrüfe die Verbindung oder senke die Bitrate und versuche es erneut",
+        "other_app_running": "Auf dem PC läuft jetzt eine andere App",
         "protected_content": "Der PC hat den Stream beendet, weil geschützte Inhalte auf seinem Bildschirm sind",
         "stage_address": "Die Adresse des PCs konnte nicht aufgelöst werden",
         "stage_control": "Der Steuerkanal des PCs hat nicht geantwortet\nPrüfe, ob seine Firewall die Stream-Ports durchlässt",

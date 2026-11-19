@@ -63,6 +63,7 @@
         "no_ip": "Impossibile ottenere l'indirizzo IP"
     },
     "error": {
+        "app_not_running": "L'app non è più in esecuzione sul PC",
         "applet_not_supported": "Applet Mode is unsupported\n\nPlease, launch this app using Title Redirection (By default it's hold  and start any game)",
         "connection_lost": "La connessione al PC si è interrotta",
         "dialog_header": "Errore",
@@ -74,6 +75,7 @@
         "no_4k": "Questo PC non può trasmettere in 4K\nScegli una risoluzione più bassa",
         "no_video": "Il PC non ha inviato video\nVerifica che il suo firewall lasci passare la porta video, poi riprova",
         "no_video_frame": "Il video non è mai arrivato completo\nControlla la connessione o abbassa il bitrate, poi riprova",
+        "other_app_running": "Sul PC ora è in esecuzione un'altra app",
         "protected_content": "Il PC ha interrotto lo stream perché sullo schermo ci sono contenuti protetti",
         "stage_address": "Impossibile risolvere l'indirizzo del PC",
         "stage_control": "Il canale di controllo del PC non ha risposto\nVerifica che il suo firewall lasci passare le porte dello stream",

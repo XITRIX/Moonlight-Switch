@@ -68,6 +68,8 @@ class MoonlightSession {
     static void connection_terminated(int);
     void handle_connection_terminated(int error_code);
     void retry_later(const std::string& error);
+    void resume_if_running(const GSResult<SERVER_DATA>& result);
+    void reconnect();
     void give_up(const std::string& error);
     void follow_display_size();
     static void connection_log_message(const char* format, ...);
