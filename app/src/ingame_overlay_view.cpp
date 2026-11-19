@@ -101,7 +101,9 @@ LogoutTab::LogoutTab(StreamingView* streamView) : streamView(streamView) {
 
     disconnect->setText("streaming/disconnect"_i18n);
     disconnect->registerClickAction([this, streamView](View* view) {
-        this->dismiss([streamView] { streamView->terminate(false); });
+        this->dismiss([streamView] {
+            streamView->terminate(Settings::instance().quit_app_on_disconnect());
+        });
         return true;
     });
 

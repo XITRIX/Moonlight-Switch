@@ -159,6 +159,7 @@
         "overlay_time": "押し続けると数秒で開きます",
         "overlay_zero_time": "0 (すぐに)",
         "paop": "PCでオーディオを再生する",
+        "quit_app_on_disconnect": "切断時にPCのアプリを終了する",
         "quality": "品質 (Higher settings requires CPU overclock)",
         "request_hdr": "Request HDR Video",
         "resolution": "解像度",

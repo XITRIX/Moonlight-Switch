@@ -159,6 +159,7 @@
         "overlay_time": "按住按鍵幾秒內打開疊加層",
         "overlay_zero_time": "0（立即）",
         "paop": "串流時在主機上也同時播放音訊",
+        "quit_app_on_disconnect": "中斷連線時結束主機上的應用程式",
         "quality": "串流質量 (更高的質量需要CPU超頻)",
         "request_hdr": "Request HDR Video",
         "resolution": "解析度",
