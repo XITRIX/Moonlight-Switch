@@ -61,7 +61,19 @@ std::string normalize_mac_address(const std::string& mac) {
         }
     }
 
-    return normalized.size() == 12 ? normalized : "";
+    if (normalized.size() != 12) {
+        return "";
+    }
+
+    // An all zero MAC is a placeholder, notably from Sunshine, which sends it
+    // to any client that is not yet paired. A magic packet addressed to it
+    // wakes nothing, so reject it here rather than offering the user a button
+    // that silently does nothing.
+    if (normalized.find_first_not_of('0') == std::string::npos) {
+        return "";
+    }
+
+    return normalized;
 }
 
 bool try_parse_port(const std::string& portText, unsigned short& port) {

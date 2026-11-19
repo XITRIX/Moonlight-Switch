@@ -61,7 +61,7 @@ void rebind_server_info(SERVER_DATA& server) {
 }
 
 std::string host_key(const Host& host) {
-    if (!host.mac.empty()) {
+    if (is_usable_mac(host.mac)) {
         return "mac:" + host.mac;
     }
     if (!host.address.empty()) {
@@ -92,7 +92,7 @@ void merge_discovered_host(std::vector<Host>& hosts, const Host& host) {
     if (!host.hostname.empty()) {
         it->hostname = host.hostname;
     }
-    if (!host.mac.empty()) {
+    if (is_usable_mac(host.mac)) {
         it->mac = host.mac;
     }
 }
@@ -576,7 +576,7 @@ void GameStreamClient::cache_server_data(const std::string& address,
                                          const SERVER_DATA& data) {
     m_server_data[address] = data;
     rebind_server_info(m_server_data[address]);
-    if (!data.mac.empty()) {
+    if (is_usable_mac(data.mac)) {
         m_active_addresses["mac:" + data.mac] = address;
     }
 }

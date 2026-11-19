@@ -46,7 +46,7 @@ std::string buildForwarderArgs(const Host& host, const App& app) {
         args += value;
     };
 
-    if (!host.mac.empty()) {
+    if (is_usable_mac(host.mac)) {
         append("--host=" + host.mac);
     } else {
         const auto preferredAddress = host.preferred_address();

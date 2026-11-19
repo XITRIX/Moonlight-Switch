@@ -36,7 +36,7 @@ void merge_host(Host& target, const Host& source) {
         target.remoteAddress = source.remoteAddress;
     if (!source.hostname.empty())
         target.hostname = source.hostname;
-    if (!source.mac.empty())
+    if (is_usable_mac(source.mac))
         target.mac = source.mac;
 }
 
