@@ -196,6 +196,7 @@
         "mouse_input": "Entra in modalità input del mouse",
         "mouse_speed": "Accelerazione Mouse",
         "options": "Opzioni",
+        "oversize_keyframes": "I fotogrammi chiave dell'host sono troppo grandi per il decoder. Riduci il bitrate.",
         "show_logs": "Mostra log",
         "terminate": "Termina app",
         "volume": "Volume"

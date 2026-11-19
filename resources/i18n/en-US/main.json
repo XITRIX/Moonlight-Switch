@@ -196,6 +196,7 @@
         "mouse_input": "Enter mouse input mode",
         "mouse_speed": "Mouse acceleration",
         "options": "Options",
+        "oversize_keyframes": "The host's keyframes are too big for the decoder. Lower the bitrate.",
         "show_logs": "Show logs",
         "terminate": "Terminate app",
         "volume": "Volume"

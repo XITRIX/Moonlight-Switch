@@ -98,6 +98,9 @@ typedef struct AVFrame {
 AVFrame* av_frame_alloc(void);
 void av_frame_free(AVFrame**);
 int av_frame_get_buffer(AVFrame*,int);
+enum AVCodecID { AV_CODEC_ID_H264=27, AV_CODEC_ID_HEVC=173, AV_CODEC_ID_AV1=226 };
+typedef struct AVCodec AVCodec;
+const AVCodec* avcodec_find_decoder(enum AVCodecID);
 """,
         )
         write(
@@ -115,11 +118,19 @@ class Settings { public:
             "borealis.hpp",
             r"""
 #pragma once
+#include <cstddef>
+#include <string>
+#include <vector>
 namespace brls { struct Logger {
  template<class... T> static void info(const char*,T...) {}
  template<class... T> static void error(const char*,T...) {}
  template<class... T> static void warning(const char*,T...) {}
-}; }
+};
+inline std::vector<std::string> notifications;
+template<class F> void sync(F f) { f(); }
+struct Application { static void notify(const std::string& text) { notifications.push_back(text); } };
+namespace literals { inline std::string operator""_i18n(const char* s,size_t n) { return std::string(s,n); } }
+}
 """,
         )
         write(
@@ -164,6 +175,7 @@ class AVFrameHolder { public:
             r"""
 #include "FFmpegVideoDecoder.hpp"
 #include "Switch2VideoDecoder.hpp"
+#include <borealis.hpp>
 #include "Switch2ImageInterop.hpp"
 #include "Switch2FrameReferences.hpp"
 #include <borealis/core/frame_resources.hpp>
@@ -203,6 +215,10 @@ AVBufferRef* av_buffer_create(uint8_t* data,size_t,void (*fn)(void*,uint8_t*),vo
 }
 AVBufferRef* av_buffer_ref(const AVBufferRef* ref) {auto* r=const_cast<AVBufferRef*>(ref);++r->refs;return r;}
 void av_buffer_unref(AVBufferRef** ref) { if(*ref && --(*ref)->refs==0) {(*ref)->freefn(nullptr,(*ref)->data);delete *ref;}*ref=nullptr; }
+const AVCodec* avcodec_find_decoder(enum AVCodecID id) {
+ static const int codec=0;
+ return id==AV_CODEC_ID_AV1 ? nullptr : reinterpret_cast<const AVCodec*>(&codec);
+}
 AVFrame* av_frame_alloc(void) { ++liveFrames;return new AVFrame{}; }
 void av_frame_free(AVFrame** f) {
  if(!*f)return;
@@ -318,6 +334,26 @@ int main() {
  }
  reset();
  {
+  Switch2VideoDecoder d;assert(d.setup(VIDEO_FORMAT_H264,16,16,60,nullptr,0)==0);
+  auto u=unit();assert(d.submit_decode_unit(&u)==DR_OK && submits==1);
+  auto big=unit();big.fullLength=4*1024*1024+1;auto p=unit();p.frameType=FRAME_TYPE_PFRAME;
+  brls::notifications.clear();
+  assert(d.submit_decode_unit(&big)==DR_NEED_IDR && d.submit_decode_unit(&big)==DR_NEED_IDR);
+  assert(brls::notifications.empty());
+  assert(d.submit_decode_unit(&big)==DR_OK); // Third in a row: wait 1 s before the next request.
+  assert(brls::notifications.size()==1 && brls::notifications[0]=="streaming/oversize_keyframes");
+  nowMs+=500;assert(d.submit_decode_unit(&p)==DR_OK && submits==1); // Dropped until the keyframe.
+  nowMs+=500;assert(d.submit_decode_unit(&p)==DR_NEED_IDR);
+  assert(d.submit_decode_unit(&big)==DR_OK);
+  nowMs+=1999;assert(d.submit_decode_unit(&p)==DR_OK);
+  nowMs+=1;assert(d.submit_decode_unit(&p)==DR_NEED_IDR); // Doubled to 2 s.
+  for(int i=0;i<8;++i) {assert(d.submit_decode_unit(&big)==DR_OK);nowMs+=8000;assert(d.submit_decode_unit(&p)==DR_NEED_IDR);}
+  assert(brls::notifications.size()==1 && submits==1);
+  assert(d.submit_decode_unit(&u)==DR_OK && submits==2); // A keyframe that fits ends the back-off.
+  assert(d.submit_decode_unit(&big)==DR_NEED_IDR);
+ }
+ reset();
+ {
   Switch2VideoDecoder d;assert(d.setup(VIDEO_FORMAT_H264,16,16,120,nullptr,0)==0);
   auto u=unit();submitError=KERNELRESULT(TimedOut);
   assert(d.submit_decode_unit(&u)==DR_NEED_IDR && submits==1 && closes==1);
@@ -352,6 +388,14 @@ int main() {
  {
   Settings::instance().hw=false;Switch2VideoDecoder d;
   assert(d.setup(VIDEO_FORMAT_H264,16,16,60,nullptr,0)==0 && softwareSetups==1);
+ }
+ reset();
+ {
+  assert(Switch2VideoDecoder::hardwareFormats()==(VIDEO_FORMAT_H264|VIDEO_FORMAT_AV1_MAIN8));
+  assert(Switch2VideoDecoder::softwareFormats()==(VIDEO_FORMAT_H264|VIDEO_FORMAT_H265|VIDEO_FORMAT_H265_MAIN10));
+  Settings::instance().hw=false;Switch2VideoDecoder d;
+  assert(d.setup(VIDEO_FORMAT_AV1_MAIN8,16,16,60,nullptr,0)==0 && softwareSetups==0);
+  assert(d.setup(VIDEO_FORMAT_AV1_MAIN10,16,16,60,nullptr,0)==-1 && softwareSetups==0);
  }
  reset();
  {

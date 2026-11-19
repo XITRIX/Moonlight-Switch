@@ -16,8 +16,15 @@ namespace
 constexpr size_t kMaxSample  = 4 * 1024 * 1024;
 constexpr uint64_t kPollNs   = 2000000; // Bounded waits keep stop/join responsive.
 constexpr uint64_t kSubmitNs = 50000000; // Allow a large 4K IDR to traverse all SDK input chunks.
+// Keyframe requests after this many oversized units in a row back off from
+// 1 s, doubling up to 8 s: each request only brings another big keyframe.
+constexpr unsigned kOversizeStreak = 3;
+constexpr uint64_t kIdrRetryMs     = 500;
+constexpr uint64_t kIdrRetryMaxMs  = 8000;
 bool timedOut(Result rc) { return R_VALUE(rc) == KERNELRESULT(TimedOut); }
 }
+
+using namespace brls::literals;
 
 Switch2VideoDecoder::~Switch2VideoDecoder() { cleanup(); }
 
@@ -26,17 +33,19 @@ int Switch2VideoDecoder::setup(int format, int width, int height, int fps, void*
     cleanup();
     if (width <= 0 || height <= 0 || width > 4096 || height > 4096 || fps <= 0)
         return -1;
-    if ((format & VIDEO_FORMAT_MASK_H265) || !Settings::instance().use_hw_decoding())
+    const bool hardware = format & hardwareFormats();
+    const bool software = format & softwareFormats();
+    if (!hardware && !software)
     {
-        brls::Logger::info("Switch 2 decoder: software {} (HEVC has no SDK codec entry; hardware setting={})",
-            format & VIDEO_FORMAT_MASK_H265 ? "HEVC" : "requested codec", Settings::instance().use_hw_decoding());
+        brls::Logger::error("Switch 2 decoder: no decoder for format 0x{:x}", format);
+        return -1;
+    }
+    if (!hardware || (software && !Settings::instance().use_hw_decoding()))
+    {
+        brls::Logger::info("Switch 2 decoder: software format 0x{:x} (hardware available={}, setting={})", format,
+            hardware, Settings::instance().use_hw_decoding());
         m_software = std::make_unique<FFmpegVideoDecoder>();
         return m_software->setup(format, width, height, fps, context, flags);
-    }
-    if (format != VIDEO_FORMAT_H264 && format != VIDEO_FORMAT_AV1_MAIN8)
-    {
-        brls::Logger::error("Switch 2 decoder: unsupported native format 0x{:x}", format);
-        return -1;
     }
     m_format     = format;
     m_width      = width;
@@ -46,6 +55,9 @@ int Switch2VideoDecoder::setup(int format, int width, int height, int fps, void*
     m_snapshot   = { };
     m_started_ms = m_window_ms             = LiGetMillis();
     m_retry_after_ms                       = 0;
+    m_idr_requested_ms                     = 0;
+    m_oversized                            = 0;
+    m_skip_to_idr                          = false;
     m_progress.measurement_start_timestamp = m_started_ms;
     m_have_last_frame                      = false;
     m_first_frame                          = false;
@@ -249,8 +261,13 @@ int Switch2VideoDecoder::submit_decode_unit(PDECODE_UNIT unit)
 {
     if (m_software)
         return m_software->submit_decode_unit(unit);
-    if (!unit || unit->fullLength <= 0 || size_t(unit->fullLength) > kMaxSample)
+    if (!unit || unit->fullLength <= 0)
         return DR_NEED_IDR;
+    if (size_t(unit->fullLength) > kMaxSample)
+    {
+        std::lock_guard<std::mutex> lock(m_mutex);
+        return dropOversized(unit->fullLength);
+    }
     std::vector<uint8_t> sample, sps, pps;
     sample.reserve(unit->fullLength);
     unsigned entries = 0;
@@ -282,6 +299,12 @@ int Switch2VideoDecoder::submit_decode_unit(PDECODE_UNIT unit)
     const auto reassembly   = uint32_t(now >= received ? std::min<uint64_t>(now - received, 60000) : 0);
     m_progress.current_reassembly_time += reassembly;
     m_progress.total_reassembly_time += reassembly;
+    if (m_skip_to_idr)
+    {
+        if (unit->frameType != FRAME_TYPE_IDR)
+            return requestIdr();
+        m_skip_to_idr = false;
+    }
     if (m_need_idr)
     {
         if (now < m_retry_after_ms)
@@ -322,6 +345,7 @@ int Switch2VideoDecoder::submit_decode_unit(PDECODE_UNIT unit)
         return DR_NEED_IDR;
     }
     m_pending_times.emplace_back(stamp, now);
+    m_oversized = 0;
     if (m_pending_times.size() > 64)
     {
         fail("output stalled", KERNELRESULT(TimedOut));
@@ -331,7 +355,45 @@ int Switch2VideoDecoder::submit_decode_unit(PDECODE_UNIT unit)
     return m_need_idr ? DR_NEED_IDR : DR_OK;
 }
 
+int Switch2VideoDecoder::dropOversized(int bytes)
+{
+    m_skip_to_idr = true;
+    if (++m_oversized == kOversizeStreak)
+    {
+        brls::Logger::warning("SWITCH2_HWDEC: {} units in a row above {} bytes (last {}); spacing out keyframe requests",
+            m_oversized, kMaxSample, bytes);
+        brls::sync([] { brls::Application::notify("streaming/oversize_keyframes"_i18n); });
+    }
+    return requestIdr();
+}
+
+int Switch2VideoDecoder::requestIdr()
+{
+    uint64_t wait = 0;
+    if (m_oversized >= kOversizeStreak)
+        wait = std::min(kIdrRetryMs << std::min(m_oversized - kOversizeStreak + 1, 8u), kIdrRetryMaxMs);
+    const uint64_t now = LiGetMillis();
+    if (m_idr_requested_ms && now - m_idr_requested_ms < wait)
+        return DR_OK; // Dropped; the last frame stays on screen until the next request.
+    m_idr_requested_ms = now;
+    return DR_NEED_IDR;
+}
+
 int Switch2VideoDecoder::capabilities() const { return CAPABILITY_SLICES_PER_FRAME(4); }
+
+int Switch2VideoDecoder::hardwareFormats() { return VIDEO_FORMAT_H264 | VIDEO_FORMAT_AV1_MAIN8; }
+
+int Switch2VideoDecoder::softwareFormats()
+{
+    int formats = 0;
+    if (avcodec_find_decoder(AV_CODEC_ID_H264))
+        formats |= VIDEO_FORMAT_H264;
+    if (avcodec_find_decoder(AV_CODEC_ID_HEVC))
+        formats |= VIDEO_FORMAT_H265 | VIDEO_FORMAT_H265_MAIN10;
+    if (avcodec_find_decoder(AV_CODEC_ID_AV1))
+        formats |= VIDEO_FORMAT_AV1_MAIN8 | VIDEO_FORMAT_AV1_MAIN10;
+    return formats;
+}
 
 VideoDecodeStats* Switch2VideoDecoder::video_decode_stats()
 {

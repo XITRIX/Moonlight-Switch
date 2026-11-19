@@ -196,6 +196,7 @@
         "mouse_input": "Mauseingabemodus starten",
         "mouse_speed": "Mausbeschleunigung",
         "options": "Einstellungen",
+        "oversize_keyframes": "Die Keyframes des Hosts sind zu groß für den Decoder. Senke die Bitrate.",
         "show_logs": "Protokolle anzeigen",
         "terminate": "Programm beenden",
         "volume": "Lautstärke"
