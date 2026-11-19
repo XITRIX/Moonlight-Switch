@@ -107,9 +107,36 @@ LogoutTab::LogoutTab(StreamingView* streamView) : streamView(streamView) {
 
     terminateButton->setText("streaming/terminate"_i18n);
     terminateButton->registerClickAction([this, streamView](View* view) {
-        this->dismiss([streamView] { streamView->terminate(true); });
+        auto* dialog = new Dialog("streaming/terminate_confirm"_i18n);
+        dialog->addButton("common/cancel"_i18n, [] {});
+        dialog->addButton("streaming/terminate"_i18n, [this, streamView] {
+            this->dismiss([streamView] { streamView->terminate(true); });
+        });
+        dialog->open();
         return true;
     });
+
+    KeyComboOptions overlayOptions = Settings::instance().overlay_options();
+    if (overlayOptions.buttons.empty())
+        menuHint->setVisibility(Visibility::GONE);
+    else
+        menuHint->setText(comboHint("streaming/menu_hint", overlayOptions));
+
+    KeyComboOptions disconnectOptions =
+        Settings::instance().disconnect_options();
+    if (disconnectOptions.buttons.empty())
+        disconnectHint->setVisibility(Visibility::GONE);
+    else
+        disconnectHint->setText(
+            comboHint("streaming/disconnect_hint", disconnectOptions));
+}
+
+std::string LogoutTab::comboHint(const std::string& key,
+                                 const KeyComboOptions& options) {
+    std::string combo = OptionsTab::getTextFromButtons(options.buttons);
+    if (options.holdTime > 0)
+        combo = brls::getStr("streaming/hint_hold", combo, options.holdTime);
+    return brls::getStr(key, combo);
 }
 
 // MARK: - Options Tab

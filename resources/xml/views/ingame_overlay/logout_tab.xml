@@ -28,6 +28,22 @@
                 
             <brls:DetailCell
                 id="terminate"/>
+
+            <brls:Label
+                id="menu_hint"
+                width="auto"
+                height="auto"
+                marginTop="16"
+                fontSize="18"
+                textColor="@theme/brls/header/subtitle"/>
+
+            <brls:Label
+                id="disconnect_hint"
+                width="auto"
+                height="auto"
+                marginTop="4"
+                fontSize="18"
+                textColor="@theme/brls/header/subtitle"/>
         
         </brls:Box>
         

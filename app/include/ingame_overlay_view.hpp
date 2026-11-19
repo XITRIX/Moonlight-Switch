@@ -35,8 +35,13 @@ class LogoutTab : public brls::Box {
   private:
     StreamingView* streamView;
 
+    static std::string comboHint(const std::string& key,
+                                 const KeyComboOptions& options);
+
     BRLS_BIND(brls::DetailCell, disconnect, "disconnect");
     BRLS_BIND(brls::DetailCell, terminateButton, "terminate");
+    BRLS_BIND(brls::Label, menuHint, "menu_hint");
+    BRLS_BIND(brls::Label, disconnectHint, "disconnect_hint");
 };
 
 // MARK: - Debug Tab
@@ -45,10 +50,11 @@ class OptionsTab : public brls::Box {
     explicit OptionsTab(StreamingView* streamView);
     ~OptionsTab() override;
 
+    static std::string getTextFromButtons(std::vector<brls::ControllerButton> buttons);
+
   private:
     StreamingView* streamView;
 
-    static std::string getTextFromButtons(std::vector<brls::ControllerButton> buttons);
     static NVGcolor getColorFromButtons(const std::vector<brls::ControllerButton>& buttons);
     void setupButtonsSelectorCell(brls::DetailCell* cell, const std::vector<brls::ControllerButton>& buttons);
 
