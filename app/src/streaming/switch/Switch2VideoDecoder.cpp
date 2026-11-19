@@ -142,9 +142,30 @@ bool Switch2VideoDecoder::openHardware(const std::vector<uint8_t>& config)
     m_pool->open = true;
     m_open       = true;
     m_need_idr   = false;
+    if (m_format != VIDEO_FORMAT_H264)
+        importImages();
     brls::Logger::info("SWITCH2_HWDEC: initialized codec={} streamFPS={} registrationFPS={} (output not verified yet)",
         int(options.codec), m_fps, options.frame_rate);
     return true;
+}
+
+void Switch2VideoDecoder::importImages()
+{
+    // H.264 images are imported before the SDK registers them, so it can share
+    // the GPU mapping (Switch2DecoderTrace.cpp). AV1 stays out of that path; an
+    // AV1 probe that registered its own image memory was refused (0x280f3).
+    // Import its images once the SDK has made them instead. The pool close
+    // hook removes the imports, and the renderer copies any image left out.
+    unsigned imported = 0;
+    for (uint32_t i = 0; i < m_pool->decoder.image_count; ++i)
+    {
+        const auto& image = m_pool->decoder.images[i];
+        if (image.backing && !switch2FindImportedImage(image.backing).buffer
+            && switch2PreimportImage(image.backing, image.backing_size))
+            imported++;
+    }
+    brls::Logger::info("SWITCH2_VK_IMPORT: imported {} of {} decoder images after creation", imported,
+        m_pool->decoder.image_count);
 }
 
 void Switch2VideoDecoder::fail(const char* operation, Result rc)

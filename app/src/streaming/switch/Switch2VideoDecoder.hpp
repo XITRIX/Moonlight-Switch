@@ -35,6 +35,7 @@ class Switch2VideoDecoder : public IFFmpegVideoDecoder
     bool drain(uint64_t timeout); // All SDK access is serialized by m_mutex.
     void readFrames();
     void fail(const char* operation, Result rc);
+    void importImages();
 
     std::shared_ptr<Switch2DecoderPool> m_pool;
     bool m_open        = false;
