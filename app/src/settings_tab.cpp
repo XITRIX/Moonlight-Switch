@@ -18,6 +18,7 @@
 #include "mapping_layout_editor.hpp"
 #include "halfcon_mapping_view.hpp"
 #include "UpscalingSupport.hpp"
+#include "MoonlightSession.hpp"
 #include <cmath>
 #include <iomanip>
 #include <sstream>
@@ -140,7 +141,7 @@ SettingsTab::SettingsTab() {
             resolutionScale->setSelection(2);
             break;
     }
-    resolutionScale->getEvent()->subscribe([](int selected) {
+    resolutionScale->getEvent()->subscribe([this](int selected) {
         switch (selected) {
             SET_SETTING(0, set_native_resolution_scale(50));
             SET_SETTING(1, set_native_resolution_scale(75));
@@ -150,6 +151,7 @@ SettingsTab::SettingsTab() {
 #endif
             DEFAULT;
         }
+        updateBitrateHeader();
     });
 
 #ifdef SUPPORT_UPSCALING
@@ -248,6 +250,7 @@ SettingsTab::SettingsTab() {
             DEFAULT;
         }
         updateNativeResolutionScaleVisibility();
+        updateBitrateHeader();
     });
 
 #if defined(__PSV__)
@@ -283,7 +286,7 @@ SettingsTab::SettingsTab() {
 #endif
         DEFAULT;
     }
-    fps->getEvent()->subscribe([](int selected) {
+    fps->getEvent()->subscribe([this](int selected) {
         switch (selected) {
 #if defined(__PSV__)
             SET_SETTING(0, set_fps(24));
@@ -299,6 +302,7 @@ SettingsTab::SettingsTab() {
 #endif
             DEFAULT;
         }
+        updateBitrateHeader();
     });
 
     std::vector<std::string> decoders = {"settings/zero_threads"_i18n, "2", "3",
@@ -382,27 +386,28 @@ SettingsTab::SettingsTab() {
     hwDecoding->setEnabled(false);
 #endif
 
-#if defined(__PSV__)
-    const float mbpsMaxLimit = 20000;
-#elif defined(PLATFORM_SWITCH)
-    const float mbpsMaxLimit = 100000;
-#else
-    const float mbpsMaxLimit = 150000;
-#endif
-
+    const float mbpsMaxLimit = Settings::max_bitrate();
     const float limitOffset = 500;
     const float limit = mbpsMaxLimit - limitOffset;
 
     float progress = (Settings::instance().bitrate() - limitOffset) / limit;
     slider->getProgressEvent()->subscribe([this, limitOffset, limit](float progress) {
         int bitrate = progress * limit + limitOffset;
-        float fbitrate = bitrate / 1000.0f;
-        std::stringstream stream;
-        stream << std::fixed << std::setprecision(1) << fbitrate;
-        header->setSubtitle(stream.str() + " Mbps");
         Settings::instance().set_bitrate(bitrate);
+        updateBitrateHeader();
     });
     slider->setProgress(progress);
+
+    bitrateAuto->init("settings/bitrate_auto"_i18n, Settings::instance().bitrate_auto(),
+                      [this, limitOffset, limit](bool value) {
+                          Settings::instance().set_bitrate_auto(value);
+                          if (!value)
+                              slider->setProgress((autoBitrate() - limitOffset) / limit);
+                          updateBitrateHeader();
+                      });
+    bitrateAdaptive->init("settings/bitrate_adaptive"_i18n, Settings::instance().bitrate_adaptive(),
+                          [](bool value) { Settings::instance().set_bitrate_adaptive(value); });
+    updateBitrateHeader();
 
 #if defined(__SWITCH__)
     audioBackend->init("settings/audio_backend"_i18n, audio_backends, 0,
@@ -798,6 +803,23 @@ void SettingsTab::willAppear(bool resetState)
     Box::willAppear(resetState);
     mouseSpeedSlider->setProgress(Settings::instance().get_mouse_speed_multiplier() / 100.0f);
     refreshMouseScrollSettings(mouseScrollSlider);
+    updateBitrateHeader();
+}
+
+int SettingsTab::autoBitrate() {
+    int width, height;
+    MoonlightSession::stream_resolution(&width, &height);
+    return Settings::default_bitrate(width, height, Settings::instance().fps());
+}
+
+void SettingsTab::updateBitrateHeader() {
+    const bool isAuto = Settings::instance().bitrate_auto();
+    const int bitrate = isAuto ? autoBitrate() : Settings::instance().bitrate();
+    std::stringstream stream;
+    stream << std::fixed << std::setprecision(1) << bitrate / 1000.0f;
+    header->setSubtitle(stream.str() + " Mbps");
+    slider->setVisibility(isAuto ? brls::Visibility::GONE : brls::Visibility::VISIBLE);
+    bitrateAdaptive->setVisibility(isAuto ? brls::Visibility::VISIBLE : brls::Visibility::GONE);
 }
 
 void SettingsTab::updateDeadZoneItems() {

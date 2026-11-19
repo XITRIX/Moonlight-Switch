@@ -140,6 +140,15 @@ class Settings : public Singleton<Settings> {
     [[nodiscard]] int bitrate() const { return m_bitrate; }
     void set_bitrate(int bitrate) { m_bitrate = bitrate; }
 
+    [[nodiscard]] bool bitrate_auto() const { return m_bitrate_auto; }
+    void set_bitrate_auto(bool bitrate_auto) { m_bitrate_auto = bitrate_auto; }
+
+    [[nodiscard]] bool bitrate_adaptive() const { return m_bitrate_adaptive; }
+    void set_bitrate_adaptive(bool bitrate_adaptive) { m_bitrate_adaptive = bitrate_adaptive; }
+
+    static int max_bitrate();
+    static int default_bitrate(int width, int height, int fps);
+
     [[nodiscard]] bool request_hdr() const { 
 #ifdef SUPPORT_HDR
         return m_enable_hdr; 
@@ -357,6 +366,8 @@ class Settings : public Singleton<Settings> {
     AudioBackend m_audio_backend = SDL;
 #endif
     int m_bitrate = 10000;
+    bool m_bitrate_auto = true;
+    bool m_bitrate_adaptive = false;
     bool m_enable_hdr = false;
     UpscalingMode m_upscaling_mode = UPSCALING_OFF;
     bool m_enable_dithering = false;
