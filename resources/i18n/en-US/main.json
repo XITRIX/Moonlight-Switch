@@ -199,6 +199,7 @@
         "logout": "Logout",
         "mouse_input": "Enter mouse input mode",
         "mouse_speed": "Mouse acceleration",
+        "network_cant_keep_up": "Your network can't keep up. Check the connection or lower the bitrate.",
         "options": "Options",
         "show_logs": "Show logs",
         "terminate": "Terminate app",

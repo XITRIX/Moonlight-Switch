@@ -199,6 +199,7 @@
         "logout": "登出",
         "mouse_input": "進入滑鼠輸入模式",
         "mouse_speed": "滑鼠速度",
+        "network_cant_keep_up": "網路跟不上。請檢查連線或降低位元率。",
         "options": "選項",
         "show_logs": "顯示日誌",
         "terminate": "終止應用程式",

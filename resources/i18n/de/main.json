@@ -199,6 +199,7 @@
         "logout": "Logout",
         "mouse_input": "Mauseingabemodus starten",
         "mouse_speed": "Mausbeschleunigung",
+        "network_cant_keep_up": "Dein Netzwerk kommt nicht hinterher. Prüfe die Verbindung oder senke die Bitrate.",
         "options": "Einstellungen",
         "show_logs": "Protokolle anzeigen",
         "terminate": "Programm beenden",

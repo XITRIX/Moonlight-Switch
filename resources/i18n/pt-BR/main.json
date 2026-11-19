@@ -199,6 +199,7 @@
         "logout": "Deslogar",
         "mouse_input": "Entrar no modo de mouse",
         "mouse_speed": "Aceleração do mouse",
+        "network_cant_keep_up": "Sua rede não está dando conta. Verifique a conexão ou reduza a taxa de bits.",
         "options": "Opções",
         "show_logs": "Mostrar logs",
         "terminate": "Encerrar aplicativo",

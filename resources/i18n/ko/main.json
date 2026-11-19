@@ -199,6 +199,7 @@
         "logout": "로그아웃",
         "mouse_input": "마우스 입력 모드 진입",
         "mouse_speed": "마우스 가속",
+        "network_cant_keep_up": "네트워크가 따라가지 못하고 있습니다. 연결을 확인하거나 비트레이트를 낮추세요.",
         "options": "옵션",
         "show_logs": "정보 표시",
         "terminate": "앱 종료",

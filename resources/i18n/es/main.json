@@ -199,6 +199,7 @@
         "logout": "Cerrar sesión",
         "mouse_input": "Activar modo ratón",
         "mouse_speed": "Aceleración del ratón",
+        "network_cant_keep_up": "Tu red no da abasto. Comprueba la conexión o baja la tasa de bits.",
         "options": "Ajustes",
         "show_logs": "Mostrar logs",
         "terminate": "Cerrar aplicación",

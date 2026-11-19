@@ -199,6 +199,7 @@
         "logout": "Disconnetti",
         "mouse_input": "Entra in modalità input del mouse",
         "mouse_speed": "Accelerazione Mouse",
+        "network_cant_keep_up": "La tua rete non regge. Controlla la connessione o abbassa il bitrate.",
         "options": "Opzioni",
         "show_logs": "Mostra log",
         "terminate": "Termina app",

@@ -199,6 +199,7 @@
         "logout": "Déconnexion",
         "mouse_input": "Utiliser le mode souris",
         "mouse_speed": "Vitesse de la souris",
+        "network_cant_keep_up": "Votre réseau ne suit pas. Vérifiez la connexion ou baissez le débit.",
         "options": "Options",
         "show_logs": "Voir les logs",
         "terminate": "Fermer l'application",
