@@ -120,6 +120,10 @@ bool Switch2VideoDecoder::openHardware(const std::vector<uint8_t>& config)
     const uint32_t budgetRate = uint32_t(
         std::min<uint64_t>(VIDEO_DECODER_MAX_FRAME_RATE, VIDEO_DECODER_PIXEL_RATE / (uint64_t(m_width) * m_height)));
     options.frame_rate        = std::min(uint32_t(m_fps), budgetRate);
+    // libounce defaults AV1 to block-linear, which only a CPU copy can read.
+    // AV1 decodes to pitch-linear on the console too (1080p120, 1440p120 and
+    // 4K60 measured), so every codec hands out frames the renderer reads in place.
+    options.tiling            = ViddecTilingMode_PitchLinear;
     options.max_sample_size   = kMaxSample;
     options.color_policy      = 3; // The session explicitly requests limited-range Rec.709.
     options.codec_config      = config.empty() ? nullptr : config.data();
@@ -182,7 +186,7 @@ bool Switch2VideoDecoder::drain(uint64_t timeout)
                 output->color_range = AVCOL_RANGE_MPEG;
                 output->colorspace  = AVCOL_SPC_BT709;
                 output->pts         = frame.timestamp_ns;
-                if (m_format == VIDEO_FORMAT_H264 && frame.planes[0] && frame.planes[1])
+                if (frame.planes[0] && frame.planes[1])
                 {
                     copied = switch2AttachNativeFrame(output, m_pool, frame);
                 }
