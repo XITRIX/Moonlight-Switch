@@ -51,6 +51,9 @@
 
             <brls:BooleanCell
                 id="bitrate_auto"/>
+
+            <brls:BooleanCell
+                id="bitrate_adaptive"/>
                 
             <brls:Slider
                 id="slider"

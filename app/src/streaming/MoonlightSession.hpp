@@ -30,6 +30,9 @@ class MoonlightSession {
 
     void restart();
 
+    // Applies to the Automatic bitrate from the next connection on.
+    void set_bitrate_scale(float scale) { m_bitrate_scale = scale; }
+
     void draw(NVGcontext* vg, int width, int height);
 
     // Stop touching the GPU while the app is off screen, and drop renderer
@@ -97,6 +100,7 @@ class MoonlightSession {
     std::atomic<bool> m_stop_requested{false};
     uint64_t m_generation = 0;
     bool m_connection_status_is_poor = false;
+    float m_bitrate_scale = 1.0f;
     bool m_suspended = false;
     bool m_invalidate_renderer_pending = false;
     bool m_restart_pending = false;

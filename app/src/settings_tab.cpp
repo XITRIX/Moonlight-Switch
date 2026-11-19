@@ -405,6 +405,8 @@ SettingsTab::SettingsTab() {
                               slider->setProgress((autoBitrate() - limitOffset) / limit);
                           updateBitrateHeader();
                       });
+    bitrateAdaptive->init("settings/bitrate_adaptive"_i18n, Settings::instance().bitrate_adaptive(),
+                          [](bool value) { Settings::instance().set_bitrate_adaptive(value); });
     updateBitrateHeader();
 
 #if defined(__SWITCH__)
@@ -817,6 +819,7 @@ void SettingsTab::updateBitrateHeader() {
     stream << std::fixed << std::setprecision(1) << bitrate / 1000.0f;
     header->setSubtitle(stream.str() + " Mbps");
     slider->setVisibility(isAuto ? brls::Visibility::GONE : brls::Visibility::VISIBLE);
+    bitrateAdaptive->setVisibility(isAuto ? brls::Visibility::VISIBLE : brls::Visibility::GONE);
 }
 
 void SettingsTab::updateDeadZoneItems() {
