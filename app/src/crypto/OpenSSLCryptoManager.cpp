@@ -11,6 +11,7 @@
 #include <openssl/pem.h>
 #include <openssl/evp.h>
 #include <openssl/pkcs12.h>
+#include <openssl/rand.h>
 
 static Data m_cert;
 static Data m_key;
@@ -204,6 +205,15 @@ Data OpenSSLCryptoManager::sign_data(Data data, Data key) {
     Data signed_data = Data(signature, slen);
     free(signature);
     return signed_data;
+}
+
+Data OpenSSLCryptoManager::random_bytes(size_t size) {
+    Data data(size);
+    if (RAND_bytes(data.bytes(), (int)size) != 1) {
+        brls::Logger::error("Crypto: random_bytes failed");
+        return Data();
+    }
+    return data;
 }
 
 // Cert and key generator

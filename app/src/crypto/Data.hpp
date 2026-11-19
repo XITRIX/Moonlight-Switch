@@ -21,7 +21,6 @@ class Data {
     Data(const Data& that);
     Data& operator=(const Data& that);
 
-    static Data random_bytes(size_t size);
     static Data read_from_file(std::string path);
     void write_to_file(std::string path);
 

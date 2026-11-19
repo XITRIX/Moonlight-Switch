@@ -69,23 +69,6 @@ Data& Data::operator=(const Data& that) {
     return *this;
 }
 
-Data Data::random_bytes(size_t size) {
-    unsigned char* bytes = (unsigned char*)malloc(sizeof(char) * size);
-
-#ifndef _WIN32
-    srand(time(NULL));
-#endif
-
-    for (int i = 0; i < size; i++) {
-        bytes[i] = rand() % 255;
-    }
-
-    Data random_data(size);
-    memcpy(random_data.m_bytes, bytes, size);
-    free(bytes);
-    return random_data;
-}
-
 Data Data::read_from_file(std::string path) {
     FILE* f = fopen(path.c_str(), "rb");
     if (f) {

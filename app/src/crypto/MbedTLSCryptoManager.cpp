@@ -236,6 +236,28 @@ Data MbedTLSCryptoManager::sign_data(Data data, Data key) {
     return data;
 }
 
+Data MbedTLSCryptoManager::random_bytes(size_t size) {
+    mbedtls_entropy_context entropy;
+    mbedtls_ctr_drbg_context ctr_drbg;
+    Data data(size);
+
+    mbedtls_entropy_init(&entropy);
+    mbedtls_ctr_drbg_init(&ctr_drbg);
+    int ret = mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy,
+                                    NULL, 0);
+    if (ret == 0) {
+        ret = mbedtls_ctr_drbg_random(&ctr_drbg, data.bytes(), size);
+    }
+    mbedtls_ctr_drbg_free(&ctr_drbg);
+    mbedtls_entropy_free(&entropy);
+
+    if (ret != 0) {
+        brls::Logger::error("Crypto: random_bytes failed: {}", ret);
+        return Data();
+    }
+    return data;
+}
+
 // Cert and key generator
 
 static void _generate_key(mbedtls_pk_context* key) {

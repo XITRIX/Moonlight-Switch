@@ -25,4 +25,5 @@ public:
     static Data signature(Data cert);
     static bool verify_signature(Data data, Data signature, Data cert);
     static Data sign_data(Data data, Data key);
+    static Data random_bytes(size_t size);
 };
