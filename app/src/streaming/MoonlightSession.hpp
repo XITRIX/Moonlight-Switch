@@ -63,6 +63,9 @@ class MoonlightSession {
                                            uint16_t leftTriggerMotor, uint16_t rightTriggerMotor);
     static void connection_status_update(int);
     static void connection_set_hdr_mode(bool);
+    static void connection_set_motion_event_state(uint16_t controllerNumber,
+                                                  uint8_t motionType,
+                                                  uint16_t reportRateHz);
 
     static int video_decoder_setup(int, int, int, int, void*, int);
     static void video_decoder_start();

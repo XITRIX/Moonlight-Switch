@@ -349,6 +349,7 @@ def main():
     controllers += stripped_header(ROOT / "app/src/streaming/InputManager.hpp")
     controllers += "\n#undef private\n"
     controllers += method(input_source, "void MoonlightInputManager::handleControllers(")
+    controllers += method(input_source, "void MoonlightInputManager::resetControllerState(")
     controllers += CONTROLLER_SCENARIOS
     library = (ROOT / "extern/moonlight-common-c/src/Connection.c").read_text()
     termination = TERMINATION

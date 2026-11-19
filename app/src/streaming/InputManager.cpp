@@ -83,9 +83,13 @@ MoonlightInputManager::MoonlightInputManager() {
             
             switch (event.type) {
                 case brls::SensorEventType::ACCEL:
+                    if (!motionDue(event.controllerIndex, LI_MOTION_TYPE_ACCEL))
+                        break;
                     LiSendControllerMotionEvent((uint8_t)event.controllerIndex, LI_MOTION_TYPE_ACCEL, event.data[0], event.data[1], event.data[2]);
                     break;
                 case brls::SensorEventType::GYRO:
+                    if (!motionDue(event.controllerIndex, LI_MOTION_TYPE_GYRO))
+                        break;
                     // Convert rad/s to deg/s
                     LiSendControllerMotionEvent((uint8_t)event.controllerIndex, LI_MOTION_TYPE_GYRO, 
                         event.data[0] * 57.2957795f, 
@@ -94,6 +98,45 @@ MoonlightInputManager::MoonlightInputManager() {
                     break;
             }
         });
+}
+
+void MoonlightInputManager::resetControllerState() {
+    for (auto& rates : motionRates)
+        for (auto& rate : rates)
+            rate = 0;
+    resetControllers = true;
+}
+
+void MoonlightInputManager::setMotionEventState(uint16_t controller,
+                                                uint8_t motionType,
+                                                uint16_t reportRateHz) {
+    if (controller >= GAMEPADS_MAX ||
+        (motionType != LI_MOTION_TYPE_ACCEL && motionType != LI_MOTION_TYPE_GYRO))
+        return;
+
+    brls::Logger::info("Host asks for motion type {} of controller {} at {} Hz",
+                       motionType, controller, reportRateHz);
+    motionRates[controller][motionType - 1] = reportRateHz;
+}
+
+// The host asks for a rate per sensor, 0 for none. Send at most one sample
+// per period, and after a late one wait at least a quarter period.
+bool MoonlightInputManager::motionDue(int controller, uint8_t motionType) {
+    if (controller < 0 || controller >= GAMEPADS_MAX)
+        return false;
+
+    uint16_t rate = motionRates[controller][motionType - 1];
+    if (rate == 0)
+        return false;
+
+    auto now = std::chrono::steady_clock::now();
+    auto& next = nextMotion[controller][motionType - 1];
+    if (now < next)
+        return false;
+
+    auto period = std::chrono::microseconds(1000000 / rate);
+    next = std::max(next + period, now + period / 4);
+    return true;
 }
 
 void MoonlightInputManager::handleDesktopMouseScroll(brls::Point scroll) {
