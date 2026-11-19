@@ -166,6 +166,9 @@
         "resolution_scale": "缩放",
         "image_adjustments": "图像调整",
         "dithering": "抖动",
+        "stream_stats": "串流统计",
+        "stream_stats_compact": "简洁",
+        "stream_stats_detailed": "详细",
         "upscaling": "将低分辨率升尺度",
         "rcas_sharpening": "RCAS 锐化",
         "rumble_force": "震动力度",
@@ -187,7 +190,6 @@
     },
     "streaming": {
         "connection": "连接选项",
-        "debug_info": "调试信息",
         "disconnect": "断开连接",
         "esc": "ESC按键",
         "input": "输入",

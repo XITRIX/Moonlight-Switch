@@ -219,6 +219,9 @@
                 
             <brls:BooleanCell
                 id="writeLog"/>
+
+            <brls:SelectorCell
+                id="stream_stats"/>
             
         </brls:Box>
 

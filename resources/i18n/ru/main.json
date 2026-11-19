@@ -166,6 +166,9 @@
         "resolution_scale": "Масштаб",
         "image_adjustments": "Коррекция изображения",
         "dithering": "Дизеринг",
+        "stream_stats": "Статистика трансляции",
+        "stream_stats_compact": "Кратко",
+        "stream_stats_detailed": "Подробно",
         "upscaling": "Масштабировать низкие разрешения",
         "rcas_sharpening": "Повышение резкости RCAS",
         "rumble_force": "Сила вибрации",
@@ -187,7 +190,6 @@
     },
     "streaming": {
         "connection": "Соединение",
-        "debug_info": "Отладочная информация",
         "disconnect": "Отключиться",
         "esc": "Кнопка ESC",
         "input": "Ввод",

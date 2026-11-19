@@ -192,6 +192,11 @@ int MoonlightSession::video_decoder_setup(int video_format, int width,
                                           int height, int redraw_rate,
                                           void* context, int dr_flags) {
     m_video_format = video_format;
+    if (m_active_session) {
+        m_active_session->m_stream_format = video_format;
+        m_active_session->m_stream_height = height;
+        m_active_session->m_stream_fps = redraw_rate;
+    }
     if (m_active_session && m_active_session->m_video_decoder) {
         return m_active_session->m_video_decoder->setup(
             video_format, width, height, redraw_rate, context, dr_flags);
