@@ -421,6 +421,10 @@ SettingsTab::SettingsTab() {
         "settings/paop"_i18n, Settings::instance().play_audio(),
         [](bool value) { Settings::instance().set_play_audio(value); });
 
+    quitAppOnDisconnect->init(
+        "settings/quit_app_on_disconnect"_i18n, Settings::instance().quit_app_on_disconnect(),
+        [](bool value) { Settings::instance().set_quit_app_on_disconnect(value); });
+
     swapUi->init("settings/swap_ui"_i18n, Settings::instance().swap_ui_keys(),
                  [](bool value) {
                      Settings::instance().set_swap_ui_keys(value);

@@ -159,6 +159,7 @@
         "overlay_time": "Retardo de activación en segundos",
         "overlay_zero_time": "0 (Inmediatamente)",
         "paop": "Reproducir el audio en el PC",
+        "quit_app_on_disconnect": "Cerrar la aplicación del PC al desconectar",
         "quality": "Calidad (Higher settings requires CPU overclock)",
         "request_hdr": "Request HDR Video",
         "resolution": "Resolución",

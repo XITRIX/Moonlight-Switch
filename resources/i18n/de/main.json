@@ -159,6 +159,7 @@
         "overlay_time": "Verzögerung (Sekunden)",
         "overlay_zero_time": "0 (keine Verzögerung)",
         "paop": "Audio auf Host abspielen",
+        "quit_app_on_disconnect": "Host-App beim Trennen beenden",
         "quality": "Qualität (Higher settings requires CPU overclock)",
         "request_hdr": "Request HDR Video",
         "resolution": "Auflösung",

@@ -85,6 +85,9 @@
             
             <brls:BooleanCell
                 id="pcAudio"/>
+
+            <brls:BooleanCell
+                id="quit_app_on_disconnect"/>
                 
             <brls:BooleanCell
                 id="volume_amplification"/>

@@ -159,6 +159,7 @@
         "overlay_time": "몇 초 안에 열려면 길게 누름",
         "overlay_zero_time": "0 (즉시)",
         "paop": "PC에서 오디오 재생",
+        "quit_app_on_disconnect": "연결 해제 시 PC 앱 종료",
         "quality": "품질 (설정이 높을수록 CPU 오버클럭 필요)",
         "request_hdr": "HDR 비디오 요청",
         "resolution": "해상도",

@@ -159,6 +159,7 @@
         "overlay_time": "Segure para abrir em segundos",
         "overlay_zero_time": "0 (Imediatamente)",
         "paop": "Reproduzir áudio no PC",
+        "quit_app_on_disconnect": "Fechar o app no PC ao desconectar",
         "quality": "Qualidade",
         "request_hdr": "Request HDR Video",
         "resolution": "Resolução",

@@ -159,6 +159,7 @@
         "overlay_time": "Hold to open in seconds",
         "overlay_zero_time": "0 (Immediately)",
         "paop": "Play Audio on PC",
+        "quit_app_on_disconnect": "Quit host app on disconnect",
         "quality": "Quality (Higher settings requires CPU overclock)",
         "request_hdr": "Request HDR Video",
         "resolution": "Resolution",

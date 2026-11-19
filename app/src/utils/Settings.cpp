@@ -384,6 +384,10 @@ void Settings::load() {
             if (json_t* play_audio = json_object_get(settings, "play_audio")) {
                 m_play_audio = json_typeof(play_audio) == JSON_TRUE;
             }
+
+            if (json_t* quit_app = json_object_get(settings, "quit_app_on_disconnect")) {
+                m_quit_app_on_disconnect = json_typeof(quit_app) == JSON_TRUE;
+            }
             
             if (json_t* write_log = json_object_get(settings, "write_log")) {
                 m_write_log = json_typeof(write_log) == JSON_TRUE;
@@ -660,6 +664,7 @@ void Settings::save()
             json_object_set_new(settings, "use_hw_decoding", m_use_hw_decoding ? json_true() : json_false());
             json_object_set_new(settings, "sops", m_sops ? json_true() : json_false());
             json_object_set_new(settings, "play_audio", m_play_audio ? json_true() : json_false());
+            json_object_set_new(settings, "quit_app_on_disconnect", m_quit_app_on_disconnect ? json_true() : json_false());
             json_object_set_new(settings, "write_log", m_write_log ? json_true() : json_false());
             json_object_set_new(settings, "swap_ui_keys", m_swap_ui_keys ? json_true() : json_false());
             json_object_set_new(settings, "swap_joycon_stick_to_dpad", m_swap_joycon_stick_to_dpad ? json_true() : json_false());
