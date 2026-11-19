@@ -38,6 +38,7 @@ class AudrenAudioRenderer : public IAudioRenderer {
     int m_frame_samples = 0;  // samples per channel in one Opus packet
     int m_buffer_size = 0;    // bytes in one wave buffer
     size_t m_dropped_packets = 0;
+    bool m_started = false;
 };
 
 #endif // __SWITCH__
