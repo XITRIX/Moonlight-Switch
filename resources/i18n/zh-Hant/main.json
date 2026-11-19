@@ -64,6 +64,7 @@
         "dialog_header": "錯誤",
         "host_not_found": "沒有找到主機……",
         "ip_not_obtained": "無法獲取IP位址……",
+        "no_video": "電腦沒有傳送影像\n請檢查電腦的防火牆是否放行影像連接埠，然後再試一次",
         "stream_start": "開始串流失敗……",
         "unknown_error": "發生了未知的錯誤……"
     },

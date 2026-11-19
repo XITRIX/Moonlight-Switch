@@ -64,6 +64,7 @@
         "dialog_header": "Error",
         "host_not_found": "Host PC not found...",
         "ip_not_obtained": "Can't obtain IP address...",
+        "no_video": "The PC sent no video\nCheck that its firewall lets the video port through, then try again",
         "stream_start": "Failed to start stream...",
         "unknown_error": "Unknown problem has been occured..."
     },

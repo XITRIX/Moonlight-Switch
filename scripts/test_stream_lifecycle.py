@@ -109,6 +109,7 @@ void LiStopConnection(){
     assert(std::this_thread::get_id()==mainThread);events.push_back("stop");
 }
 uint64_t LiGetMillis(){return 1000;}
+#define ML_ERROR_NO_VIDEO_TRAFFIC -100
 """
 
 SCENARIOS = r"""
@@ -158,6 +159,14 @@ int main() {
     MoonlightSession::requestRestart();delete old;
     s=new MoonlightSession("host",1);events.clear();brls::drain();
     assert(events.empty()); // stale decoder reconnect cannot reach a new session
+
+    MoonlightSession::connection_started();
+    std::thread([]{
+        MoonlightSession::connection_terminated(ML_ERROR_NO_VIDEO_TRAFFIC);
+    }).join();
+    brls::drain();
+    assert(events.empty()&&starts==2); // no video at all is reported, not retried
+    assert(s->is_terminated()&&s->termination_error()==ML_ERROR_NO_VIDEO_TRAFFIC);
     delete s;
 }
 """

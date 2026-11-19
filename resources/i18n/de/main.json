@@ -64,6 +64,7 @@
         "dialog_header": "Fehler",
         "host_not_found": "Host nicht gefunden...",
         "ip_not_obtained": "IP Adresse kann nicht abgerufen werden...",
+        "no_video": "Der PC hat kein Video gesendet\nPrüfe, ob seine Firewall den Videoport durchlässt, und versuche es erneut",
         "stream_start": "Stream konnten nicht gestartet werden...",
         "unknown_error": "Unbekannter Fehler aufgetreten..."
     },
