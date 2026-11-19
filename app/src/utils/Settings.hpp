@@ -144,7 +144,7 @@ class Settings : public Singleton<Settings> {
     void set_bitrate_auto(bool bitrate_auto) { m_bitrate_auto = bitrate_auto; }
 
     static int max_bitrate();
-    static int default_bitrate(int width, int height, int fps);
+    static int default_bitrate(int width, int height, int fps, VideoCodec codec);
 
     [[nodiscard]] bool request_hdr() const { 
 #ifdef SUPPORT_HDR

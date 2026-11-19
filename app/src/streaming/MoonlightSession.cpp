@@ -320,7 +320,8 @@ void MoonlightSession::start(ServerCallback<bool> callback, bool is_sunshine) {
     m_config.packetSize = 1392;
     m_config.streamingRemotely = STREAM_CFG_AUTO;
     m_config.bitrate = Settings::instance().bitrate_auto()
-        ? Settings::default_bitrate(m_config.width, m_config.height, m_config.fps)
+        ? Settings::default_bitrate(m_config.width, m_config.height, m_config.fps,
+                                    Settings::instance().video_codec())
         : Settings::instance().bitrate();
     m_config.encryptionFlags = m_is_sunshine ? ENCFLG_ALL : ENCFLG_VIDEO;
 

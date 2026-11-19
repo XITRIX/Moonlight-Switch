@@ -362,6 +362,7 @@ SettingsTab::SettingsTab() {
             hwDecoding->setOn(supportedCodecs[selected] != H265 && Settings::instance().use_hw_decoding());
             hwDecoding->setEnabled(supportedCodecs[selected] != H265);
 #endif
+            updateBitrateHeader();
         });
 
     requestHdr->init("settings/request_hdr"_i18n, Settings::instance().request_hdr(),
@@ -807,7 +808,8 @@ void SettingsTab::willAppear(bool resetState)
 int SettingsTab::autoBitrate() {
     int width, height;
     MoonlightSession::stream_resolution(&width, &height);
-    return Settings::default_bitrate(width, height, Settings::instance().fps());
+    return Settings::default_bitrate(width, height, Settings::instance().fps(),
+                                     Settings::instance().video_codec());
 }
 
 void SettingsTab::updateBitrateHeader() {

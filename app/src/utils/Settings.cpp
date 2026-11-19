@@ -191,7 +191,8 @@ int Settings::max_bitrate() {
 #endif
 }
 
-int Settings::default_bitrate(int width, int height, int fps) {
+int Settings::default_bitrate(int width, int height, int fps,
+                              VideoCodec codec) {
     // moonlight-qt's table: Mbps at 30 FPS by pixel count, interpolated.
     static const struct {
         int pixels;
@@ -218,7 +219,9 @@ int Settings::default_bitrate(int width, int height, int fps) {
 
     // Twice the frames don't need twice the bits above 60 FPS.
     const float rate = fps <= 60 ? fps : std::sqrt(fps / 60.0f) * 60.0f;
-    const int kbps = (int)std::lround(factor * rate / 30.0f) * 1000;
+    // AV1 reaches the same quality with fewer bits.
+    const float share = codec == AV1 ? 0.7f : 1.0f;
+    const int kbps = (int)std::lround(factor * rate / 30.0f * share) * 1000;
     return std::clamp(kbps, 500, max_bitrate());
 }
 
