@@ -21,6 +21,10 @@ namespace {
 constexpr int MAX_PENDING_MS = 30;
 constexpr int MAX_QUEUED_MS = 40;
 
+// Playback starts once this much is queued, so the first packets of a
+// stream have a cushion against Wi-Fi jitter instead of running dry.
+constexpr int PRIME_MS = 30;
+
 void applyVolume(s16* buffer, size_t sampleCount, int volume) {
     if (volume == 100)
         return;
@@ -52,6 +56,7 @@ int AudrenAudioRenderer::init(int audio_configuration,
                           : AUDREN_SAMPLES_PER_FRAME_48KHZ;
     m_buffer_size = m_frame_samples * m_channel_count * sizeof(s16);
     m_dropped_packets = 0;
+    m_started = false;
 
     brls::Logger::info("Audren: Init with channels: {}, sample rate: {}, frame: {} samples",
                        m_channel_count, m_sample_rate, m_frame_samples);
@@ -132,8 +137,6 @@ int AudrenAudioRenderer::init(int audio_configuration,
             audrvVoiceSetMixFactor(&m_driver, 0, i == j ? 1.0f : 0.0f, i, j);
         }
     }
-
-    audrvVoiceStart(&m_driver, 0);
 
     m_inited_driver = true;
 
@@ -223,7 +226,9 @@ void AudrenAudioRenderer::decode_and_play_sample(char* data, int length) {
     wavebuf->end_sample_offset = wavebuf->start_sample_offset + decoded;
 
     audrvVoiceAddWaveBuf(&m_driver, 0, wavebuf);
-    if (!audrvVoiceIsPlaying(&m_driver, 0))
+    if (!m_started && queued_ms() >= PRIME_MS)
+        m_started = true;
+    if (m_started && !audrvVoiceIsPlaying(&m_driver, 0))
         audrvVoiceStart(&m_driver, 0);
     audrvUpdate(&m_driver);
 }
