@@ -115,6 +115,8 @@
     "settings": {
         "audio_backend": "音頻驅動",
         "av1": "AV1 (實驗性)",
+        "bitrate_adaptive": "連線不佳時降低",
+        "bitrate_auto": "自動",
         "buttons": {
             "chat": "聊天（C）",
             "home": "Home",
@@ -186,6 +188,8 @@
         "zero_threads": "0（不使用執行緒）"
     },
     "streaming": {
+        "bitrate_lowered": "連線不佳，正在降低位元率",
+        "bitrate_restored": "連線已穩定，正在恢復位元率",
         "connection": "連接選項",
         "debug_info": "除錯訊息",
         "disconnect": "斷開連接",
@@ -195,6 +199,7 @@
         "logout": "登出",
         "mouse_input": "進入滑鼠輸入模式",
         "mouse_speed": "滑鼠速度",
+        "network_cant_keep_up": "網路跟不上。請檢查連線或降低位元率。",
         "options": "選項",
         "show_logs": "顯示日誌",
         "terminate": "終止應用程式",

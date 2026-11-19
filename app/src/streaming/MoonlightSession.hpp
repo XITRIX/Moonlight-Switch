@@ -21,11 +21,17 @@ class MoonlightSession {
     static MoonlightSession* activeSession();
     static void requestRestart();
 
+    // The stream size the current settings ask for, with Native resolved.
+    static void stream_resolution(int* width, int* height);
+
     void start(ServerCallback<bool> callback, bool is_sunshine);
     void stop(int terminate_app);
     void set_address(const std::string& address) { m_address = address; }
 
     void restart();
+
+    // Applies to the Automatic bitrate from the next connection on.
+    void set_bitrate_scale(float scale) { m_bitrate_scale = scale; }
 
     void draw(NVGcontext* vg, int width, int height);
 
@@ -94,6 +100,7 @@ class MoonlightSession {
     std::atomic<bool> m_stop_requested{false};
     uint64_t m_generation = 0;
     bool m_connection_status_is_poor = false;
+    float m_bitrate_scale = 1.0f;
     bool m_suspended = false;
     bool m_invalidate_renderer_pending = false;
     bool m_restart_pending = false;

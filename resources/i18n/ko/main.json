@@ -115,6 +115,8 @@
     "settings": {
         "audio_backend": "오디오 드라이버",
         "av1": "AV1 (실험용)",
+        "bitrate_adaptive": "연결이 나쁠 때 낮추기",
+        "bitrate_auto": "자동",
         "buttons": {
             "chat": "채팅(C)",
             "home": "홈",
@@ -186,6 +188,8 @@
         "zero_threads": "0 (스레드 사용 안 함)"
     },
     "streaming": {
+        "bitrate_lowered": "연결 상태가 나빠 비트레이트를 낮춥니다",
+        "bitrate_restored": "연결이 안정되어 비트레이트를 복원합니다",
         "connection": "연결",
         "debug_info": "디버그 정보",
         "disconnect": "연결 해제",
@@ -195,6 +199,7 @@
         "logout": "로그아웃",
         "mouse_input": "마우스 입력 모드 진입",
         "mouse_speed": "마우스 가속",
+        "network_cant_keep_up": "네트워크가 따라가지 못하고 있습니다. 연결을 확인하거나 비트레이트를 낮추세요.",
         "options": "옵션",
         "show_logs": "정보 표시",
         "terminate": "앱 종료",

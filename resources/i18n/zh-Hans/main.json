@@ -115,6 +115,8 @@
     "settings": {
         "audio_backend": "音频驱动",
         "av1": "AV1 (实验性)",
+        "bitrate_adaptive": "连接不佳时降低",
+        "bitrate_auto": "自动",
         "buttons": {
             "chat": "聊天（C）",
             "home": "Home",
@@ -186,6 +188,8 @@
         "zero_threads": "0（不使用线程）"
     },
     "streaming": {
+        "bitrate_lowered": "连接不佳，正在降低码率",
+        "bitrate_restored": "连接已稳定，正在恢复码率",
         "connection": "连接选项",
         "debug_info": "调试信息",
         "disconnect": "断开连接",
@@ -195,6 +199,7 @@
         "logout": "退出",
         "mouse_input": "进入鼠标输入模式",
         "mouse_speed": "鼠标速度",
+        "network_cant_keep_up": "网络跟不上。请检查连接或降低码率。",
         "options": "选项",
         "show_logs": "显示日志",
         "terminate": "终止应用程序",
