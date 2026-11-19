@@ -276,6 +276,7 @@ void StreamingView::onFocusGained() {
     Box::onFocusGained();
 
     MoonlightInputManager::instance().setInputEnabled(true);
+    MoonlightInputManager::instance().setRumbleEnabled(windowFocused);
 
     if (!blocked) {
         blocked = true;
@@ -305,6 +306,7 @@ void StreamingView::onFocusLost() {
     Box::onFocusLost();
 
     MoonlightInputManager::instance().setInputEnabled(false);
+    MoonlightInputManager::instance().setRumbleEnabled(false);
     MoonlightInputManager::instance().dropInput();
 
     if (blocked) {
@@ -334,6 +336,7 @@ void StreamingView::onWindowFocusChanged(bool focused) {
         // before the graphics service goes away underneath the session.
         MoonlightInputManager::instance().dropInput();
     }
+    MoonlightInputManager::instance().setRumbleEnabled(focused && this->focused);
 
     session->set_suspended(!focused);
 }

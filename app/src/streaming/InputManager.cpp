@@ -255,10 +255,15 @@ void MoonlightInputManager::handleRumble(unsigned short controller,
     rumbleCache[controller].lowFreqMotor = lowFreqMotor * rumbleMultiplier;
     rumbleCache[controller].highFreqMotor = highFreqMotor * rumbleMultiplier;
 
+    if (!rumbleEnabled)
+        return;
+
     brls::Application::getPlatform()->getInputManager()->sendRumble(
         controller, 
         rumbleCache[controller].lowFreqMotor,
-        rumbleCache[controller].highFreqMotor);
+        rumbleCache[controller].highFreqMotor,
+        rumbleCache[controller].leftTriggerMotor,
+        rumbleCache[controller].rightTriggerMotor);
 }
 
 void MoonlightInputManager::handleRumbleTriggers(uint16_t controllerNumber, 
@@ -276,12 +281,27 @@ void MoonlightInputManager::handleRumbleTriggers(uint16_t controllerNumber,
     rumbleCache[controllerNumber].leftTriggerMotor = leftTriggerMotor * rumbleMultiplier;
     rumbleCache[controllerNumber].rightTriggerMotor = rightTriggerMotor * rumbleMultiplier;
 
+    if (!rumbleEnabled)
+        return;
+
     brls::Application::getPlatform()->getInputManager()->sendRumble(
         controllerNumber, 
         rumbleCache[controllerNumber].lowFreqMotor,
         rumbleCache[controllerNumber].highFreqMotor,
         rumbleCache[controllerNumber].leftTriggerMotor,
         rumbleCache[controllerNumber].rightTriggerMotor);
+}
+
+void MoonlightInputManager::setRumbleEnabled(bool enabled) {
+    if (rumbleEnabled.exchange(enabled) == enabled || enabled)
+        return;
+
+    // The host only sends rumble when it changes, so a motor left running
+    // while the stream is paused would keep going until the game stops it.
+    for (unsigned short i = 0; i < GAMEPADS_MAX; i++) {
+        rumbleCache[i] = {};
+        brls::Application::getPlatform()->getInputManager()->sendRumble(i, 0, 0);
+    }
 }
 
 void MoonlightInputManager::dropInput() {
@@ -473,7 +493,8 @@ void MoonlightInputManager::handleControllers(bool specialKey) {
         for (int i = 0; i < controllersCount; i++) {
             announced &= LiSendControllerArrivalEvent(
                              i, mappedControllersCount, LI_CTYPE_UNKNOWN, 0,
-                             LI_CCAP_RUMBLE | LI_CCAP_ACCEL | LI_CCAP_GYRO) == 0;
+                             LI_CCAP_RUMBLE | LI_CCAP_TRIGGER_RUMBLE |
+                             LI_CCAP_ACCEL | LI_CCAP_GYRO) == 0;
         }
         if (announced) {
             Logger::debug("StreamingView: announced {} controller(s)", controllersCount);
