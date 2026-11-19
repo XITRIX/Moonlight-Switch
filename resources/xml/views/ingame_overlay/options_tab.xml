@@ -34,6 +34,9 @@
             <brls:BooleanCell
                 id="touchscreen_mouse_mode"/>
 
+            <brls:BooleanCell
+                id="touch_as_mouse"/>
+
             <brls:Header
                 title="@i18n/settings/guide_key"
                 paddingTop="60"/>

@@ -322,6 +322,7 @@ void MoonlightInputManager::dropInput() {
 
     // Drop touchscreen mouse state
     LiSendMouseButtonEvent(BUTTON_ACTION_RELEASE,BUTTON_MOUSE_LEFT);
+    mouseTouchId.reset();
 
     // Drop touchscreen state
     for (auto id: activeTouchIDs) {
@@ -514,7 +515,7 @@ void MoonlightInputManager::handleInput(bool ignoreTouch) {
     brls::Application::getPlatform()->getInputManager()->updateTouchStates(&states);
 
     //Do not use gamepad for mouse controll assist if touchscreen mode enabled
-    bool specialKey = !ignoreTouch && !Settings::instance().touchscreen_mouse_mode() && states.size() == 1;
+    bool specialKey = !ignoreTouch && !Settings::instance().direct_touch() && states.size() == 1;
 
     handleControllers(specialKey);
 
@@ -530,7 +531,7 @@ void MoonlightInputManager::handleInput(bool ignoreTouch) {
     static MouseStateS lastMouseState;
 
     MouseStateS mouseState;
-    if (!Settings::instance().touchscreen_mouse_mode()) {
+    if (!Settings::instance().direct_touch()) {
         mouseState = {
                 .scroll_y = stickScrolling,
                 .l_pressed = (specialKey && controller.buttons[brls::BUTTON_RT]) || mouse.leftButton,
@@ -591,7 +592,7 @@ void MoonlightInputManager::handleInput(bool ignoreTouch) {
         sendMouseScroll({0, mouseState.scroll_y > 0 ? 1.0f : -1.0f});
     }
 
-    if (!Settings::instance().touchscreen_mouse_mode()) {
+    if (!Settings::instance().direct_touch()) {
         // Do not process touch events, useful if onscreen keyboard is presented
         if (ignoreTouch) { return; }
 
@@ -610,6 +611,11 @@ void MoonlightInputManager::handleInput(bool ignoreTouch) {
         for (int i = 0; i < touches.size(); i++) {
             auto touch = touches[i];
             if (touch.view && touch.view->hasParent() && dynamic_cast<StreamingView*>(touch.view->getParent()) == nullptr) return;
+
+            if (Settings::instance().touch_as_mouse()) {
+                sendTouchAsMouse(touch);
+                continue;
+            }
 
             switch (touch.phase) {
                 case TouchPhase::START:
@@ -639,25 +645,35 @@ void MoonlightInputManager::handleInput(bool ignoreTouch) {
                                  touch.position.y / height, touch.pressure,
                                  touch.contactSize.width / width,
                                  touch.contactSize.height / height, rotation) ==
-                LI_ERR_UNSUPPORTED && i == 0) {
+                LI_ERR_UNSUPPORTED) {
                 if (!touchFallbackNoticeShown.exchange(true)) {
                     brls::Logger::info("Host takes no touch input, touch moves the mouse instead");
                     brls::Application::notify("streaming/touch_unsupported"_i18n);
                 }
-
-                // Fallback to move cursor and click if touch unsupported
-                if (touch.phase != TouchPhase::NONE) {
-                    LiSendMousePositionEvent(touch.position.x, touch.position.y, Application::contentWidth,
-                                             Application::contentHeight);
-                }
-                if (touch.phase == TouchPhase::START) {
-                    LiSendMouseButtonEvent(BUTTON_ACTION_PRESS, BUTTON_MOUSE_LEFT);
-                }
-                if (touch.phase == TouchPhase::END) {
-                    LiSendMouseButtonEvent(BUTTON_ACTION_RELEASE, BUTTON_MOUSE_LEFT);
-                }
+                sendTouchAsMouse(touch);
             }
         }
+    }
+}
+
+// The first finger down moves the host's pointer to where it touches and
+// holds the left button until it lifts. Other fingers are ignored meanwhile.
+void MoonlightInputManager::sendTouchAsMouse(const brls::TouchState& touch) {
+    if (!mouseTouchId && touch.phase == TouchPhase::START)
+        mouseTouchId = touch.fingerId;
+    if (mouseTouchId != touch.fingerId)
+        return;
+
+    if (touch.phase != TouchPhase::NONE)
+        LiSendMousePositionEvent(touch.position.x, touch.position.y,
+                                 Application::contentWidth,
+                                 Application::contentHeight);
+
+    if (touch.phase == TouchPhase::START) {
+        LiSendMouseButtonEvent(BUTTON_ACTION_PRESS, BUTTON_MOUSE_LEFT);
+    } else if (touch.phase == TouchPhase::END || touch.phase == TouchPhase::NONE) {
+        LiSendMouseButtonEvent(BUTTON_ACTION_RELEASE, BUTTON_MOUSE_LEFT);
+        mouseTouchId.reset();
     }
 }
 

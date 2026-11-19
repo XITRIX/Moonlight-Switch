@@ -166,6 +166,7 @@
         "resolution_scale": "Escala",
         "image_adjustments": "Ajustes de imagem",
         "dithering": "Dithering",
+        "touch_as_mouse": "O toque move o ponteiro do mouse",
         "upscaling": "Melhorar resoluções baixas",
         "rcas_sharpening": "Nitidez RCAS",
         "rumble_force": "Rumble force",

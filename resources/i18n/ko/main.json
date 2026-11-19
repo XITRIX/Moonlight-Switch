@@ -166,6 +166,7 @@
         "resolution_scale": "배율",
         "image_adjustments": "이미지 조정",
         "dithering": "디더링",
+        "touch_as_mouse": "터치로 마우스 포인터 이동",
         "upscaling": "저해상도 업스케일링",
         "rcas_sharpening": "RCAS 선명화",
         "rumble_force": "진동 강도",

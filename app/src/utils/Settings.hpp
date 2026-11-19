@@ -263,6 +263,12 @@ class Settings : public Singleton<Settings> {
     [[nodiscard]] bool touchscreen_mouse_mode() const { return m_touchscreen_mouse_mode; }
 
     void set_touchscreen_mouse_mode(bool touchscreen_mouse_mode) { m_touchscreen_mouse_mode = touchscreen_mouse_mode; }
+
+    [[nodiscard]] bool touch_as_mouse() const { return m_touch_as_mouse; }
+    void set_touch_as_mouse(bool touch_as_mouse) { m_touch_as_mouse = touch_as_mouse; }
+
+    // Touches go to the host one by one instead of through the trackpad gestures.
+    [[nodiscard]] bool direct_touch() const { return m_touchscreen_mouse_mode || m_touch_as_mouse; }
     [[nodiscard]] bool swap_mouse_keys() const { return m_swap_mouse_keys; }
 
     void set_swap_mouse_scroll(bool swap_mouse_scroll) { m_swap_mouse_scroll = swap_mouse_scroll; }
@@ -372,6 +378,7 @@ class Settings : public Singleton<Settings> {
     bool m_swap_ui_keys = false;
     bool m_swap_joycon_stick_to_dpad = false;
     bool m_touchscreen_mouse_mode = false;
+    bool m_touch_as_mouse = false;
     bool m_swap_mouse_keys = false;
     bool m_swap_mouse_scroll = false;
     int m_rumble_force = 100;

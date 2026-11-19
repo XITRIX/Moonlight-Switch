@@ -181,6 +181,9 @@
 
             <brls:BooleanCell
                 id="touchscreen_mouse_mode"/>
+
+            <brls:BooleanCell
+                id="touch_as_mouse"/>
                 
             <brls:BooleanCell
                 id="swap_mouse_keys"/>

@@ -166,6 +166,7 @@
         "resolution_scale": "缩放",
         "image_adjustments": "图像调整",
         "dithering": "抖动",
+        "touch_as_mouse": "触摸移动鼠标指针",
         "upscaling": "将低分辨率升尺度",
         "rcas_sharpening": "RCAS 锐化",
         "rumble_force": "震动力度",

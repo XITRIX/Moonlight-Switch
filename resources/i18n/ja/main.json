@@ -166,6 +166,7 @@
         "resolution_scale": "倍率",
         "image_adjustments": "画像調整",
         "dithering": "ディザリング",
+        "touch_as_mouse": "タッチでマウスポインターを移動",
         "upscaling": "低解像度をアップスケール",
         "rcas_sharpening": "RCAS シャープ化",
         "rumble_force": "Rumble force",

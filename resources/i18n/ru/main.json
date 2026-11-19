@@ -166,6 +166,7 @@
         "resolution_scale": "Масштаб",
         "image_adjustments": "Коррекция изображения",
         "dithering": "Дизеринг",
+        "touch_as_mouse": "Касание перемещает указатель мыши",
         "upscaling": "Масштабировать низкие разрешения",
         "rcas_sharpening": "Повышение резкости RCAS",
         "rumble_force": "Сила вибрации",
