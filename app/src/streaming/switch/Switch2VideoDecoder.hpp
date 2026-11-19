@@ -50,6 +50,7 @@ class Switch2VideoDecoder : public IFFmpegVideoDecoder
     std::thread m_reader;
     std::mutex m_mutex;
     VideoDecodeStats m_progress { }, m_snapshot { };
-    std::deque<std::pair<int64_t, uint64_t>> m_pending_times;
+    std::deque<std::pair<int64_t, uint64_t>> m_pending_times; // Timestamp, submit time in us.
+    uint64_t m_last_output_us = 0;
 };
 #endif

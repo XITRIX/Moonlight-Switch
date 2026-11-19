@@ -99,6 +99,7 @@ void Switch2VideoDecoder::closeHardware()
     // The last frame/import releases the pool after GPU completion.
     m_pool.reset();
     m_pending_times.clear();
+    m_last_output_us = 0;
 }
 
 bool Switch2VideoDecoder::openHardware(const std::vector<uint8_t>& config)
@@ -158,7 +159,6 @@ bool Switch2VideoDecoder::drain(uint64_t timeout)
     // Limit each batch, allowing the submitter to acquire the mutex at 120 FPS.
     for (unsigned count = 0; count < VIDEO_DECODER_DEFAULT_IMAGES; ++count)
     {
-        const uint64_t before = LiGetMicroseconds();
         VideoFrame frame { };
         Result rc = videoDecoderGetFrame(&m_pool->decoder, &frame, count ? 0 : timeout);
         if (timedOut(rc))
@@ -168,6 +168,7 @@ bool Switch2VideoDecoder::drain(uint64_t timeout)
             fail("acquire", rc);
             return false;
         }
+        const uint64_t ready = LiGetMicroseconds();
         AVFrame* output = nullptr;
         bool copied     = false;
         if (frame.width > 0 && frame.height > 0 && !(frame.width & 1) && !(frame.height & 1)
@@ -208,19 +209,23 @@ bool Switch2VideoDecoder::drain(uint64_t timeout)
         const int visibleWidth = output->width, visibleHeight = output->height;
         AVFrameHolder::instance().pushTransferred(output);
         switch2WakeVideoFrame();
-        const uint64_t now      = LiGetMillis();
-        const uint64_t copyTime = LiGetMicroseconds() - before;
-        m_progress.current_decode_time += copyTime;
-        m_progress.total_decode_time += copyTime;
+        const uint64_t now = LiGetMicroseconds();
         auto timing = std::find_if(m_pending_times.begin(), m_pending_times.end(),
             [frameTimestamp](const auto& item) { return item.first == frameTimestamp; });
         if (timing != m_pending_times.end())
         {
-            const uint32_t delay = uint32_t(now - timing->second);
+            // The decoder works on one frame at a time: a frame starts when it is
+            // submitted or when the one ahead of it comes out, whichever is later.
+            // Time before that is queueing, which the decoder delay already shows.
+            const uint64_t decodeTime = ready - std::max(timing->second, m_last_output_us);
+            m_progress.current_decode_time += decodeTime;
+            m_progress.total_decode_time += decodeTime;
+            const auto delay = uint32_t((now - timing->second) / 1000);
             m_progress.current_decoder_delay_time += delay;
             m_progress.total_decoder_delay_time += delay;
             m_pending_times.erase(m_pending_times.begin(), std::next(timing));
         }
+        m_last_output_us = ready;
         m_progress.current_decoded_frames++;
         m_progress.total_decoded_frames++;
         if (!m_first_frame)
@@ -321,7 +326,7 @@ int Switch2VideoDecoder::submit_decode_unit(PDECODE_UNIT unit)
         fail("submit", rc);
         return DR_NEED_IDR;
     }
-    m_pending_times.emplace_back(stamp, now);
+    m_pending_times.emplace_back(stamp, LiGetMicroseconds());
     if (m_pending_times.size() > 64)
     {
         fail("output stalled", KERNELRESULT(TimedOut));
