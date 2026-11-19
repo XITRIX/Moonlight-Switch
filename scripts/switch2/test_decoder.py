@@ -346,7 +346,8 @@ int main() {
  {
   Switch2VideoDecoder d;assert(d.setup(VIDEO_FORMAT_AV1_MAIN8,16,16,120,nullptr,0)==0);
   auto u=unit();u.bufferList=&picture;u.fullLength=sizeof pic;
-  assert(d.submit_decode_unit(&u)==DR_OK && captured.codec==ViddecCodec_Av1 && capturedConfig.empty());
+  assert(d.submit_decode_unit(&u)==DR_OK && captured.codec==ViddecCodec_Av1);
+  assert(capturedConfig.size()==10 && std::memcmp(capturedConfig.data(),"video/av1",10)==0);
  }
  reset();
  {
