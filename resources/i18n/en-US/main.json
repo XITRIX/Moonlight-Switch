@@ -38,6 +38,7 @@
         "try_connect": "Trying to connect to the host"
     },
     "app_list": {
+        "other_app_running": " is still running on the PC.\n\nQuit it first: ",
         "reload_app_list": "Reload",
         "run_current": "Run current app",
         "running": "Running",

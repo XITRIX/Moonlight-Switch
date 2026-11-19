@@ -38,6 +38,7 @@
         "try_connect": "嘗試連接到目前主機"
     },
     "app_list": {
+        "other_app_running": " 仍在電腦上執行。\n\n請先結束它：",
         "reload_app_list": "重新載入",
         "run_current": "啟動目前應用程式",
         "running": "啟動中",

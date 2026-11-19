@@ -38,6 +38,7 @@
         "try_connect": "Connexion à l'hôte en cours..."
     },
     "app_list": {
+        "other_app_running": " est toujours en cours d'exécution sur le PC.\n\nQuittez-le d'abord : ",
         "reload_app_list": "Recharger",
         "run_current": "Exécuter l'application",
         "running": "En cours d'exécution",

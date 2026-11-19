@@ -38,6 +38,7 @@
         "try_connect": "尝试连接到当前主机"
     },
     "app_list": {
+        "other_app_running": " 仍在电脑上运行。\n\n请先结束它：",
         "reload_app_list": "重新载入",
         "run_current": "启动当前应用程序",
         "running": "启动中",
