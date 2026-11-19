@@ -535,14 +535,18 @@ void MoonlightInputManager::handleInput(bool ignoreTouch) {
                 .scroll_y = stickScrolling,
                 .l_pressed = (specialKey && controller.buttons[brls::BUTTON_RT]) || mouse.leftButton,
                 .m_pressed = mouse.middleButton,
-                .r_pressed = (specialKey && controller.buttons[brls::BUTTON_LT]) || mouse.rightButton
+                .r_pressed = (specialKey && controller.buttons[brls::BUTTON_LT]) || mouse.rightButton,
+                .x1_pressed = mouse.backButton,
+                .x2_pressed = mouse.forwardButton
         };
     } else {
         mouseState = {
                 .scroll_y = 0,
                 .l_pressed = mouse.leftButton,
                 .m_pressed = mouse.middleButton,
-                .r_pressed = mouse.rightButton
+                .r_pressed = mouse.rightButton,
+                .x1_pressed = mouse.backButton,
+                .x2_pressed = mouse.forwardButton
         };
     }
 
@@ -574,6 +578,20 @@ void MoonlightInputManager::handleInput(bool ignoreTouch) {
         LiSendMouseButtonEvent(mouseState.r_pressed ? BUTTON_ACTION_PRESS
                                                     : BUTTON_ACTION_RELEASE,
                                rb);
+    }
+
+    if (mouseState.x1_pressed != lastMouseState.x1_pressed) {
+        lastMouseState.x1_pressed = mouseState.x1_pressed;
+        LiSendMouseButtonEvent(mouseState.x1_pressed ? BUTTON_ACTION_PRESS
+                                                     : BUTTON_ACTION_RELEASE,
+                               BUTTON_X1);
+    }
+
+    if (mouseState.x2_pressed != lastMouseState.x2_pressed) {
+        lastMouseState.x2_pressed = mouseState.x2_pressed;
+        LiSendMouseButtonEvent(mouseState.x2_pressed ? BUTTON_ACTION_PRESS
+                                                     : BUTTON_ACTION_RELEASE,
+                               BUTTON_X2);
     }
 
     std::chrono::high_resolution_clock::time_point timeNow =

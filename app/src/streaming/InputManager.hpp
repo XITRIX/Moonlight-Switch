@@ -40,6 +40,8 @@ struct MouseStateS {
     bool l_pressed = 0;
     bool m_pressed = 0;
     bool r_pressed = 0;
+    bool x1_pressed = 0;
+    bool x2_pressed = 0;
 };
 
 struct RumbleValues {
