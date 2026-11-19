@@ -198,6 +198,7 @@
         "options": "選項",
         "show_logs": "顯示日誌",
         "terminate": "終止應用程式",
+        "touch_unsupported": "此電腦不支援觸控輸入，觸控將改為移動滑鼠",
         "volume": "音量"
     },
     "tabs": {

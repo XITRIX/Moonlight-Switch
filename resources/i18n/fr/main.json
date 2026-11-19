@@ -198,6 +198,7 @@
         "options": "Options",
         "show_logs": "Voir les logs",
         "terminate": "Fermer l'application",
+        "touch_unsupported": "Ce PC n'accepte pas le tactile, le toucher déplace donc la souris",
         "volume": "Volume"
     },
     "tabs": {
