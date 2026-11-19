@@ -68,6 +68,8 @@ private:
     bool arrivalClockStarted = false;
     bool startupBuffering = true;
     bool playoutResyncNeeded = true;
+    size_t catchUpBacklogDraws = 0;
+    size_t drawsSinceCatchUp = 0;
     mutable std::mutex m_mutex;
     size_t fakeFrameUsedStat = 0;
     size_t framesDroppedStat = 0;

@@ -17,6 +17,8 @@ constexpr auto kArrivalRateResetGap = std::chrono::milliseconds(500);
 constexpr double kArrivalRateSmoothing = 0.35;
 constexpr double kOccupancyCorrectionPerFrame = 0.01;
 constexpr double kMaximumOccupancyCorrection = 0.08;
+constexpr size_t kCatchUpBacklogDraws = 8;
+constexpr size_t kCatchUpSpacingDraws = 30;
 
 void freeFrameQueue(std::queue<AVFrame*>& frames) {
     for (; !frames.empty(); frames.pop()) {
@@ -165,6 +167,18 @@ AVFrame* AVFrameQueue::pop(bool* consumed) {
         // Native Vulkan/VRR presents on arrivals. A second local-clock gate
         // would delay an already-ready frame until another decoder wakeup.
         dueFrames = 1;
+        // At one arrival per draw a standing backlog never drains, so every
+        // frame stays late. When a finished frame has waited behind the shown
+        // one for several draws in a row, skip one; at most one skip per
+        // kCatchUpSpacingDraws, so working off the backlog doesn't stutter.
+        catchUpBacklogDraws = queue.size() > 1 ? catchUpBacklogDraws + 1 : 0;
+        drawsSinceCatchUp = std::min(drawsSinceCatchUp + 1, kCatchUpSpacingDraws);
+        if (catchUpBacklogDraws >= kCatchUpBacklogDraws &&
+            drawsSinceCatchUp >= kCatchUpSpacingDraws) {
+            dueFrames = 2;
+            catchUpBacklogDraws = 0;
+            drawsSinceCatchUp = 0;
+        }
     }
 #endif
     else if (arrivalRateSamples == 0 ||
@@ -277,6 +291,8 @@ void AVFrameQueue::configure(
     frameCredit = 0.0;
     startupBuffering = true;
     playoutResyncNeeded = true;
+    catchUpBacklogDraws = 0;
+    drawsSinceCatchUp = kCatchUpSpacingDraws;
 }
 
 size_t AVFrameQueue::size() const {
@@ -484,6 +500,8 @@ void AVFrameQueue::cleanup() {
     frameCredit = 0.0;
     startupBuffering = true;
     playoutResyncNeeded = true;
+    catchUpBacklogDraws = 0;
+    drawsSinceCatchUp = kCatchUpSpacingDraws;
 
     if (bufferFrame) {
         av_frame_free(&bufferFrame);

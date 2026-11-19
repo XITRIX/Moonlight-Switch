@@ -35,6 +35,7 @@ def main():
 #include <borealis/core/frame_presentation.hpp>
 #include "AVFrameHolder.hpp"
 #include <cassert>
+#include <vector>
 
 static int live = 0;
 extern "C" {
@@ -76,6 +77,31 @@ int main(){
         assert(queue.pop(&consumed)->pts==4 && consumed);
         for(int i=5;i<30;++i)push(i);
         assert(queue.size()<=queue.capacity());
+    }
+    {
+        AVFrameQueue queue;
+        queue.configure(3,60,true,4);
+        auto push=[&](int64_t pts){auto* f=queue.acquireWriteFrame();f->pts=pts;assert(queue.pushTransferred(f));};
+        int64_t next=1,shown=0;
+        push(next++);push(next++);push(next++);
+        std::vector<int> skips;
+        for(int draw=0;draw<120;++draw){
+            const int64_t pts=queue.pop()->pts;
+            if(pts>shown+1)skips.push_back(draw);
+            shown=pts;
+            push(next++);
+        }
+        // The startup reserve of two frames is worked off one skip at a time.
+        assert(skips.size()==2 && skips[1]-skips[0]>=30);
+        assert(queue.size()==1 && queue.getPacingSkipStat()==2);
+        for(int draw=0;draw<120;++draw){
+            // Jitter: two frames in one draw, none in the next. No lasting backlog.
+            if(draw%10==0)push(next++);
+            assert(queue.pop()->pts==shown+1);
+            shown++;
+            if(draw%10!=1)push(next++);
+        }
+        assert(queue.getPacingSkipStat()==2);
     }
     assert(live==0);
 }
