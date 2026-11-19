@@ -796,6 +796,15 @@ SettingsTab::SettingsTab() {
                        Settings::instance().set_write_log(value);
                        brls::Application::enableDebuggingView(value);
                    });
+
+    streamStats->init("settings/stream_stats"_i18n,
+                      {"hints/off"_i18n, "settings/stream_stats_compact"_i18n,
+                       "settings/stream_stats_detailed"_i18n},
+                      (int)Settings::instance().stream_stats_mode(),
+                      [](int selected) {
+                          Settings::instance().set_stream_stats_mode(
+                              (StreamStatsMode)selected);
+                      });
 }
 
 void SettingsTab::willAppear(bool resetState)

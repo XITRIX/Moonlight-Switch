@@ -383,7 +383,8 @@ void StreamingView::draw(NVGcontext* vg, float x, float y, float width,
 #endif
     }
 
-    if (draw_stats) {
+    const auto statsMode = Settings::instance().stream_stats_mode();
+    if (statsMode != StreamStatsMode::OFF) {
         // The stats only change a few times a second; formatting them and
         // laying the text out twice (blurred shadow + text) every frame cost
         // a noticeable part of the frame. Rebuild the text every 250 ms and
@@ -396,7 +397,9 @@ void StreamingView::draw(NVGcontext* vg, float x, float y, float width,
         const auto statsNow = std::chrono::steady_clock::now();
         if (statsText.empty() ||
             statsNow - statsTextTime >= std::chrono::milliseconds(250)) {
-            statsText = buildStatsText();
+            statsText = statsMode == StreamStatsMode::COMPACT
+                            ? buildCompactStatsText()
+                            : buildStatsText();
             statsTextTime = statsNow;
             nvgTextBoxBounds(vg, 20, 30, width, statsText.c_str(), nullptr,
                              statsBounds);
@@ -452,6 +455,46 @@ void StreamingView::updateBitrateAdapter() {
                                   : "streaming/bitrate_restored"_i18n);
     session->set_bitrate_scale(bitrateAdapter.scale());
     session->restart();
+}
+
+static std::string videoFormatName(int format) {
+    std::string name = "H.264";
+    if (format & VIDEO_FORMAT_MASK_AV1)
+        name = "AV1";
+    else if (format & VIDEO_FORMAT_MASK_H265)
+        name = "HEVC";
+    if (format & VIDEO_FORMAT_MASK_10BIT)
+        name += " 10-bit";
+    return name;
+}
+
+static int videoFormatMask(VideoCodec codec) {
+    switch (codec) {
+    case H265:
+        return VIDEO_FORMAT_MASK_H265;
+    case AV1:
+        return VIDEO_FORMAT_MASK_AV1;
+    default:
+        return VIDEO_FORMAT_MASK_H264;
+    }
+}
+
+std::string StreamingView::buildCompactStatsText() {
+    const auto& requested = session->requested_config();
+    const int requestedCodec = videoFormatMask(Settings::instance().video_codec());
+
+    auto text = fmt::format("{}p{} | {} | {:.1f} Mbps", session->stream_height(),
+                            session->stream_fps(),
+                            videoFormatName(session->stream_format()),
+                            requested.bitrate / 1000.0);
+
+    if (session->stream_height() != requested.height ||
+        session->stream_fps() != requested.fps ||
+        !(session->stream_format() & requestedCodec)) {
+        text += fmt::format(" (requested {}p{} {})", requested.height,
+                            requested.fps, videoFormatName(requestedCodec));
+    }
+    return text;
 }
 
 std::string StreamingView::buildStatsText() {
