@@ -21,7 +21,8 @@ public:
     AVFrame* pop(bool* consumed = nullptr);
     AVFrame* acquireWriteFrame();
     void recycleWriteFrame(AVFrame*& frame);
-    void configure(size_t queueLimit, int streamFps, bool transferOwnershipEnabled, size_t capacityLimit = 0);
+    void configure(size_t queueLimit, int streamFps, bool transferOwnershipEnabled, size_t capacityLimit = 0,
+                   bool latestOnlyEnabled = false);
     static size_t capacityFor(size_t configuredQueueSize);
 
     [[nodiscard]] size_t size() const;
@@ -53,6 +54,7 @@ private:
     std::queue<AVFrame*> freeQueue;
     AVFrame* bufferFrame = nullptr;
     bool transferOwnership = false;
+    bool latestOnly = false;
     size_t targetBufferedFrames = 0;
     int streamFps = 0;
     std::chrono::nanoseconds adaptiveFrameInterval{0};
@@ -110,7 +112,9 @@ class AVFrameHolder : public Singleton<AVFrameHolder> {
 
     void prepare(int streamFps, bool transferOwnership = false, size_t capacityLimit = 0)
     {
-        m_frame_queue.configure(Settings::instance().frames_queue_size(), streamFps, transferOwnership, capacityLimit);
+        const bool lowLatency = Settings::instance().low_latency_video();
+        const int queueSize = lowLatency ? 1 : Settings::instance().frames_queue_size();
+        m_frame_queue.configure(queueSize, streamFps, transferOwnership, capacityLimit, lowLatency);
     }
 
     void cleanup() {

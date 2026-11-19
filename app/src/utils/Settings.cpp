@@ -373,6 +373,10 @@ void Settings::load() {
                 }
             }
 
+            if (json_t* low_latency_video = json_object_get(settings, "low_latency_video")) {
+                m_low_latency_video = json_typeof(low_latency_video) == JSON_TRUE;
+            }
+
             if (json_t* hw_decoding = json_object_get(settings, "use_hw_decoding")) {
                 m_use_hw_decoding = json_typeof(hw_decoding) == JSON_TRUE;
             }
@@ -649,6 +653,7 @@ void Settings::save()
             json_object_set_new(settings, "bitrate", json_integer(m_bitrate));
             json_object_set_new(settings, "decoder_threads", json_integer(m_decoder_threads));
             json_object_set_new(settings, "frames_queue_size", json_integer(m_frames_queue_size));
+            json_object_set_new(settings, "low_latency_video", m_low_latency_video ? json_true() : json_false());
             json_object_set_new(settings, "enable_hdr", m_enable_hdr ? json_true() : json_false());
             json_object_set_new(settings, "enable_upscaling", upscaling() ? json_true() : json_false());
             json_object_set_new(settings, "upscaling_mode", json_integer(upscaling_mode()));
