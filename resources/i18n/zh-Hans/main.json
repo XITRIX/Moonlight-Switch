@@ -29,8 +29,11 @@
         "connect": "连接",
         "host_ip": "主机IP",
         "manual": "手动",
+        "pair_in_progress": "另一台设备正在与此主机配对",
         "pair_postfix": " 在计算机设备上输入",
         "pair_prefix": "配对\n\n在主机设备上输入 ",
+        "pair_timeout": "配对超时\n请在主机上输入 PIN 后重试",
+        "pair_wrong_pin": "PIN 不正确\n请重新配对",
         "paired_error": "已配对\n配置已经更新",
         "search": "搜索",
         "search_error": "不可使用搜索",
@@ -60,10 +63,24 @@
         "no_ip": "无法获取IP地址"
     },
     "error": {
+        "app_not_running": "该应用已不在电脑上运行",
         "applet_not_supported": "不支持在 Applet 下运行\n\n请按住  打开任意游戏启动",
+        "connection_lost": "与电脑的连接已断开",
         "dialog_header": "错误",
+        "early_termination": "电脑在串流刚开始时就结束了它\n请关闭电脑上的受保护内容或重启电脑，然后重试",
+        "frame_conversion": "电脑无法转换视频\n请尝试关闭 HDR 或更改电脑的分辨率",
         "host_not_found": "没有找到主机……",
+        "host_timeout": "电脑没有及时响应",
         "ip_not_obtained": "无法获取IP地址……",
+        "no_4k": "这台电脑无法以 4K 串流\n请选择较低的分辨率",
+        "no_video": "电脑没有发送视频\n请检查电脑的防火墙是否放行视频端口，然后重试",
+        "no_video_frame": "视频始终没有完整到达\n请检查连接或降低码率，然后重试",
+        "other_app_running": "电脑上现在运行的是另一个应用",
+        "protected_content": "电脑屏幕上有受保护的内容，因此停止了串流",
+        "stage_address": "无法解析电脑的地址",
+        "stage_control": "电脑的控制通道没有响应\n请检查电脑的防火墙是否放行串流端口",
+        "stage_media": "电脑没有打开视频、音频或输入流\n请检查电脑的防火墙是否放行串流端口",
+        "stage_rtsp": "电脑没有响应串流准备\n请检查电脑的防火墙是否放行串流端口",
         "stream_start": "开始串流失败……",
         "unknown_error": "发生了未知的错误……"
     },
@@ -115,6 +132,8 @@
     "settings": {
         "audio_backend": "音频驱动",
         "av1": "AV1 (实验性)",
+        "bitrate_adaptive": "连接不佳时降低",
+        "bitrate_auto": "自动",
         "buttons": {
             "chat": "聊天（C）",
             "home": "Home",
@@ -186,6 +205,8 @@
         "zero_threads": "0（不使用线程）"
     },
     "streaming": {
+        "bitrate_lowered": "连接不佳，正在降低码率",
+        "bitrate_restored": "连接已稳定，正在恢复码率",
         "connection": "连接选项",
         "debug_info": "调试信息",
         "disconnect": "断开连接",
@@ -196,6 +217,8 @@
         "mouse_input": "进入鼠标输入模式",
         "mouse_speed": "鼠标速度",
         "options": "选项",
+        "reconnected": "已重新连接到电脑",
+        "reconnecting": "与电脑的连接已断开，正在重新连接…",
         "show_logs": "显示日志",
         "terminate": "终止应用程序",
         "volume": "音量"

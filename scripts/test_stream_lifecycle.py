@@ -27,6 +27,7 @@ def method(source, signature):
 
 
 FIXTURE = r"""
+#include <algorithm>
 #include <atomic>
 #include <cassert>
 #include <cstdint>
@@ -50,6 +51,12 @@ void drain() {
     {std::lock_guard<std::mutex> lock(queueMutex);pending.swap(queue);}
     for(auto& fn:pending)fn();
 }
+void drainAll() {
+    for(;;){
+        {std::lock_guard<std::mutex> lock(queueMutex);if(queue.empty())return;}
+        drain();
+    }
+}
 }
 struct VideoDecodeStats {};
 struct VideoRenderStats {};
@@ -63,9 +70,17 @@ struct OPUS_MULTISTREAM_CONFIGURATION {};
 using POPUS_MULTISTREAM_CONFIGURATION=OPUS_MULTISTREAM_CONFIGURATION*;
 using PDECODE_UNIT=void*;
 template<class T> struct GSResult {
-    bool ok; static GSResult success(T){return {true};}
+    bool ok; std::string message; T data{};
+    static GSResult success(T v){return {true,"",v};}
+    static GSResult failure(std::string m){return {false,m,{}};}
     bool isSuccess()const{return ok;}
+    std::string error()const{return message;}
+    T value()const{return data;}
 };
+std::string operator""_i18n(const char* text,size_t){return text;}
+struct SERVER_DATA {int currentGame;};
+static int hostGame=1,serverinfos=0;
+static bool hostDown=false;
 template<class T> using ServerCallback=const std::function<void(GSResult<T>)>;
 struct IFFmpegVideoDecoder {
     virtual ~IFFmpegVideoDecoder()=default;
@@ -90,6 +105,13 @@ struct MoonlightSessionDecoderAndRenderProvider {
 struct GameStreamClient {
     static GameStreamClient& instance(){static GameStreamClient c;return c;}
     template<class F> void quit(const std::string&,F){}
+    template<class F> void connect(const std::string&,F cb){
+        ++serverinfos;
+        brls::sync([cb]{
+            cb(hostDown?GSResult<SERVER_DATA>::failure("down")
+                       :GSResult<SERVER_DATA>::success({hostGame}));
+        });
+    }
 };
 struct MoonlightInputManager {
     static MoonlightInputManager& instance(){static MoonlightInputManager i;return i;}
@@ -108,12 +130,20 @@ struct Switch2VulkanContext {
 void LiStopConnection(){
     assert(std::this_thread::get_id()==mainThread);events.push_back("stop");
 }
-uint64_t LiGetMillis(){return 1000;}
+static uint64_t nowMs=1000;
+uint64_t LiGetMillis(){return nowMs;}
+#define ML_ERROR_NO_VIDEO_TRAFFIC -100
+#define ML_ERROR_NO_VIDEO_FRAME -101
+#define ML_ERROR_UNEXPECTED_EARLY_TERMINATION -102
+#define ML_ERROR_PROTECTED_CONTENT -103
+#define ML_ERROR_FRAME_CONVERSION -104
+static bool startFails=false;
 """
 
 SCENARIOS = r"""
 void MoonlightSession::start(ServerCallback<bool> cb,bool sunshine) {
     ++starts;events.push_back("start");m_is_sunshine=sunshine;
+    if(startFails){cb(GSResult<bool>::failure("refused"));return;}
     connection_started();cb(GSResult<bool>::success(true));
 }
 int main() {
@@ -139,7 +169,10 @@ int main() {
     brls::drain();s->draw(nullptr,1280,720);
     assert(events.empty()&&draws==0); // no GPU or teardown while asleep
     s->set_suspended(false);s->draw(nullptr,1280,720);
+    assert(serverinfos==1); // asks the PC what it runs before resuming
+    brls::drain();
     assert((events==std::vector<std::string>{"invalidate","stop","start"}));
+    s->draw(nullptr,1280,720);
     assert(starts==2&&draws==1);
 
     events.clear();s->set_suspended(true);s->set_suspended(false);
@@ -158,6 +191,80 @@ int main() {
     MoonlightSession::requestRestart();delete old;
     s=new MoonlightSession("host",1);events.clear();brls::drain();
     assert(events.empty()); // stale decoder reconnect cannot reach a new session
+
+    MoonlightSession::connection_started();
+    std::thread([]{
+        MoonlightSession::connection_terminated(ML_ERROR_NO_VIDEO_TRAFFIC);
+    }).join();
+    brls::drain();
+    assert(events.empty()&&starts==2); // no video at all is reported, not retried
+    assert(s->is_terminated()&&s->termination_error()==ML_ERROR_NO_VIDEO_TRAFFIC);
+    delete s;
+
+    s=new MoonlightSession("host",1);
+    MoonlightSession::connection_started();
+    std::thread([]{
+        MoonlightSession::connection_terminated(ML_ERROR_PROTECTED_CONTENT);
+    }).join();
+    brls::drain();
+    assert(starts==2&&s->termination_error()==ML_ERROR_PROTECTED_CONTENT);
+    delete s;
+
+    s=new MoonlightSession("host",1);
+    MoonlightSession::connection_started();startFails=true;
+    std::thread([]{MoonlightSession::connection_terminated(-1);}).join();
+    brls::drainAll();
+    assert(starts==3&&!s->is_terminated()&&s->is_reconnecting());
+    s->draw(nullptr,1280,720);assert(starts==3); // waits before the next try
+    nowMs+=1000;s->draw(nullptr,1280,720);brls::drainAll();assert(starts==4);
+    nowMs+=1999;s->draw(nullptr,1280,720);assert(starts==4); // backs off
+    nowMs+=1;s->draw(nullptr,1280,720);brls::drainAll();assert(starts==5);
+    while(!s->is_terminated()){nowMs+=15000;s->draw(nullptr,1280,720);brls::drainAll();}
+    assert(nowMs-1000>=180000&&nowMs-1000<200000); // gives up after the limit
+    assert(s->m_reconnect_failed&&s->m_reconnect_error=="refused");
+    assert(!s->is_reconnecting());
+    startFails=false;
+    delete s;
+
+    s=new MoonlightSession("host",1);
+    for(int cut=0;cut<3;++cut){
+        MoonlightSession::connection_started();
+        std::thread([]{MoonlightSession::connection_terminated(-1);}).join();
+        brls::drainAll();
+        assert(!s->is_terminated()&&!s->is_reconnecting()); // reconnected
+        nowMs+=5000;
+    }
+    MoonlightSession::connection_started();
+    std::thread([]{MoonlightSession::connection_terminated(-1);}).join();
+    brls::drain();
+    assert(s->is_terminated()&&s->m_reconnect_failed); // a fourth cut in a minute
+    delete s;
+
+    s=new MoonlightSession("host",1);hostGame=0;
+    MoonlightSession::connection_started();
+    std::thread([]{MoonlightSession::connection_terminated(-1);}).join();
+    brls::drainAll();
+    assert(s->is_terminated()&&s->m_reconnect_error=="error/app_not_running");
+    delete s;
+
+    s=new MoonlightSession("host",1);hostGame=1;hostDown=true;
+    int before=starts;
+    MoonlightSession::connection_started();
+    std::thread([]{MoonlightSession::connection_terminated(-1);}).join();
+    brls::drainAll();
+    assert(starts==before&&s->is_reconnecting()&&!s->is_terminated());
+    hostDown=false;nowMs+=1000;s->draw(nullptr,1280,720);brls::drainAll();
+    assert(starts==before+1&&!s->is_reconnecting()); // back once the PC answers
+    delete s;
+
+    s=new MoonlightSession("host",1);
+    for(int cut=0;cut<5;++cut){
+        MoonlightSession::connection_started();
+        std::thread([]{MoonlightSession::connection_terminated(-1);}).join();
+        brls::drainAll();
+        nowMs+=60000;
+    }
+    assert(!s->is_terminated()); // a stream that runs a minute between cuts
     delete s;
 }
 """
@@ -337,6 +444,10 @@ def main():
         "void MoonlightSession::handle_connection_terminated(",
         "void MoonlightSession::stop(",
         "void MoonlightSession::restart()",
+        "void MoonlightSession::retry_later(",
+        "void MoonlightSession::resume_if_running(",
+        "void MoonlightSession::reconnect()",
+        "void MoonlightSession::give_up(",
         "void MoonlightSession::set_suspended(",
         "void MoonlightSession::draw(",
     )

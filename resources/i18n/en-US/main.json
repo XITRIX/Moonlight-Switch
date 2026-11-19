@@ -29,8 +29,11 @@
         "connect": "Connect",
         "host_ip": "Host IP",
         "manual": "Manual",
+        "pair_in_progress": "Another device is already pairing with this host",
         "pair_postfix": " on your host device",
         "pair_prefix": "Pair up\n\nEnter ",
+        "pair_timeout": "Pairing timed out\nEnter the PIN on your host and try again",
+        "pair_wrong_pin": "Incorrect PIN\nTry pairing again",
         "paired_error": "Already paired\nConfiguration has been updated",
         "search": "Search",
         "search_error": "Search is unavailable",
@@ -60,10 +63,24 @@
         "no_ip": "Can't obtain IP address"
     },
     "error": {
+        "app_not_running": "The app is no longer running on the PC",
         "applet_not_supported": "Applet Mode is unsupported\n\nPlease, launch this app using Title Redirection (By default it's hold  and start any game)",
+        "connection_lost": "The connection to the PC was lost",
         "dialog_header": "Error",
+        "early_termination": "The PC ended the stream as soon as it started\nClose any protected content on the PC or restart it, then try again",
+        "frame_conversion": "The PC could not convert its video\nTry turning HDR off or changing the PC's resolution",
         "host_not_found": "Host PC not found...",
+        "host_timeout": "The PC did not answer in time",
         "ip_not_obtained": "Can't obtain IP address...",
+        "no_4k": "This PC can't stream in 4K\nPick a lower resolution",
+        "no_video": "The PC sent no video\nCheck that its firewall lets the video port through, then try again",
+        "no_video_frame": "The video never came through in full\nCheck the connection or lower the bitrate, then try again",
+        "other_app_running": "Another app is now running on the PC",
+        "protected_content": "The PC stopped the stream because protected content is on its screen",
+        "stage_address": "The PC's address could not be resolved",
+        "stage_control": "The PC's control channel did not answer\nCheck that its firewall lets the stream ports through",
+        "stage_media": "The PC did not open the video, audio or input stream\nCheck that its firewall lets the stream ports through",
+        "stage_rtsp": "The PC did not answer the stream setup\nCheck that its firewall lets the stream ports through",
         "stream_start": "Failed to start stream...",
         "unknown_error": "Unknown problem has been occured..."
     },
@@ -115,6 +132,8 @@
     "settings": {
         "audio_backend": "Audio driver",
         "av1": "AV1 (Experimental)",
+        "bitrate_adaptive": "Lower on poor connection",
+        "bitrate_auto": "Automatic",
         "buttons": {
             "chat": "Chat (C)",
             "home": "Home",
@@ -186,6 +205,8 @@
         "zero_threads": "0 (No use threads)"
     },
     "streaming": {
+        "bitrate_lowered": "Poor connection, lowering the bitrate",
+        "bitrate_restored": "Connection is stable, restoring the bitrate",
         "connection": "Connection",
         "debug_info": "Debug info",
         "disconnect": "Disconnect",
@@ -196,6 +217,8 @@
         "mouse_input": "Enter mouse input mode",
         "mouse_speed": "Mouse acceleration",
         "options": "Options",
+        "reconnected": "Reconnected to the PC",
+        "reconnecting": "The connection to the PC was lost. Reconnecting…",
         "show_logs": "Show logs",
         "terminate": "Terminate app",
         "volume": "Volume"

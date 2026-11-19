@@ -21,11 +21,17 @@ class MoonlightSession {
     static MoonlightSession* activeSession();
     static void requestRestart();
 
+    // The stream size the current settings ask for, with Native resolved.
+    static void stream_resolution(int* width, int* height);
+
     void start(ServerCallback<bool> callback, bool is_sunshine);
     void stop(int terminate_app);
     void set_address(const std::string& address) { m_address = address; }
 
     void restart();
+
+    // Applies to the Automatic bitrate from the next connection on.
+    void set_bitrate_scale(float scale) { m_bitrate_scale = scale; }
 
     void draw(NVGcontext* vg, int width, int height);
 
@@ -36,6 +42,11 @@ class MoonlightSession {
 
     bool is_active() const { return m_is_active; }
     bool is_terminated() const { return m_is_terminated; }
+    // The connection was cut and is being brought back.
+    bool is_reconnecting() const { return m_outage_since_ms != 0; }
+    int termination_error() const { return m_termination_error; }
+    // Why the stream ended, or empty when the host or the user ended it.
+    std::string termination_message() const;
 
     bool connection_status_is_poor() const {
         return m_connection_status_is_poor;
@@ -56,6 +67,11 @@ class MoonlightSession {
     static void connection_started();
     static void connection_terminated(int);
     void handle_connection_terminated(int error_code);
+    void retry_later(const std::string& error);
+    void resume_if_running(const GSResult<SERVER_DATA>& result);
+    void reconnect();
+    void give_up(const std::string& error);
+    void follow_display_size();
     static void connection_log_message(const char* format, ...);
     static void connection_rumble(unsigned short, unsigned short,
                                   unsigned short);
@@ -93,7 +109,17 @@ class MoonlightSession {
     std::atomic<bool> m_is_terminated{false};
     std::atomic<bool> m_stop_requested{false};
     uint64_t m_generation = 0;
+    int m_termination_error = 0;
+    std::atomic<int> m_failed_stage{0};
+    bool m_reconnect_failed = false;
+    std::string m_reconnect_error;
+    uint64_t m_outage_since_ms = 0;
+    uint64_t m_retry_at_ms = 0;
+    size_t m_reconnect_attempt = 0;
+    uint64_t m_last_cut_ms = 0;
+    int m_cuts = 0;
     bool m_connection_status_is_poor = false;
+    float m_bitrate_scale = 1.0f;
     bool m_suspended = false;
     bool m_invalidate_renderer_pending = false;
     bool m_restart_pending = false;
@@ -101,4 +127,5 @@ class MoonlightSession {
 
     SessionStats m_session_stats = {};
     uint64_t m_last_stats_update_ms = 0;
+    uint64_t m_display_size_changed_ms = 0;
 };
