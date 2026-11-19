@@ -22,6 +22,7 @@
 #include "Data.hpp"
 #include "xml.h"
 #include <Limelight.h>
+#include <atomic>
 #include <stdbool.h>
 
 #define MIN_SUPPORTED_GFE_VERSION 3
@@ -53,5 +54,5 @@ int gs_app_boxart(PSERVER_DATA server, int app_id, Data* out);
 int gs_start_app(PSERVER_DATA server, PSTREAM_CONFIGURATION config, int appId, bool sops, bool localaudio, int gamepad_mask);
 int gs_applist(PSERVER_DATA server, PAPP_LIST* app_list);
 int gs_unpair(PSERVER_DATA server);
-int gs_pair(PSERVER_DATA server, char* pin);
+int gs_pair(PSERVER_DATA server, char* pin, const std::atomic_bool* cancelled = nullptr);
 int gs_quit_app(PSERVER_DATA server);

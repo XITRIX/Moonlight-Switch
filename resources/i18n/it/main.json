@@ -29,8 +29,11 @@
         "connect": "Connetti",
         "host_ip": "IP Host",
         "manual": "Manuale",
+        "pair_in_progress": "Un altro dispositivo si sta già accoppiando con questo host",
         "pair_postfix": " nel tuo dispositivo host",
         "pair_prefix": "Accoppia\n\nInserisci ",
+        "pair_timeout": "Tempo di accoppiamento scaduto\nInserisci il PIN nel tuo dispositivo host e riprova",
+        "pair_wrong_pin": "PIN errato\nRiprova ad accoppiare",
         "paired_error": "Già accoppiato\nLa configurazione è stata aggiornata",
         "search": "Cerca",
         "search_error": "Ricerca non disponibile",
@@ -61,9 +64,21 @@
     },
     "error": {
         "applet_not_supported": "Applet Mode is unsupported\n\nPlease, launch this app using Title Redirection (By default it's hold  and start any game)",
+        "connection_lost": "La connessione al PC si è interrotta",
         "dialog_header": "Errore",
+        "early_termination": "Il PC ha chiuso lo stream appena avviato\nChiudi eventuali contenuti protetti sul PC o riavvialo, poi riprova",
+        "frame_conversion": "Il PC non è riuscito a convertire il video\nProva a disattivare l'HDR o a cambiare la risoluzione del PC",
         "host_not_found": "PC Host non trovato...",
+        "host_timeout": "Il PC non ha risposto in tempo",
         "ip_not_obtained": "Impossibile ottenere l'indirizzo IP...",
+        "no_4k": "Questo PC non può trasmettere in 4K\nScegli una risoluzione più bassa",
+        "no_video": "Il PC non ha inviato video\nVerifica che il suo firewall lasci passare la porta video, poi riprova",
+        "no_video_frame": "Il video non è mai arrivato completo\nControlla la connessione o abbassa il bitrate, poi riprova",
+        "protected_content": "Il PC ha interrotto lo stream perché sullo schermo ci sono contenuti protetti",
+        "stage_address": "Impossibile risolvere l'indirizzo del PC",
+        "stage_control": "Il canale di controllo del PC non ha risposto\nVerifica che il suo firewall lasci passare le porte dello stream",
+        "stage_media": "Il PC non ha aperto lo stream video, audio o di input\nVerifica che il suo firewall lasci passare le porte dello stream",
+        "stage_rtsp": "Il PC non ha risposto alla preparazione dello stream\nVerifica che il suo firewall lasci passare le porte dello stream",
         "stream_start": "Errore nell'avvio dello stream...",
         "unknown_error": "Si è verificato un problema sconosciuto..."
     },
@@ -115,6 +130,8 @@
     "settings": {
         "audio_backend": "Audio driver",
         "av1": "AV1 (Experimental)",
+        "bitrate_adaptive": "Riduci con connessione scarsa",
+        "bitrate_auto": "Automatico",
         "buttons": {
             "chat": "Chat (C)",
             "home": "Home",
@@ -186,6 +203,8 @@
         "zero_threads": "0 (Non usare threads)"
     },
     "streaming": {
+        "bitrate_lowered": "Connessione scarsa, riduzione del bitrate",
+        "bitrate_restored": "Connessione stabile, ripristino del bitrate",
         "connection": "Connessione",
         "debug_info": "Info di Debug",
         "disconnect": "Disconnetti",
@@ -196,6 +215,8 @@
         "mouse_input": "Entra in modalità input del mouse",
         "mouse_speed": "Accelerazione Mouse",
         "options": "Opzioni",
+        "reconnected": "Riconnesso al PC",
+        "reconnecting": "La connessione al PC si è interrotta. Riconnessione…",
         "show_logs": "Mostra log",
         "terminate": "Termina app",
         "volume": "Volume"

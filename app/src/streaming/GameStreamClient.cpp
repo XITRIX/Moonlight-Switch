@@ -636,19 +636,47 @@ void GameStreamClient::connect(const Host& host,
     connect_to_addresses(host.connection_addresses(), host_key(host), callback);
 }
 
+static std::string pair_error(int status) {
+    switch (status) {
+    case GS_PAIR_WRONG_PIN:
+        return "add_host/pair_wrong_pin"_i18n;
+    case GS_PAIR_IN_PROGRESS:
+        return "add_host/pair_in_progress"_i18n;
+    case GS_TIMEOUT:
+        return "add_host/pair_timeout"_i18n;
+    default:
+        return gs_error();
+    }
+}
+
+static std::string start_error(int status) {
+    switch (status) {
+    case GS_TIMEOUT:
+        return "error/host_timeout"_i18n;
+    case GS_NOT_SUPPORTED_4K:
+        return "error/no_4k"_i18n;
+    default:
+        return gs_error();
+    }
+}
+
 void GameStreamClient::pair(const std::string& address, const std::string& pin,
                             ServerCallback<bool>& callback) {
+    auto cancelled = std::make_shared<std::atomic_bool>(false);
+    m_pair_cancelled = cancelled;
+
     with_cached_server_data<bool>(
         address, "Firstly call connect()...", callback,
-        [this, pin](const std::string& cachedAddress,
-                    ServerCallback<bool>& callback) {
-            int status = gs_pair(&m_server_data[cachedAddress], (char*)pin.c_str());
+        [this, pin, cancelled](const std::string& cachedAddress,
+                               ServerCallback<bool>& callback) {
+            int status = gs_pair(&m_server_data[cachedAddress],
+                                 (char*)pin.c_str(), cancelled.get());
 
             brls::sync([callback, status] {
                 if (status == GS_OK) {
                     callback(GSResult<bool>::success(true));
                 } else {
-                    callback(GSResult<bool>::failure(gs_error()));
+                    callback(GSResult<bool>::failure(pair_error(status)));
                 }
             });
         });
@@ -657,6 +685,12 @@ void GameStreamClient::pair(const std::string& address, const std::string& pin,
 void GameStreamClient::pair(const Host& host, const std::string& pin,
                             ServerCallback<bool>& callback) {
     pair(active_address(host), pin, callback);
+}
+
+void GameStreamClient::cancel_pair() {
+    if (m_pair_cancelled) {
+        m_pair_cancelled->store(true);
+    }
 }
 
 void GameStreamClient::applist(const std::string& address,
@@ -749,7 +783,8 @@ void GameStreamClient::start(const std::string& address,
                 if (status == GS_OK) {
                     callback(GSResult<STREAM_CONFIGURATION>::success(m_config));
                 } else {
-                    callback(GSResult<STREAM_CONFIGURATION>::failure(gs_error()));
+                    callback(GSResult<STREAM_CONFIGURATION>::failure(
+                        start_error(status)));
                 }
             });
         });

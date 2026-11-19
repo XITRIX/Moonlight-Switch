@@ -1,9 +1,11 @@
 #include "MoonlightSession.hpp"
 #include "AVFrameHolder.hpp"
+#include "BitrateAdapter.hpp"
 #include "GameStreamClient.hpp"
 #include "InputManager.hpp"
 #include "Settings.hpp"
 #include "borealis.hpp"
+#include <algorithm>
 #include <atomic>
 #include <string.h>
 #ifdef __SWITCH2__
@@ -21,6 +23,15 @@ int m_video_format;
 static MoonlightSession* m_active_session = nullptr;
 static std::atomic<uint64_t> m_session_generation{0};
 static MoonlightSessionDecoderAndRenderProvider* m_provider = nullptr;
+
+// A cut stream is reconnected at once, then after these pauses (the last one
+// repeats) until the outage has lasted RECONNECT_LIMIT_MS.
+static const uint64_t RECONNECT_DELAYS_MS[] = {1000, 2000, 4000, 8000, 15000};
+static const uint64_t RECONNECT_LIMIT_MS = 180000;
+// A stream that keeps being cut gets this many reconnects in a row, and
+// gets them back once it has run for RECONNECT_STABLE_MS.
+static const int RECONNECT_CUTS = 3;
+static const uint64_t RECONNECT_STABLE_MS = 60000;
 
 
 MoonlightSession* MoonlightSession::activeSession() {
@@ -71,29 +82,64 @@ MoonlightSession::~MoonlightSession() {
 
 // MARK: Connection callbacks
 
-static const char* stages[] = {"STAGE_NONE",
-                               "STAGE_PLATFORM_INIT",
-                               "STAGE_NAME_RESOLUTION",
-                               "STAGE_RTSP_HANDSHAKE",
-                               "STAGE_CONTROL_STREAM_INIT",
-                               "STAGE_VIDEO_STREAM_INIT",
-                               "STAGE_AUDIO_STREAM_INIT",
-                               "STAGE_INPUT_STREAM_INIT",
-                               "STAGE_CONTROL_STREAM_START",
-                               "STAGE_VIDEO_STREAM_START",
-                               "STAGE_AUDIO_STREAM_START",
-                               "STAGE_INPUT_STREAM_START"};
-
 void MoonlightSession::connection_stage_starting(int stage) {
-    brls::Logger::info("MoonlightSession: Starting: {}", stages[stage]);
+    brls::Logger::info("MoonlightSession: Starting: {}", LiGetStageName(stage));
 }
 
 void MoonlightSession::connection_stage_complete(int stage) {
-    brls::Logger::info("MoonlightSession: Complete: {}", stages[stage]);
+    brls::Logger::info("MoonlightSession: Complete: {}", LiGetStageName(stage));
 }
 
 void MoonlightSession::connection_stage_failed(int stage, int error_code) {
-    brls::Logger::error("MoonlightSession: Failed: {} with error code: {}", stages[stage], error_code);
+    brls::Logger::error("MoonlightSession: Failed: {} with error code: {}",
+                        LiGetStageName(stage), error_code);
+    if (m_active_session)
+        m_active_session->m_failed_stage = stage;
+}
+
+static std::string stage_error(int stage) {
+    switch (stage) {
+    case STAGE_NAME_RESOLUTION:
+        return "error/stage_address"_i18n;
+    case STAGE_RTSP_HANDSHAKE:
+        return "error/stage_rtsp"_i18n;
+    case STAGE_CONTROL_STREAM_INIT:
+    case STAGE_CONTROL_STREAM_START:
+        return "error/stage_control"_i18n;
+    case STAGE_VIDEO_STREAM_INIT:
+    case STAGE_VIDEO_STREAM_START:
+    case STAGE_AUDIO_STREAM_INIT:
+    case STAGE_AUDIO_STREAM_START:
+    case STAGE_INPUT_STREAM_INIT:
+    case STAGE_INPUT_STREAM_START:
+        return "error/stage_media"_i18n;
+    default:
+        return "error/stream_start"_i18n;
+    }
+}
+
+std::string MoonlightSession::termination_message() const {
+    if (m_reconnect_failed) {
+        std::string message = "error/connection_lost"_i18n;
+        if (!m_reconnect_error.empty())
+            message += "\n\n" + m_reconnect_error;
+        return message;
+    }
+
+    switch (m_termination_error) {
+    case ML_ERROR_NO_VIDEO_TRAFFIC:
+        return "error/no_video"_i18n;
+    case ML_ERROR_NO_VIDEO_FRAME:
+        return "error/no_video_frame"_i18n;
+    case ML_ERROR_UNEXPECTED_EARLY_TERMINATION:
+        return "error/early_termination"_i18n;
+    case ML_ERROR_PROTECTED_CONTENT:
+        return "error/protected_content"_i18n;
+    case ML_ERROR_FRAME_CONVERSION:
+        return "error/frame_conversion"_i18n;
+    default:
+        return "";
+    }
 }
 
 void MoonlightSession::connection_started() {
@@ -128,8 +174,37 @@ void MoonlightSession::handle_connection_terminated(int error_code) {
         return;
     }
 
+    // These come from the start of a stream or from the host itself, so a
+    // reconnect would fail the same way. Report them instead.
+    switch (error_code) {
+    case ML_ERROR_NO_VIDEO_TRAFFIC:
+    case ML_ERROR_NO_VIDEO_FRAME:
+    case ML_ERROR_UNEXPECTED_EARLY_TERMINATION:
+    case ML_ERROR_PROTECTED_CONTENT:
+    case ML_ERROR_FRAME_CONVERSION:
+        brls::Logger::info("MoonlightSession: Ended by error {}", error_code);
+        m_termination_error = error_code;
+        m_is_active = false;
+        m_is_terminated = true;
+        return;
+    default:
+        break;
+    }
+
     if (error_code != 0) {
+        const uint64_t now = LiGetMillis();
+        if (now - m_last_cut_ms >= RECONNECT_STABLE_MS)
+            m_cuts = 0;
+        m_last_cut_ms = now;
+        if (++m_cuts > RECONNECT_CUTS) {
+            brls::Logger::info("MoonlightSession: Connection keeps dropping, giving up");
+            give_up("");
+            return;
+        }
+
         brls::Logger::info("MoonlightSession: Reconnection attempt");
+        if (m_outage_since_ms == 0)
+            m_outage_since_ms = now;
         restart();
         return;
     }
@@ -266,13 +341,7 @@ void MoonlightSession::audio_renderer_decode_and_play_sample(
 
 // MARK: MoonlightSession
 
-void MoonlightSession::start(ServerCallback<bool> callback, bool is_sunshine) {
-    m_is_sunshine = is_sunshine;
-    m_stop_requested = false;
-    m_is_terminated = false;
-
-    LiInitializeStreamConfiguration(&m_config);
-
+void MoonlightSession::stream_resolution(int* width, int* height) {
     int resolution = Settings::instance().resolution();
     int h = resolution;
     int w = h * 16 / 9;
@@ -305,8 +374,22 @@ void MoonlightSession::start(ServerCallback<bool> callback, bool is_sunshine) {
         w += 1;
     }
 
-    m_config.width = w;
-    m_config.height = h;
+    *width = w;
+    *height = h;
+}
+
+void MoonlightSession::start(ServerCallback<bool> callback, bool is_sunshine) {
+    m_is_sunshine = is_sunshine;
+    m_stop_requested = false;
+    m_is_terminated = false;
+    m_termination_error = 0;
+    m_failed_stage = STAGE_NONE;
+    m_display_size_changed_ms = 0;
+    m_connection_status_is_poor = false;
+
+    LiInitializeStreamConfiguration(&m_config);
+
+    stream_resolution(&m_config.width, &m_config.height);
     m_config.fps = Settings::instance().fps();
 #ifdef __SWITCH2__
     m_config.colorSpace = COLORSPACE_REC_709;
@@ -315,7 +398,11 @@ void MoonlightSession::start(ServerCallback<bool> callback, bool is_sunshine) {
     m_config.audioConfiguration = AUDIO_CONFIGURATION_STEREO;
     m_config.packetSize = 1392;
     m_config.streamingRemotely = STREAM_CFG_AUTO;
-    m_config.bitrate = Settings::instance().bitrate();
+    m_config.bitrate = Settings::instance().bitrate_auto()
+        ? BitrateAdapter::scaled_bitrate(
+              Settings::default_bitrate(m_config.width, m_config.height, m_config.fps),
+              m_bitrate_scale)
+        : Settings::instance().bitrate();
     m_config.encryptionFlags = m_is_sunshine ? ENCFLG_ALL : ENCFLG_VIDEO;
 
     switch (Settings::instance().video_codec()) {
@@ -385,8 +472,8 @@ void MoonlightSession::start(ServerCallback<bool> callback, bool is_sunshine) {
 
                     if (result != 0) {
                         LiStopConnection();
-                        callback(
-                            GSResult<bool>::failure("error/stream_start"_i18n));
+                        callback(GSResult<bool>::failure(
+                            stage_error(m_failed_stage)));
                     } else {
                         callback(GSResult<bool>::success(true));
                     }
@@ -442,13 +529,66 @@ void MoonlightSession::restart() {
                 return;
             if (result.isSuccess()) {
                 brls::Logger::info("MoonlightSession: Reconnected");
+                m_active_session->m_outage_since_ms = 0;
+                m_active_session->m_reconnect_attempt = 0;
             } else {
                 brls::Logger::info("MoonlightSession: Reconnection failed");
-                m_active_session->m_is_active = false;
-                m_active_session->m_is_terminated = true;
+                m_active_session->retry_later(result.error());
             }
         });
     }, m_is_sunshine);
+}
+
+void MoonlightSession::retry_later(const std::string& error) {
+    if (m_stop_requested)
+        return;
+
+    const uint64_t now = LiGetMillis();
+    if (m_outage_since_ms == 0)
+        m_outage_since_ms = now;
+    if (now - m_outage_since_ms >= RECONNECT_LIMIT_MS) {
+        give_up(error);
+        return;
+    }
+
+    const size_t last = sizeof(RECONNECT_DELAYS_MS) / sizeof(*RECONNECT_DELAYS_MS) - 1;
+    const uint64_t delay = RECONNECT_DELAYS_MS[std::min(m_reconnect_attempt, last)];
+    ++m_reconnect_attempt;
+    m_retry_at_ms = now + delay;
+    brls::Logger::info("MoonlightSession: Next reconnection in {} ms", delay);
+}
+
+void MoonlightSession::give_up(const std::string& error) {
+    m_reconnect_failed = true;
+    m_reconnect_error = error;
+    m_outage_since_ms = 0;
+    m_retry_at_ms = 0;
+    m_is_active = false;
+    m_is_terminated = true;
+}
+
+void MoonlightSession::follow_display_size() {
+    // With the Native resolution the stream follows the display, so docking
+    // or undocking reconnects at the new size once it has settled.
+    if (Settings::instance().resolution() != -1)
+        return;
+
+    int width, height;
+    stream_resolution(&width, &height);
+    if (width == m_config.width && height == m_config.height) {
+        m_display_size_changed_ms = 0;
+        return;
+    }
+
+    const uint64_t now = LiGetMillis();
+    if (m_display_size_changed_ms == 0)
+        m_display_size_changed_ms = now;
+    if (now - m_display_size_changed_ms < 1000)
+        return;
+
+    brls::Logger::info("MoonlightSession: display changed from {}x{} to {}x{}, reconnecting",
+                       m_config.width, m_config.height, width, height);
+    restart();
 }
 
 void MoonlightSession::set_suspended(bool suspended) {
@@ -474,8 +614,17 @@ void MoonlightSession::draw(NVGcontext* vg, int width, int height) {
     if (m_restart_pending)
         restart();
 
+    if (m_retry_at_ms != 0 && LiGetMillis() >= m_retry_at_ms) {
+        m_retry_at_ms = 0;
+        restart();
+    }
+
     if (!m_is_active)
         return;
+
+#ifdef PLATFORM_SWITCH
+    follow_display_size();
+#endif
 
     if (m_video_decoder && m_video_renderer) {
         if (m_invalidate_renderer_pending) {

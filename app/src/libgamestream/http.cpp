@@ -53,6 +53,12 @@ static size_t _write_curl(void* contents, size_t size, size_t nmemb,
     return realsize;
 }
 
+static int _cancel_curl(void* clientp, curl_off_t, curl_off_t, curl_off_t,
+                        curl_off_t) {
+    auto* cancelled = (const std::atomic_bool*)clientp;
+    return cancelled->load() ? 1 : 0;
+}
+
 int http_init(const std::string& key_directory) {
     if (!curlGlobalInit) {
 #if LIBCURL_VERSION_NUM >= 0x075600
@@ -101,7 +107,7 @@ void freeCurl(CURL* curl) {
 }
 
 int http_request(const std::string& url, Data* data,
-                 HTTPRequestTimeout timeout) {
+                 HTTPRequestTimeout timeout, const std::atomic_bool* cancelled) {
     brls::Logger::info("Curl: Request:\n{}", url.c_str());
 
     auto* http_data = (HTTP_DATA*)malloc(sizeof(HTTP_DATA));
@@ -115,6 +121,12 @@ int http_request(const std::string& url, Data* data,
     curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
     curl_easy_setopt(curl, CURLOPT_TIMEOUT, timeout);
 
+    if (cancelled) {
+        curl_easy_setopt(curl, CURLOPT_XFERINFOFUNCTION, _cancel_curl);
+        curl_easy_setopt(curl, CURLOPT_XFERINFODATA, (void*)cancelled);
+        curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0L);
+    }
+
     CURLcode res = curl_easy_perform(curl);
 
     if (res != CURLE_OK) {
@@ -122,6 +134,11 @@ int http_request(const std::string& url, Data* data,
         brls::Logger::error("Curl: error: {}", gs_error().c_str());
         free(http_data->memory);
         free(http_data);
+        freeCurl(curl);
+        if (res == CURLE_OPERATION_TIMEDOUT)
+            return GS_TIMEOUT;
+        if (res == CURLE_ABORTED_BY_CALLBACK)
+            return GS_CANCELLED;
         return GS_FAILED;
     } else if (http_data->memory == nullptr) {
         brls::Logger::error("Curl: memory = NULL");

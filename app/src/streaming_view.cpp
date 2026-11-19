@@ -348,7 +348,7 @@ void StreamingView::draw(NVGcontext* vg, float x, float y, float width,
         return;
 
     if (session->is_terminated()) {
-        terminate(false);
+        reportTermination();
         return;
     }
 
@@ -356,6 +356,7 @@ void StreamingView::draw(NVGcontext* vg, float x, float y, float width,
 
     if (!tempInputLock && session->is_active())
         handleInput();
+    updateBitrateAdapter();
     handleOverlayCombo();
     handleMouseInputCombo();
 
@@ -373,6 +374,8 @@ void StreamingView::draw(NVGcontext* vg, float x, float y, float width,
         nvgFontFaceId(vg, Application::getFont(FONT_REGULAR));
         nvgText(vg, 50, height - 28, "\uE140 Bad connection...", nullptr);
     }
+
+    updateReconnectNotice(vg, height);
 
     if (session->use_hdr() != m_use_hdr) {
         m_use_hdr = session->use_hdr();
@@ -413,6 +416,56 @@ void StreamingView::draw(NVGcontext* vg, float x, float y, float width,
     }
 
     Box::draw(vg, x, y, width, height, style, ctx);
+}
+
+void StreamingView::updateReconnectNotice(NVGcontext* vg, float height) {
+    if (wasReconnecting && !session->is_reconnecting() && session->is_active())
+        brls::Application::notify("streaming/reconnected"_i18n);
+    wasReconnecting = session->is_reconnecting();
+    if (!wasReconnecting)
+        return;
+
+    const std::string notice = "streaming/reconnecting"_i18n;
+    nvgFontSize(vg, 20);
+    nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+    nvgFontFaceId(vg, Application::getFont(FONT_REGULAR));
+
+    nvgFontBlur(vg, 3);
+    nvgFillColor(vg, nvgRGBA(0, 0, 0, 255));
+    nvgText(vg, 50, height - 56, notice.c_str(), nullptr);
+
+    nvgFontBlur(vg, 0);
+    nvgFillColor(vg, nvgRGBA(255, 255, 255, 255));
+    nvgText(vg, 50, height - 56, notice.c_str(), nullptr);
+}
+
+void StreamingView::updateBitrateAdapter() {
+    if (!Settings::instance().bitrate_auto() ||
+        !Settings::instance().bitrate_adaptive())
+        return;
+
+    if (!session->is_active()) {
+        bitrateAdapter.restartWindow();
+        return;
+    }
+
+    const auto now = std::chrono::steady_clock::now();
+    if (now - bitrateSampleTime < std::chrono::seconds(1))
+        return;
+    bitrateSampleTime = now;
+
+    auto change = bitrateAdapter.update(session->connection_status_is_poor());
+    if (change == BitrateAdapter::Change::NONE)
+        return;
+
+    brls::Logger::info("StreamingView: {} bitrate, scale {}",
+                       change == BitrateAdapter::Change::LOWER ? "lowering" : "restoring",
+                       bitrateAdapter.scale());
+    brls::Application::notify(change == BitrateAdapter::Change::LOWER
+                                  ? "streaming/bitrate_lowered"_i18n
+                                  : "streaming/bitrate_restored"_i18n);
+    session->set_bitrate_scale(bitrateAdapter.scale());
+    session->restart();
 }
 
 std::string StreamingView::buildStatsText() {
@@ -499,6 +552,20 @@ void StreamingView::removeKeyboard() {
     keyboard->removeFromSuperView();
     keyboard = nullptr;
     Application::giveFocus(this);
+}
+
+void StreamingView::reportTermination() {
+    if (terminationReported)
+        return;
+    terminationReported = true;
+
+    std::string message = session->termination_message();
+    if (message.empty()) {
+        terminate(false);
+        return;
+    }
+
+    showError(message, [this]() { terminate(false); });
 }
 
 void StreamingView::terminate(bool terminateApp) {

@@ -29,8 +29,11 @@
         "connect": "Se connecter",
         "host_ip": "IP de l'hôte",
         "manual": "Manuel",
+        "pair_in_progress": "Un autre appareil est déjà en cours d'appairage avec cet hôte",
         "pair_postfix": " sur la machine hôte",
         "pair_prefix": "Appairage\n\nEntrez ",
+        "pair_timeout": "Délai d'appairage dépassé\nEntrez le PIN sur la machine hôte et réessayez",
+        "pair_wrong_pin": "PIN incorrect\nRéessayez l'appairage",
         "paired_error": "Déjà appairé\nConfiguration mise à jour",
         "search": "Rechercher",
         "search_error": "La recherche n'est pas disponible",
@@ -61,9 +64,21 @@
     },
     "error": {
         "applet_not_supported": "Le mode Applet n'est pas pris en charge. \n\nVeuillez lancer cette application à l'aide de la redirection de titre (par défaut, maintenez la touche  enfoncée et démarrez n'importe quel jeu).",
+        "connection_lost": "La connexion au PC a été perdue",
         "dialog_header": "Erreur",
+        "early_termination": "Le PC a arrêté la diffusion dès son démarrage\nFermez tout contenu protégé sur le PC ou redémarrez-le, puis réessayez",
+        "frame_conversion": "Le PC n'a pas pu convertir sa vidéo\nDésactivez le HDR ou changez la résolution du PC",
         "host_not_found": "Machine hôte non trouvée",
+        "host_timeout": "Le PC n'a pas répondu à temps",
         "ip_not_obtained": "Impossible de récupérer l'adresse IP",
+        "no_4k": "Ce PC ne peut pas diffuser en 4K\nChoisissez une résolution plus basse",
+        "no_video": "Le PC n'a envoyé aucune vidéo\nVérifiez que son pare-feu laisse passer le port vidéo, puis réessayez",
+        "no_video_frame": "La vidéo n'est jamais arrivée en entier\nVérifiez la connexion ou baissez le débit, puis réessayez",
+        "protected_content": "Le PC a arrêté la diffusion car un contenu protégé est affiché à l'écran",
+        "stage_address": "L'adresse du PC n'a pas pu être résolue",
+        "stage_control": "Le canal de contrôle du PC n'a pas répondu\nVérifiez que son pare-feu laisse passer les ports de diffusion",
+        "stage_media": "Le PC n'a pas ouvert le flux vidéo, audio ou d'entrée\nVérifiez que son pare-feu laisse passer les ports de diffusion",
+        "stage_rtsp": "Le PC n'a pas répondu à la préparation de la diffusion\nVérifiez que son pare-feu laisse passer les ports de diffusion",
         "stream_start": "La diffusion a échoué",
         "unknown_error": "Une erreur inconnue s'est produite"
     },
@@ -115,6 +130,8 @@
     "settings": {
         "audio_backend": "Driver audio",
         "av1": "AV1 (Expérimental)",
+        "bitrate_adaptive": "Réduire si la connexion est mauvaise",
+        "bitrate_auto": "Automatique",
         "buttons": {
             "chat": "Chat (C)",
             "home": "Home",
@@ -186,6 +203,8 @@
         "zero_threads": "0 (pas de threads)"
     },
     "streaming": {
+        "bitrate_lowered": "Mauvaise connexion, baisse du débit",
+        "bitrate_restored": "Connexion stable, rétablissement du débit",
         "connection": "Connexion",
         "debug_info": "Infos de Debug",
         "disconnect": "Déconnecter",
@@ -196,6 +215,8 @@
         "mouse_input": "Utiliser le mode souris",
         "mouse_speed": "Vitesse de la souris",
         "options": "Options",
+        "reconnected": "Reconnecté au PC",
+        "reconnecting": "La connexion au PC a été perdue. Reconnexion…",
         "show_logs": "Voir les logs",
         "terminate": "Fermer l'application",
         "volume": "Volume"

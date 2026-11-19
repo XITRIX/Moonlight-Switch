@@ -29,8 +29,11 @@
         "connect": "連接",
         "host_ip": "主機IP",
         "manual": "手動",
+        "pair_in_progress": "另一台裝置正在與此主機配對",
         "pair_postfix": " on your host device",
         "pair_prefix": "配對\n\n在主機裝置上輸入 ",
+        "pair_timeout": "配對逾時\n請在主機上輸入 PIN 後重試",
+        "pair_wrong_pin": "PIN 不正確\n請重新配對",
         "paired_error": "已配對\n配置已經更新",
         "search": "搜尋",
         "search_error": "不可使用搜尋",
@@ -61,9 +64,21 @@
     },
     "error": {
         "applet_not_supported": "Applet Mode is unsupported\n\nPlease, launch this app using Title Redirection (By default it's hold  and start any game)",
+        "connection_lost": "與電腦的連線已中斷",
         "dialog_header": "錯誤",
+        "early_termination": "電腦在串流剛開始時就結束了它\n請關閉電腦上的受保護內容或重新啟動電腦，然後再試一次",
+        "frame_conversion": "電腦無法轉換影像\n請嘗試關閉 HDR 或變更電腦的解析度",
         "host_not_found": "沒有找到主機……",
+        "host_timeout": "電腦沒有及時回應",
         "ip_not_obtained": "無法獲取IP位址……",
+        "no_4k": "這台電腦無法以 4K 串流\n請選擇較低的解析度",
+        "no_video": "電腦沒有傳送影像\n請檢查電腦的防火牆是否放行影像連接埠，然後再試一次",
+        "no_video_frame": "影像始終沒有完整送達\n請檢查連線或降低位元率，然後再試一次",
+        "protected_content": "電腦畫面上有受保護的內容，因此停止了串流",
+        "stage_address": "無法解析電腦的位址",
+        "stage_control": "電腦的控制通道沒有回應\n請檢查電腦的防火牆是否放行串流連接埠",
+        "stage_media": "電腦沒有開啟影像、音訊或輸入串流\n請檢查電腦的防火牆是否放行串流連接埠",
+        "stage_rtsp": "電腦沒有回應串流準備\n請檢查電腦的防火牆是否放行串流連接埠",
         "stream_start": "開始串流失敗……",
         "unknown_error": "發生了未知的錯誤……"
     },
@@ -115,6 +130,8 @@
     "settings": {
         "audio_backend": "音頻驅動",
         "av1": "AV1 (實驗性)",
+        "bitrate_adaptive": "連線不佳時降低",
+        "bitrate_auto": "自動",
         "buttons": {
             "chat": "聊天（C）",
             "home": "Home",
@@ -186,6 +203,8 @@
         "zero_threads": "0（不使用執行緒）"
     },
     "streaming": {
+        "bitrate_lowered": "連線不佳，正在降低位元率",
+        "bitrate_restored": "連線已穩定，正在恢復位元率",
         "connection": "連接選項",
         "debug_info": "除錯訊息",
         "disconnect": "斷開連接",
@@ -196,6 +215,8 @@
         "mouse_input": "進入滑鼠輸入模式",
         "mouse_speed": "滑鼠速度",
         "options": "選項",
+        "reconnected": "已重新連線到電腦",
+        "reconnecting": "與電腦的連線已中斷，正在重新連線…",
         "show_logs": "顯示日誌",
         "terminate": "終止應用程式",
         "volume": "音量"

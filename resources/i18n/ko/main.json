@@ -29,8 +29,11 @@
         "connect": "연결",
         "host_ip": "호스트 IP",
         "manual": "수동",
+        "pair_in_progress": "다른 기기가 이미 이 호스트와 페어링 중입니다",
         "pair_postfix": " 호스트 장치",
         "pair_prefix": "페어링\n\n진입 ",
+        "pair_timeout": "페어링 시간이 초과되었습니다\n호스트에서 PIN을 입력한 후 다시 시도하세요",
+        "pair_wrong_pin": "PIN이 올바르지 않습니다\n다시 페어링하세요",
         "paired_error": "이미 페어링되었음\n구성이 업데이트되었음",
         "search": "검색",
         "search_error": "검색할 수 없음",
@@ -61,9 +64,21 @@
     },
     "error": {
         "applet_not_supported": "애플릿 모드는 지원되지 않습니다.\n\n제목 리디렉션을 사용하여 이 앱을 실행하세요. (기본적으로 를 누르고 게임을 시작함)",
+        "connection_lost": "PC와의 연결이 끊어졌습니다",
         "dialog_header": "오류",
+        "early_termination": "PC가 시작하자마자 스트림을 종료했습니다\nPC에서 보호된 콘텐츠를 닫거나 PC를 다시 시작한 후 다시 시도하세요",
+        "frame_conversion": "PC가 영상을 변환하지 못했습니다\nHDR을 끄거나 PC 해상도를 바꿔 보세요",
         "host_not_found": "호스트 PC를 찾을 수 없음...",
+        "host_timeout": "PC가 제때 응답하지 않았습니다",
         "ip_not_obtained": "IP 주소를 얻을 수 없음...",
+        "no_4k": "이 PC는 4K로 스트리밍할 수 없습니다\n더 낮은 해상도를 선택하세요",
+        "no_video": "PC에서 영상을 보내지 않았습니다\nPC 방화벽이 영상 포트를 허용하는지 확인한 후 다시 시도하세요",
+        "no_video_frame": "영상이 온전히 도착하지 않았습니다\n연결을 확인하거나 비트레이트를 낮춘 후 다시 시도하세요",
+        "protected_content": "화면에 보호된 콘텐츠가 있어 PC가 스트림을 중지했습니다",
+        "stage_address": "PC 주소를 확인할 수 없습니다",
+        "stage_control": "PC의 제어 채널이 응답하지 않았습니다\nPC 방화벽이 스트림 포트를 허용하는지 확인하세요",
+        "stage_media": "PC가 영상, 오디오 또는 입력 스트림을 열지 않았습니다\nPC 방화벽이 스트림 포트를 허용하는지 확인하세요",
+        "stage_rtsp": "PC가 스트림 준비에 응답하지 않았습니다\nPC 방화벽이 스트림 포트를 허용하는지 확인하세요",
         "stream_start": "스트림 시작 실패...",
         "unknown_error": "알 수 없는 문제가 발생..."
     },
@@ -115,6 +130,8 @@
     "settings": {
         "audio_backend": "오디오 드라이버",
         "av1": "AV1 (실험용)",
+        "bitrate_adaptive": "연결이 나쁠 때 낮추기",
+        "bitrate_auto": "자동",
         "buttons": {
             "chat": "채팅(C)",
             "home": "홈",
@@ -186,6 +203,8 @@
         "zero_threads": "0 (스레드 사용 안 함)"
     },
     "streaming": {
+        "bitrate_lowered": "연결 상태가 나빠 비트레이트를 낮춥니다",
+        "bitrate_restored": "연결이 안정되어 비트레이트를 복원합니다",
         "connection": "연결",
         "debug_info": "디버그 정보",
         "disconnect": "연결 해제",
@@ -196,6 +215,8 @@
         "mouse_input": "마우스 입력 모드 진입",
         "mouse_speed": "마우스 가속",
         "options": "옵션",
+        "reconnected": "PC에 다시 연결되었습니다",
+        "reconnecting": "PC와의 연결이 끊어졌습니다. 다시 연결하는 중…",
         "show_logs": "정보 표시",
         "terminate": "앱 종료",
         "volume": "볼륨"
