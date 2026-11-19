@@ -113,6 +113,7 @@
         "title": "鼠标输入模式"
     },
     "settings": {
+        "appearance": "外观",
         "audio_backend": "音频驱动",
         "av1": "AV1 (实验性)",
         "buttons": {
@@ -166,6 +167,11 @@
         "resolution_scale": "缩放",
         "image_adjustments": "图像调整",
         "dithering": "抖动",
+        "theme": "主题",
+        "theme_dark": "深色",
+        "theme_light": "浅色",
+        "theme_restart": "主题将在下次启动 Moonlight 时更改",
+        "theme_system": "跟随系统",
         "upscaling": "将低分辨率升尺度",
         "rcas_sharpening": "RCAS 锐化",
         "rumble_force": "震动力度",

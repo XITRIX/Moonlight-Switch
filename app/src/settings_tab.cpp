@@ -431,6 +431,15 @@ SettingsTab::SettingsTab() {
                      });
                  });
 
+    themeSelector->init(
+        "settings/theme"_i18n,
+        {"settings/theme_system"_i18n, "settings/theme_dark"_i18n,
+         "settings/theme_light"_i18n},
+        (int)Settings::instance().theme(), [](int selected) {
+            Settings::instance().set_theme((ThemePreference)selected);
+            brls::Application::notify("settings/theme_restart"_i18n);
+        });
+
     std::vector<std::string> layouts;
     for (KeyMappingLayout layout : *Settings::instance().get_mapping_laouts())
         layouts.push_back(layout.title);

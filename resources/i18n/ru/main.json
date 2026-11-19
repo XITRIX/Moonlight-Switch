@@ -113,6 +113,7 @@
         "title": "Режим ввода мышью"
     },
     "settings": {
+        "appearance": "Внешний вид",
         "audio_backend": "Аудио драйвер",
         "av1": "AV1 (Экспериментальный)",
         "buttons": {
@@ -166,6 +167,11 @@
         "resolution_scale": "Масштаб",
         "image_adjustments": "Коррекция изображения",
         "dithering": "Дизеринг",
+        "theme": "Тема",
+        "theme_dark": "Тёмная",
+        "theme_light": "Светлая",
+        "theme_restart": "Тема изменится при следующем запуске Moonlight",
+        "theme_system": "Системная",
         "upscaling": "Масштабировать низкие разрешения",
         "rcas_sharpening": "Повышение резкости RCAS",
         "rumble_force": "Сила вибрации",

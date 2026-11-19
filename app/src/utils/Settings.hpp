@@ -25,6 +25,8 @@ enum AudioBackend : int {
 
 enum KeyboardType : int { COMPACT, FULLSIZED };
 
+enum class ThemePreference : int { SYSTEM, DARK, LIGHT };
+
 enum class ButtonOverrideType : int { NONE, SCREENSHOT, HOME, CHAT };
 
 struct KeyMappingLayout {
@@ -254,6 +256,8 @@ class Settings : public Singleton<Settings> {
     [[nodiscard]] bool write_log() const { return m_write_log; }
 
     void set_swap_ui_keys(bool swap_ui_keys) { m_swap_ui_keys = swap_ui_keys; }
+    void set_theme(ThemePreference theme) { m_theme = theme; }
+    [[nodiscard]] ThemePreference theme() const { return m_theme; }
     [[nodiscard]] bool swap_ui_keys() const { return m_swap_ui_keys; }
 
     void set_swap_joycon_stick_to_dpad(bool value) { m_swap_joycon_stick_to_dpad = value; }
@@ -370,6 +374,7 @@ class Settings : public Singleton<Settings> {
     bool m_play_audio = false;
     bool m_write_log = false;
     bool m_swap_ui_keys = false;
+    ThemePreference m_theme = ThemePreference::SYSTEM;
     bool m_swap_joycon_stick_to_dpad = false;
     bool m_touchscreen_mouse_mode = false;
     bool m_swap_mouse_keys = false;

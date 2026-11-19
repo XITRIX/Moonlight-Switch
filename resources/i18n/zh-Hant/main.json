@@ -113,6 +113,7 @@
         "title": "滑鼠輸入模式"
     },
     "settings": {
+        "appearance": "外觀",
         "audio_backend": "音頻驅動",
         "av1": "AV1 (實驗性)",
         "buttons": {
@@ -166,6 +167,11 @@
         "resolution_scale": "縮放",
         "image_adjustments": "影像調整",
         "dithering": "抖動",
+        "theme": "主題",
+        "theme_dark": "深色",
+        "theme_light": "淺色",
+        "theme_restart": "主題將在下次啟動 Moonlight 時變更",
+        "theme_system": "跟隨系統",
         "upscaling": "將低解析度升尺度",
         "rcas_sharpening": "RCAS 銳化",
         "rumble_force": "震動力度",

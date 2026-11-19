@@ -113,6 +113,7 @@
         "title": "Mode souris"
     },
     "settings": {
+        "appearance": "Apparence",
         "audio_backend": "Driver audio",
         "av1": "AV1 (Expérimental)",
         "buttons": {
@@ -166,6 +167,11 @@
         "resolution_scale": "Échelle",
         "image_adjustments": "Ajustements d'image",
         "dithering": "Tramage",
+        "theme": "Thème",
+        "theme_dark": "Sombre",
+        "theme_light": "Clair",
+        "theme_restart": "Le thème change au prochain lancement de Moonlight",
+        "theme_system": "Système",
         "upscaling": "Mettre à l'échelle les basses résolutions",
         "rcas_sharpening": "Netteté RCAS",
         "rumble_force": "Force de vibration",

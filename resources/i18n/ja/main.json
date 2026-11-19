@@ -113,6 +113,7 @@
         "title": "マウス入力モード"
     },
     "settings": {
+        "appearance": "外観",
         "audio_backend": "Audio driver",
         "av1": "AV1 (実験的)",
         "buttons": {
@@ -166,6 +167,11 @@
         "resolution_scale": "倍率",
         "image_adjustments": "画像調整",
         "dithering": "ディザリング",
+        "theme": "テーマ",
+        "theme_dark": "ダーク",
+        "theme_light": "ライト",
+        "theme_restart": "テーマは次回 Moonlight の起動時に変わります",
+        "theme_system": "システム",
         "upscaling": "低解像度をアップスケール",
         "rcas_sharpening": "RCAS シャープ化",
         "rumble_force": "Rumble force",
