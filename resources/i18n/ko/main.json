@@ -166,6 +166,9 @@
         "resolution_scale": "배율",
         "image_adjustments": "이미지 조정",
         "dithering": "디더링",
+        "stream_stats": "스트림 통계",
+        "stream_stats_compact": "간단히",
+        "stream_stats_detailed": "자세히",
         "upscaling": "저해상도 업스케일링",
         "rcas_sharpening": "RCAS 선명화",
         "rumble_force": "진동 강도",
@@ -187,7 +190,6 @@
     },
     "streaming": {
         "connection": "연결",
-        "debug_info": "디버그 정보",
         "disconnect": "연결 해제",
         "esc": "ESC 버튼",
         "input": "입력",

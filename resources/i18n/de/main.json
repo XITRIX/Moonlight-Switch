@@ -166,6 +166,9 @@
         "resolution_scale": "Skalierung",
         "image_adjustments": "Bildanpassungen",
         "dithering": "Dithering",
+        "stream_stats": "Stream-Statistiken",
+        "stream_stats_compact": "Kompakt",
+        "stream_stats_detailed": "Ausführlich",
         "upscaling": "Niedrige Auflösungen hochskalieren",
         "rcas_sharpening": "RCAS-Schärfung",
         "rumble_force": "Rumble force",
@@ -187,7 +190,6 @@
     },
     "streaming": {
         "connection": "Verbindung",
-        "debug_info": "Debug Informationen",
         "disconnect": "Verbindung trennen",
         "esc": "ESC Taste",
         "input": "Eingabe",

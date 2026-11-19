@@ -166,6 +166,9 @@
         "resolution_scale": "倍率",
         "image_adjustments": "画像調整",
         "dithering": "ディザリング",
+        "stream_stats": "ストリーム統計",
+        "stream_stats_compact": "簡易",
+        "stream_stats_detailed": "詳細",
         "upscaling": "低解像度をアップスケール",
         "rcas_sharpening": "RCAS シャープ化",
         "rumble_force": "Rumble force",
@@ -187,7 +190,6 @@
     },
     "streaming": {
         "connection": "接続",
-        "debug_info": "デバッグ情報",
         "disconnect": "切断する",
         "esc": "エスケープボタン",
         "input": "入力",

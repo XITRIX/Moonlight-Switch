@@ -45,6 +45,11 @@ class MoonlightSession {
         return m_use_hdr;
     }
 
+    const STREAM_CONFIGURATION& requested_config() const { return m_config; }
+    int stream_format() const { return m_stream_format; }
+    int stream_height() const { return m_stream_height; }
+    int stream_fps() const { return m_stream_fps; }
+
     SessionStats* session_stats() const {
         return (SessionStats*)&m_session_stats;
     }
@@ -98,6 +103,9 @@ class MoonlightSession {
     bool m_invalidate_renderer_pending = false;
     bool m_restart_pending = false;
     bool m_use_hdr = false;
+    int m_stream_format = 0;
+    int m_stream_height = 0;
+    int m_stream_fps = 0;
 
     SessionStats m_session_stats = {};
     uint64_t m_last_stats_update_ms = 0;
