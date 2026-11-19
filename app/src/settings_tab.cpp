@@ -860,6 +860,27 @@ SettingsTab::SettingsTab() {
                        Settings::instance().set_write_log(value);
                        brls::Application::enableDebuggingView(value);
                    });
+
+    addHint(resolution, "settings/hint_resolution"_i18n);
+    addHint(codec, "settings/hint_codec"_i18n);
+    addHint(optimal, "settings/hint_optimal"_i18n);
+    addHint(pcAudio, "settings/hint_pc_audio"_i18n);
+    addHint(overlayButtons, "settings/hint_overlay_buttons"_i18n);
+    addHint(touchscreenMouseMode, "settings/hint_touchscreen_mouse_mode"_i18n);
+}
+
+void SettingsTab::addHint(brls::View* row, const std::string& text) {
+    brls::Box* parent = row->getParent();
+    auto& children = parent->getChildren();
+    auto position = std::find(children.begin(), children.end(), row);
+
+    auto* hint = new brls::Label();
+    hint->setFontSize(15);
+    hint->setTextColor(brls::Application::getTheme()["brls/header/subtitle"]);
+    hint->setMarginLeft(brls::Application::getStyle()["brls/listitem/descriptionIndent"]);
+    hint->setMarginBottom(8);
+    hint->setText(text);
+    parent->addView(hint, position - children.begin() + 1);
 }
 
 void SettingsTab::willAppear(bool resetState)
@@ -921,14 +942,12 @@ brls::View* SettingsTab::create() { return new SettingsTab(); }
 
 #ifdef __SWITCH2__
 void SettingsTab::updateFpsHint() {
-    std::string hint;
+    std::string hint = "settings/hint_fps"_i18n;
     if (Settings::instance().resolution() == 2160)
         hint = "settings/fps_fixed_for_4k"_i18n;
     else if (Settings::instance().fps() > 60 && !displayRunsAt120Hz())
         hint = "settings/fps_needs_120hz"_i18n;
 
     fpsHint->setText(hint);
-    fpsHint->setVisibility(hint.empty() ? brls::Visibility::GONE
-                                        : brls::Visibility::VISIBLE);
 }
 #endif

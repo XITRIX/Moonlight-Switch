@@ -31,9 +31,9 @@
                 height="auto"
                 fontSize="15"
                 textColor="@theme/brls/header/subtitle"
+                text="@i18n/settings/hint_fps"
                 marginLeft="@style/brls/listitem/descriptionIndent"
-                marginBottom="8"
-                visibility="gone"/>
+                marginBottom="8"/>
                     
             <brls:SelectorCell
                 id="resolution"/>
