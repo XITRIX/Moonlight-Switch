@@ -299,6 +299,9 @@ void MoonlightInputManager::dropInput() {
     pendingHorizontalScrollEvents = 0;
     desktopScrollAxis = DesktopScrollAxis::None;
     lastDesktopScrollEvent = {};
+    for (auto& holds : comboHolds)
+        for (auto& hold : holds)
+            hold = {};
 
     bool res = true;
     // Drop gamepad state
@@ -345,6 +348,8 @@ GamepadState MoonlightInputManager::getControllerState(int controllerNum,
 
     brls::Application::setSwapHalfJoyconStickToDpad(Settings::instance().swap_joycon_stick_to_dpad());
     brls::Application::getPlatform()->getInputManager()->updateControllerState(&rawController, controllerNum);
+    holdBackHeldWhileDisabled(controllerNum, rawController);
+    holdBackLocalCombos(controllerNum, rawController);
 #ifdef __SWITCH__
     auto* switchInput = static_cast<brls::SwitchInputManager*>(brls::Application::getPlatform()->getInputManager());
     controller = switchInput->isHalfJoyConMappingActive(controllerNum) ? rawController : mapController(rawController);
@@ -408,6 +413,13 @@ GamepadState MoonlightInputManager::getControllerState(int controllerNum,
         ? (gamepadState.buttonFlags |= LIMELIGHT_KEY)                          \
         : (gamepadState.buttonFlags &= ~LIMELIGHT_KEY);
 
+    // A real D-pad can't press opposite directions together, so don't send
+    // them to the host.
+    if (controller.buttons[brls::BUTTON_UP] && controller.buttons[brls::BUTTON_DOWN])
+        controller.buttons[brls::BUTTON_UP] = controller.buttons[brls::BUTTON_DOWN] = false;
+    if (controller.buttons[brls::BUTTON_LEFT] && controller.buttons[brls::BUTTON_RIGHT])
+        controller.buttons[brls::BUTTON_LEFT] = controller.buttons[brls::BUTTON_RIGHT] = false;
+
     SET_GAME_PAD_STATE(UP_FLAG, brls::BUTTON_UP);
     SET_GAME_PAD_STATE(DOWN_FLAG, brls::BUTTON_DOWN);
     SET_GAME_PAD_STATE(LEFT_FLAG, brls::BUTTON_LEFT);
@@ -448,6 +460,90 @@ GamepadState MoonlightInputManager::getControllerState(int controllerNum,
                : (gamepadState.buttonFlags &= ~SPECIAL_FLAG);
 
     return gamepadState;
+}
+
+void MoonlightInputManager::setInputEnabled(bool enabled) {
+    if (inputEnabled && !enabled) {
+        for (auto& held : heldWhileDisabled)
+            held = ~0U;
+    }
+    inputEnabled = enabled;
+}
+
+// A button still down from the overlay, like the A that closed it, reaches
+// the host only after it is let go and pressed again.
+void MoonlightInputManager::holdBackHeldWhileDisabled(
+    int controllerNum, brls::ControllerState& controller) {
+    if (controllerNum < 0 || controllerNum >= GAMEPADS_MAX)
+        return;
+
+    uint32_t& held = heldWhileDisabled[controllerNum];
+    for (int i = 0; i < brls::_BUTTON_MAX; i++) {
+        if (!controller.buttons[i])
+            held &= ~(1U << i);
+        else if (held & (1U << i))
+            controller.buttons[i] = false;
+    }
+}
+
+uint32_t ComboHold::update(uint32_t buttons, uint32_t combo,
+                           std::chrono::steady_clock::time_point now) {
+    constexpr auto window = std::chrono::milliseconds(60);
+    const uint32_t held = buttons & combo;
+    const uint32_t others = buttons & ~combo;
+
+    if (held == combo) {
+        *this = {};
+        suppressed = combo;
+        return others;
+    }
+
+    // A tap shorter than the window still reaches the host, as a press now
+    // and a release on the next frame.
+    const uint32_t tapped = waiting & ~held;
+    forwarded &= held;
+    suppressed &= held;
+    const uint32_t fresh = held & ~forwarded & ~suppressed & ~waiting;
+    if (fresh)
+        since = now;
+    waiting = (waiting & held) | fresh;
+    if (waiting && now - since >= window) {
+        forwarded |= waiting;
+        waiting = 0;
+    }
+    return others | forwarded | tapped;
+}
+
+void MoonlightInputManager::holdBackLocalCombos(
+    int controllerNum, brls::ControllerState& controller) {
+    if (controllerNum < 0 || controllerNum >= GAMEPADS_MAX)
+        return;
+
+    const KeyComboOptions combos[] = {
+        Settings::instance().overlay_options(),
+        Settings::instance().mouse_input_options(),
+        Settings::instance().disconnect_options(),
+    };
+
+    uint32_t buttons = 0;
+    for (int i = 0; i < brls::_BUTTON_MAX; i++)
+        buttons |= controller.buttons[i] ? 1U << i : 0;
+
+    const auto now = std::chrono::steady_clock::now();
+    uint32_t forwarded = buttons;
+    for (int i = 0; i < 3; i++) {
+        uint32_t combo = 0;
+        for (auto button : combos[i].buttons)
+            combo |= 1U << button;
+
+        // A single button is the whole combo, so it is left to the host.
+        if ((combo & (combo - 1)) == 0)
+            continue;
+        forwarded &= comboHolds[controllerNum][i].update(buttons, combo, now);
+    }
+
+    for (int i = 0; i < brls::_BUTTON_MAX; i++)
+        controller.buttons[i] = forwarded & (1U << i);
 }
 
 void MoonlightInputManager::handleControllers(bool specialKey) {

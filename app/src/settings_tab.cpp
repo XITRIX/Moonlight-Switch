@@ -709,6 +709,31 @@ SettingsTab::SettingsTab() {
         return true;
     });
 
+    disconnectTime->init(
+        "settings/disconnect_time"_i18n,
+        {"settings/overlay_zero_time"_i18n, "1", "2", "3", "4", "5"},
+        Settings::instance().disconnect_options().holdTime, [](int value) {
+            auto options = Settings::instance().disconnect_options();
+            options.holdTime = value;
+            Settings::instance().set_disconnect_options(options);
+        });
+
+    disconnectButtons->setText("settings/overlay_buttons"_i18n);
+    setupButtonsSelectorCell(
+        disconnectButtons, Settings::instance().disconnect_options().buttons);
+    disconnectButtons->registerClickAction([this](View*) {
+        ButtonSelectingDialog* dialog = ButtonSelectingDialog::create(
+            "settings/disconnect_setup_message"_i18n, [this](auto buttons) {
+                auto options = Settings::instance().disconnect_options();
+                options.buttons = buttons;
+                Settings::instance().set_disconnect_options(options);
+                setupButtonsSelectorCell(disconnectButtons, buttons);
+            });
+
+        dialog->open();
+        return true;
+    });
+
     std::vector<std::string> keyboardTypes = {
         "settings/keyboard_compact"_i18n, "settings/keyboard_fullsized"_i18n};
     keyboardType->setText("settings/keyboard_type"_i18n);
