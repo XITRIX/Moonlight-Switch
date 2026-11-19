@@ -93,7 +93,9 @@
         "wait": "Warten...",
         "wake_up": "Aufwecken",
         "wake_up_error": "Host konnte nicht geweckt werden",
-        "wake_up_message": "Host wird geweckt"
+        "wake_up_message": "Host wird geweckt",
+        "wake_up_timeout": "Der Host hat nicht innerhalb von {} Sekunden geantwortet. Prüfe, ob Wake-on-LAN im BIOS und in den Netzwerkadapter-Einstellungen aktiviert ist.",
+        "wake_up_waiting": "Host wird geweckt... {} s"
     },
     "mapping_layout_editor": {
         "remove": "Layout entfernen",

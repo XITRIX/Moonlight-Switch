@@ -163,8 +163,10 @@ bool connect_to_addresses_sync(const std::vector<std::string>& addresses,
     return false;
 }
 
-constexpr int WAKE_POLL_ATTEMPTS = 20;
-constexpr auto WAKE_POLL_INTERVAL = std::chrono::seconds(1);
+constexpr auto WAKE_TIMEOUT = std::chrono::seconds(120);
+constexpr auto WAKE_RESEND_INTERVAL = std::chrono::seconds(10);
+constexpr auto WAKE_POLL_INTERVAL = std::chrono::seconds(2);
+constexpr auto WAKE_SLEEP_STEP = std::chrono::milliseconds(250);
 
 #if defined(__linux) || defined(__APPLE__)
 bool copy_interface_name(struct ifreq& request, const char* interfaceName) {
@@ -533,42 +535,73 @@ bool GameStreamClient::can_wake_up_host(const Host& host) {
 }
 
 void GameStreamClient::wake_up_host(const Host& host,
-                                    ServerCallback<bool>& callback) {
-    brls::async([host, callback] {
+                                    ServerCallback<bool>& callback,
+                                    std::shared_ptr<std::atomic_bool> cancelled,
+                                    const std::function<void(int)>& progress) {
+    brls::async([host, callback, cancelled, progress] {
+        using clock = std::chrono::steady_clock;
+
+        auto isCancelled = [cancelled] { return cancelled && *cancelled; };
+        auto finish = [callback](GSResult<bool> result) {
+            brls::sync([callback, result] { callback(result); });
+        };
+
         auto result = WakeOnLanManager::wake_up_host(host);
         if (!result.isSuccess()) {
-            brls::sync([callback, result] { callback(result); });
+            finish(GSResult<bool>::failure("host/wake_up_error"_i18n));
             return;
         }
+
+        const auto started = clock::now();
+        const auto deadline = started + WAKE_TIMEOUT;
+        auto nextSend = started + WAKE_RESEND_INTERVAL;
+        int shownSeconds = -1;
 
         std::string connectedAddress;
         std::string error;
         SERVER_DATA connectedServer{};
 
-        for (int attempt = 0; attempt < WAKE_POLL_ATTEMPTS; attempt++) {
+        while (!isCancelled()) {
             if (connect_to_addresses_sync(host.connection_addresses(),
                                           connectedAddress, connectedServer,
                                           error)) {
                 auto& client = GameStreamClient::instance();
                 client.cache_server_data(connectedAddress, connectedServer);
                 client.m_active_addresses[host_key(host)] = connectedAddress;
-
-                brls::sync([callback] {
-                    callback(GSResult<bool>::success(true));
-                });
+                finish(GSResult<bool>::success(true));
                 return;
             }
 
-            if (attempt + 1 < WAKE_POLL_ATTEMPTS) {
-                std::this_thread::sleep_for(WAKE_POLL_INTERVAL);
+            const auto nextPoll = clock::now() + WAKE_POLL_INTERVAL;
+            while (!isCancelled() && clock::now() < nextPoll) {
+                const auto now = clock::now();
+                if (now >= deadline) {
+                    finish(GSResult<bool>::failure(brls::getStr(
+                        "host/wake_up_timeout",
+                        std::chrono::duration_cast<std::chrono::seconds>(
+                            WAKE_TIMEOUT)
+                            .count())));
+                    return;
+                }
+
+                if (now >= nextSend) {
+                    WakeOnLanManager::wake_up_host(host);
+                    nextSend = now + WAKE_RESEND_INTERVAL;
+                }
+
+                const int left = (int)std::chrono::duration_cast<
+                                     std::chrono::seconds>(deadline - now)
+                                     .count();
+                if (progress && left != shownSeconds) {
+                    shownSeconds = left;
+                    brls::sync([progress, left] { progress(left); });
+                }
+
+                std::this_thread::sleep_for(WAKE_SLEEP_STEP);
             }
         }
 
-        brls::sync([callback, error] {
-            callback(GSResult<bool>::failure(
-                error.empty() ? "Host did not come online after wake signal"
-                              : error));
-        });
+        finish(GSResult<bool>::failure("common/cancel"_i18n));
     });
 }
 

@@ -93,7 +93,9 @@
         "wait": "Espera...",
         "wake_up": "Reanudar",
         "wake_up_error": "No se pudo reanudar el servidor",
-        "wake_up_message": "Reanudando"
+        "wake_up_message": "Reanudando",
+        "wake_up_timeout": "El servidor no respondió en {} segundos. Comprueba que Wake-on-LAN esté activado en la BIOS y en la configuración del adaptador de red.",
+        "wake_up_waiting": "Reanudando el servidor... {} s"
     },
     "mapping_layout_editor": {
         "remove": "Eliminar diseño",

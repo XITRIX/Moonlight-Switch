@@ -23,8 +23,10 @@ class HostTab : public brls::Box {
     BRLS_BIND(brls::Header, header, "header");
 
   private:
+    void wakeUpHost();
+
     Host host;
     HostState state = HostState::FETCHING;
     uint64_t wakeRequestGeneration = 0;
-    uint64_t canceledWakeRequestGeneration = 0;
+    bool openAppsWhenReady = false;
 };

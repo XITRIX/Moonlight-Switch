@@ -28,6 +28,7 @@ brls::Dialog* createLoadingDialog(
     Box* holder = new Box(Axis::COLUMN);
 
     auto* label = new Label();
+    label->setId("loading_text");
     label->setText(text);
     label->setFontSize(style["brls/dialog/fontSize"]);
     label->setHorizontalAlign(HorizontalAlign::CENTER);

@@ -93,7 +93,9 @@
         "wait": "En attente...",
         "wake_up": "Réveiller",
         "wake_up_error": "L'hôte n'a pas pu être réveillé",
-        "wake_up_message": "Réveil en cours..."
+        "wake_up_message": "Réveil en cours...",
+        "wake_up_timeout": "L'hôte n'a pas répondu en {} secondes. Vérifiez que le Wake-on-LAN est activé dans son BIOS et dans les réglages de sa carte réseau.",
+        "wake_up_waiting": "Réveil de l'hôte... {} s"
     },
     "mapping_layout_editor": {
         "remove": "Supprimer la configuration",

@@ -93,7 +93,9 @@
         "wait": "Attendi...",
         "wake_up": "Risveglia",
         "wake_up_error": "Impossibile risvegliare l'host",
-        "wake_up_message": "Inviando messaggio di risveglio"
+        "wake_up_message": "Inviando messaggio di risveglio",
+        "wake_up_timeout": "L'host non ha risposto entro {} secondi. Verifica che Wake-on-LAN sia attivo nel BIOS e nelle impostazioni della scheda di rete.",
+        "wake_up_waiting": "Risveglio dell'host... {} s"
     },
     "mapping_layout_editor": {
         "remove": "Rimuovi layout",

@@ -93,7 +93,9 @@
         "wait": "待機中...",
         "wake_up": "起動",
         "wake_up_error": "ホストを起動することができませんでしたt",
-        "wake_up_message": "起を送信する"
+        "wake_up_message": "起を送信する",
+        "wake_up_timeout": "ホストが {} 秒以内に応答しませんでした。BIOS とネットワークアダプターの設定で Wake-on-LAN が有効になっているか確認してください。",
+        "wake_up_waiting": "ホストを起動中... {} 秒"
     },
     "mapping_layout_editor": {
         "remove": "Remove layout",

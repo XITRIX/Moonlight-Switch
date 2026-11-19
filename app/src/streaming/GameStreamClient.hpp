@@ -3,8 +3,10 @@
 #include "Settings.hpp"
 #include "client.h"
 #include "errors.h"
+#include <atomic>
 #include <functional>
 #include <map>
+#include <memory>
 #include <string>
 #include <utility>
 #include <vector>
@@ -75,7 +77,9 @@ class GameStreamClient : public Singleton<GameStreamClient> {
     static void cancel_find_hosts();
 
     static bool can_wake_up_host(const Host& host);
-    static void wake_up_host(const Host& host, ServerCallback<bool>& callback);
+    static void wake_up_host(const Host& host, ServerCallback<bool>& callback,
+                             std::shared_ptr<std::atomic_bool> cancelled = {},
+                             const std::function<void(int)>& progress = {});
 
     void connect(const std::string& address,
                  ServerCallback<SERVER_DATA>& callback);
