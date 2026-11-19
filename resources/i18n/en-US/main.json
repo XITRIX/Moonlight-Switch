@@ -196,6 +196,7 @@
         "connection": "Connection",
         "disconnect": "Disconnect",
         "esc": "ESC button",
+        "fps_lowered": "The console can't keep up with this frame rate, switching to 60 FPS",
         "input": "Input",
         "keys": "Keys",
         "logout": "Logout",

@@ -19,6 +19,9 @@ class BitrateAdapter {
         uint32_t dropped_frames = 0;
         uint32_t idr_requests = 0;
         int pending_frames = 0; // decode units waiting for the decoder
+        // Left to the frame-rate guard: a stream above 60 FPS that showed
+        // less than 90% of its frames.
+        bool fell_behind = false;
     };
 
     Change update(const Second& second);

@@ -356,6 +356,7 @@ void StreamingView::draw(NVGcontext* vg, float x, float y, float width,
 
     if (!tempInputLock && session->is_active())
         handleInput();
+    updateFrameRateGuard();
     updateBitrateAdapter();
     handleOverlayCombo();
     handleMouseInputCombo();
@@ -419,6 +420,37 @@ void StreamingView::draw(NVGcontext* vg, float x, float y, float width,
     Box::draw(vg, x, y, width, height, style, ctx);
 }
 
+void StreamingView::updateFrameRateGuard() {
+    const auto counter = AVFrameHolder::instance().getFrameCounter();
+    if (session->is_active() && counter.second == frameRateGuardSecond)
+        return;
+
+    // A gap in the seconds, a restarted counter or a reconnect warms up again.
+    const bool next = counter.second == frameRateGuardSecond + 1;
+    frameRateGuardSecond = counter.second;
+    if (!session->is_active() || !next) {
+        frameRateGuard.restartWindow();
+        return;
+    }
+
+    FrameRateGuard::Second second;
+    second.fps = session->requested_config().fps;
+    second.presented = counter.presented;
+    second.skipped = counter.skipped;
+    second.dropped_frames =
+        session->session_stats()->video_decode_stats.network_dropped_frames;
+    second.idr_requests = session->idr_requests();
+    second.pending_frames = LiGetPendingVideoFrames();
+    if (!frameRateGuard.update(second))
+        return;
+
+    brls::Logger::info("StreamingView: {} FPS isn't keeping up, continuing at 60",
+                       second.fps);
+    brls::Application::notify("streaming/fps_lowered"_i18n);
+    session->set_fps_limit(60);
+    session->restart();
+}
+
 void StreamingView::updateBitrateAdapter() {
     if (!Settings::instance().bitrate_auto() ||
         !Settings::instance().bitrate_adaptive())
@@ -442,6 +474,9 @@ void StreamingView::updateBitrateAdapter() {
         session->session_stats()->video_decode_stats.network_dropped_frames;
     second.idr_requests = session->idr_requests();
     second.pending_frames = LiGetPendingVideoFrames();
+    second.fell_behind = FrameRateGuard::fellBehind(
+        session->requested_config().fps,
+        AVFrameHolder::instance().getFrameCounter().presented);
 
     auto change = bitrateAdapter.update(second);
     if (change == BitrateAdapter::Change::NONE)

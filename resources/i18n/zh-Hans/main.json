@@ -196,6 +196,7 @@
         "connection": "连接选项",
         "disconnect": "断开连接",
         "esc": "ESC按键",
+        "fps_lowered": "主机跟不上此帧率，正在切换到 60 FPS",
         "input": "输入",
         "keys": "按键",
         "logout": "退出",

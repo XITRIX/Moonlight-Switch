@@ -196,6 +196,7 @@
         "connection": "Conexión",
         "disconnect": "Desconectar",
         "esc": "Botón de Escape",
+        "fps_lowered": "La consola no puede mantener esta tasa de fotogramas, cambiando a 60 FPS",
         "input": "Entrada",
         "keys": "Botones",
         "logout": "Cerrar sesión",

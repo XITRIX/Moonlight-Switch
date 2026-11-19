@@ -196,6 +196,7 @@
         "connection": "Connessione",
         "disconnect": "Disconnetti",
         "esc": "Pulsante ESC",
+        "fps_lowered": "La console non regge questa frequenza, passo a 60 FPS",
         "input": "Input",
         "keys": "Tasti",
         "logout": "Disconnetti",

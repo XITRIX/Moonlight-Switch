@@ -196,6 +196,7 @@
         "connection": "Connexion",
         "disconnect": "Déconnecter",
         "esc": "Esc",
+        "fps_lowered": "La console ne suit pas cette fréquence d'images, passage à 60 FPS",
         "input": "Modes de saisie",
         "keys": "Touches",
         "logout": "Déconnexion",

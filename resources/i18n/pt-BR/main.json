@@ -196,6 +196,7 @@
         "connection": "Conexão",
         "disconnect": "Desconectar",
         "esc": "Botão ESC",
+        "fps_lowered": "O console não acompanha esta taxa de quadros, mudando para 60 FPS",
         "input": "Entrada",
         "keys": "Teclas",
         "logout": "Deslogar",

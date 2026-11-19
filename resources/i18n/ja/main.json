@@ -196,6 +196,7 @@
         "connection": "接続",
         "disconnect": "切断する",
         "esc": "エスケープボタン",
+        "fps_lowered": "このフレームレートを表示しきれないため、60 FPS に切り替えます",
         "input": "入力",
         "keys": "キー",
         "logout": "ログアウト",

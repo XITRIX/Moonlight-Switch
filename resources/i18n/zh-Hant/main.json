@@ -196,6 +196,7 @@
         "connection": "連接選項",
         "disconnect": "斷開連接",
         "esc": "ESC按鍵",
+        "fps_lowered": "主機跟不上此影格率，正在切換到 60 FPS",
         "input": "輸入",
         "keys": "按鍵",
         "logout": "登出",

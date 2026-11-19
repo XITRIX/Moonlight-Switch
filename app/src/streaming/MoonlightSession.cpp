@@ -329,6 +329,8 @@ void MoonlightSession::start(ServerCallback<bool> callback, bool is_sunshine) {
 
     stream_resolution(&m_config.width, &m_config.height);
     m_config.fps = Settings::instance().fps();
+    if (m_fps_limit > 0 && m_config.fps > m_fps_limit)
+        m_config.fps = m_fps_limit;
 #ifdef __SWITCH2__
     m_config.colorSpace = COLORSPACE_REC_709;
     m_config.colorRange = COLOR_RANGE_LIMITED;

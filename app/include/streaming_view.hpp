@@ -17,6 +17,7 @@
 #include "GameStreamClient.hpp"
 #include "MoonlightSession.hpp"
 #include "BitrateAdapter.hpp"
+#include "FrameRateGuard.hpp"
 #include "two_finger_scroll_recognizer.hpp"
 
 class StreamingView : public brls::Box {
@@ -55,8 +56,11 @@ class StreamingView : public brls::Box {
     bool windowFocused = true;
     BitrateAdapter bitrateAdapter;
     std::chrono::steady_clock::time_point bitrateSampleTime;
+    FrameRateGuard frameRateGuard;
+    uint64_t frameRateGuardSecond = 0;
 
     void updateBitrateAdapter();
+    void updateFrameRateGuard();
 
     void onWindowFocusChanged(bool focused);
 

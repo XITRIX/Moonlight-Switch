@@ -33,6 +33,9 @@ class MoonlightSession {
     // Applies to the Automatic bitrate from the next connection on.
     void set_bitrate_scale(float scale) { m_bitrate_scale = scale; }
 
+    // Caps the frame rate from the next connection on; 0 removes the cap.
+    void set_fps_limit(int fps) { m_fps_limit = fps; }
+
     void draw(NVGcontext* vg, int width, int height);
 
     // Stop touching the GPU while the app is off screen, and drop renderer
@@ -112,6 +115,7 @@ class MoonlightSession {
     bool m_connection_status_is_poor = false;
     std::atomic<uint32_t> m_idr_requests{0};
     float m_bitrate_scale = 1.0f;
+    int m_fps_limit = 0;
     bool m_suspended = false;
     bool m_invalidate_renderer_pending = false;
     bool m_restart_pending = false;

@@ -196,6 +196,7 @@
         "connection": "연결",
         "disconnect": "연결 해제",
         "esc": "ESC 버튼",
+        "fps_lowered": "콘솔이 이 프레임 레이트를 따라가지 못해 60 FPS로 전환합니다",
         "input": "입력",
         "keys": "키",
         "logout": "로그아웃",

@@ -196,6 +196,7 @@
         "connection": "Verbindung",
         "disconnect": "Verbindung trennen",
         "esc": "ESC Taste",
+        "fps_lowered": "Die Konsole kommt mit dieser Bildrate nicht mit, wechsle auf 60 FPS",
         "input": "Eingabe",
         "keys": "Tasten",
         "logout": "Logout",

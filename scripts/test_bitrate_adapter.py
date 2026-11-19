@@ -10,6 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 TEST = r"""
 #include "BitrateAdapter.hpp"
+#include "FrameRateGuard.hpp"
 #include <cassert>
 
 using Change = BitrateAdapter::Change;
@@ -48,7 +49,89 @@ static void lowers_on(void (*bad)(Second&, int)) {
     assert(last == Change::LOWER);
 }
 
+static FrameRateGuard::Second behind(int fps) {
+    FrameRateGuard::Second second;
+    second.fps = fps;
+    second.presented = fps * 8 / 10;
+    second.skipped = 3;
+    second.pending_frames = 3;
+    return second;
+}
+
+static void guard_tests() {
+    {
+        // Two warm-up seconds, then three behind in a row ask for 60 once.
+        FrameRateGuard guard;
+        for (int i = 0; i < 4; i++)
+            assert(!guard.update(behind(120)));
+        assert(guard.update(behind(120)));
+        for (int i = 0; i < 60; i++)
+            assert(!guard.update(behind(120)));
+    }
+    {
+        // A second that keeps up resets the run.
+        FrameRateGuard guard;
+        for (int i = 0; i < 60; i++) {
+            auto second = behind(120);
+            if (i % 3 == 2)
+                second.presented = 110;
+            assert(!guard.update(second));
+        }
+    }
+    {
+        // Few frames from the host, with nothing backed up, aren't the console's.
+        FrameRateGuard guard;
+        for (int i = 0; i < 60; i++) {
+            auto second = behind(120);
+            second.skipped = 0;
+            second.pending_frames = 0;
+            second.dropped_frames = i * 10;
+            assert(!guard.update(second));
+        }
+    }
+    {
+        // Lost frames with dropped decoded frames count.
+        FrameRateGuard guard;
+        bool lowered = false;
+        for (int i = 0; i < 5 && !lowered; i++) {
+            auto second = behind(120);
+            second.pending_frames = 0;
+            second.dropped_frames = i * 2;
+            lowered = guard.update(second);
+        }
+        assert(lowered);
+    }
+    {
+        // 60 FPS and below are never touched.
+        FrameRateGuard guard;
+        for (int i = 0; i < 60; i++)
+            assert(!guard.update(behind(60)));
+    }
+    {
+        // A reconnect warms up again.
+        FrameRateGuard guard;
+        for (int i = 0; i < 4; i++)
+            assert(!guard.update(behind(120)));
+        guard.restartWindow();
+        for (int i = 0; i < 4; i++)
+            assert(!guard.update(behind(120)));
+        assert(guard.update(behind(120)));
+    }
+    assert(FrameRateGuard::fellBehind(120, 107));
+    assert(!FrameRateGuard::fellBehind(120, 108));
+    assert(!FrameRateGuard::fellBehind(60, 10));
+}
+
 int main() {
+    guard_tests();
+    {
+        // Seconds left to the frame-rate guard aren't judged.
+        BitrateAdapter adapter;
+        Second second = poor();
+        second.fell_behind = true;
+        assert(run(adapter, 300, second) == Change::NONE);
+        assert(run(adapter, 6, poor()) == Change::LOWER);
+    }
     {
         BitrateAdapter adapter;
         assert(run(adapter, 5, poor()) == Change::NONE); // warm-up isn't judged
@@ -145,13 +228,14 @@ def main():
                 "-I" + str(ROOT / "app/src/streaming"),
                 str(tmp / "test.cpp"),
                 str(ROOT / "app/src/streaming/BitrateAdapter.cpp"),
+                str(ROOT / "app/src/streaming/FrameRateGuard.cpp"),
                 "-o",
                 str(binary),
             ],
             check=True,
         )
         subprocess.run([str(binary)], check=True)
-    print("Bitrate step-down: warm-up, loss signals, one restore and floor passed")
+    print("Bitrate step-down and frame-rate guard: warm-up, loss signals, one change each and floor passed")
 
 
 if __name__ == "__main__":

@@ -38,7 +38,7 @@ BitrateAdapter::Change BitrateAdapter::update(const Second& second) {
 
     // Skip the first seconds of each connection, which are dominated by
     // the startup keyframe burst.
-    if (++m_seconds <= kWarmupSeconds)
+    if (++m_seconds <= kWarmupSeconds || second.fell_behind)
         return Change::NONE;
 
     const bool poor = isPoor(second, drops, idrs);
