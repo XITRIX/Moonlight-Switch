@@ -53,6 +53,15 @@ int Switch2VideoDecoder::setup(int format, int width, int height, int fps, void*
     AVFrameHolder::instance().prepare(fps, true, 4);
     brls::Logger::info("Switch 2 decoder: native {} requested, {}x{} at {} FPS; awaiting keyframe",
         format == VIDEO_FORMAT_H264 ? "H.264" : "AV1", width, height, fps);
+    // AV1 needs no codec configuration, so create it now instead of on the
+    // first keyframe, where creation stalls the stream for about 20 ms at 4K.
+    // H.264 still waits for the SPS/PPS of its first IDR.
+    if (format == VIDEO_FORMAT_AV1_MAIN8)
+    {
+        std::lock_guard<std::mutex> lock(m_mutex);
+        if (openHardware({ }))
+            m_need_idr = true; // Still start decoding on a keyframe.
+    }
     return 0;
 }
 
@@ -305,8 +314,9 @@ int Switch2VideoDecoder::submit_decode_unit(PDECODE_UNIT unit)
         if (m_format == VIDEO_FORMAT_H264 && (!normalize(sps) || !normalize(pps)))
             return DR_NEED_IDR;
         sps.insert(sps.end(), pps.begin(), pps.end());
-        if (!openHardware(sps))
+        if (!m_open && !openHardware(sps))
             return DR_NEED_IDR;
+        m_need_idr = false;
     }
     if (!drain(0))
         return DR_NEED_IDR;
