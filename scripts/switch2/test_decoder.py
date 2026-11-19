@@ -98,6 +98,9 @@ typedef struct AVFrame {
 AVFrame* av_frame_alloc(void);
 void av_frame_free(AVFrame**);
 int av_frame_get_buffer(AVFrame*,int);
+enum AVCodecID { AV_CODEC_ID_H264=27, AV_CODEC_ID_HEVC=173, AV_CODEC_ID_AV1=226 };
+typedef struct AVCodec AVCodec;
+const AVCodec* avcodec_find_decoder(enum AVCodecID);
 """,
         )
         write(
@@ -203,6 +206,10 @@ AVBufferRef* av_buffer_create(uint8_t* data,size_t,void (*fn)(void*,uint8_t*),vo
 }
 AVBufferRef* av_buffer_ref(const AVBufferRef* ref) {auto* r=const_cast<AVBufferRef*>(ref);++r->refs;return r;}
 void av_buffer_unref(AVBufferRef** ref) { if(*ref && --(*ref)->refs==0) {(*ref)->freefn(nullptr,(*ref)->data);delete *ref;}*ref=nullptr; }
+const AVCodec* avcodec_find_decoder(enum AVCodecID id) {
+ static const int codec=0;
+ return id==AV_CODEC_ID_AV1 ? nullptr : reinterpret_cast<const AVCodec*>(&codec);
+}
 AVFrame* av_frame_alloc(void) { ++liveFrames;return new AVFrame{}; }
 void av_frame_free(AVFrame** f) {
  if(!*f)return;
@@ -352,6 +359,14 @@ int main() {
  {
   Settings::instance().hw=false;Switch2VideoDecoder d;
   assert(d.setup(VIDEO_FORMAT_H264,16,16,60,nullptr,0)==0 && softwareSetups==1);
+ }
+ reset();
+ {
+  assert(Switch2VideoDecoder::hardwareFormats()==(VIDEO_FORMAT_H264|VIDEO_FORMAT_AV1_MAIN8));
+  assert(Switch2VideoDecoder::softwareFormats()==(VIDEO_FORMAT_H264|VIDEO_FORMAT_H265|VIDEO_FORMAT_H265_MAIN10));
+  Settings::instance().hw=false;Switch2VideoDecoder d;
+  assert(d.setup(VIDEO_FORMAT_AV1_MAIN8,16,16,60,nullptr,0)==0 && softwareSetups==0);
+  assert(d.setup(VIDEO_FORMAT_AV1_MAIN10,16,16,60,nullptr,0)==-1 && softwareSetups==0);
  }
  reset();
  {

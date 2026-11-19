@@ -26,17 +26,19 @@ int Switch2VideoDecoder::setup(int format, int width, int height, int fps, void*
     cleanup();
     if (width <= 0 || height <= 0 || width > 4096 || height > 4096 || fps <= 0)
         return -1;
-    if ((format & VIDEO_FORMAT_MASK_H265) || !Settings::instance().use_hw_decoding())
+    const bool hardware = format & hardwareFormats();
+    const bool software = format & softwareFormats();
+    if (!hardware && !software)
     {
-        brls::Logger::info("Switch 2 decoder: software {} (HEVC has no SDK codec entry; hardware setting={})",
-            format & VIDEO_FORMAT_MASK_H265 ? "HEVC" : "requested codec", Settings::instance().use_hw_decoding());
+        brls::Logger::error("Switch 2 decoder: no decoder for format 0x{:x}", format);
+        return -1;
+    }
+    if (!hardware || (software && !Settings::instance().use_hw_decoding()))
+    {
+        brls::Logger::info("Switch 2 decoder: software format 0x{:x} (hardware available={}, setting={})", format,
+            hardware, Settings::instance().use_hw_decoding());
         m_software = std::make_unique<FFmpegVideoDecoder>();
         return m_software->setup(format, width, height, fps, context, flags);
-    }
-    if (format != VIDEO_FORMAT_H264 && format != VIDEO_FORMAT_AV1_MAIN8)
-    {
-        brls::Logger::error("Switch 2 decoder: unsupported native format 0x{:x}", format);
-        return -1;
     }
     m_format     = format;
     m_width      = width;
@@ -332,6 +334,20 @@ int Switch2VideoDecoder::submit_decode_unit(PDECODE_UNIT unit)
 }
 
 int Switch2VideoDecoder::capabilities() const { return CAPABILITY_SLICES_PER_FRAME(4); }
+
+int Switch2VideoDecoder::hardwareFormats() { return VIDEO_FORMAT_H264 | VIDEO_FORMAT_AV1_MAIN8; }
+
+int Switch2VideoDecoder::softwareFormats()
+{
+    int formats = 0;
+    if (avcodec_find_decoder(AV_CODEC_ID_H264))
+        formats |= VIDEO_FORMAT_H264;
+    if (avcodec_find_decoder(AV_CODEC_ID_HEVC))
+        formats |= VIDEO_FORMAT_H265 | VIDEO_FORMAT_H265_MAIN10;
+    if (avcodec_find_decoder(AV_CODEC_ID_AV1))
+        formats |= VIDEO_FORMAT_AV1_MAIN8 | VIDEO_FORMAT_AV1_MAIN10;
+    return formats;
+}
 
 VideoDecodeStats* Switch2VideoDecoder::video_decode_stats()
 {

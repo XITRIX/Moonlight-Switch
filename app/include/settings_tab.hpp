@@ -9,6 +9,7 @@
 
 #include <borealis.hpp>
 
+#include "Settings.hpp"
 #include "views/boolean_slider_cell.hpp"
 
 class SettingsTab : public brls::Box {
@@ -69,4 +70,7 @@ class SettingsTab : public brls::Box {
     std::string getTextFromButtons(std::vector<brls::ControllerButton> buttons);
     NVGcolor getColorFromButtons(std::vector<brls::ControllerButton> buttons);
     void updateDeadZoneItems();
+#ifdef __SWITCH2__
+    void updateHwDecoding(VideoCodec selectedCodec);
+#endif
 };

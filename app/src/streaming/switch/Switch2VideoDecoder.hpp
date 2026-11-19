@@ -29,6 +29,11 @@ class Switch2VideoDecoder : public IFFmpegVideoDecoder
     int capabilities() const override;
     VideoDecodeStats* video_decode_stats() override;
 
+    // VIDEO_FORMAT_* bits the SDK decodes in hardware, and the ones this
+    // build's FFmpeg has a software decoder for.
+    static int hardwareFormats();
+    static int softwareFormats();
+
   private:
     bool openHardware(const std::vector<uint8_t>& config);
     void closeHardware(); // Call with m_mutex held, after stopping the reader on cleanup.
