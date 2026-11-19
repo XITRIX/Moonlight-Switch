@@ -104,6 +104,8 @@ struct AVFrameHolder {
 struct Switch2VulkanContext {
     static Switch2VulkanContext* current(){static Switch2VulkanContext c;return &c;}
     void videoFrameChanged(bool consumed){assert(consumed);}
+    void setDockedHighRefresh(bool enabled){dockedHighRefresh=enabled;}
+    bool dockedHighRefresh=false;
 };
 void LiStopConnection(){
     assert(std::this_thread::get_id()==mainThread);events.push_back("stop");
@@ -152,7 +154,11 @@ int main() {
     assert((events==std::vector<std::string>{"invalidate","stop"}));
     assert(starts==2);s->stop(false);assert(events.size()==2);
     s->draw(nullptr,1280,720);assert(draws==3);
+    Switch2VulkanContext::current()->dockedHighRefresh=true;
     delete s;
+#ifdef __SWITCH2__
+    assert(!Switch2VulkanContext::current()->dockedHighRefresh); // menus go back to the console's mode
+#endif
 
     old=new MoonlightSession("host",1);
     MoonlightSession::requestRestart();delete old;
