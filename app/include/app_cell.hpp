@@ -26,4 +26,6 @@ class AppCell : public Box {
 
   private:
     void updateFavoriteAction(Host host, AppInfo app);
+    void fetchBoxArt(const Host& host, int appId, int attempt);
+    void retryBoxArt(const Host& host, int appId, int attempt);
 };
