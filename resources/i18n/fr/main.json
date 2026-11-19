@@ -64,6 +64,7 @@
         "dialog_header": "Erreur",
         "host_not_found": "Machine hôte non trouvée",
         "ip_not_obtained": "Impossible de récupérer l'adresse IP",
+        "no_video": "Le PC n'a envoyé aucune vidéo\nVérifiez que son pare-feu laisse passer le port vidéo, puis réessayez",
         "stream_start": "La diffusion a échoué",
         "unknown_error": "Une erreur inconnue s'est produite"
     },

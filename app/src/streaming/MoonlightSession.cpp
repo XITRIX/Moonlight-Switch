@@ -128,6 +128,16 @@ void MoonlightSession::handle_connection_terminated(int error_code) {
         return;
     }
 
+    // No video packet ever arrived, so a reconnect would only wait again.
+    // Usually the PC's firewall is dropping the video port.
+    if (error_code == ML_ERROR_NO_VIDEO_TRAFFIC) {
+        brls::Logger::info("MoonlightSession: No video traffic from the host");
+        m_termination_error = error_code;
+        m_is_active = false;
+        m_is_terminated = true;
+        return;
+    }
+
     if (error_code != 0) {
         brls::Logger::info("MoonlightSession: Reconnection attempt");
         restart();
@@ -270,6 +280,7 @@ void MoonlightSession::start(ServerCallback<bool> callback, bool is_sunshine) {
     m_is_sunshine = is_sunshine;
     m_stop_requested = false;
     m_is_terminated = false;
+    m_termination_error = 0;
 
     LiInitializeStreamConfiguration(&m_config);
 

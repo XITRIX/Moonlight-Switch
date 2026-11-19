@@ -348,7 +348,7 @@ void StreamingView::draw(NVGcontext* vg, float x, float y, float width,
         return;
 
     if (session->is_terminated()) {
-        terminate(false);
+        reportTermination();
         return;
     }
 
@@ -499,6 +499,19 @@ void StreamingView::removeKeyboard() {
     keyboard->removeFromSuperView();
     keyboard = nullptr;
     Application::giveFocus(this);
+}
+
+void StreamingView::reportTermination() {
+    if (terminationReported)
+        return;
+    terminationReported = true;
+
+    if (session->termination_error() != ML_ERROR_NO_VIDEO_TRAFFIC) {
+        terminate(false);
+        return;
+    }
+
+    showError("error/no_video"_i18n, [this]() { terminate(false); });
 }
 
 void StreamingView::terminate(bool terminateApp) {

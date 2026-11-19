@@ -64,6 +64,7 @@
         "dialog_header": "Errore",
         "host_not_found": "PC Host non trovato...",
         "ip_not_obtained": "Impossibile ottenere l'indirizzo IP...",
+        "no_video": "Il PC non ha inviato video\nVerifica che il suo firewall lasci passare la porta video, poi riprova",
         "stream_start": "Errore nell'avvio dello stream...",
         "unknown_error": "Si è verificato un problema sconosciuto..."
     },
