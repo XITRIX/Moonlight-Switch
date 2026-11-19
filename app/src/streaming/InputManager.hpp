@@ -76,7 +76,7 @@ class MoonlightInputManager : public Singleton<MoonlightInputManager> {
     void handleRumbleTriggers(unsigned short controller, unsigned short lowFreqMotor, unsigned short highFreqMotor);
     void updateTouchScreenPanDelta(brls::PanGestureStatus panStatus);
     void reloadButtonMappingLayout();
-    void setInputEnabled(bool enabled) { inputEnabled = enabled; }
+    void setInputEnabled(bool enabled);
     static void leftMouseClick();
     static void rightMouseClick();
 
@@ -90,6 +90,7 @@ class MoonlightInputManager : public Singleton<MoonlightInputManager> {
     RumbleValues rumbleCache[GAMEPADS_MAX];
     GamepadState lastGamepadStates[GAMEPADS_MAX];
     ComboHold comboHolds[GAMEPADS_MAX][3];
+    uint32_t heldWhileDisabled[GAMEPADS_MAX] = {};
     brls::ControllerButton mappingButtons[brls::_BUTTON_MAX];
     std::optional<brls::PanGestureStatus> panStatus;
     std::map<uint32_t, bool> activeTouchIDs;
@@ -117,6 +118,7 @@ class MoonlightInputManager : public Singleton<MoonlightInputManager> {
 
     GamepadState getControllerState(int controllerNum, bool specialKey);
     void holdBackLocalCombos(int controllerNum, brls::ControllerState& controller);
+    void holdBackHeldWhileDisabled(int controllerNum, brls::ControllerState& controller);
     void handleControllers(bool specialKey);
 
     static short controllersToMap();

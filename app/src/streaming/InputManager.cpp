@@ -348,6 +348,7 @@ GamepadState MoonlightInputManager::getControllerState(int controllerNum,
 
     brls::Application::setSwapHalfJoyconStickToDpad(Settings::instance().swap_joycon_stick_to_dpad());
     brls::Application::getPlatform()->getInputManager()->updateControllerState(&rawController, controllerNum);
+    holdBackHeldWhileDisabled(controllerNum, rawController);
     holdBackLocalCombos(controllerNum, rawController);
 #ifdef __SWITCH__
     auto* switchInput = static_cast<brls::SwitchInputManager*>(brls::Application::getPlatform()->getInputManager());
@@ -412,6 +413,13 @@ GamepadState MoonlightInputManager::getControllerState(int controllerNum,
         ? (gamepadState.buttonFlags |= LIMELIGHT_KEY)                          \
         : (gamepadState.buttonFlags &= ~LIMELIGHT_KEY);
 
+    // A real D-pad can't press opposite directions together, so don't send
+    // them to the host.
+    if (controller.buttons[brls::BUTTON_UP] && controller.buttons[brls::BUTTON_DOWN])
+        controller.buttons[brls::BUTTON_UP] = controller.buttons[brls::BUTTON_DOWN] = false;
+    if (controller.buttons[brls::BUTTON_LEFT] && controller.buttons[brls::BUTTON_RIGHT])
+        controller.buttons[brls::BUTTON_LEFT] = controller.buttons[brls::BUTTON_RIGHT] = false;
+
     SET_GAME_PAD_STATE(UP_FLAG, brls::BUTTON_UP);
     SET_GAME_PAD_STATE(DOWN_FLAG, brls::BUTTON_DOWN);
     SET_GAME_PAD_STATE(LEFT_FLAG, brls::BUTTON_LEFT);
@@ -452,6 +460,30 @@ GamepadState MoonlightInputManager::getControllerState(int controllerNum,
                : (gamepadState.buttonFlags &= ~SPECIAL_FLAG);
 
     return gamepadState;
+}
+
+void MoonlightInputManager::setInputEnabled(bool enabled) {
+    if (inputEnabled && !enabled) {
+        for (auto& held : heldWhileDisabled)
+            held = ~0U;
+    }
+    inputEnabled = enabled;
+}
+
+// A button still down from the overlay, like the A that closed it, reaches
+// the host only after it is let go and pressed again.
+void MoonlightInputManager::holdBackHeldWhileDisabled(
+    int controllerNum, brls::ControllerState& controller) {
+    if (controllerNum < 0 || controllerNum >= GAMEPADS_MAX)
+        return;
+
+    uint32_t& held = heldWhileDisabled[controllerNum];
+    for (int i = 0; i < brls::_BUTTON_MAX; i++) {
+        if (!controller.buttons[i])
+            held &= ~(1U << i);
+        else if (held & (1U << i))
+            controller.buttons[i] = false;
+    }
 }
 
 uint32_t ComboHold::update(uint32_t buttons, uint32_t combo,
