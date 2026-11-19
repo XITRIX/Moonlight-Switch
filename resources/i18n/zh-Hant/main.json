@@ -88,6 +88,7 @@
         "rename": "重新命名",
         "rename_title": "重新命名主機",
         "remove_message": "確定想要移除目前主機嗎？",
+        "remove_hint": "電腦上仍保留配對。要取消此主機的配對，請開啟 Sunshine 網頁介面，進入「疑難排解」，在「取消裝置配對」中操作。",
         "status": "狀態",
         "unable": "不可用",
         "wait": "等待中……",

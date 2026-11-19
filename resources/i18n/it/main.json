@@ -88,6 +88,7 @@
         "rename": "Rinomina",
         "rename_title": "Rinomina host",
         "remove_message": "Sei sicuro di voler rimuovere questo host?",
+        "remove_hint": "Il PC resta associato. Per dissociare questa console, apri l'interfaccia web di Sunshine, vai su Risoluzione dei problemi e usa Dissocia in Dissocia dispositivi.",
         "status": "Stato",
         "unable": "Impossibile",
         "wait": "Attendi...",

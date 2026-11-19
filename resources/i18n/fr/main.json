@@ -88,6 +88,7 @@
         "rename": "Renommer",
         "rename_title": "Renommer l'hôte",
         "remove_message": "Êtes-vous sûr de vouloir supprimer cet hôte ?",
+        "remove_hint": "Le PC reste jumelé. Pour dissocier cette console, ouvrez l'interface web de Sunshine, allez dans Dépannage et utilisez Dissocier sous Dissocier les appareils.",
         "status": "Statut ",
         "unable": "Injoignable",
         "wait": "En attente...",

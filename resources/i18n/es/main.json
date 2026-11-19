@@ -88,6 +88,7 @@
         "rename": "Renombrar",
         "rename_title": "Renombrar host",
         "remove_message": "¿Estás seguro de eliminar este servidor?",
+        "remove_hint": "El PC sigue emparejado. Para desemparejar esta consola, abre la interfaz web de Sunshine, ve a Solución de problemas y usa Desemparejar en Desemparejar dispositivos.",
         "status": "Estado",
         "unable": "No disponible",
         "wait": "Espera...",
