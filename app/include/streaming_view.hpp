@@ -16,6 +16,7 @@
 #include <optional>
 #include "GameStreamClient.hpp"
 #include "MoonlightSession.hpp"
+#include "BitrateAdapter.hpp"
 #include "two_finger_scroll_recognizer.hpp"
 
 class StreamingView : public brls::Box {
@@ -55,6 +56,10 @@ class StreamingView : public brls::Box {
     TwoFingerScrollGestureRecognizer* scrollTouchRecognizer = nullptr;
     brls::Event<bool>::Subscription windowFocusSubscription;
     bool windowFocused = true;
+    BitrateAdapter bitrateAdapter;
+    std::chrono::steady_clock::time_point bitrateSampleTime;
+
+    void updateBitrateAdapter();
 
     void onWindowFocusChanged(bool focused);
     void reportTermination();

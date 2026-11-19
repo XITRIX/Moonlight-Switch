@@ -143,6 +143,9 @@ class Settings : public Singleton<Settings> {
     [[nodiscard]] bool bitrate_auto() const { return m_bitrate_auto; }
     void set_bitrate_auto(bool bitrate_auto) { m_bitrate_auto = bitrate_auto; }
 
+    [[nodiscard]] bool bitrate_adaptive() const { return m_bitrate_adaptive; }
+    void set_bitrate_adaptive(bool bitrate_adaptive) { m_bitrate_adaptive = bitrate_adaptive; }
+
     static int max_bitrate();
     static int default_bitrate(int width, int height, int fps);
 
@@ -364,6 +367,7 @@ class Settings : public Singleton<Settings> {
 #endif
     int m_bitrate = 10000;
     bool m_bitrate_auto = true;
+    bool m_bitrate_adaptive = false;
     bool m_enable_hdr = false;
     UpscalingMode m_upscaling_mode = UPSCALING_OFF;
     bool m_enable_dithering = false;

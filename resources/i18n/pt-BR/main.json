@@ -130,6 +130,7 @@
     "settings": {
         "audio_backend": "Audio driver",
         "av1": "AV1 (Experimental)",
+        "bitrate_adaptive": "Reduzir com conexão ruim",
         "bitrate_auto": "Automático",
         "buttons": {
             "chat": "Bate-papo (C)",
@@ -202,6 +203,8 @@
         "zero_threads": "0 (Não usar threads)"
     },
     "streaming": {
+        "bitrate_lowered": "Conexão ruim, reduzindo a taxa de bits",
+        "bitrate_restored": "Conexão estável, restaurando a taxa de bits",
         "connection": "Conexão",
         "debug_info": "Informações de debug",
         "disconnect": "Desconectar",
