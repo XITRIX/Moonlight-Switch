@@ -1,5 +1,6 @@
 #include "MoonlightSession.hpp"
 #include "AVFrameHolder.hpp"
+#include "BitrateAdapter.hpp"
 #include "GameStreamClient.hpp"
 #include "InputManager.hpp"
 #include "Settings.hpp"
@@ -192,6 +193,11 @@ int MoonlightSession::video_decoder_setup(int video_format, int width,
                                           int height, int redraw_rate,
                                           void* context, int dr_flags) {
     m_video_format = video_format;
+    if (m_active_session) {
+        m_active_session->m_stream_format = video_format;
+        m_active_session->m_stream_height = height;
+        m_active_session->m_stream_fps = redraw_rate;
+    }
     if (m_active_session && m_active_session->m_video_decoder) {
         return m_active_session->m_video_decoder->setup(
             video_format, width, height, redraw_rate, context, dr_flags);
@@ -219,9 +225,19 @@ void MoonlightSession::video_decoder_cleanup() {
 
 int MoonlightSession::video_decoder_submit_decode_unit(
     PDECODE_UNIT decode_unit) {
+    const uint64_t now = LiGetMicroseconds();
+    const auto age = std::chrono::microseconds(
+        now > decode_unit->receiveTimeUs ? now - decode_unit->receiveTimeUs : 0);
+    AVFrameHolder::instance().recordArrival(
+        int64_t(decode_unit->presentationTimeUs) * 1000,
+        std::chrono::steady_clock::now() - age);
+
     if (m_active_session && m_active_session->m_video_decoder) {
-        return m_active_session->m_video_decoder->submit_decode_unit(
+        int result = m_active_session->m_video_decoder->submit_decode_unit(
             decode_unit);
+        if (result == DR_NEED_IDR)
+            m_active_session->m_idr_requests++;
+        return result;
     }
     return DR_OK;
 }
@@ -266,13 +282,7 @@ void MoonlightSession::audio_renderer_decode_and_play_sample(
 
 // MARK: MoonlightSession
 
-void MoonlightSession::start(ServerCallback<bool> callback, bool is_sunshine) {
-    m_is_sunshine = is_sunshine;
-    m_stop_requested = false;
-    m_is_terminated = false;
-
-    LiInitializeStreamConfiguration(&m_config);
-
+void MoonlightSession::stream_resolution(int* width, int* height) {
     int resolution = Settings::instance().resolution();
     int h = resolution;
     int w = h * 16 / 9;
@@ -305,9 +315,22 @@ void MoonlightSession::start(ServerCallback<bool> callback, bool is_sunshine) {
         w += 1;
     }
 
-    m_config.width = w;
-    m_config.height = h;
+    *width = w;
+    *height = h;
+}
+
+void MoonlightSession::start(ServerCallback<bool> callback, bool is_sunshine) {
+    m_is_sunshine = is_sunshine;
+    m_stop_requested = false;
+    m_is_terminated = false;
+    m_connection_status_is_poor = false;
+
+    LiInitializeStreamConfiguration(&m_config);
+
+    stream_resolution(&m_config.width, &m_config.height);
     m_config.fps = Settings::instance().fps();
+    if (m_fps_limit > 0 && m_config.fps > m_fps_limit)
+        m_config.fps = m_fps_limit;
 #ifdef __SWITCH2__
     m_config.colorSpace = COLORSPACE_REC_709;
     m_config.colorRange = COLOR_RANGE_LIMITED;
@@ -315,7 +338,11 @@ void MoonlightSession::start(ServerCallback<bool> callback, bool is_sunshine) {
     m_config.audioConfiguration = AUDIO_CONFIGURATION_STEREO;
     m_config.packetSize = 1392;
     m_config.streamingRemotely = STREAM_CFG_AUTO;
-    m_config.bitrate = Settings::instance().bitrate();
+    m_config.bitrate = Settings::instance().bitrate_auto()
+        ? BitrateAdapter::scaled_bitrate(
+              Settings::default_bitrate(m_config.width, m_config.height, m_config.fps),
+              m_bitrate_scale)
+        : Settings::instance().bitrate();
     m_config.encryptionFlags = m_is_sunshine ? ENCFLG_ALL : ENCFLG_VIDEO;
 
     switch (Settings::instance().video_codec()) {

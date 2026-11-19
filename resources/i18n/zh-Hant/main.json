@@ -115,6 +115,8 @@
     "settings": {
         "audio_backend": "音頻驅動",
         "av1": "AV1 (實驗性)",
+        "bitrate_adaptive": "連線不佳時降低",
+        "bitrate_auto": "自動",
         "buttons": {
             "chat": "聊天（C）",
             "home": "Home",
@@ -166,6 +168,9 @@
         "resolution_scale": "縮放",
         "image_adjustments": "影像調整",
         "dithering": "抖動",
+        "stream_stats": "串流統計",
+        "stream_stats_compact": "簡潔",
+        "stream_stats_detailed": "詳細",
         "upscaling": "將低解析度升尺度",
         "rcas_sharpening": "RCAS 銳化",
         "rumble_force": "震動力度",
@@ -186,10 +191,12 @@
         "zero_threads": "0（不使用執行緒）"
     },
     "streaming": {
+        "bitrate_lowered": "連線不佳，正在降低位元率",
+        "bitrate_restored": "連線已穩定，正在恢復位元率",
         "connection": "連接選項",
-        "debug_info": "除錯訊息",
         "disconnect": "斷開連接",
         "esc": "ESC按鍵",
+        "fps_lowered": "主機跟不上此影格率，正在切換到 60 FPS",
         "input": "輸入",
         "keys": "按鍵",
         "logout": "登出",

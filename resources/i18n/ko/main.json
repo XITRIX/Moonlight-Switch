@@ -115,6 +115,8 @@
     "settings": {
         "audio_backend": "오디오 드라이버",
         "av1": "AV1 (실험용)",
+        "bitrate_adaptive": "연결이 나쁠 때 낮추기",
+        "bitrate_auto": "자동",
         "buttons": {
             "chat": "채팅(C)",
             "home": "홈",
@@ -166,6 +168,9 @@
         "resolution_scale": "배율",
         "image_adjustments": "이미지 조정",
         "dithering": "디더링",
+        "stream_stats": "스트림 통계",
+        "stream_stats_compact": "간단히",
+        "stream_stats_detailed": "자세히",
         "upscaling": "저해상도 업스케일링",
         "rcas_sharpening": "RCAS 선명화",
         "rumble_force": "진동 강도",
@@ -186,10 +191,12 @@
         "zero_threads": "0 (스레드 사용 안 함)"
     },
     "streaming": {
+        "bitrate_lowered": "연결 상태가 나빠 비트레이트를 낮춥니다",
+        "bitrate_restored": "연결이 안정되어 비트레이트를 복원합니다",
         "connection": "연결",
-        "debug_info": "디버그 정보",
         "disconnect": "연결 해제",
         "esc": "ESC 버튼",
+        "fps_lowered": "콘솔이 이 프레임 레이트를 따라가지 못해 60 FPS로 전환합니다",
         "input": "입력",
         "keys": "키",
         "logout": "로그아웃",

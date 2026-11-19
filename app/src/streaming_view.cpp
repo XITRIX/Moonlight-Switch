@@ -356,6 +356,8 @@ void StreamingView::draw(NVGcontext* vg, float x, float y, float width,
 
     if (!tempInputLock && session->is_active())
         handleInput();
+    updateFrameRateGuard();
+    updateBitrateAdapter();
     handleOverlayCombo();
     handleMouseInputCombo();
 
@@ -382,7 +384,8 @@ void StreamingView::draw(NVGcontext* vg, float x, float y, float width,
 #endif
     }
 
-    if (draw_stats) {
+    const auto statsMode = Settings::instance().stream_stats_mode();
+    if (statsMode != StreamStatsMode::OFF) {
         // The stats only change a few times a second; formatting them and
         // laying the text out twice (blurred shadow + text) every frame cost
         // a noticeable part of the frame. Rebuild the text every 250 ms and
@@ -395,7 +398,9 @@ void StreamingView::draw(NVGcontext* vg, float x, float y, float width,
         const auto statsNow = std::chrono::steady_clock::now();
         if (statsText.empty() ||
             statsNow - statsTextTime >= std::chrono::milliseconds(250)) {
-            statsText = buildStatsText();
+            statsText = statsMode == StreamStatsMode::COMPACT
+                            ? buildCompactStatsText() + "\n" + buildFrameCounterText()
+                            : buildFrameCounterText() + "\n" + buildStatsText();
             statsTextTime = statsNow;
             nvgTextBoxBounds(vg, 20, 30, width, statsText.c_str(), nullptr,
                              statsBounds);
@@ -413,6 +418,135 @@ void StreamingView::draw(NVGcontext* vg, float x, float y, float width,
     }
 
     Box::draw(vg, x, y, width, height, style, ctx);
+}
+
+void StreamingView::updateFrameRateGuard() {
+    const auto counter = AVFrameHolder::instance().getFrameCounter();
+    if (session->is_active() && counter.second == frameRateGuardSecond)
+        return;
+
+    // A gap in the seconds, a restarted counter or a reconnect warms up again.
+    const bool next = counter.second == frameRateGuardSecond + 1;
+    frameRateGuardSecond = counter.second;
+    if (!session->is_active() || !next) {
+        frameRateGuard.restartWindow();
+        return;
+    }
+
+    FrameRateGuard::Second second;
+    second.fps = session->requested_config().fps;
+    second.presented = counter.presented;
+    second.skipped = counter.skipped;
+    second.dropped_frames =
+        session->session_stats()->video_decode_stats.network_dropped_frames;
+    second.idr_requests = session->idr_requests();
+    second.pending_frames = LiGetPendingVideoFrames();
+    if (!frameRateGuard.update(second))
+        return;
+
+    brls::Logger::info("StreamingView: {} FPS isn't keeping up, continuing at 60",
+                       second.fps);
+    brls::Application::notify("streaming/fps_lowered"_i18n);
+    session->set_fps_limit(60);
+    session->restart();
+}
+
+void StreamingView::updateBitrateAdapter() {
+    if (!Settings::instance().bitrate_auto() ||
+        !Settings::instance().bitrate_adaptive())
+        return;
+
+    if (!session->is_active()) {
+        bitrateAdapter.restartWindow();
+        return;
+    }
+
+    const auto now = std::chrono::steady_clock::now();
+    if (now - bitrateSampleTime < std::chrono::seconds(1))
+        return;
+    bitrateSampleTime = now;
+
+    BitrateAdapter::Second second;
+    second.bitrate = session->bitrate();
+    second.poor = session->connection_status_is_poor();
+    LiGetEstimatedRttInfo(&second.rtt_ms, nullptr);
+    second.dropped_frames =
+        session->session_stats()->video_decode_stats.network_dropped_frames;
+    second.idr_requests = session->idr_requests();
+    second.pending_frames = LiGetPendingVideoFrames();
+    second.fell_behind = FrameRateGuard::fellBehind(
+        session->requested_config().fps,
+        AVFrameHolder::instance().getFrameCounter().presented);
+
+    auto change = bitrateAdapter.update(second);
+    if (change == BitrateAdapter::Change::NONE)
+        return;
+
+    brls::Logger::info("StreamingView: {} bitrate, scale {}",
+                       change == BitrateAdapter::Change::LOWER ? "lowering" : "restoring",
+                       bitrateAdapter.scale());
+    brls::Application::notify(change == BitrateAdapter::Change::LOWER
+                                  ? "streaming/bitrate_lowered"_i18n
+                                  : "streaming/bitrate_restored"_i18n);
+    session->set_bitrate_scale(bitrateAdapter.scale());
+    session->restart();
+}
+
+static std::string videoFormatName(int format) {
+    std::string name = "H.264";
+    if (format & VIDEO_FORMAT_MASK_AV1)
+        name = "AV1";
+    else if (format & VIDEO_FORMAT_MASK_H265)
+        name = "HEVC";
+    if (format & VIDEO_FORMAT_MASK_10BIT)
+        name += " 10-bit";
+    return name;
+}
+
+static int videoFormatMask(VideoCodec codec) {
+    switch (codec) {
+    case H265:
+        return VIDEO_FORMAT_MASK_H265;
+    case AV1:
+        return VIDEO_FORMAT_MASK_AV1;
+    default:
+        return VIDEO_FORMAT_MASK_H264;
+    }
+}
+
+std::string StreamingView::buildCompactStatsText() {
+    const auto& requested = session->requested_config();
+    const int requestedCodec = videoFormatMask(Settings::instance().video_codec());
+
+    auto text = fmt::format("{}p{} | {} | {:.1f} Mbps", session->stream_height(),
+                            session->stream_fps(),
+                            videoFormatName(session->stream_format()),
+                            requested.bitrate / 1000.0);
+
+    if (session->stream_height() != requested.height ||
+        session->stream_fps() != requested.fps ||
+        !(session->stream_format() & requestedCodec)) {
+        text += fmt::format(" (requested {}p{} {})", requested.height,
+                            requested.fps, videoFormatName(requestedCodec));
+    }
+    return text;
+}
+
+std::string StreamingView::buildFrameCounterText() {
+    const auto counter = AVFrameHolder::instance().getFrameCounter();
+    const uint32_t lost = session->session_stats()->video_decode_stats.network_dropped_frames;
+    if (counter.second != frameCounterSecond) {
+        frameCounterLost = lost >= frameCounterLostBase ? lost - frameCounterLostBase : lost;
+        frameCounterLostBase = lost;
+        frameCounterSecond = counter.second;
+    }
+
+    auto text = fmt::format("Frames per second: {} shown | {} skipped | {} lost",
+                            counter.presented, counter.skipped, frameCounterLost);
+    if (counter.latencyMs >= 0) {
+        text += fmt::format(" | arrival to draw {:.1f} ms", counter.latencyMs);
+    }
+    return text;
 }
 
 std::string StreamingView::buildStatsText() {

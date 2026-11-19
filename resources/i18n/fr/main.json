@@ -115,6 +115,8 @@
     "settings": {
         "audio_backend": "Driver audio",
         "av1": "AV1 (Expérimental)",
+        "bitrate_adaptive": "Réduire si la connexion est mauvaise",
+        "bitrate_auto": "Automatique",
         "buttons": {
             "chat": "Chat (C)",
             "home": "Home",
@@ -166,6 +168,9 @@
         "resolution_scale": "Échelle",
         "image_adjustments": "Ajustements d'image",
         "dithering": "Tramage",
+        "stream_stats": "Statistiques du stream",
+        "stream_stats_compact": "Compactes",
+        "stream_stats_detailed": "Détaillées",
         "upscaling": "Mettre à l'échelle les basses résolutions",
         "rcas_sharpening": "Netteté RCAS",
         "rumble_force": "Force de vibration",
@@ -186,10 +191,12 @@
         "zero_threads": "0 (pas de threads)"
     },
     "streaming": {
+        "bitrate_lowered": "Mauvaise connexion, baisse du débit",
+        "bitrate_restored": "Connexion stable, rétablissement du débit",
         "connection": "Connexion",
-        "debug_info": "Infos de Debug",
         "disconnect": "Déconnecter",
         "esc": "Esc",
+        "fps_lowered": "La console ne suit pas cette fréquence d'images, passage à 60 FPS",
         "input": "Modes de saisie",
         "keys": "Touches",
         "logout": "Déconnexion",

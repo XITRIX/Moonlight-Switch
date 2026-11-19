@@ -115,6 +115,8 @@
     "settings": {
         "audio_backend": "音频驱动",
         "av1": "AV1 (实验性)",
+        "bitrate_adaptive": "连接不佳时降低",
+        "bitrate_auto": "自动",
         "buttons": {
             "chat": "聊天（C）",
             "home": "Home",
@@ -166,6 +168,9 @@
         "resolution_scale": "缩放",
         "image_adjustments": "图像调整",
         "dithering": "抖动",
+        "stream_stats": "串流统计",
+        "stream_stats_compact": "简洁",
+        "stream_stats_detailed": "详细",
         "upscaling": "将低分辨率升尺度",
         "rcas_sharpening": "RCAS 锐化",
         "rumble_force": "震动力度",
@@ -186,10 +191,12 @@
         "zero_threads": "0（不使用线程）"
     },
     "streaming": {
+        "bitrate_lowered": "连接不佳，正在降低码率",
+        "bitrate_restored": "连接已稳定，正在恢复码率",
         "connection": "连接选项",
-        "debug_info": "调试信息",
         "disconnect": "断开连接",
         "esc": "ESC按键",
+        "fps_lowered": "主机跟不上此帧率，正在切换到 60 FPS",
         "input": "输入",
         "keys": "按键",
         "logout": "退出",

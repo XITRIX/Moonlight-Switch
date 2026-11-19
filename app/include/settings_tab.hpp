@@ -30,6 +30,8 @@ class SettingsTab : public brls::Box {
     BRLS_BIND(brls::SelectorCell, decoder, "decoder");
     BRLS_BIND(brls::BooleanCell, hwDecoding, "use_hw_decoding");
     BRLS_BIND(brls::Header, header, "header");
+    BRLS_BIND(brls::BooleanCell, bitrateAuto, "bitrate_auto");
+    BRLS_BIND(brls::BooleanCell, bitrateAdaptive, "bitrate_adaptive");
     BRLS_BIND(brls::Slider, slider, "slider");
     BRLS_BIND(brls::SelectorCell, audioBackend, "audio_backend");
     BRLS_BIND(brls::BooleanCell, optimal, "optimal");
@@ -60,6 +62,7 @@ class SettingsTab : public brls::Box {
     BRLS_BIND(brls::Header, mouseScrollHeader, "mouse_scroll_header");
     BRLS_BIND(brls::Slider, mouseScrollSlider, "mouse_scroll_slider");
     BRLS_BIND(brls::BooleanCell, writeLog, "writeLog");
+    BRLS_BIND(brls::SelectorCell, streamStats, "stream_stats");
 
     static brls::View* create();
 
@@ -69,4 +72,6 @@ class SettingsTab : public brls::Box {
     std::string getTextFromButtons(std::vector<brls::ControllerButton> buttons);
     NVGcolor getColorFromButtons(std::vector<brls::ControllerButton> buttons);
     void updateDeadZoneItems();
+    int autoBitrate();
+    void updateBitrateHeader();
 };

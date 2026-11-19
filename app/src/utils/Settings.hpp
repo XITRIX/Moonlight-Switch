@@ -27,6 +27,8 @@ enum KeyboardType : int { COMPACT, FULLSIZED };
 
 enum class ButtonOverrideType : int { NONE, SCREENSHOT, HOME, CHAT };
 
+enum class StreamStatsMode : int { OFF, COMPACT, DETAILED };
+
 struct KeyMappingLayout {
     std::string title;
     bool editable;
@@ -139,6 +141,15 @@ class Settings : public Singleton<Settings> {
 
     [[nodiscard]] int bitrate() const { return m_bitrate; }
     void set_bitrate(int bitrate) { m_bitrate = bitrate; }
+
+    [[nodiscard]] bool bitrate_auto() const { return m_bitrate_auto; }
+    void set_bitrate_auto(bool bitrate_auto) { m_bitrate_auto = bitrate_auto; }
+
+    [[nodiscard]] bool bitrate_adaptive() const { return m_bitrate_adaptive; }
+    void set_bitrate_adaptive(bool bitrate_adaptive) { m_bitrate_adaptive = bitrate_adaptive; }
+
+    static int max_bitrate();
+    static int default_bitrate(int width, int height, int fps);
 
     [[nodiscard]] bool request_hdr() const { 
 #ifdef SUPPORT_HDR
@@ -253,6 +264,9 @@ class Settings : public Singleton<Settings> {
     void set_write_log(bool write_log) { m_write_log = write_log; }
     [[nodiscard]] bool write_log() const { return m_write_log; }
 
+    void set_stream_stats_mode(StreamStatsMode mode) { m_stream_stats_mode = mode; }
+    [[nodiscard]] StreamStatsMode stream_stats_mode() const { return m_stream_stats_mode; }
+
     void set_swap_ui_keys(bool swap_ui_keys) { m_swap_ui_keys = swap_ui_keys; }
     [[nodiscard]] bool swap_ui_keys() const { return m_swap_ui_keys; }
 
@@ -357,6 +371,8 @@ class Settings : public Singleton<Settings> {
     AudioBackend m_audio_backend = SDL;
 #endif
     int m_bitrate = 10000;
+    bool m_bitrate_auto = true;
+    bool m_bitrate_adaptive = false;
     bool m_enable_hdr = false;
     UpscalingMode m_upscaling_mode = UPSCALING_OFF;
     bool m_enable_dithering = false;
@@ -369,6 +385,7 @@ class Settings : public Singleton<Settings> {
     bool m_sops = false;
     bool m_play_audio = false;
     bool m_write_log = false;
+    StreamStatsMode m_stream_stats_mode = StreamStatsMode::OFF;
     bool m_swap_ui_keys = false;
     bool m_swap_joycon_stick_to_dpad = false;
     bool m_touchscreen_mouse_mode = false;

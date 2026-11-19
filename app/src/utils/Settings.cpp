@@ -4,6 +4,7 @@
 #include <cstring>
 #include <iomanip>
 #include <climits>
+#include <cmath>
 #include <filesystem>
 #ifdef __SWITCH__
 #include <borealis/platforms/switch/switch_input.hpp>
@@ -180,6 +181,47 @@ void Settings::set_mouse_scroll_multiplier(int percent)
 #endif
 }
 
+int Settings::max_bitrate() {
+#if defined(__PSV__)
+    return 20000;
+#elif defined(PLATFORM_SWITCH)
+    return 100000;
+#else
+    return 150000;
+#endif
+}
+
+int Settings::default_bitrate(int width, int height, int fps) {
+    // moonlight-qt's table: Mbps at 30 FPS by pixel count, interpolated.
+    static const struct {
+        int pixels;
+        float factor;
+    } table[] = {
+        {640 * 360, 1.0f},    {854 * 480, 2.0f},    {1280 * 720, 5.0f},
+        {1920 * 1080, 10.0f}, {2560 * 1440, 20.0f}, {3840 * 2160, 40.0f},
+    };
+
+    const int pixels = width * height;
+    float factor = table[std::size(table) - 1].factor;
+    for (size_t i = 0; i < std::size(table); i++) {
+        if (pixels > table[i].pixels)
+            continue;
+        if (i == 0 || pixels == table[i].pixels) {
+            factor = table[i].factor;
+        } else {
+            const auto& low = table[i - 1];
+            factor = low.factor + (table[i].factor - low.factor) *
+                (pixels - low.pixels) / (table[i].pixels - low.pixels);
+        }
+        break;
+    }
+
+    // Twice the frames don't need twice the bits above 60 FPS.
+    const float rate = fps <= 60 ? fps : std::sqrt(fps / 60.0f) * 60.0f;
+    const int kbps = (int)std::lround(factor * rate / 30.0f) * 1000;
+    return std::clamp(kbps, 500, max_bitrate());
+}
+
 void Settings::load() {
     loadBaseLayouts();
 
@@ -320,6 +362,17 @@ void Settings::load() {
                 }
             }
 
+            if (json_t* bitrate_auto = json_object_get(settings, "bitrate_auto")) {
+                m_bitrate_auto = json_typeof(bitrate_auto) == JSON_TRUE;
+            } else {
+                // Settings saved before Auto existed keep their bitrate.
+                m_bitrate_auto = json_object_get(settings, "bitrate") == nullptr;
+            }
+
+            if (json_t* bitrate_adaptive = json_object_get(settings, "bitrate_adaptive")) {
+                m_bitrate_adaptive = json_typeof(bitrate_adaptive) == JSON_TRUE;
+            }
+
             if (json_t* enable_hdr = json_object_get(settings, "enable_hdr")) {
                 m_enable_hdr = json_typeof(enable_hdr) == JSON_TRUE;
             }
@@ -389,6 +442,14 @@ void Settings::load() {
                 m_write_log = json_typeof(write_log) == JSON_TRUE;
             }
             
+            if (json_t* stream_stats = json_object_get(settings, "stream_stats")) {
+                if (json_typeof(stream_stats) == JSON_INTEGER) {
+                    auto mode = json_integer_value(stream_stats);
+                    if (mode >= (int)StreamStatsMode::OFF && mode <= (int)StreamStatsMode::DETAILED)
+                        m_stream_stats_mode = (StreamStatsMode)mode;
+                }
+            }
+
             if (json_t* swap_ui_keys = json_object_get(settings, "swap_ui_keys")) {
                 m_swap_ui_keys = json_typeof(swap_ui_keys) == JSON_TRUE;
             }
@@ -647,6 +708,8 @@ void Settings::save()
             json_object_set_new(settings, "video_codec", json_integer(m_video_codec));
             json_object_set_new(settings, "audio_backend", json_integer(m_audio_backend));
             json_object_set_new(settings, "bitrate", json_integer(m_bitrate));
+            json_object_set_new(settings, "bitrate_auto", m_bitrate_auto ? json_true() : json_false());
+            json_object_set_new(settings, "bitrate_adaptive", m_bitrate_adaptive ? json_true() : json_false());
             json_object_set_new(settings, "decoder_threads", json_integer(m_decoder_threads));
             json_object_set_new(settings, "frames_queue_size", json_integer(m_frames_queue_size));
             json_object_set_new(settings, "enable_hdr", m_enable_hdr ? json_true() : json_false());
@@ -661,6 +724,7 @@ void Settings::save()
             json_object_set_new(settings, "sops", m_sops ? json_true() : json_false());
             json_object_set_new(settings, "play_audio", m_play_audio ? json_true() : json_false());
             json_object_set_new(settings, "write_log", m_write_log ? json_true() : json_false());
+            json_object_set_new(settings, "stream_stats", json_integer((int)m_stream_stats_mode));
             json_object_set_new(settings, "swap_ui_keys", m_swap_ui_keys ? json_true() : json_false());
             json_object_set_new(settings, "swap_joycon_stick_to_dpad", m_swap_joycon_stick_to_dpad ? json_true() : json_false());
             json_object_set_new(settings, "touchscreen_mouse_mode", m_touchscreen_mouse_mode ? json_true() : json_false());

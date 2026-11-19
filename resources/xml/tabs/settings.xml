@@ -48,6 +48,12 @@
                 title="@i18n/settings/video_bitrate"
                 subtitle="10.0 Mbps"
                 paddingTop="60"/>
+
+            <brls:BooleanCell
+                id="bitrate_auto"/>
+
+            <brls:BooleanCell
+                id="bitrate_adaptive"/>
                 
             <brls:Slider
                 id="slider"
@@ -219,6 +225,9 @@
                 
             <brls:BooleanCell
                 id="writeLog"/>
+
+            <brls:SelectorCell
+                id="stream_stats"/>
             
         </brls:Box>
 

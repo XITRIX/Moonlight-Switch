@@ -21,11 +21,20 @@ class MoonlightSession {
     static MoonlightSession* activeSession();
     static void requestRestart();
 
+    // The stream size the current settings ask for, with Native resolved.
+    static void stream_resolution(int* width, int* height);
+
     void start(ServerCallback<bool> callback, bool is_sunshine);
     void stop(int terminate_app);
     void set_address(const std::string& address) { m_address = address; }
 
     void restart();
+
+    // Applies to the Automatic bitrate from the next connection on.
+    void set_bitrate_scale(float scale) { m_bitrate_scale = scale; }
+
+    // Caps the frame rate from the next connection on; 0 removes the cap.
+    void set_fps_limit(int fps) { m_fps_limit = fps; }
 
     void draw(NVGcontext* vg, int width, int height);
 
@@ -41,9 +50,19 @@ class MoonlightSession {
         return m_connection_status_is_poor;
     }
 
+    int bitrate() const { return m_config.bitrate; }
+
+    // Keyframes the decoder asked for since the session started.
+    uint32_t idr_requests() const { return m_idr_requests; }
+
     bool use_hdr() const {
         return m_use_hdr;
     }
+
+    const STREAM_CONFIGURATION& requested_config() const { return m_config; }
+    int stream_format() const { return m_stream_format; }
+    int stream_height() const { return m_stream_height; }
+    int stream_fps() const { return m_stream_fps; }
 
     SessionStats* session_stats() const {
         return (SessionStats*)&m_session_stats;
@@ -94,10 +113,16 @@ class MoonlightSession {
     std::atomic<bool> m_stop_requested{false};
     uint64_t m_generation = 0;
     bool m_connection_status_is_poor = false;
+    std::atomic<uint32_t> m_idr_requests{0};
+    float m_bitrate_scale = 1.0f;
+    int m_fps_limit = 0;
     bool m_suspended = false;
     bool m_invalidate_renderer_pending = false;
     bool m_restart_pending = false;
     bool m_use_hdr = false;
+    int m_stream_format = 0;
+    int m_stream_height = 0;
+    int m_stream_fps = 0;
 
     SessionStats m_session_stats = {};
     uint64_t m_last_stats_update_ms = 0;

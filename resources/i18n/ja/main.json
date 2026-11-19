@@ -115,6 +115,8 @@
     "settings": {
         "audio_backend": "Audio driver",
         "av1": "AV1 (実験的)",
+        "bitrate_adaptive": "接続不良時に下げる",
+        "bitrate_auto": "自動",
         "buttons": {
             "chat": "チャット（C）",
             "home": "Home",
@@ -166,6 +168,9 @@
         "resolution_scale": "倍率",
         "image_adjustments": "画像調整",
         "dithering": "ディザリング",
+        "stream_stats": "ストリーム統計",
+        "stream_stats_compact": "簡易",
+        "stream_stats_detailed": "詳細",
         "upscaling": "低解像度をアップスケール",
         "rcas_sharpening": "RCAS シャープ化",
         "rumble_force": "Rumble force",
@@ -186,10 +191,12 @@
         "zero_threads": "0 (使用しないスレッド)"
     },
     "streaming": {
+        "bitrate_lowered": "接続が不安定です。ビットレートを下げます",
+        "bitrate_restored": "接続が安定しました。ビットレートを戻します",
         "connection": "接続",
-        "debug_info": "デバッグ情報",
         "disconnect": "切断する",
         "esc": "エスケープボタン",
+        "fps_lowered": "このフレームレートを表示しきれないため、60 FPS に切り替えます",
         "input": "入力",
         "keys": "キー",
         "logout": "ログアウト",

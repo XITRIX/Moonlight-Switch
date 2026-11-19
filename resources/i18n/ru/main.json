@@ -115,6 +115,8 @@
     "settings": {
         "audio_backend": "Аудио драйвер",
         "av1": "AV1 (Экспериментальный)",
+        "bitrate_adaptive": "Снижать при плохом соединении",
+        "bitrate_auto": "Автоматически",
         "buttons": {
             "chat": "Чат (C)",
             "home": "Домой",
@@ -166,6 +168,9 @@
         "resolution_scale": "Масштаб",
         "image_adjustments": "Коррекция изображения",
         "dithering": "Дизеринг",
+        "stream_stats": "Статистика трансляции",
+        "stream_stats_compact": "Кратко",
+        "stream_stats_detailed": "Подробно",
         "upscaling": "Масштабировать низкие разрешения",
         "rcas_sharpening": "Повышение резкости RCAS",
         "rumble_force": "Сила вибрации",
@@ -186,10 +191,12 @@
         "zero_threads": "0 (Не использовать потоки)"
     },
     "streaming": {
+        "bitrate_lowered": "Плохое соединение, битрейт снижается",
+        "bitrate_restored": "Соединение стабильно, битрейт восстанавливается",
         "connection": "Соединение",
-        "debug_info": "Отладочная информация",
         "disconnect": "Отключиться",
         "esc": "Кнопка ESC",
+        "fps_lowered": "Консоль не успевает за этой частотой кадров, переключаюсь на 60 FPS",
         "input": "Ввод",
         "keys": "Кнопки",
         "logout": "Выход",

@@ -16,6 +16,8 @@
 #include <optional>
 #include "GameStreamClient.hpp"
 #include "MoonlightSession.hpp"
+#include "BitrateAdapter.hpp"
+#include "FrameRateGuard.hpp"
 #include "two_finger_scroll_recognizer.hpp"
 
 class StreamingView : public brls::Box {
@@ -30,8 +32,6 @@ class StreamingView : public brls::Box {
     void onLayout() override;
 
     void terminate(bool terminateApp);
-
-    bool draw_stats = false;
 
     Host getHost() { return host; }
 
@@ -54,10 +54,22 @@ class StreamingView : public brls::Box {
     TwoFingerScrollGestureRecognizer* scrollTouchRecognizer = nullptr;
     brls::Event<bool>::Subscription windowFocusSubscription;
     bool windowFocused = true;
+    BitrateAdapter bitrateAdapter;
+    std::chrono::steady_clock::time_point bitrateSampleTime;
+    FrameRateGuard frameRateGuard;
+    uint64_t frameRateGuardSecond = 0;
+
+    void updateBitrateAdapter();
+    void updateFrameRateGuard();
 
     void onWindowFocusChanged(bool focused);
 
     std::string buildStatsText();
+    std::string buildCompactStatsText();
+    std::string buildFrameCounterText();
+    uint64_t frameCounterSecond = 0;
+    uint32_t frameCounterLostBase = 0;
+    uint32_t frameCounterLost = 0;
     std::string statsText;
     std::chrono::steady_clock::time_point statsTextTime{};
     float statsBounds[4] = {0, 0, 0, 0};
