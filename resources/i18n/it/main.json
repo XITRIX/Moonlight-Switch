@@ -38,6 +38,10 @@
         "try_connect": "Tentativo di connessione all'host"
     },
     "app_list": {
+        "options": "Opzioni di streaming",
+        "options_default": "Predefinito ({})",
+        "options_note": "Queste scelte valgono solo per {}",
+        "options_reset": "Ripristina",
         "reload_app_list": "Ricarica",
         "run_current": "Esegui app corrente",
         "running": "In Esecuzione",

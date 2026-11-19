@@ -104,7 +104,8 @@ StreamingView::StreamingView(const Host& host, const AppInfo& app) : host(host),
     keyboardHolder->setAlignItems(AlignItems::STRETCH);
     addView(keyboardHolder);
 
-    session = new MoonlightSession(host.preferred_address(), app.app_id);
+    session = new MoonlightSession(host.preferred_address(), app.app_id,
+                                   Settings::instance().app_options(host, app.app_id));
 
 #ifdef PLATFORM_TVOS
         updatePreferredDisplayMode(true);

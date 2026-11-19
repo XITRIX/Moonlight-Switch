@@ -38,6 +38,10 @@
         "try_connect": "尝试连接到当前主机"
     },
     "app_list": {
+        "options": "串流选项",
+        "options_default": "默认 ({})",
+        "options_note": "这些设置仅适用于 {}",
+        "options_reset": "重置",
         "reload_app_list": "重新载入",
         "run_current": "启动当前应用程序",
         "running": "启动中",

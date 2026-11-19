@@ -38,6 +38,10 @@
         "try_connect": "嘗試連接到目前主機"
     },
     "app_list": {
+        "options": "串流選項",
+        "options_default": "預設 ({})",
+        "options_note": "這些設定僅適用於 {}",
+        "options_reset": "重設",
         "reload_app_list": "重新載入",
         "run_current": "啟動目前應用程式",
         "running": "啟動中",

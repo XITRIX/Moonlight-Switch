@@ -56,6 +56,7 @@ struct VideoRenderStats {};
 struct NVGcontext {};
 struct AVFrame {};
 struct STREAM_CONFIGURATION {};
+struct AppStreamOptions {};
 struct CONNECTION_LISTENER_CALLBACKS {};
 struct DECODER_RENDERER_CALLBACKS {};
 struct AUDIO_RENDERER_CALLBACKS {};

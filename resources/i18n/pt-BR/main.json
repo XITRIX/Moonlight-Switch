@@ -38,6 +38,10 @@
         "try_connect": "Tentando conectar ao host"
     },
     "app_list": {
+        "options": "Opções de transmissão",
+        "options_default": "Padrão ({})",
+        "options_note": "Estas opções valem apenas para {}",
+        "options_reset": "Redefinir",
         "reload_app_list": "Recarregar",
         "run_current": "Executar aplicativo atual",
         "running": "Em execução",

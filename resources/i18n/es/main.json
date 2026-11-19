@@ -38,6 +38,10 @@
         "try_connect": "Intentando conectar al servidor"
     },
     "app_list": {
+        "options": "Opciones de transmisión",
+        "options_default": "Predeterminado ({})",
+        "options_note": "Estas opciones solo se aplican a {}",
+        "options_reset": "Restablecer",
         "reload_app_list": "Recargar",
         "run_current": "Ejecutar aplicación iniciada",
         "running": "Ejecutándose",

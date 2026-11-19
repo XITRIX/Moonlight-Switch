@@ -68,11 +68,26 @@ std::string getVideoCodecName(VideoCodec codec) {
         case H264:
             return "settings/h264"_i18n;
         case H265:
+#ifdef __SWITCH2__
+            return "settings/h265"_i18n + " (software)";
+#else
             return "settings/h265"_i18n;
+#endif
         case AV1:
             return "settings/av1"_i18n;
         default:
             return "settings/h264"_i18n;
+    }
+}
+
+std::string getResolutionName(int resolution) {
+    switch (resolution) {
+        case -1:
+            return "settings/resolution_native"_i18n;
+        case 2160:
+            return "2160p (4K)";
+        default:
+            return std::to_string(resolution) + "p";
     }
 }
 
@@ -163,6 +178,28 @@ bool Settings::has_any_favorite() {
     });
 }
 
+AppStreamOptions Settings::app_options(const Host& host, int app_id) const {
+    if (const Host* existing = find_host(m_hosts, host)) {
+        auto it = existing->app_options.find(app_id);
+        if (it != existing->app_options.end())
+            return it->second;
+    }
+    return {};
+}
+
+void Settings::set_app_options(const Host& host, int app_id, const AppStreamOptions& options) {
+    Host* existing = find_host(m_hosts, host);
+    if (!existing)
+        return;
+
+    auto& stored = existing->app_options;
+    if (options.empty())
+        stored.erase(app_id);
+    else if (stored.count(app_id) || stored.size() < max_app_options)
+        stored[app_id] = options;
+    save();
+}
+
 void Settings::set_mouse_speed_multiplier(int mouse_speed_multiplier)
 {
     m_mouse_speed_multiplier = std::clamp(mouse_speed_multiplier, 0, 100);
@@ -179,6 +216,38 @@ void Settings::set_mouse_scroll_multiplier(int percent)
     auto* input = static_cast<brls::SwitchInputManager*>(Application::getPlatform()->getInputManager());
     input->setMouseScrollSensitivity(get_mouse_scroll_multiplier());
 #endif
+}
+
+std::vector<int> Settings::resolutions() {
+    return {
+        -1, 360, 480, 540, 720, 1080,
+#if !defined(__PSV__)
+        1440,
+#endif
+#ifdef __SWITCH2__
+        2160,
+#endif
+    };
+}
+
+std::vector<int> Settings::fps_values() {
+#if defined(__PSV__)
+    return {24, 30, 40, 50, 60};
+#else
+    return {30, 40, 60, 120};
+#endif
+}
+
+std::vector<VideoCodec> Settings::video_codecs() {
+    return {
+        H264,
+#if !defined(__PSV__)
+        H265,
+#endif
+#ifdef __SWITCH2__
+        AV1,
+#endif
+    };
 }
 
 int Settings::max_bitrate() {
@@ -312,6 +381,32 @@ void Settings::load() {
                                         host.favorites.push_back(app);
                                     }
                                 }
+                            }
+                        }
+
+                        if (json_t* options = json_object_get(json, "app_options")) {
+                            size_t index;
+                            json_t* entry;
+                            json_array_foreach(options, index, entry) {
+                                json_t* id = json_object_get(entry, "id");
+                                if (!json_is_integer(id))
+                                    continue;
+
+                                auto value = [entry](const char* key) -> std::optional<int> {
+                                    json_t* item = json_object_get(entry, key);
+                                    if (!json_is_integer(item))
+                                        return std::nullopt;
+                                    return (int)json_integer_value(item);
+                                };
+
+                                AppStreamOptions app;
+                                app.resolution = value("resolution");
+                                app.fps = value("fps");
+                                app.bitrate = value("bitrate");
+                                if (auto codec = value("codec"))
+                                    app.codec = (VideoCodec)*codec;
+                                if (!app.empty())
+                                    host.app_options[(int)json_integer_value(id)] = app;
                             }
                         }
                         
@@ -682,6 +777,24 @@ void Settings::save()
                             }
                         }
                         json_object_set_new(json, "favorites", apps);
+                    }
+                    if (json_t* options = json_array())
+                    {
+                        for (const auto& [id, app] : host.app_options)
+                        {
+                            json_t* entry = json_object();
+                            json_object_set_new(entry, "id", json_integer(id));
+                            if (app.resolution)
+                                json_object_set_new(entry, "resolution", json_integer(*app.resolution));
+                            if (app.fps)
+                                json_object_set_new(entry, "fps", json_integer(*app.fps));
+                            if (app.bitrate)
+                                json_object_set_new(entry, "bitrate", json_integer(*app.bitrate));
+                            if (app.codec)
+                                json_object_set_new(entry, "codec", json_integer(*app.codec));
+                            json_array_append_new(options, entry);
+                        }
+                        json_object_set_new(json, "app_options", options);
                     }
                     json_array_append_new(hosts, json);
                 }

@@ -38,6 +38,10 @@
         "try_connect": "ホストに接続しようとしています"
     },
     "app_list": {
+        "options": "ストリーム設定",
+        "options_default": "デフォルト ({})",
+        "options_note": "これらの設定は {} にのみ適用されます",
+        "options_reset": "リセット",
         "reload_app_list": "リロード",
         "run_current": "現在のアプリを実行する",
         "running": "実行中",

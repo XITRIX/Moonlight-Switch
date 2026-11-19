@@ -38,6 +38,10 @@
         "try_connect": "Connexion à l'hôte en cours..."
     },
     "app_list": {
+        "options": "Options de streaming",
+        "options_default": "Par défaut ({})",
+        "options_note": "Ces choix s'appliquent uniquement à {}",
+        "options_reset": "Réinitialiser",
         "reload_app_list": "Recharger",
         "run_current": "Exécuter l'application",
         "running": "En cours d'exécution",

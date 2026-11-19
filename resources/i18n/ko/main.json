@@ -38,6 +38,10 @@
         "try_connect": "호스트에 연결 시도 중"
     },
     "app_list": {
+        "options": "스트림 옵션",
+        "options_default": "기본값 ({})",
+        "options_note": "이 설정은 {}에만 적용됩니다",
+        "options_reset": "초기화",
         "reload_app_list": "다시 불러오기",
         "run_current": "현재 앱 실행",
         "running": "실행 중",

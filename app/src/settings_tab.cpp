@@ -90,37 +90,16 @@ SettingsTab::SettingsTab() {
     // Inflate the tab from the XML file
     this->inflateFromXMLRes("xml/tabs/settings.xml");
 
-    std::vector<std::string> resolutions = {
-        "settings/resolution_native"_i18n,
-        "360p",
-        "480p",
-        "540p",
-        "720p",
-        "1080p",
-#if !defined(__PSV__)
-        "1440p",
-#endif
-#ifdef __SWITCH2__
-        "2160p (4K)",
-#endif
-    };
+    const auto resolutionValues = Settings::resolutions();
+    std::vector<std::string> resolutions;
+    for (int value : resolutionValues)
+        resolutions.push_back(getResolutionName(value));
     resolution->setText("settings/resolution"_i18n);
     resolution->setData(resolutions);
-    switch (Settings::instance().resolution()) {
-        GET_SETTINGS(resolution, -1, 0);
-        GET_SETTINGS(resolution, 360, 1);
-        GET_SETTINGS(resolution, 480, 2);
-        GET_SETTINGS(resolution, 540, 3);
-        GET_SETTINGS(resolution, 720, 4);
-        GET_SETTINGS(resolution, 1080, 5);
-#if !defined(__PSV__)
-        GET_SETTINGS(resolution, 1440, 6);
-#endif
-#ifdef __SWITCH2__
-        GET_SETTINGS(resolution, 2160, 7);
-#endif
-        DEFAULT;
-    }
+    auto resolutionIt = std::find(resolutionValues.begin(), resolutionValues.end(),
+                                  Settings::instance().resolution());
+    if (resolutionIt != resolutionValues.end())
+        resolution->setSelection(resolutionIt - resolutionValues.begin());
 
     std::vector<std::string> nativeResolutionScales = {
         "0.5x", "0.75x", "1.0x",
@@ -233,75 +212,23 @@ SettingsTab::SettingsTab() {
     };
     updateNativeResolutionScaleVisibility();
 
-    resolution->getEvent()->subscribe([this, updateNativeResolutionScaleVisibility](int selected) {
-        switch (selected) {
-            SET_SETTING(0, set_resolution(-1));
-            SET_SETTING(1, set_resolution(360));
-            SET_SETTING(2, set_resolution(480));
-            SET_SETTING(3, set_resolution(540));
-            SET_SETTING(4, set_resolution(720));
-            SET_SETTING(5, set_resolution(1080));
-#if !defined(__PSV__)
-            SET_SETTING(6, set_resolution(1440));
-#endif
-#ifdef __SWITCH2__
-            SET_SETTING(7, set_resolution(2160));
-#endif
-            DEFAULT;
-        }
+    resolution->getEvent()->subscribe([this, resolutionValues, updateNativeResolutionScaleVisibility](int selected) {
+        Settings::instance().set_resolution(resolutionValues[selected]);
         updateNativeResolutionScaleVisibility();
         updateBitrateHeader();
     });
 
-#if defined(__PSV__)
-    std::vector<std::string> fpss = {
-        "24",
-        "30",
-        "40",
-        "50",
-        "60",
-    };
-#else
-    std::vector<std::string> fpss = {
-        "30",
-        "40",
-        "60",
-        "120",
-    };
-#endif
+    const auto fpsValues = Settings::fps_values();
+    std::vector<std::string> fpss;
+    for (int value : fpsValues)
+        fpss.push_back(std::to_string(value));
     fps->setText("settings/fps"_i18n);
     fps->setData(fpss);
-    switch (Settings::instance().fps()) {
-#if defined(__PSV__)
-        GET_SETTINGS(fps, 24, 0);
-        GET_SETTINGS(fps, 30, 1);
-        GET_SETTINGS(fps, 40, 2);
-        GET_SETTINGS(fps, 50, 3);
-        GET_SETTINGS(fps, 60, 4);
-#else
-        GET_SETTINGS(fps, 30, 0);
-        GET_SETTINGS(fps, 40, 1);
-        GET_SETTINGS(fps, 60, 2);
-        GET_SETTINGS(fps, 120, 3);
-#endif
-        DEFAULT;
-    }
-    fps->getEvent()->subscribe([this](int selected) {
-        switch (selected) {
-#if defined(__PSV__)
-            SET_SETTING(0, set_fps(24));
-            SET_SETTING(1, set_fps(30));
-            SET_SETTING(2, set_fps(40));
-            SET_SETTING(3, set_fps(50));
-            SET_SETTING(4, set_fps(60));
-#else
-            SET_SETTING(0, set_fps(30));
-            SET_SETTING(1, set_fps(40));
-            SET_SETTING(2, set_fps(60));
-            SET_SETTING(3, set_fps(120));
-#endif
-            DEFAULT;
-        }
+    auto fpsIt = std::find(fpsValues.begin(), fpsValues.end(), Settings::instance().fps());
+    if (fpsIt != fpsValues.end())
+        fps->setSelection(fpsIt - fpsValues.begin());
+    fps->getEvent()->subscribe([this, fpsValues](int selected) {
+        Settings::instance().set_fps(fpsValues[selected]);
         updateBitrateHeader();
     });
 
@@ -326,25 +253,11 @@ SettingsTab::SettingsTab() {
         }
     });
 
-    std::vector<VideoCodec> supportedCodecs = {
-        H264,
-#if !defined(__PSV__)
-        H265,
-#endif
-#ifdef __SWITCH2__
-        AV1,
-#endif
-    };
+    std::vector<VideoCodec> supportedCodecs = Settings::video_codecs();
 
     std::vector<std::string> supportedCodecNames;
-    for (int i = 0; i < supportedCodecs.size(); i++) {
-        std::string name = getVideoCodecName(supportedCodecs[i]);
-#ifdef __SWITCH2__
-        if (supportedCodecs[i] == H265)
-            name += " (software)";
-#endif
-        supportedCodecNames.push_back(name);
-    }
+    for (VideoCodec supportedCodec : supportedCodecs)
+        supportedCodecNames.push_back(getVideoCodecName(supportedCodec));
 
     auto it = find(supportedCodecs.begin(), supportedCodecs.end(), Settings::instance().video_codec());
 
@@ -806,7 +719,7 @@ void SettingsTab::willAppear(bool resetState)
 
 int SettingsTab::autoBitrate() {
     int width, height;
-    MoonlightSession::stream_resolution(&width, &height);
+    MoonlightSession::stream_resolution(Settings::instance().resolution(), &width, &height);
     return Settings::default_bitrate(width, height, Settings::instance().fps());
 }
 
