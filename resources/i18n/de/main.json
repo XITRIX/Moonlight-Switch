@@ -38,6 +38,10 @@
         "try_connect": "Verbindung mit Host wird hergestellt"
     },
     "app_list": {
+        "options": "Stream-Optionen",
+        "options_default": "Standard ({})",
+        "options_note": "Diese Einstellungen gelten nur für {}",
+        "options_reset": "Zurücksetzen",
         "reload_app_list": "Neu laden",
         "run_current": "Aktuelles Programm fortsetzen",
         "running": "Läuft",
@@ -115,6 +119,7 @@
     "settings": {
         "audio_backend": "Audio driver",
         "av1": "AV1 (Experimentell)",
+        "bitrate_auto": "Automatisch",
         "buttons": {
             "chat": "Chat (C)",
             "home": "Home",

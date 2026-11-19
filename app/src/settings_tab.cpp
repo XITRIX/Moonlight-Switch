@@ -18,6 +18,7 @@
 #include "mapping_layout_editor.hpp"
 #include "halfcon_mapping_view.hpp"
 #include "UpscalingSupport.hpp"
+#include "MoonlightSession.hpp"
 #include <cmath>
 #include <iomanip>
 #include <sstream>
@@ -89,37 +90,16 @@ SettingsTab::SettingsTab() {
     // Inflate the tab from the XML file
     this->inflateFromXMLRes("xml/tabs/settings.xml");
 
-    std::vector<std::string> resolutions = {
-        "settings/resolution_native"_i18n,
-        "360p",
-        "480p",
-        "540p",
-        "720p",
-        "1080p",
-#if !defined(__PSV__)
-        "1440p",
-#endif
-#ifdef __SWITCH2__
-        "2160p (4K)",
-#endif
-    };
+    const auto resolutionValues = Settings::resolutions();
+    std::vector<std::string> resolutions;
+    for (int value : resolutionValues)
+        resolutions.push_back(getResolutionName(value));
     resolution->setText("settings/resolution"_i18n);
     resolution->setData(resolutions);
-    switch (Settings::instance().resolution()) {
-        GET_SETTINGS(resolution, -1, 0);
-        GET_SETTINGS(resolution, 360, 1);
-        GET_SETTINGS(resolution, 480, 2);
-        GET_SETTINGS(resolution, 540, 3);
-        GET_SETTINGS(resolution, 720, 4);
-        GET_SETTINGS(resolution, 1080, 5);
-#if !defined(__PSV__)
-        GET_SETTINGS(resolution, 1440, 6);
-#endif
-#ifdef __SWITCH2__
-        GET_SETTINGS(resolution, 2160, 7);
-#endif
-        DEFAULT;
-    }
+    auto resolutionIt = std::find(resolutionValues.begin(), resolutionValues.end(),
+                                  Settings::instance().resolution());
+    if (resolutionIt != resolutionValues.end())
+        resolution->setSelection(resolutionIt - resolutionValues.begin());
 
     std::vector<std::string> nativeResolutionScales = {
         "0.5x", "0.75x", "1.0x",
@@ -140,7 +120,7 @@ SettingsTab::SettingsTab() {
             resolutionScale->setSelection(2);
             break;
     }
-    resolutionScale->getEvent()->subscribe([](int selected) {
+    resolutionScale->getEvent()->subscribe([this](int selected) {
         switch (selected) {
             SET_SETTING(0, set_native_resolution_scale(50));
             SET_SETTING(1, set_native_resolution_scale(75));
@@ -150,6 +130,7 @@ SettingsTab::SettingsTab() {
 #endif
             DEFAULT;
         }
+        updateBitrateHeader();
     });
 
 #ifdef SUPPORT_UPSCALING
@@ -231,74 +212,24 @@ SettingsTab::SettingsTab() {
     };
     updateNativeResolutionScaleVisibility();
 
-    resolution->getEvent()->subscribe([this, updateNativeResolutionScaleVisibility](int selected) {
-        switch (selected) {
-            SET_SETTING(0, set_resolution(-1));
-            SET_SETTING(1, set_resolution(360));
-            SET_SETTING(2, set_resolution(480));
-            SET_SETTING(3, set_resolution(540));
-            SET_SETTING(4, set_resolution(720));
-            SET_SETTING(5, set_resolution(1080));
-#if !defined(__PSV__)
-            SET_SETTING(6, set_resolution(1440));
-#endif
-#ifdef __SWITCH2__
-            SET_SETTING(7, set_resolution(2160));
-#endif
-            DEFAULT;
-        }
+    resolution->getEvent()->subscribe([this, resolutionValues, updateNativeResolutionScaleVisibility](int selected) {
+        Settings::instance().set_resolution(resolutionValues[selected]);
         updateNativeResolutionScaleVisibility();
+        updateBitrateHeader();
     });
 
-#if defined(__PSV__)
-    std::vector<std::string> fpss = {
-        "24",
-        "30",
-        "40",
-        "50",
-        "60",
-    };
-#else
-    std::vector<std::string> fpss = {
-        "30",
-        "40",
-        "60",
-        "120",
-    };
-#endif
+    const auto fpsValues = Settings::fps_values();
+    std::vector<std::string> fpss;
+    for (int value : fpsValues)
+        fpss.push_back(std::to_string(value));
     fps->setText("settings/fps"_i18n);
     fps->setData(fpss);
-    switch (Settings::instance().fps()) {
-#if defined(__PSV__)
-        GET_SETTINGS(fps, 24, 0);
-        GET_SETTINGS(fps, 30, 1);
-        GET_SETTINGS(fps, 40, 2);
-        GET_SETTINGS(fps, 50, 3);
-        GET_SETTINGS(fps, 60, 4);
-#else
-        GET_SETTINGS(fps, 30, 0);
-        GET_SETTINGS(fps, 40, 1);
-        GET_SETTINGS(fps, 60, 2);
-        GET_SETTINGS(fps, 120, 3);
-#endif
-        DEFAULT;
-    }
-    fps->getEvent()->subscribe([](int selected) {
-        switch (selected) {
-#if defined(__PSV__)
-            SET_SETTING(0, set_fps(24));
-            SET_SETTING(1, set_fps(30));
-            SET_SETTING(2, set_fps(40));
-            SET_SETTING(3, set_fps(50));
-            SET_SETTING(4, set_fps(60));
-#else
-            SET_SETTING(0, set_fps(30));
-            SET_SETTING(1, set_fps(40));
-            SET_SETTING(2, set_fps(60));
-            SET_SETTING(3, set_fps(120));
-#endif
-            DEFAULT;
-        }
+    auto fpsIt = std::find(fpsValues.begin(), fpsValues.end(), Settings::instance().fps());
+    if (fpsIt != fpsValues.end())
+        fps->setSelection(fpsIt - fpsValues.begin());
+    fps->getEvent()->subscribe([this, fpsValues](int selected) {
+        Settings::instance().set_fps(fpsValues[selected]);
+        updateBitrateHeader();
     });
 
     std::vector<std::string> decoders = {"settings/zero_threads"_i18n, "2", "3",
@@ -322,25 +253,11 @@ SettingsTab::SettingsTab() {
         }
     });
 
-    std::vector<VideoCodec> supportedCodecs = {
-        H264,
-#if !defined(__PSV__)
-        H265,
-#endif
-#ifdef __SWITCH2__
-        AV1,
-#endif
-    };
+    std::vector<VideoCodec> supportedCodecs = Settings::video_codecs();
 
     std::vector<std::string> supportedCodecNames;
-    for (int i = 0; i < supportedCodecs.size(); i++) {
-        std::string name = getVideoCodecName(supportedCodecs[i]);
-#ifdef __SWITCH2__
-        if (supportedCodecs[i] == H265)
-            name += " (software)";
-#endif
-        supportedCodecNames.push_back(name);
-    }
+    for (VideoCodec supportedCodec : supportedCodecs)
+        supportedCodecNames.push_back(getVideoCodecName(supportedCodec));
 
     auto it = find(supportedCodecs.begin(), supportedCodecs.end(), Settings::instance().video_codec());
 
@@ -382,27 +299,26 @@ SettingsTab::SettingsTab() {
     hwDecoding->setEnabled(false);
 #endif
 
-#if defined(__PSV__)
-    const float mbpsMaxLimit = 20000;
-#elif defined(PLATFORM_SWITCH)
-    const float mbpsMaxLimit = 100000;
-#else
-    const float mbpsMaxLimit = 150000;
-#endif
-
+    const float mbpsMaxLimit = Settings::max_bitrate();
     const float limitOffset = 500;
     const float limit = mbpsMaxLimit - limitOffset;
 
     float progress = (Settings::instance().bitrate() - limitOffset) / limit;
     slider->getProgressEvent()->subscribe([this, limitOffset, limit](float progress) {
         int bitrate = progress * limit + limitOffset;
-        float fbitrate = bitrate / 1000.0f;
-        std::stringstream stream;
-        stream << std::fixed << std::setprecision(1) << fbitrate;
-        header->setSubtitle(stream.str() + " Mbps");
         Settings::instance().set_bitrate(bitrate);
+        updateBitrateHeader();
     });
     slider->setProgress(progress);
+
+    bitrateAuto->init("settings/bitrate_auto"_i18n, Settings::instance().bitrate_auto(),
+                      [this, limitOffset, limit](bool value) {
+                          Settings::instance().set_bitrate_auto(value);
+                          if (!value)
+                              slider->setProgress((autoBitrate() - limitOffset) / limit);
+                          updateBitrateHeader();
+                      });
+    updateBitrateHeader();
 
 #if defined(__SWITCH__)
     audioBackend->init("settings/audio_backend"_i18n, audio_backends, 0,
@@ -798,6 +714,22 @@ void SettingsTab::willAppear(bool resetState)
     Box::willAppear(resetState);
     mouseSpeedSlider->setProgress(Settings::instance().get_mouse_speed_multiplier() / 100.0f);
     refreshMouseScrollSettings(mouseScrollSlider);
+    updateBitrateHeader();
+}
+
+int SettingsTab::autoBitrate() {
+    int width, height;
+    MoonlightSession::stream_resolution(Settings::instance().resolution(), &width, &height);
+    return Settings::default_bitrate(width, height, Settings::instance().fps());
+}
+
+void SettingsTab::updateBitrateHeader() {
+    const bool isAuto = Settings::instance().bitrate_auto();
+    const int bitrate = isAuto ? autoBitrate() : Settings::instance().bitrate();
+    std::stringstream stream;
+    stream << std::fixed << std::setprecision(1) << bitrate / 1000.0f;
+    header->setSubtitle(stream.str() + " Mbps");
+    slider->setVisibility(isAuto ? brls::Visibility::GONE : brls::Visibility::VISIBLE);
 }
 
 void SettingsTab::updateDeadZoneItems() {

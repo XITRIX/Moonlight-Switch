@@ -42,9 +42,11 @@ void MoonlightSession::set_provider(
     m_provider = provider;
 }
 
-MoonlightSession::MoonlightSession(const std::string& address, int app_id) {
+MoonlightSession::MoonlightSession(const std::string& address, int app_id,
+                                   const AppStreamOptions& options) {
     m_address = address;
     m_app_id = app_id;
+    m_options = options;
     m_active_session = this;
     m_generation = ++m_session_generation;
 
@@ -266,14 +268,7 @@ void MoonlightSession::audio_renderer_decode_and_play_sample(
 
 // MARK: MoonlightSession
 
-void MoonlightSession::start(ServerCallback<bool> callback, bool is_sunshine) {
-    m_is_sunshine = is_sunshine;
-    m_stop_requested = false;
-    m_is_terminated = false;
-
-    LiInitializeStreamConfiguration(&m_config);
-
-    int resolution = Settings::instance().resolution();
+void MoonlightSession::stream_resolution(int resolution, int* width, int* height) {
     int h = resolution;
     int w = h * 16 / 9;
     if (resolution == -1) {
@@ -305,9 +300,21 @@ void MoonlightSession::start(ServerCallback<bool> callback, bool is_sunshine) {
         w += 1;
     }
 
-    m_config.width = w;
-    m_config.height = h;
-    m_config.fps = Settings::instance().fps();
+    *width = w;
+    *height = h;
+}
+
+void MoonlightSession::start(ServerCallback<bool> callback, bool is_sunshine) {
+    m_is_sunshine = is_sunshine;
+    m_stop_requested = false;
+    m_is_terminated = false;
+
+    LiInitializeStreamConfiguration(&m_config);
+
+    const auto& settings = Settings::instance();
+    stream_resolution(m_options.resolution.value_or(settings.resolution()),
+                      &m_config.width, &m_config.height);
+    m_config.fps = m_options.fps.value_or(settings.fps());
 #ifdef __SWITCH2__
     m_config.colorSpace = COLORSPACE_REC_709;
     m_config.colorRange = COLOR_RANGE_LIMITED;
@@ -315,10 +322,13 @@ void MoonlightSession::start(ServerCallback<bool> callback, bool is_sunshine) {
     m_config.audioConfiguration = AUDIO_CONFIGURATION_STEREO;
     m_config.packetSize = 1392;
     m_config.streamingRemotely = STREAM_CFG_AUTO;
-    m_config.bitrate = Settings::instance().bitrate();
+    const int bitrate = m_options.bitrate.value_or(settings.bitrate_auto() ? 0 : settings.bitrate());
+    m_config.bitrate = bitrate == 0
+        ? Settings::default_bitrate(m_config.width, m_config.height, m_config.fps)
+        : bitrate;
     m_config.encryptionFlags = m_is_sunshine ? ENCFLG_ALL : ENCFLG_VIDEO;
 
-    switch (Settings::instance().video_codec()) {
+    switch (m_options.codec.value_or(settings.video_codec())) {
     case H264:
         m_config.supportedVideoFormats = VIDEO_FORMAT_H264;
         break;

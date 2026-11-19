@@ -3,6 +3,7 @@
 #include "Singleton.hpp"
 #include <borealis.hpp>
 #include <map>
+#include <optional>
 #include <cstdio>
 #include <string>
 #include <utility>
@@ -13,6 +14,7 @@
 
 enum VideoCodec : int { H264, H265, AV1 };
 std::string getVideoCodecName(VideoCodec codec);
+std::string getResolutionName(int resolution);
 
 enum UpscalingMode : int { UPSCALING_OFF, UPSCALING_METALFX, UPSCALING_FSR1 };
 
@@ -43,12 +45,24 @@ struct App {
     int app_id;
 };
 
+struct AppStreamOptions {
+    std::optional<int> resolution;
+    std::optional<int> fps;
+    std::optional<int> bitrate; // 0 means automatic
+    std::optional<VideoCodec> codec;
+
+    [[nodiscard]] bool empty() const {
+        return !resolution && !fps && !bitrate && !codec;
+    }
+};
+
 struct Host {
     std::string address;
     std::string remoteAddress;
     std::string hostname;
     std::string mac;
     std::vector<App> favorites;
+    std::map<int, AppStreamOptions> app_options;
 
     [[nodiscard]] std::vector<std::string> connection_addresses() const {
         std::vector<std::string> addresses;
@@ -108,6 +122,9 @@ class Settings : public Singleton<Settings> {
     bool is_favorite(const Host& host, int app_id);
     bool has_any_favorite();
 
+    [[nodiscard]] AppStreamOptions app_options(const Host& host, int app_id) const;
+    void set_app_options(const Host& host, int app_id, const AppStreamOptions& options);
+
     [[nodiscard]] int resolution() const { return m_resolution; }
     void set_resolution(int resolution) { m_resolution = resolution; }
 
@@ -139,6 +156,15 @@ class Settings : public Singleton<Settings> {
 
     [[nodiscard]] int bitrate() const { return m_bitrate; }
     void set_bitrate(int bitrate) { m_bitrate = bitrate; }
+
+    [[nodiscard]] bool bitrate_auto() const { return m_bitrate_auto; }
+    void set_bitrate_auto(bool bitrate_auto) { m_bitrate_auto = bitrate_auto; }
+
+    static std::vector<int> resolutions();
+    static std::vector<int> fps_values();
+    static std::vector<VideoCodec> video_codecs();
+    static int max_bitrate();
+    static int default_bitrate(int width, int height, int fps);
 
     [[nodiscard]] bool request_hdr() const { 
 #ifdef SUPPORT_HDR
@@ -335,6 +361,8 @@ class Settings : public Singleton<Settings> {
     void save();
 
   private:
+    static constexpr size_t max_app_options = 32;
+
     std::string m_working_dir;
     std::string m_launch_path;
     std::string m_key_dir;
@@ -357,6 +385,7 @@ class Settings : public Singleton<Settings> {
     AudioBackend m_audio_backend = SDL;
 #endif
     int m_bitrate = 10000;
+    bool m_bitrate_auto = true;
     bool m_enable_hdr = false;
     UpscalingMode m_upscaling_mode = UPSCALING_OFF;
     bool m_enable_dithering = false;

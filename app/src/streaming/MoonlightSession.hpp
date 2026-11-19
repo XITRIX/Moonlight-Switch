@@ -15,11 +15,15 @@ class MoonlightSession {
     static void
     set_provider(MoonlightSessionDecoderAndRenderProvider* provider);
 
-    MoonlightSession(const std::string& address, int app_id);
+    MoonlightSession(const std::string& address, int app_id,
+                     const AppStreamOptions& options = {});
     ~MoonlightSession();
 
     static MoonlightSession* activeSession();
     static void requestRestart();
+
+    // The stream size a resolution setting asks for, with Native resolved.
+    static void stream_resolution(int resolution, int* width, int* height);
 
     void start(ServerCallback<bool> callback, bool is_sunshine);
     void stop(int terminate_app);
@@ -79,6 +83,7 @@ class MoonlightSession {
 
     std::string m_address;
     int m_app_id;
+    AppStreamOptions m_options;
     bool m_is_sunshine = false;
     STREAM_CONFIGURATION m_config;
     CONNECTION_LISTENER_CALLBACKS m_connection_callbacks;

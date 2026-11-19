@@ -4,6 +4,7 @@
 #include <cstring>
 #include <iomanip>
 #include <climits>
+#include <cmath>
 #include <filesystem>
 #ifdef __SWITCH__
 #include <borealis/platforms/switch/switch_input.hpp>
@@ -67,11 +68,26 @@ std::string getVideoCodecName(VideoCodec codec) {
         case H264:
             return "settings/h264"_i18n;
         case H265:
+#ifdef __SWITCH2__
+            return "settings/h265"_i18n + " (software)";
+#else
             return "settings/h265"_i18n;
+#endif
         case AV1:
             return "settings/av1"_i18n;
         default:
             return "settings/h264"_i18n;
+    }
+}
+
+std::string getResolutionName(int resolution) {
+    switch (resolution) {
+        case -1:
+            return "settings/resolution_native"_i18n;
+        case 2160:
+            return "2160p (4K)";
+        default:
+            return std::to_string(resolution) + "p";
     }
 }
 
@@ -162,6 +178,28 @@ bool Settings::has_any_favorite() {
     });
 }
 
+AppStreamOptions Settings::app_options(const Host& host, int app_id) const {
+    if (const Host* existing = find_host(m_hosts, host)) {
+        auto it = existing->app_options.find(app_id);
+        if (it != existing->app_options.end())
+            return it->second;
+    }
+    return {};
+}
+
+void Settings::set_app_options(const Host& host, int app_id, const AppStreamOptions& options) {
+    Host* existing = find_host(m_hosts, host);
+    if (!existing)
+        return;
+
+    auto& stored = existing->app_options;
+    if (options.empty())
+        stored.erase(app_id);
+    else if (stored.count(app_id) || stored.size() < max_app_options)
+        stored[app_id] = options;
+    save();
+}
+
 void Settings::set_mouse_speed_multiplier(int mouse_speed_multiplier)
 {
     m_mouse_speed_multiplier = std::clamp(mouse_speed_multiplier, 0, 100);
@@ -178,6 +216,79 @@ void Settings::set_mouse_scroll_multiplier(int percent)
     auto* input = static_cast<brls::SwitchInputManager*>(Application::getPlatform()->getInputManager());
     input->setMouseScrollSensitivity(get_mouse_scroll_multiplier());
 #endif
+}
+
+std::vector<int> Settings::resolutions() {
+    return {
+        -1, 360, 480, 540, 720, 1080,
+#if !defined(__PSV__)
+        1440,
+#endif
+#ifdef __SWITCH2__
+        2160,
+#endif
+    };
+}
+
+std::vector<int> Settings::fps_values() {
+#if defined(__PSV__)
+    return {24, 30, 40, 50, 60};
+#else
+    return {30, 40, 60, 120};
+#endif
+}
+
+std::vector<VideoCodec> Settings::video_codecs() {
+    return {
+        H264,
+#if !defined(__PSV__)
+        H265,
+#endif
+#ifdef __SWITCH2__
+        AV1,
+#endif
+    };
+}
+
+int Settings::max_bitrate() {
+#if defined(__PSV__)
+    return 20000;
+#elif defined(PLATFORM_SWITCH)
+    return 100000;
+#else
+    return 150000;
+#endif
+}
+
+int Settings::default_bitrate(int width, int height, int fps) {
+    // moonlight-qt's table: Mbps at 30 FPS by pixel count, interpolated.
+    static const struct {
+        int pixels;
+        float factor;
+    } table[] = {
+        {640 * 360, 1.0f},    {854 * 480, 2.0f},    {1280 * 720, 5.0f},
+        {1920 * 1080, 10.0f}, {2560 * 1440, 20.0f}, {3840 * 2160, 40.0f},
+    };
+
+    const int pixels = width * height;
+    float factor = table[std::size(table) - 1].factor;
+    for (size_t i = 0; i < std::size(table); i++) {
+        if (pixels > table[i].pixels)
+            continue;
+        if (i == 0 || pixels == table[i].pixels) {
+            factor = table[i].factor;
+        } else {
+            const auto& low = table[i - 1];
+            factor = low.factor + (table[i].factor - low.factor) *
+                (pixels - low.pixels) / (table[i].pixels - low.pixels);
+        }
+        break;
+    }
+
+    // Twice the frames don't need twice the bits above 60 FPS.
+    const float rate = fps <= 60 ? fps : std::sqrt(fps / 60.0f) * 60.0f;
+    const int kbps = (int)std::lround(factor * rate / 30.0f) * 1000;
+    return std::clamp(kbps, 500, max_bitrate());
 }
 
 void Settings::load() {
@@ -272,6 +383,32 @@ void Settings::load() {
                                 }
                             }
                         }
+
+                        if (json_t* options = json_object_get(json, "app_options")) {
+                            size_t index;
+                            json_t* entry;
+                            json_array_foreach(options, index, entry) {
+                                json_t* id = json_object_get(entry, "id");
+                                if (!json_is_integer(id))
+                                    continue;
+
+                                auto value = [entry](const char* key) -> std::optional<int> {
+                                    json_t* item = json_object_get(entry, key);
+                                    if (!json_is_integer(item))
+                                        return std::nullopt;
+                                    return (int)json_integer_value(item);
+                                };
+
+                                AppStreamOptions app;
+                                app.resolution = value("resolution");
+                                app.fps = value("fps");
+                                app.bitrate = value("bitrate");
+                                if (auto codec = value("codec"))
+                                    app.codec = (VideoCodec)*codec;
+                                if (!app.empty())
+                                    host.app_options[(int)json_integer_value(id)] = app;
+                            }
+                        }
                         
                         m_hosts.push_back(host);
                     }
@@ -318,6 +455,13 @@ void Settings::load() {
                 if (json_typeof(bitrate) == JSON_INTEGER) {
                     m_bitrate = (int)json_integer_value(bitrate);
                 }
+            }
+
+            if (json_t* bitrate_auto = json_object_get(settings, "bitrate_auto")) {
+                m_bitrate_auto = json_typeof(bitrate_auto) == JSON_TRUE;
+            } else {
+                // Settings saved before Auto existed keep their bitrate.
+                m_bitrate_auto = json_object_get(settings, "bitrate") == nullptr;
             }
 
             if (json_t* enable_hdr = json_object_get(settings, "enable_hdr")) {
@@ -634,6 +778,24 @@ void Settings::save()
                         }
                         json_object_set_new(json, "favorites", apps);
                     }
+                    if (json_t* options = json_array())
+                    {
+                        for (const auto& [id, app] : host.app_options)
+                        {
+                            json_t* entry = json_object();
+                            json_object_set_new(entry, "id", json_integer(id));
+                            if (app.resolution)
+                                json_object_set_new(entry, "resolution", json_integer(*app.resolution));
+                            if (app.fps)
+                                json_object_set_new(entry, "fps", json_integer(*app.fps));
+                            if (app.bitrate)
+                                json_object_set_new(entry, "bitrate", json_integer(*app.bitrate));
+                            if (app.codec)
+                                json_object_set_new(entry, "codec", json_integer(*app.codec));
+                            json_array_append_new(options, entry);
+                        }
+                        json_object_set_new(json, "app_options", options);
+                    }
                     json_array_append_new(hosts, json);
                 }
             }
@@ -647,6 +809,7 @@ void Settings::save()
             json_object_set_new(settings, "video_codec", json_integer(m_video_codec));
             json_object_set_new(settings, "audio_backend", json_integer(m_audio_backend));
             json_object_set_new(settings, "bitrate", json_integer(m_bitrate));
+            json_object_set_new(settings, "bitrate_auto", m_bitrate_auto ? json_true() : json_false());
             json_object_set_new(settings, "decoder_threads", json_integer(m_decoder_threads));
             json_object_set_new(settings, "frames_queue_size", json_integer(m_frames_queue_size));
             json_object_set_new(settings, "enable_hdr", m_enable_hdr ? json_true() : json_false());

@@ -6,6 +6,7 @@
 //
 
 #include "app_list_view.hpp"
+#include "app_options_view.hpp"
 #include "helper.hpp"
 #include "main_tabs_view.hpp"
 
@@ -173,6 +174,12 @@ void AppListView::updateAppList() {
                                         host, app.app_id));
                                 gridView->addView(cell);
                                 this->updateFavoriteAction(cell, host, app);
+                                cell->registerAction(
+                                    "app_list/options"_i18n, BUTTON_START,
+                                    [this, app](View*) {
+                                        this->present(new AppOptionsView(host, app));
+                                        return true;
+                                    });
                             }
                             Application::giveFocus(this);
                         } else {

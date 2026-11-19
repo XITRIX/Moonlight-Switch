@@ -38,6 +38,10 @@
         "try_connect": "Trying to connect to the host"
     },
     "app_list": {
+        "options": "Stream options",
+        "options_default": "Default ({})",
+        "options_note": "These choices apply to {} only",
+        "options_reset": "Reset",
         "reload_app_list": "Reload",
         "run_current": "Run current app",
         "running": "Running",
@@ -115,6 +119,7 @@
     "settings": {
         "audio_backend": "Audio driver",
         "av1": "AV1 (Experimental)",
+        "bitrate_auto": "Automatic",
         "buttons": {
             "chat": "Chat (C)",
             "home": "Home",
