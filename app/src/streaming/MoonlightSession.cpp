@@ -266,13 +266,7 @@ void MoonlightSession::audio_renderer_decode_and_play_sample(
 
 // MARK: MoonlightSession
 
-void MoonlightSession::start(ServerCallback<bool> callback, bool is_sunshine) {
-    m_is_sunshine = is_sunshine;
-    m_stop_requested = false;
-    m_is_terminated = false;
-
-    LiInitializeStreamConfiguration(&m_config);
-
+void MoonlightSession::stream_resolution(int* width, int* height) {
     int resolution = Settings::instance().resolution();
     int h = resolution;
     int w = h * 16 / 9;
@@ -305,8 +299,18 @@ void MoonlightSession::start(ServerCallback<bool> callback, bool is_sunshine) {
         w += 1;
     }
 
-    m_config.width = w;
-    m_config.height = h;
+    *width = w;
+    *height = h;
+}
+
+void MoonlightSession::start(ServerCallback<bool> callback, bool is_sunshine) {
+    m_is_sunshine = is_sunshine;
+    m_stop_requested = false;
+    m_is_terminated = false;
+
+    LiInitializeStreamConfiguration(&m_config);
+
+    stream_resolution(&m_config.width, &m_config.height);
     m_config.fps = Settings::instance().fps();
 #ifdef __SWITCH2__
     m_config.colorSpace = COLORSPACE_REC_709;
@@ -315,7 +319,10 @@ void MoonlightSession::start(ServerCallback<bool> callback, bool is_sunshine) {
     m_config.audioConfiguration = AUDIO_CONFIGURATION_STEREO;
     m_config.packetSize = 1392;
     m_config.streamingRemotely = STREAM_CFG_AUTO;
-    m_config.bitrate = Settings::instance().bitrate();
+    m_config.bitrate = Settings::instance().bitrate_auto()
+        ? Settings::default_bitrate(m_config.width, m_config.height, m_config.fps,
+                                    Settings::instance().video_codec())
+        : Settings::instance().bitrate();
     m_config.encryptionFlags = m_is_sunshine ? ENCFLG_ALL : ENCFLG_VIDEO;
 
     switch (Settings::instance().video_codec()) {

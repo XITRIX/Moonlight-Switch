@@ -4,6 +4,7 @@
 #include <cstring>
 #include <iomanip>
 #include <climits>
+#include <cmath>
 #include <filesystem>
 #ifdef __SWITCH__
 #include <borealis/platforms/switch/switch_input.hpp>
@@ -180,6 +181,50 @@ void Settings::set_mouse_scroll_multiplier(int percent)
 #endif
 }
 
+int Settings::max_bitrate() {
+#if defined(__PSV__)
+    return 20000;
+#elif defined(PLATFORM_SWITCH)
+    return 100000;
+#else
+    return 150000;
+#endif
+}
+
+int Settings::default_bitrate(int width, int height, int fps,
+                              VideoCodec codec) {
+    // moonlight-qt's table: Mbps at 30 FPS by pixel count, interpolated.
+    static const struct {
+        int pixels;
+        float factor;
+    } table[] = {
+        {640 * 360, 1.0f},    {854 * 480, 2.0f},    {1280 * 720, 5.0f},
+        {1920 * 1080, 10.0f}, {2560 * 1440, 20.0f}, {3840 * 2160, 40.0f},
+    };
+
+    const int pixels = width * height;
+    float factor = table[std::size(table) - 1].factor;
+    for (size_t i = 0; i < std::size(table); i++) {
+        if (pixels > table[i].pixels)
+            continue;
+        if (i == 0 || pixels == table[i].pixels) {
+            factor = table[i].factor;
+        } else {
+            const auto& low = table[i - 1];
+            factor = low.factor + (table[i].factor - low.factor) *
+                (pixels - low.pixels) / (table[i].pixels - low.pixels);
+        }
+        break;
+    }
+
+    // Twice the frames don't need twice the bits above 60 FPS.
+    const float rate = fps <= 60 ? fps : std::sqrt(fps / 60.0f) * 60.0f;
+    // AV1 reaches the same quality with fewer bits.
+    const float share = codec == AV1 ? 0.7f : 1.0f;
+    const int kbps = (int)std::lround(factor * rate / 30.0f * share) * 1000;
+    return std::clamp(kbps, 500, max_bitrate());
+}
+
 void Settings::load() {
     loadBaseLayouts();
 
@@ -318,6 +363,13 @@ void Settings::load() {
                 if (json_typeof(bitrate) == JSON_INTEGER) {
                     m_bitrate = (int)json_integer_value(bitrate);
                 }
+            }
+
+            if (json_t* bitrate_auto = json_object_get(settings, "bitrate_auto")) {
+                m_bitrate_auto = json_typeof(bitrate_auto) == JSON_TRUE;
+            } else {
+                // Settings saved before Auto existed keep their bitrate.
+                m_bitrate_auto = json_object_get(settings, "bitrate") == nullptr;
             }
 
             if (json_t* enable_hdr = json_object_get(settings, "enable_hdr")) {
@@ -647,6 +699,7 @@ void Settings::save()
             json_object_set_new(settings, "video_codec", json_integer(m_video_codec));
             json_object_set_new(settings, "audio_backend", json_integer(m_audio_backend));
             json_object_set_new(settings, "bitrate", json_integer(m_bitrate));
+            json_object_set_new(settings, "bitrate_auto", m_bitrate_auto ? json_true() : json_false());
             json_object_set_new(settings, "decoder_threads", json_integer(m_decoder_threads));
             json_object_set_new(settings, "frames_queue_size", json_integer(m_frames_queue_size));
             json_object_set_new(settings, "enable_hdr", m_enable_hdr ? json_true() : json_false());
