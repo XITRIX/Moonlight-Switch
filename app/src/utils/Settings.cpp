@@ -389,6 +389,22 @@ void Settings::load() {
                 m_write_log = json_typeof(write_log) == JSON_TRUE;
             }
             
+            if (json_t* stream_stats = json_object_get(settings, "stream_stats")) {
+                if (json_typeof(stream_stats) == JSON_INTEGER) {
+                    auto mode = json_integer_value(stream_stats);
+                    if (mode >= (int)StreamStatsMode::OFF && mode <= (int)StreamStatsMode::DETAILED)
+                        m_stream_stats_mode = (StreamStatsMode)mode;
+                }
+            }
+
+            if (json_t* power_profile = json_object_get(settings, "power_profile")) {
+                if (json_typeof(power_profile) == JSON_INTEGER) {
+                    auto profile = json_integer_value(power_profile);
+                    if (profile >= (int)PowerProfile::AUTO && profile <= (int)PowerProfile::PERFORMANCE)
+                        m_power_profile = (PowerProfile)profile;
+                }
+            }
+
             if (json_t* swap_ui_keys = json_object_get(settings, "swap_ui_keys")) {
                 m_swap_ui_keys = json_typeof(swap_ui_keys) == JSON_TRUE;
             }
@@ -661,6 +677,8 @@ void Settings::save()
             json_object_set_new(settings, "sops", m_sops ? json_true() : json_false());
             json_object_set_new(settings, "play_audio", m_play_audio ? json_true() : json_false());
             json_object_set_new(settings, "write_log", m_write_log ? json_true() : json_false());
+            json_object_set_new(settings, "stream_stats", json_integer((int)m_stream_stats_mode));
+            json_object_set_new(settings, "power_profile", json_integer((int)m_power_profile));
             json_object_set_new(settings, "swap_ui_keys", m_swap_ui_keys ? json_true() : json_false());
             json_object_set_new(settings, "swap_joycon_stick_to_dpad", m_swap_joycon_stick_to_dpad ? json_true() : json_false());
             json_object_set_new(settings, "touchscreen_mouse_mode", m_touchscreen_mouse_mode ? json_true() : json_false());

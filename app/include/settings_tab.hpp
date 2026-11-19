@@ -29,6 +29,7 @@ class SettingsTab : public brls::Box {
     BRLS_BIND(brls::BooleanCell, requestHdr, "request_hdr");
     BRLS_BIND(brls::SelectorCell, decoder, "decoder");
     BRLS_BIND(brls::BooleanCell, hwDecoding, "use_hw_decoding");
+    BRLS_BIND(brls::SelectorCell, powerProfile, "power_profile");
     BRLS_BIND(brls::Header, header, "header");
     BRLS_BIND(brls::Slider, slider, "slider");
     BRLS_BIND(brls::SelectorCell, audioBackend, "audio_backend");
@@ -60,6 +61,7 @@ class SettingsTab : public brls::Box {
     BRLS_BIND(brls::Header, mouseScrollHeader, "mouse_scroll_header");
     BRLS_BIND(brls::Slider, mouseScrollSlider, "mouse_scroll_slider");
     BRLS_BIND(brls::BooleanCell, writeLog, "writeLog");
+    BRLS_BIND(brls::SelectorCell, streamStats, "stream_stats");
 
     static brls::View* create();
 

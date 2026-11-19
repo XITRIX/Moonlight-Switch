@@ -382,6 +382,18 @@ SettingsTab::SettingsTab() {
     hwDecoding->setEnabled(false);
 #endif
 
+#ifdef __SWITCH2__
+    powerProfile->init("settings/power"_i18n,
+                       {"settings/power_auto"_i18n, "settings/power_battery_saver"_i18n,
+                        "settings/power_performance"_i18n},
+                       (int)Settings::instance().power_profile(),
+                       [](int selected) {
+                           Settings::instance().set_power_profile((PowerProfile)selected);
+                       });
+#else
+    powerProfile->removeFromSuperView(true);
+#endif
+
 #if defined(__PSV__)
     const float mbpsMaxLimit = 20000;
 #elif defined(PLATFORM_SWITCH)
@@ -791,6 +803,15 @@ SettingsTab::SettingsTab() {
                        Settings::instance().set_write_log(value);
                        brls::Application::enableDebuggingView(value);
                    });
+
+    streamStats->init("settings/stream_stats"_i18n,
+                      {"hints/off"_i18n, "settings/stream_stats_compact"_i18n,
+                       "settings/stream_stats_detailed"_i18n},
+                      (int)Settings::instance().stream_stats_mode(),
+                      [](int selected) {
+                          Settings::instance().set_stream_stats_mode(
+                              (StreamStatsMode)selected);
+                      });
 }
 
 void SettingsTab::willAppear(bool resetState)

@@ -116,13 +116,16 @@
 
             <BooleanSliderCell
                 id="rcas"/>
+
+            <brls:SelectorCell
+                id="power_profile"/>
             
             <brls:Header
                 title="@i18n/settings/debug"
                 paddingTop="60"
                 lineTop="1px"/>
                 
-            <brls:BooleanCell
+            <brls:SelectorCell
                 id="debug"/>
                 
             <brls:BooleanCell
