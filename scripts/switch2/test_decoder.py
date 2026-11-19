@@ -48,6 +48,7 @@ typedef uint32_t Result;
 #define VIDEO_DECODER_MAX_FRAME_RATE 60
 #define VIDEO_DECODER_PIXEL_RATE 248832000ULL
 typedef enum { ViddecCodec_H264=0, ViddecCodec_Av1=3 } ViddecCodec;
+enum { ViddecTilingMode_PitchLinear=1, ViddecTilingMode_BlockLinear=2 };
 typedef struct {
  ViddecCodec codec; uint32_t width,height,image_count,frame_rate,tiling,color_policy;
  uint64_t max_sample_size; const void* codec_config; size_t codec_config_size;
@@ -191,9 +192,12 @@ static std::vector<uint8_t> capturedConfig,lastSample;
 void switch2StartImageInterop() {}
 void switch2StopImageInterop() {}
 void switch2WakeVideoFrame() {}
-bool switch2PreimportImage(void*,uint64_t) { return false; }
-Switch2ImportedImage switch2FindImportedImage(void*) { return {}; }
-void switch2UnimportImage(void*) {}
+static std::map<void*,uint64_t> imports;
+static bool preimportOk=false;
+bool switch2PreimportImage(void* backing,uint64_t size) { if(preimportOk)imports[backing]=size;return preimportOk; }
+Switch2ImportedImage switch2FindImportedImage(void* backing) { return imports.count(backing)?Switch2ImportedImage{1,imports[backing]}:Switch2ImportedImage{}; }
+void switch2UnimportImage(void* backing) { imports.erase(backing); }
+static uint8_t backings[2][64];
 static std::deque<VideoFrame> pending;
 static uint8_t yPlane[32*16],uvPlane[32*8];
 extern "C" {
@@ -223,6 +227,7 @@ Result videoDecoderCreate(VideoDecoder* d,const VideoDecoderConfig* c) {
  if(rejectFastRegistration && (c->frame_rate>60 || uint64_t(c->width)*c->height*c->frame_rate>VIDEO_DECODER_PIXEL_RATE))return MAKERESULT(111,3025);
  if(createError)return createError;
  assert(activeSessions==0);++activeSessions;
+ d->image_count=2;for(int i=0;i<2;++i)d->images[i]={backings[i],sizeof backings[i],{}};
  d->initialized=1;d->started=d->decoder_open=true;d->decoder.open=1;return 0;
 }
 Result videoDecoderSubmit(VideoDecoder* d,const void* bytes,size_t size,int64_t stamp,bool,uint64_t timeout) {
@@ -278,6 +283,7 @@ int main() {
   assert(d.submit_decode_unit(&p)==DR_NEED_IDR && creates==0);
   assert(d.submit_decode_unit(&u)==DR_OK);
   assert(captured.codec==ViddecCodec_H264 && captured.frame_rate==60 && captured.color_policy==3);
+  assert(captured.tiling==ViddecTilingMode_PitchLinear);
   assert(capturedConfig.size()==12 && capturedConfig[3]==1 && capturedConfig[9]==1);
   assert(lastSample.size()==15 && std::memcmp(lastSample.data(),sps,sizeof sps)==0);
   auto& q=AVFrameHolder::instance();assert(q.transferred && q.fps==120 && q.queued.size()==1);
@@ -347,6 +353,18 @@ int main() {
   Switch2VideoDecoder d;assert(d.setup(VIDEO_FORMAT_AV1_MAIN8,16,16,120,nullptr,0)==0);
   auto u=unit();u.bufferList=&picture;u.fullLength=sizeof pic;
   assert(d.submit_decode_unit(&u)==DR_OK && captured.codec==ViddecCodec_Av1 && capturedConfig.empty());
+  assert(captured.tiling==ViddecTilingMode_PitchLinear && copies==0);
+  auto& q=AVFrameHolder::instance();assert(q.queued.size()==1 && q.queued[0]->format==kSwitch2NativeFrame);
+ }
+ reset();
+ {
+  preimportOk=true;Switch2VideoDecoder d;assert(d.setup(VIDEO_FORMAT_AV1_MAIN8,16,16,60,nullptr,0)==0);
+  auto u=unit();u.bufferList=&picture;u.fullLength=sizeof pic;assert(d.submit_decode_unit(&u)==DR_OK);
+  assert(imports.size()==2 && imports[backings[0]]==sizeof backings[0]); // AV1 images imported after creation.
+  d.cleanup();assert(imports.empty());
+  assert(d.setup(VIDEO_FORMAT_H264,16,16,60,nullptr,0)==0);u=unit();assert(d.submit_decode_unit(&u)==DR_OK);
+  assert(imports.empty()); // H.264 keeps the pre-registration import path.
+  preimportOk=false;
  }
  reset();
  {

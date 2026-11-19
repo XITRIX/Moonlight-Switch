@@ -120,6 +120,10 @@ bool Switch2VideoDecoder::openHardware(const std::vector<uint8_t>& config)
     const uint32_t budgetRate = uint32_t(
         std::min<uint64_t>(VIDEO_DECODER_MAX_FRAME_RATE, VIDEO_DECODER_PIXEL_RATE / (uint64_t(m_width) * m_height)));
     options.frame_rate        = std::min(uint32_t(m_fps), budgetRate);
+    // libounce defaults AV1 to block-linear, which only a CPU copy can read.
+    // AV1 decodes to pitch-linear on the console too (1080p120, 1440p120 and
+    // 4K60 measured), so every codec hands out frames the renderer reads in place.
+    options.tiling            = ViddecTilingMode_PitchLinear;
     options.max_sample_size   = kMaxSample;
     options.color_policy      = 3; // The session explicitly requests limited-range Rec.709.
     options.codec_config      = config.empty() ? nullptr : config.data();
@@ -138,9 +142,30 @@ bool Switch2VideoDecoder::openHardware(const std::vector<uint8_t>& config)
     m_pool->open = true;
     m_open       = true;
     m_need_idr   = false;
+    if (m_format != VIDEO_FORMAT_H264)
+        importImages();
     brls::Logger::info("SWITCH2_HWDEC: initialized codec={} streamFPS={} registrationFPS={} (output not verified yet)",
         int(options.codec), m_fps, options.frame_rate);
     return true;
+}
+
+void Switch2VideoDecoder::importImages()
+{
+    // H.264 images are imported before the SDK registers them, so it can share
+    // the GPU mapping (Switch2DecoderTrace.cpp). AV1 stays out of that path; an
+    // AV1 probe that registered its own image memory was refused (0x280f3).
+    // Import its images once the SDK has made them instead. The pool close
+    // hook removes the imports, and the renderer copies any image left out.
+    unsigned imported = 0;
+    for (uint32_t i = 0; i < m_pool->decoder.image_count; ++i)
+    {
+        const auto& image = m_pool->decoder.images[i];
+        if (image.backing && !switch2FindImportedImage(image.backing).buffer
+            && switch2PreimportImage(image.backing, image.backing_size))
+            imported++;
+    }
+    brls::Logger::info("SWITCH2_VK_IMPORT: imported {} of {} decoder images after creation", imported,
+        m_pool->decoder.image_count);
 }
 
 void Switch2VideoDecoder::fail(const char* operation, Result rc)
@@ -182,7 +207,7 @@ bool Switch2VideoDecoder::drain(uint64_t timeout)
                 output->color_range = AVCOL_RANGE_MPEG;
                 output->colorspace  = AVCOL_SPC_BT709;
                 output->pts         = frame.timestamp_ns;
-                if (m_format == VIDEO_FORMAT_H264 && frame.planes[0] && frame.planes[1])
+                if (frame.planes[0] && frame.planes[1])
                 {
                     copied = switch2AttachNativeFrame(output, m_pool, frame);
                 }
