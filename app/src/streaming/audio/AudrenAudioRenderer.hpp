@@ -3,6 +3,7 @@
 #include "IAudioRenderer.hpp"
 #include <opus/opus_multistream.h>
 #include <switch.h>
+#include <vector>
 #pragma once
 
 // One wave buffer holds exactly one Opus packet (5 ms at Sunshine's default),
@@ -38,6 +39,8 @@ class AudrenAudioRenderer : public IAudioRenderer {
     int m_frame_samples = 0;  // samples per channel in one Opus packet
     int m_buffer_size = 0;    // bytes in one wave buffer
     size_t m_dropped_packets = 0;
+    std::vector<s16> m_fade;  // start of the first packet dropped since the last one played
+    int m_fade_frames = 0;
 };
 
 #endif // __SWITCH__
