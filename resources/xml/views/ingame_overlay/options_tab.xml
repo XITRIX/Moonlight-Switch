@@ -25,6 +25,9 @@
             <brls:DetailCell
                 id="input_overlay"/>
 
+            <brls:DetailCell
+                id="type_text"/>
+
             <brls:SelectorCell
                 id="keyboard_type"/>
 

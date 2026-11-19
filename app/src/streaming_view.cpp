@@ -32,6 +32,9 @@
 
 using namespace brls;
 
+// The Switch keyboard returns at most 0x100 bytes of UTF-8.
+static constexpr int TYPE_TEXT_MAX_LENGTH = 63;
+
 #ifdef PLATFORM_TVOS
 extern void updatePreferredDisplayMode(bool streamActive);
 #endif
@@ -282,12 +285,7 @@ void StreamingView::onFocusGained() {
         Application::blockInputs(true);
     }
 
-    tempInputLock = true;
-    ASYNC_RETAIN
-    delay(300, [ASYNC_TOKEN]() {
-        ASYNC_RELEASE
-        this->tempInputLock = false;
-    });
+    lockInputBriefly();
 
     Application::getPlatform()->getInputManager()->setPointerLock(true);
 
@@ -295,6 +293,20 @@ void StreamingView::onFocusGained() {
     setBottomBarStatus("1");
 
     scrollTouchRecognizer->forceReset();
+}
+
+void StreamingView::lockInputBriefly() {
+    tempInputLock = true;
+
+    if (tempInputLockTask != (size_t) -1)
+        cancelDelay(tempInputLockTask);
+
+    ASYNC_RETAIN
+    tempInputLockTask = delay(300, [ASYNC_TOKEN]() {
+        ASYNC_RELEASE
+        this->tempInputLock = false;
+        this->tempInputLockTask = -1;
+    });
 }
 
 void StreamingView::onFocusLost() {
@@ -499,6 +511,19 @@ void StreamingView::removeKeyboard() {
     keyboard->removeFromSuperView();
     keyboard = nullptr;
     Application::giveFocus(this);
+}
+
+void StreamingView::typeText() {
+    Application::getImeManager()->openForText(
+        [](const std::string& text) {
+            if (!text.empty())
+                LiSendUtf8TextEvent(text.c_str(), (unsigned int) text.size());
+        },
+        "streaming/type_text_header"_i18n, "", TYPE_TEXT_MAX_LENGTH);
+
+    // The Switch keyboard blocks until it closes, so the button that
+    // confirmed it may still be held when streaming input resumes.
+    lockInputBriefly();
 }
 
 void StreamingView::terminate(bool terminateApp) {

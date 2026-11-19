@@ -198,6 +198,8 @@
         "options": "Options",
         "show_logs": "Voir les logs",
         "terminate": "Fermer l'application",
+        "type_text": "Saisir du texte sur l'hôte",
+        "type_text_header": "Texte à envoyer à l'hôte",
         "volume": "Volume"
     },
     "tabs": {

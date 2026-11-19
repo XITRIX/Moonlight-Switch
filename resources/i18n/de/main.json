@@ -198,6 +198,8 @@
         "options": "Einstellungen",
         "show_logs": "Protokolle anzeigen",
         "terminate": "Programm beenden",
+        "type_text": "Text auf dem Host eingeben",
+        "type_text_header": "Text, der an den Host gesendet wird",
         "volume": "Lautstärke"
     },
     "tabs": {

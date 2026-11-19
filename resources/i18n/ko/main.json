@@ -198,6 +198,8 @@
         "options": "옵션",
         "show_logs": "정보 표시",
         "terminate": "앱 종료",
+        "type_text": "호스트에 텍스트 입력",
+        "type_text_header": "호스트로 보낼 텍스트",
         "volume": "볼륨"
     },
     "tabs": {
