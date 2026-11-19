@@ -345,8 +345,17 @@ int main() {
  reset();
  {
   Switch2VideoDecoder d;assert(d.setup(VIDEO_FORMAT_AV1_MAIN8,16,16,120,nullptr,0)==0);
-  auto u=unit();u.bufferList=&picture;u.fullLength=sizeof pic;
-  assert(d.submit_decode_unit(&u)==DR_OK && captured.codec==ViddecCodec_Av1 && capturedConfig.empty());
+  assert(creates==1 && captured.codec==ViddecCodec_Av1 && capturedConfig.empty()); // Created at setup.
+  auto u=unit();u.bufferList=&picture;u.fullLength=sizeof pic;auto p=u;p.frameType=FRAME_TYPE_PFRAME;
+  assert(d.submit_decode_unit(&p)==DR_NEED_IDR && submits==0);
+  assert(d.submit_decode_unit(&u)==DR_OK && creates==1 && submits==1);
+ }
+ reset();
+ {
+  Switch2VideoDecoder d;createError=0x99;
+  assert(d.setup(VIDEO_FORMAT_AV1_MAIN8,16,16,60,nullptr,0)==0 && creates==1);
+  createError=0;auto u=unit();u.bufferList=&picture;u.fullLength=sizeof pic;
+  nowMs+=1001;assert(d.submit_decode_unit(&u)==DR_OK && creates==2); // A failed early create retries on the IDR.
  }
  reset();
  {
