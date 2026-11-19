@@ -91,7 +91,7 @@ class MoonlightInputManager : public Singleton<MoonlightInputManager> {
     bool inputDropped = false;
     bool inputEnabled = true;
     std::atomic<bool> resetControllers = true;
-    int announcedControllerCount = -1;
+    short announcedControllers = 0;
 
     brls::ControllerState mapController(brls::ControllerState controller);
     static short glfwKeyToVKKey(brls::BrlsKeyboardScancode key);
@@ -101,5 +101,5 @@ class MoonlightInputManager : public Singleton<MoonlightInputManager> {
     GamepadState getControllerState(int controllerNum, bool specialKey);
     void handleControllers(bool specialKey);
 
-    static short controllersToMap();
+    static short connectedControllers();
 };
