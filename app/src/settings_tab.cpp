@@ -9,6 +9,10 @@
 #include <borealis/platforms/switch/switch_input.hpp>
 #endif
 
+#ifdef __SWITCH2__
+#include <switch.h>
+#endif
+
 #include "settings_tab.hpp"
 #include "Settings.hpp"
 #include "MouseScrollSettings.hpp"
@@ -120,6 +124,24 @@ SettingsTab::SettingsTab() {
 #endif
         DEFAULT;
     }
+
+#ifdef __SWITCH2__
+    // 1440p and 2160p, the last two entries, are only offered when docked.
+    // A saved docked size is kept and streams 1080p in handheld mode.
+    if (appletGetOperationMode() == AppletOperationMode_Handheld) {
+        const int dockedOnly = 6;
+        const int saved = Settings::instance().resolution();
+        if (saved == 1440 || saved == 2160) {
+            const std::string savedName = resolutions[saved == 1440 ? 6 : 7];
+            resolution->setSelection(dockedOnly - 1, true);
+            resolution->setDetailText(brls::getStr("settings/resolution_when_docked",
+                                                   resolutions[dockedOnly - 1], savedName));
+        }
+        resolutions.resize(dockedOnly);
+        resolution->setData(resolutions);
+        resolutionHint->setVisibility(brls::Visibility::VISIBLE);
+    }
+#endif
 
     std::vector<std::string> nativeResolutionScales = {
         "0.5x", "0.75x", "1.0x",
@@ -300,6 +322,34 @@ SettingsTab::SettingsTab() {
             DEFAULT;
         }
     });
+
+#ifdef __SWITCH2__
+    // 2160p streams at 60 FPS. The previous rate comes back at a smaller size.
+    auto limitFpsAt2160p = [this, fpss]() {
+        auto& settings = Settings::instance();
+        const bool at2160p = settings.resolution() == 2160;
+        if (at2160p && settings.fps() != 60) {
+            settings.set_fps_before_2160p(settings.fps());
+            settings.set_fps(60);
+        } else if (!at2160p && settings.fps_before_2160p() > 0) {
+            settings.set_fps(settings.fps_before_2160p());
+            settings.set_fps_before_2160p(0);
+        }
+
+        auto it = std::find(fpss.begin(), fpss.end(),
+                            std::to_string(settings.fps()));
+        if (it != fpss.end())
+            fps->setSelection(int(it - fpss.begin()), true);
+
+        auto theme = brls::Application::getTheme();
+        fps->setFocusable(!at2160p);
+        fps->title->setTextColor(
+            theme[at2160p ? "brls/text_disabled" : "brls/text"]);
+    };
+    limitFpsAt2160p();
+    resolution->getEvent()->subscribe(
+        [limitFpsAt2160p](int) { limitFpsAt2160p(); });
+#endif
 
     std::vector<std::string> decoders = {"settings/zero_threads"_i18n, "2", "3",
                                          "4"};

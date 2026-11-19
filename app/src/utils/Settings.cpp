@@ -297,6 +297,14 @@ void Settings::load() {
                     m_fps = (int)json_integer_value(fps);
                 }
             }
+
+#ifdef __SWITCH2__
+            if (json_t* fps = json_object_get(settings, "fps_before_2160p")) {
+                if (json_typeof(fps) == JSON_INTEGER) {
+                    m_fps_before_2160p = (int)json_integer_value(fps);
+                }
+            }
+#endif
             
             if (json_t* video_codec = json_object_get(settings, "video_codec")) {
                 if (json_typeof(video_codec) == JSON_INTEGER) {
@@ -644,6 +652,9 @@ void Settings::save()
             json_object_set_new(settings, "resolution", json_integer(m_resolution));
             json_object_set_new(settings, "native_resolution_scale", json_integer(m_native_resolution_scale));
             json_object_set_new(settings, "fps", json_integer(m_fps));
+#ifdef __SWITCH2__
+            json_object_set_new(settings, "fps_before_2160p", json_integer(m_fps_before_2160p));
+#endif
             json_object_set_new(settings, "video_codec", json_integer(m_video_codec));
             json_object_set_new(settings, "audio_backend", json_integer(m_audio_backend));
             json_object_set_new(settings, "bitrate", json_integer(m_bitrate));
