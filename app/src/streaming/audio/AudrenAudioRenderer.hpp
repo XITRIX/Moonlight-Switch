@@ -5,7 +5,9 @@
 #include <switch.h>
 #pragma once
 
-#define BUFFER_COUNT 5
+// One wave buffer holds exactly one Opus packet (5 ms at Sunshine's default),
+// so a packet is handed to audren as soon as it is decoded.
+#define BUFFER_COUNT 12
 
 class AudrenAudioRenderer : public IAudioRenderer {
   public:
@@ -21,30 +23,21 @@ class AudrenAudioRenderer : public IAudioRenderer {
 
   private:
     ssize_t free_wavebuf_index();
-    size_t append_audio(const void* buf, size_t size);
-    void write_audio(const void* buf, size_t size);
-    bool flush();
+    int queued_ms();
 
     OpusMSDecoder* m_decoder = nullptr;
     s16* m_decoded_buffer = nullptr;
     void* mempool_ptr = nullptr;
-    void* current_pool_ptr = nullptr;
 
     AudioDriver m_driver;
     AudioDriverWaveBuf m_wavebufs[BUFFER_COUNT];
-    AudioDriverWaveBuf* m_current_wavebuf;
-    Mutex m_update_lock;
 
     bool m_inited_driver = false;
     int m_channel_count = 0;
     int m_sample_rate = 0;
-    int m_buffer_size = 0;
-    int m_samples = 0;
-    size_t m_total_queued_samples = 0;
-    ssize_t m_current_size = 0;
-
-    const int m_samples_per_frame = AUDREN_SAMPLES_PER_FRAME_48KHZ;
-    const int m_latency = 5;
+    int m_frame_samples = 0;  // samples per channel in one Opus packet
+    int m_buffer_size = 0;    // bytes in one wave buffer
+    size_t m_dropped_packets = 0;
 };
 
 #endif // __SWITCH__

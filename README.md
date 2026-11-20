@@ -1,6 +1,6 @@
 # Moonlight-Switch
 
-Moonlight-Switch is a port of [Moonlight Game Streaming Project](https://github.com/moonlight-stream "Moonlight Game Streaming Project") for Nintendo Switch.
+Moonlight-Switch is a port of [Moonlight Game Streaming Project](https://github.com/moonlight-stream "Moonlight Game Streaming Project") for Nintendo Switch and Nintendo Switch 2.
 
 ## Screenshots
 <details>
@@ -17,7 +17,7 @@ Moonlight-Switch is a port of [Moonlight Game Streaming Project](https://github.
 # Installing
 ### Switch
 1. Download latest Moonlight-Switch [release](https://github.com/XITRIX/Moonlight-Switch/releases).
-2. Put Moonlight.nro to sdcard:/switch/Moonlight-Switch;
+2. Rename the Switch 1 release NRO to Moonlight-Switch.nro and put it in sdcard:/switch/Moonlight-Switch;
 3. Launch hbmenu over *Title Redirection* (for FULL RAM access);
 4. Launch moonlight.
 
@@ -32,6 +32,12 @@ Or download it from [HB App Store](https://apps.fortheusers.org/switch/Moonlight
 > I DO NOT RESPOSIBLE FOR ANY DAMAGE TO YOUR CONSOLE IF SOMETHING WILL GO WRONG!
 >
 > I am using 4IFIR by myself and not find any issue, but everything is possible. So think by you own head and be responsible for what you do with your devices!
+
+### Switch 2
+1. Download latest Moonlight-Switch2 [release](https://github.com/XITRIX/Moonlight-Switch/releases).
+2. Extract Moonlight-Switch2-vX.X.X.zip to the root of your SD card;
+3. Launch hbmenu;
+4. Launch moonlight.
 
 ### iOS, tvOS and macOS
 Accept [invite for TestFlight](https://testflight.apple.com/join/P9EX5vQ5) and download app from there
@@ -144,6 +150,21 @@ To build for Switch, a standard development environment must first be set up. In
 cmake -B build/switch -DPLATFORM_SWITCH=ON
 make -C build/switch Moonlight.nro -j$(nproc)
 ```
+
+### Switch 2
+
+To build for Switch 2, install [ounce-devkit](https://github.com/ouncebrew/ounce-devkit). Set `DEVKITPRO` to the SDK installation directory, then run:
+
+```bash
+export DEVKITPRO=/opt/devkitpro
+bash scripts/switch2/build.sh
+```
+
+The resulting package is written to `build/switch2/Moonlight-Switch.nro`.
+Add `--run-tests` to include host regression tests; regular builds skip them.
+Builds automatically reuse downloaded sources, compiled dependencies and app objects.
+Add `--clean-build` to rebuild dependencies and the app from scratch; downloaded
+source archives are retained.
 
 ### PS Vita
 
@@ -297,6 +318,8 @@ Thanks a lot to [Rock88](https://github.com/rock88) and his [Moonlight-NX](https
 [Xfangfang](https://github.com/xfangfang) for maintaining [Borealis](https://github.com/xfangfang/borealis) library. iOS port would not be possible without it. 
 
 [Averne](https://github.com/averne) for NVDEC implementation into [FFmpeg](https://github.com/averne/FFmpeg) and useful guidance of how to enable it 
+
+[Azkali](https://gitlab.com/Azkali) and his [Moonlight-NX2](https://gitlab.com/Azkali/moonlight-nx2) for help and assistance with Switch 2 implementation
 
 Also huge thanks to [Cooler3D](https://github.com/Cooler3Ds) for help with Deko3D implementation and solving performance issues
 

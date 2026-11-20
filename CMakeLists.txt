@@ -27,9 +27,12 @@ endif ()
 include(${EXTERN_PATH}/cmake/toolchain.cmake)
 
 # Renderers
-if (PLATFORM_APPLE)
+if (PLATFORM_SWITCH2)
+    set(USE_VULKAN_RENDERER ON)
+    set(USE_GL_RENDERER OFF)
+elseif (PLATFORM_APPLE)
     set(USE_METAL_RENDERER ON)
-elseif (PLATFORM_SWITCH)
+elseif (PLATFORM_SWITCH AND NOT PLATFORM_SWITCH2)
     set(USE_DEKO3D_RENDERER ON)
 elseif (WIN32 AND USE_D3D11)
     set(USE_D3D11_RENDERER ON)
@@ -69,12 +72,12 @@ if (PLATFORM_IOS OR PLATFORM_TVOS OR PLATFORM_VISIONOS)
 endif ()
 
 set(VERSION_MAJOR "1")
-set(VERSION_MINOR "5")
+set(VERSION_MINOR "6")
 set(VERSION_ALTER "0")
 set(VERSION_BUILD "1")
 set(PACKAGE_NAME "ru.xitrix.Moonlight")
 set(PSN_TITLE_ID  "MNTL00000")
-set(PSN_VERSION  "01.00")
+set(PSN_VERSION  "01.06")
 set(PROJECT_AUTHOR "XITRIX")
 set(PROJECT_ICON ${CMAKE_CURRENT_SOURCE_DIR}/resources/img/moonlight_icon.jpg)
 set(PROJECT_RESOURCES ${CMAKE_CURRENT_SOURCE_DIR}/resources)
@@ -262,6 +265,8 @@ elseif (USE_D3D11_RENDERER)
     list(APPEND MAIN_SRC app/src/streaming/video/D3D11/D3D11VideoRenderer.cpp)
 elseif (USE_DEKO3D_RENDERER)
     list(APPEND MAIN_SRC app/src/streaming/video/deko3d/DKVideoRenderer.cpp)
+elseif (USE_VULKAN_RENDERER)
+    list(APPEND MAIN_SRC app/src/streaming/video/Vulkan/VulkanVideoRenderer.cpp)
 elseif (USE_GL_RENDERER)
     list(APPEND MAIN_SRC app/src/streaming/video/OpenGL/GLVideoRenderer.cpp)
 endif ()
@@ -269,6 +274,16 @@ endif ()
 # building target
 program_target(${PROJECT_NAME} "${MAIN_SRC}")
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 20)
+if (PLATFORM_SWITCH2)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE USE_VULKAN_RENDERER VK_USE_PLATFORM_VI_NN)
+    target_include_directories(${PROJECT_NAME} PRIVATE app/src/streaming/video/Vulkan ${CMAKE_CURRENT_SOURCE_DIR}/build/switch2-generated)
+    target_link_options(${PROJECT_NAME} PRIVATE "-Wl,-Map,${CMAKE_CURRENT_BINARY_DIR}/Moonlight.map")
+    foreach (symbol viddecInitialize gsvRegisterFrame gsvGpuRegisterMemory gsvCreateNativeMemory
+                    viddecImagePoolCreate viddecImagePoolClose viddecOpenDecoder
+                    viddecDecoderInitialize viddecDecoderRegisterImage viddecDecoderStart)
+        target_link_options(${PROJECT_NAME} PRIVATE "-Wl,--wrap=${symbol}")
+    endforeach ()
+endif ()
 if (USE_SDL3)
     target_compile_definitions(${PROJECT_NAME} PRIVATE SDL_ENABLE_OLD_NAMES)
 endif ()
@@ -389,14 +404,22 @@ elseif (PLATFORM_SWITCH)
     if (USE_DEKO3D)
         gen_dksh("${PROJECT_RESOURCES}/shaders")
     endif ()
-    add_custom_target(${PROJECT_NAME}.nro DEPENDS ${PROJECT_NAME}
+    set(MOONLIGHT_NRO_NAME "${PROJECT_NAME}")
+    if (PLATFORM_SWITCH2)
+        set(MOONLIGHT_NRO_NAME "Moonlight-Switch")
+    endif ()
+    add_custom_target(${MOONLIGHT_NRO_NAME}.nro DEPENDS ${PROJECT_NAME}
         COMMAND ${NX_NACPTOOL_EXE} --create "${PROJECT_NAME}" "${PROJECT_AUTHOR}" "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_ALTER}" ${PROJECT_NAME}.nacp --titleid=${PROJECT_TITLEID}
         COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_BINARY_DIR}/resources
         COMMAND ${CMAKE_COMMAND} -E copy_directory ${PROJECT_RESOURCES} ${CMAKE_BINARY_DIR}/resources
         COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_BINARY_DIR}/resources/font
-        COMMAND ${NX_ELF2NRO_EXE} ${PROJECT_NAME}.elf ${PROJECT_NAME}.nro --icon=${PROJECT_ICON} --nacp=${PROJECT_NAME}.nacp --romfsdir=${CMAKE_BINARY_DIR}/resources
+        COMMAND ${NX_ELF2NRO_EXE} ${PROJECT_NAME}.elf ${MOONLIGHT_NRO_NAME}.nro --icon=${PROJECT_ICON} --nacp=${PROJECT_NAME}.nacp --romfsdir=${CMAKE_BINARY_DIR}/resources
     )
-    list(APPEND APP_PLATFORM_LIB dav1d z)
+    if (PLATFORM_SWITCH2)
+        list(APPEND APP_PLATFORM_LIB ZLIB::ZLIB)
+    else ()
+        list(APPEND APP_PLATFORM_LIB dav1d z)
+    endif ()
 elseif (PLATFORM_ANDROID)
     list(APPEND APP_PLATFORM_LIB android)
     target_link_libraries(${PROJECT_NAME} PRIVATE 
@@ -500,7 +523,7 @@ target_compile_options(${PROJECT_NAME} PRIVATE
         $<$<COMPILE_LANGUAGE:C,CXX,OBJC,OBJCXX>:-fdata-sections>
         ${APP_PLATFORM_OPTION})
 
-if(PLATFORM_SWITCH)
+if(PLATFORM_SWITCH AND NOT PLATFORM_SWITCH2)
     target_include_directories(${PROJECT_NAME} PRIVATE
             ${CMAKE_CURRENT_SOURCE_DIR}/lib/switch/include
     )
@@ -535,14 +558,20 @@ if (MOONLIGHT_APPLE_MOBILE_USE_MULTI_SDK)
     list(APPEND MOONLIGHT_APP_MISC_LIBS jansson expat zstd opus png16 z)
 else ()
         find_package(CURL REQUIRED)
-    find_package(Jansson REQUIRED)
-    find_package(EXPAT REQUIRED)
-    find_package(PNG REQUIRED)
+    if (PLATFORM_SWITCH2)
+        find_package(Jansson MODULE REQUIRED)
+        find_package(EXPAT MODULE REQUIRED)
+        find_package(PNG MODULE REQUIRED)
+    else ()
+        find_package(Jansson REQUIRED)
+        find_package(EXPAT REQUIRED)
+        find_package(PNG REQUIRED)
+    endif ()
 
     find_library(OPUS_LIBRARY opus)
     message("opus: ${OPUS_LIBRARY}")
 
-    if(PLATFORM_SWITCH)
+    if(PLATFORM_SWITCH AND NOT PLATFORM_SWITCH2)
         list(APPEND MOONLIGHT_APP_FFMPEG_LIBS
             ${CMAKE_CURRENT_SOURCE_DIR}/lib/switch/libavcodec.a
             ${CMAKE_CURRENT_SOURCE_DIR}/lib/switch/libavformat.a
@@ -650,7 +679,7 @@ else ()
 endif ()
 
 # Recompiled CURL with Mbedtls support for Switch
-if(PLATFORM_SWITCH)
+if(PLATFORM_SWITCH AND NOT PLATFORM_SWITCH2)
     target_link_libraries(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/lib/switch/libcurl.a)
 elseif (MOONLIGHT_APPLE_MOBILE_USE_MULTI_SDK)
     target_link_libraries(${PROJECT_NAME} PRIVATE curl)

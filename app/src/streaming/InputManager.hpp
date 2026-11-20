@@ -10,6 +10,7 @@
 #include "Singleton.hpp"
 #include "keyboard_view.hpp"
 #include <borealis.hpp>
+#include <atomic>
 #include <chrono>
 #include <optional>
 
@@ -52,7 +53,9 @@ class MoonlightInputManager : public Singleton<MoonlightInputManager> {
   public:
     MoonlightInputManager();
     void dropInput();
+    void resetControllerState() { resetControllers = true; }
     void handleInput(bool ignoreTouch = false);
+    void sendMouseScroll(brls::Point scroll);
     void handleRumble(unsigned short controller, unsigned short lowFreqMotor, unsigned short highFreqMotor);
     void handleRumbleTriggers(unsigned short controller, unsigned short lowFreqMotor, unsigned short highFreqMotor);
     void updateTouchScreenPanDelta(brls::PanGestureStatus panStatus);
@@ -75,18 +78,25 @@ class MoonlightInputManager : public Singleton<MoonlightInputManager> {
     std::map<uint32_t, bool> activeTouchIDs;
     brls::Point desktopMouseRemainder = {0, 0};
     brls::Point desktopScrollRemainder = {0, 0};
+    brls::Point scrollLogInput = {0, 0};
+    int64_t scrollLogSentX = 0;
+    int64_t scrollLogSentY = 0;
+    unsigned scrollLogEvents = 0;
+    float loggedScrollSensitivity = -1;
+    std::chrono::steady_clock::time_point lastScrollLog = {};
     float pendingHorizontalScroll = 0;
     unsigned pendingHorizontalScrollEvents = 0;
     DesktopScrollAxis desktopScrollAxis = DesktopScrollAxis::None;
     std::chrono::steady_clock::time_point lastDesktopScrollEvent;
     bool inputDropped = false;
     bool inputEnabled = true;
+    std::atomic<bool> resetControllers = true;
+    int announcedControllerCount = -1;
 
     brls::ControllerState mapController(brls::ControllerState controller);
     static short glfwKeyToVKKey(brls::BrlsKeyboardScancode key);
     void sendRelativeMouseMove(brls::Point offset);
     void handleDesktopMouseScroll(brls::Point scroll);
-    void sendDesktopMouseScroll(brls::Point scroll);
 
     GamepadState getControllerState(int controllerNum, bool specialKey);
     void handleControllers(bool specialKey);

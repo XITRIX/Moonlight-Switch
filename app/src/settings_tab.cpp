@@ -11,9 +11,12 @@
 
 #include "settings_tab.hpp"
 #include "Settings.hpp"
+#include "MouseScrollSettings.hpp"
+#include "SystemButtonSettings.hpp"
 #include "helper.hpp"
 #include "button_selecting_dialog.hpp"
 #include "mapping_layout_editor.hpp"
+#include "halfcon_mapping_view.hpp"
 #include "UpscalingSupport.hpp"
 #include <cmath>
 #include <iomanip>
@@ -87,9 +90,17 @@ SettingsTab::SettingsTab() {
     this->inflateFromXMLRes("xml/tabs/settings.xml");
 
     std::vector<std::string> resolutions = {
-        "settings/resolution_native"_i18n, "360p", "480p", "540p", "720p", "1080p",
+        "settings/resolution_native"_i18n,
+        "360p",
+        "480p",
+        "540p",
+        "720p",
+        "1080p",
 #if !defined(__PSV__)
         "1440p",
+#endif
+#ifdef __SWITCH2__
+        "2160p (4K)",
 #endif
     };
     resolution->setText("settings/resolution"_i18n);
@@ -103,6 +114,9 @@ SettingsTab::SettingsTab() {
         GET_SETTINGS(resolution, 1080, 5);
 #if !defined(__PSV__)
         GET_SETTINGS(resolution, 1440, 6);
+#endif
+#ifdef __SWITCH2__
+        GET_SETTINGS(resolution, 2160, 7);
 #endif
         DEFAULT;
     }
@@ -228,6 +242,9 @@ SettingsTab::SettingsTab() {
 #if !defined(__PSV__)
             SET_SETTING(6, set_resolution(1440));
 #endif
+#ifdef __SWITCH2__
+            SET_SETTING(7, set_resolution(2160));
+#endif
             DEFAULT;
         }
         updateNativeResolutionScaleVisibility();
@@ -310,11 +327,19 @@ SettingsTab::SettingsTab() {
 #if !defined(__PSV__)
         H265,
 #endif
+#ifdef __SWITCH2__
+        AV1,
+#endif
     };
 
     std::vector<std::string> supportedCodecNames;
     for (int i = 0; i < supportedCodecs.size(); i++) {
-        supportedCodecNames.push_back(getVideoCodecName(supportedCodecs[i]));
+        std::string name = getVideoCodecName(supportedCodecs[i]);
+#ifdef __SWITCH2__
+        if (supportedCodecs[i] == H265)
+            name += " (software)";
+#endif
+        supportedCodecNames.push_back(name);
     }
 
     auto it = find(supportedCodecs.begin(), supportedCodecs.end(), Settings::instance().video_codec());
@@ -325,10 +350,15 @@ SettingsTab::SettingsTab() {
         selected = index;
     }
 
-    codec->init("settings/video_codec"_i18n, supportedCodecNames,
-                selected, [supportedCodecs](int selected) {
-                    Settings::instance().set_video_codec(supportedCodecs[selected]);
-                });
+    codec->init("settings/video_codec"_i18n, supportedCodecNames, selected,
+        [this, supportedCodecs](int selected)
+        {
+            Settings::instance().set_video_codec(supportedCodecs[selected]);
+#ifdef __SWITCH2__
+            hwDecoding->setOn(supportedCodecs[selected] != H265 && Settings::instance().use_hw_decoding());
+            hwDecoding->setEnabled(supportedCodecs[selected] != H265);
+#endif
+        });
 
     requestHdr->init("settings/request_hdr"_i18n, Settings::instance().request_hdr(),
                      [](bool value) { Settings::instance().set_request_hdr(value); });
@@ -337,10 +367,16 @@ SettingsTab::SettingsTab() {
     requestHdr->removeFromSuperView(true);
  #endif
 
-    hwDecoding->init("settings/use_hw_decoding"_i18n, Settings::instance().use_hw_decoding(),
-                     [](bool value) { Settings::instance().set_use_hw_decoding(value); });
+    hwDecoding->init("settings/use_hw_decoding"_i18n,
+#ifdef __SWITCH2__
+        Settings::instance().video_codec() != H265 &&
+#endif
+            Settings::instance().use_hw_decoding(),
+        [](bool value) { Settings::instance().set_use_hw_decoding(value); });
 
-#if defined(__linux__) && defined(PLATFORM_DESKTOP)
+#if defined(__SWITCH2__)
+    hwDecoding->setEnabled(Settings::instance().video_codec() != H265);
+#elif defined(__linux__) && defined(PLATFORM_DESKTOP)
     hwDecoding->setEnabled(true);
 #else
     hwDecoding->setEnabled(false);
@@ -401,10 +437,19 @@ SettingsTab::SettingsTab() {
     layouts.push_back("settings/keys_mapping_create_new"_i18n);
 
     swapGame->setText("settings/keys_mapping_title"_i18n);
-    swapGame->setDetailTextColor(
-        Application::getTheme()["brls/list/listItem_value_color"]);
-    swapGame->setDetailText(
-        layouts[Settings::instance().get_current_mapping_layout()]);
+#ifdef __SWITCH__
+    halfconMapping->setText("halfcon/title"_i18n);
+    halfconMapping->registerClickAction(
+        [this](View*)
+        {
+            this->present(new HalfConMappingView());
+            return true;
+        });
+#else
+    halfconMapping->setVisibility(Visibility::GONE);
+#endif
+    swapGame->setDetailTextColor(Application::getTheme()["brls/list/listItem_value_color"]);
+    swapGame->setDetailText(layouts[Settings::instance().get_current_mapping_layout()]);
 
     swapGame->registerClickAction([this](View* view) {
         auto layouts = *Settings::instance().get_mapping_laouts();
@@ -568,7 +613,7 @@ SettingsTab::SettingsTab() {
 #else
     guideBySystemButton->init(
         "settings/use_system_button"_i18n,
-        {"hints/off"_i18n, "settings/buttons/screenshot"_i18n, "settings/buttons/home"_i18n},
+        systemButtonOptions(),
         (int) Settings::instance().get_guide_system_button(), [this](int value) {
             if (value != 0 && Settings::instance().get_overlay_system_button() == (ButtonOverrideType) value) {
                 brls::sync([this, value](){
@@ -590,7 +635,7 @@ SettingsTab::SettingsTab() {
 
     overlayBySystemButton->init(
         "settings/use_system_button"_i18n,
-        {"hints/off"_i18n, "settings/buttons/screenshot"_i18n, "settings/buttons/home"_i18n},
+        systemButtonOptions(),
         (int) Settings::instance().get_overlay_system_button(), [this](int value) {
             if (value != 0 && Settings::instance().get_guide_system_button() == (ButtonOverrideType) value) {
                 brls::sync([this, value](){
@@ -739,12 +784,20 @@ SettingsTab::SettingsTab() {
         Settings::instance().set_mouse_speed_multiplier(value * 100);
     });
     mouseSpeedSlider->setProgress(mouseProgress);
+    setupMouseScrollSettings(mouseScrollHeader, mouseScrollSlider);
 
     writeLog->init("settings/debugging_view"_i18n,
                    Settings::instance().write_log(), [](bool value) {
                        Settings::instance().set_write_log(value);
                        brls::Application::enableDebuggingView(value);
                    });
+}
+
+void SettingsTab::willAppear(bool resetState)
+{
+    Box::willAppear(resetState);
+    mouseSpeedSlider->setProgress(Settings::instance().get_mouse_speed_multiplier() / 100.0f);
+    refreshMouseScrollSettings(mouseScrollSlider);
 }
 
 void SettingsTab::updateDeadZoneItems() {

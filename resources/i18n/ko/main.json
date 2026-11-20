@@ -1,4 +1,14 @@
 {
+    "halfcon": {
+        "title": "Joy-Con 단독 버튼 설정",
+        "left": "왼쪽 Joy-Con",
+        "right": "오른쪽 Joy-Con",
+        "unmapped": "할당 없음",
+        "reset": "기본값 복원",
+        "select": "Select",
+        "start": "Start",
+        "guide": "Guide"
+    },
     "about": {
         "about": "Moonlight-Switch는 닌텐도 스위치용 Moonlight-Common-C를 기반으로 하는 타사 게임 스트리밍 클라이언트입니다.",
         "link_gbatemp": "GbaTemp 페이지",
@@ -106,6 +116,7 @@
         "audio_backend": "오디오 드라이버",
         "av1": "AV1 (실험용)",
         "buttons": {
+            "chat": "채팅(C)",
             "home": "홈",
             "screenshot": "스크린샷"
         },
@@ -141,6 +152,7 @@
         "mouse_input": "마우스 입력 모드",
         "mouse_input_setup_message": "마우스 입력 모드를 여는 데 사용할 키를 누르세요:\n\n",
         "mouse_speed": "마우스 가속",
+        "mouse_scroll_sensitivity": "스크롤 감도",
         "overlay": "게임 오버레이",
         "overlay_buttons": "버튼 조합",
         "overlay_setup_message": "오버레이를 여는 데 사용할 키를 누르세요:\n\n",

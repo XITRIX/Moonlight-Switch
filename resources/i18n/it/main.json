@@ -1,4 +1,14 @@
 {
+    "halfcon": {
+        "title": "Mappatura Joy-Con singolo",
+        "left": "Joy-Con sinistro",
+        "right": "Joy-Con destro",
+        "unmapped": "Non assegnato",
+        "reset": "Ripristina",
+        "select": "Select",
+        "start": "Start",
+        "guide": "Guide"
+    },
     "about": {
         "about": "Moonlight-Switch è un client di gioco in streaming di terze parti per Nintendo Switch basato su Moonlight-Common-C",
         "link_gbatemp": "Pagina GbaTemp",
@@ -106,6 +116,7 @@
         "audio_backend": "Audio driver",
         "av1": "AV1 (Experimental)",
         "buttons": {
+            "chat": "Chat (C)",
             "home": "Home",
             "screenshot": "Screenshot"
         },
@@ -141,6 +152,7 @@
         "mouse_input": "Modalità input del mouse",
         "mouse_input_setup_message": "Premi i tasti che desideri usare per aprire la modalità di input del mouse:",
         "mouse_speed": "Accelerazione mouse",
+        "mouse_scroll_sensitivity": "Sensibilità scorrimento",
         "overlay": "Sovrapposizione in gioco",
         "overlay_buttons": "Combinazione Tasti",
         "overlay_setup_message": "Premi i tasti che vuoi usare per aprire la Sovrapposizione:\n\n",

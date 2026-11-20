@@ -1,6 +1,7 @@
 
 #ifdef __SWITCH__
 #include <switch.h>
+#include <borealis/platforms/switch/switch_input.hpp>
 #endif
 
 #include "InputManager.hpp"
@@ -113,7 +114,7 @@ void MoonlightInputManager::handleDesktopMouseScroll(brls::Point scroll) {
         desktopScrollAxis = DesktopScrollAxis::Vertical;
         pendingHorizontalScroll = 0;
         pendingHorizontalScrollEvents = 0;
-        sendDesktopMouseScroll({0, scroll.y});
+        sendMouseScroll({0, scroll.y});
         return;
     }
 
@@ -135,38 +136,73 @@ void MoonlightInputManager::handleDesktopMouseScroll(brls::Point scroll) {
         pendingHorizontalScrollEvents = 0;
     }
 
-    sendDesktopMouseScroll({scroll.x, 0});
+    sendMouseScroll({scroll.x, 0});
 }
 
-void MoonlightInputManager::sendDesktopMouseScroll(brls::Point scroll) {
-    desktopScrollRemainder.x += scroll.x * MOONLIGHT_WHEEL_DELTA;
-    desktopScrollRemainder.y += scroll.y * MOONLIGHT_WHEEL_DELTA;
+void MoonlightInputManager::sendMouseScroll(brls::Point scroll)
+{
+    const float sensitivity = Settings::instance().get_mouse_scroll_multiplier();
+    const auto now          = std::chrono::steady_clock::now();
+    if (sensitivity != loggedScrollSensitivity)
+    {
+        brls::Logger::info("MOUSE_SCROLL: sensitivity={:.2f}", sensitivity);
+        loggedScrollSensitivity = sensitivity;
+        scrollLogInput          = { };
+        scrollLogSentX = scrollLogSentY = 0;
+        scrollLogEvents                 = 0;
+        lastScrollLog                   = now;
+    }
+    scrollLogInput.x += scroll.x;
+    scrollLogInput.y += scroll.y;
+    ++scrollLogEvents;
+    if (lastScrollLog.time_since_epoch().count() == 0)
+        lastScrollLog = now;
+    desktopScrollRemainder.x += scroll.x * MOONLIGHT_WHEEL_DELTA * sensitivity;
+    desktopScrollRemainder.y += scroll.y * MOONLIGHT_WHEEL_DELTA * sensitivity;
 
-    const int horizontal = std::clamp(
-        static_cast<int>(std::trunc(desktopScrollRemainder.x)),
-        static_cast<int>(std::numeric_limits<short>::min()),
-        static_cast<int>(std::numeric_limits<short>::max()));
-    const int vertical = std::clamp(
-        static_cast<int>(std::trunc(desktopScrollRemainder.y)),
-        static_cast<int>(std::numeric_limits<short>::min()),
-        static_cast<int>(std::numeric_limits<short>::max()));
+#ifdef __SWITCH2__
+    // Some host applications round every small packet to a whole wheel click.
+    // Accumulate fractional Joy-Con scrolling here so sensitivity controls rate.
+    constexpr int quantum = 120;
+#else
+    constexpr int quantum = 1;
+#endif
+    constexpr float minimum = (std::numeric_limits<short>::min() / quantum) * quantum;
+    constexpr float maximum = (std::numeric_limits<short>::max() / quantum) * quantum;
+    const int horizontal
+        = static_cast<int>(std::clamp(std::trunc(desktopScrollRemainder.x / quantum) * quantum, minimum, maximum));
+    const int vertical
+        = static_cast<int>(std::clamp(std::trunc(desktopScrollRemainder.y / quantum) * quantum, minimum, maximum));
 
-    if (horizontal != 0) {
+    if (horizontal != 0)
+    {
         desktopScrollRemainder.x -= horizontal;
-        const int result =
-            LiSendHighResHScrollEvent(static_cast<short>(horizontal));
+        const int result = LiSendHighResHScrollEvent(static_cast<short>(horizontal));
         if (result < 0)
-            brls::Logger::warning(
-                "Failed to queue horizontal mouse scroll: {}", result);
+            brls::Logger::warning("Failed to queue horizontal mouse scroll: {}", result);
+        else
+            scrollLogSentX += horizontal;
     }
 
-    if (vertical != 0) {
+    if (vertical != 0)
+    {
         desktopScrollRemainder.y -= vertical;
-        const int result =
-            LiSendHighResScrollEvent(static_cast<short>(vertical));
+        const int result = LiSendHighResScrollEvent(static_cast<short>(vertical));
         if (result < 0)
-            brls::Logger::warning(
-                "Failed to queue vertical mouse scroll: {}", result);
+            brls::Logger::warning("Failed to queue vertical mouse scroll: {}", result);
+        else
+            scrollLogSentY += vertical;
+    }
+    if (now - lastScrollLog >= std::chrono::seconds(1))
+    {
+        brls::Logger::info("MOUSE_SCROLL: sensitivity={:.2f} quantum={} events={} wheelX={:.4f} wheelY={:.4f} "
+                           "queuedX={} queuedY={} pendingX={:.4f} pendingY={:.4f}",
+            sensitivity, quantum, scrollLogEvents, scrollLogInput.x, scrollLogInput.y, scrollLogSentX, scrollLogSentY,
+            desktopScrollRemainder.x, desktopScrollRemainder.y);
+        scrollLogInput = { };
+        scrollLogSentX = scrollLogSentY = 0;
+        scrollLogEvents                 = 0;
+        lastScrollLog                   = now;
     }
 }
 
@@ -254,6 +290,11 @@ void MoonlightInputManager::dropInput() {
 
     desktopMouseRemainder = {0, 0};
     desktopScrollRemainder = {0, 0};
+    scrollLogInput = {0, 0};
+    scrollLogSentX = scrollLogSentY = 0;
+    scrollLogEvents = 0;
+    loggedScrollSensitivity = -1;
+    lastScrollLog = {};
     pendingHorizontalScroll = 0;
     pendingHorizontalScrollEvents = 0;
     desktopScrollAxis = DesktopScrollAxis::None;
@@ -303,12 +344,17 @@ GamepadState MoonlightInputManager::getControllerState(int controllerNum,
     brls::ControllerState controller{};
 
     brls::Application::setSwapHalfJoyconStickToDpad(Settings::instance().swap_joycon_stick_to_dpad());
-    brls::Application::getPlatform()->getInputManager()->updateControllerState(
-        &rawController, controllerNum);
+    brls::Application::getPlatform()->getInputManager()->updateControllerState(&rawController, controllerNum);
+#ifdef __SWITCH__
+    auto* switchInput = static_cast<brls::SwitchInputManager*>(brls::Application::getPlatform()->getInputManager());
+    controller = switchInput->isHalfJoyConMappingActive(controllerNum) ? rawController : mapController(rawController);
+#else
     controller = mapController(rawController);
+#endif
 
     // Use axis or button if axis is not available (equals 0)
-    float lzAxis = controller.axes[LEFT_Z] > 0 ? controller.axes[LEFT_Z] : (controller.buttons[brls::BUTTON_LT] ? 1.f : 0.f);
+    float lzAxis
+        = controller.axes[LEFT_Z] > 0 ? controller.axes[LEFT_Z] : (controller.buttons[brls::BUTTON_LT] ? 1.f : 0.f);
     float rzAxis = controller.axes[RIGHT_Z] > 0 ? controller.axes[RIGHT_Z] : (controller.buttons[brls::BUTTON_RT] ? 1.f : 0.f);
 
     // Truncate dead zones
@@ -405,7 +451,9 @@ GamepadState MoonlightInputManager::getControllerState(int controllerNum,
 }
 
 void MoonlightInputManager::handleControllers(bool specialKey) {
-    static int lastControllerCount = 0;
+    const bool newStream = resetControllers.exchange(false);
+    if (newStream)
+        announcedControllerCount = -1;
 
     auto controllersCount = brls::Application::getPlatform()
                             ->getInputManager()
@@ -418,20 +466,26 @@ void MoonlightInputManager::handleControllers(bool specialKey) {
 
     short mappedControllersCount = controllersToMap();
 
+    // The host needs type/capabilities again for every new stream, even when
+    // no buttons changed and the controller count stayed the same.
+    if (announcedControllerCount != controllersCount) {
+        bool announced = true;
+        for (int i = 0; i < controllersCount; i++) {
+            announced &= LiSendControllerArrivalEvent(
+                             i, mappedControllersCount, LI_CTYPE_UNKNOWN, 0,
+                             LI_CCAP_RUMBLE | LI_CCAP_ACCEL | LI_CCAP_GYRO) == 0;
+        }
+        if (announced) {
+            Logger::debug("StreamingView: announced {} controller(s)", controllersCount);
+            announcedControllerCount = controllersCount;
+        }
+    }
+
     for (int i = 0; i < controllersCount; i++) {
         GamepadState gamepadState = getControllerState(i, specialKey);
 
-        if (!gamepadState.is_equal(lastGamepadStates[i])) {
+        if (newStream || !gamepadState.is_equal(lastGamepadStates[i])) {
             lastGamepadStates[i] = gamepadState;
-
-            if (lastControllerCount != controllersCount) {
-                lastControllerCount = controllersCount;
-                
-                for (int i = 0; i < controllersCount; i++) {
-                    Logger::debug("StreamingView: send features message for controller #{}", i);
-                    LiSendControllerArrivalEvent(i, mappedControllersCount, LI_CTYPE_UNKNOWN, 0, LI_CCAP_RUMBLE | LI_CCAP_ACCEL | LI_CCAP_GYRO);
-                }
-            }
 
             if (LiSendMultiControllerEvent(
                     i, mappedControllersCount, gamepadState.buttonFlags,
@@ -534,7 +588,7 @@ void MoonlightInputManager::handleInput(bool ignoreTouch) {
         timeStamp = timeNow;
         brls::Logger::info("Scroll sended: {}", mouseState.scroll_y);
         lastMouseState.scroll_y = mouseState.scroll_y;
-        LiSendScrollEvent(mouseState.scroll_y > 0 ? 1 : -1);
+        sendMouseScroll({0, mouseState.scroll_y > 0 ? 1.0f : -1.0f});
     }
 
     if (!Settings::instance().touchscreen_mouse_mode()) {

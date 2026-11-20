@@ -21,8 +21,7 @@ public:
     AVFrame* pop(bool* consumed = nullptr);
     AVFrame* acquireWriteFrame();
     void recycleWriteFrame(AVFrame*& frame);
-    void configure(size_t queueLimit, int streamFps,
-                   bool transferOwnershipEnabled);
+    void configure(size_t queueLimit, int streamFps, bool transferOwnershipEnabled, size_t capacityLimit = 0);
     static size_t capacityFor(size_t configuredQueueSize);
 
     [[nodiscard]] size_t size() const;
@@ -93,8 +92,8 @@ class AVFrameHolder : public Singleton<AVFrameHolder> {
         m_frame_queue.pushTransferred(frame);
     }
 
-    void get(const std::function<void(AVFrame*)>& fn) {
-        auto frame = m_frame_queue.pop();
+    void get(const std::function<void(AVFrame*)>& fn, bool* consumed = nullptr) {
+        auto frame = m_frame_queue.pop(consumed);
 
         if (frame) {
             fn(frame);
@@ -109,9 +108,9 @@ class AVFrameHolder : public Singleton<AVFrameHolder> {
         m_frame_queue.recycleWriteFrame(frame);
     }
 
-    void prepare(int streamFps, bool transferOwnership = false) {
-        m_frame_queue.configure(Settings::instance().frames_queue_size(),
-                                streamFps, transferOwnership);
+    void prepare(int streamFps, bool transferOwnership = false, size_t capacityLimit = 0)
+    {
+        m_frame_queue.configure(Settings::instance().frames_queue_size(), streamFps, transferOwnership, capacityLimit);
     }
 
     void cleanup() {

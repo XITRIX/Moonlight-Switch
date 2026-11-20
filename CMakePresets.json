@@ -100,6 +100,21 @@
       "inherits": "windows-clangarm64-c-root-base",
       "displayName": "Windows CLANGARM64 Release",
       "description": "Build Moonlight for Windows ARM64 with MSYS2 CLANGARM64 system packages using the recommended C:/msys64 root."
+    },
+    {
+      "name": "switch2",
+      "displayName": "Switch 2 (libounce + native Vulkan)",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/switch2",
+      "cacheVariables": {
+        "PLATFORM_SWITCH2": "ON",
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_PREFIX_PATH": "${sourceDir}/build/deps/switch2",
+        "CMAKE_FIND_ROOT_PATH": "${sourceDir}/build/deps/switch2",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "ENABLE_UPSCALING": "OFF",
+        "CMAKE_POLICY_VERSION_MINIMUM": "3.5"
+      }
     }
   ],
   "buildPresets": [
@@ -114,6 +129,13 @@
     {
       "name": "windows-clangarm64-release",
       "configurePreset": "windows-clangarm64-release"
+    },
+    {
+      "name": "switch2",
+      "configurePreset": "switch2",
+      "targets": [
+        "Moonlight-Switch.nro"
+      ]
     }
   ]
 }

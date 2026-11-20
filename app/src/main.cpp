@@ -1,3 +1,6 @@
+#ifdef __SWITCH2__
+#include "switch2_build_id.hpp"
+#endif
 //
 //  main.cpp
 //  Moonlight
@@ -8,6 +11,7 @@
 // Switch include only necessary for demo videos recording
 #ifdef __SWITCH__
 #include <switch.h>
+#include <sys/stat.h>
 #endif
 
 #ifdef __PSV__
@@ -58,7 +62,8 @@ namespace {
 s32 selectAllowedSwitchCore(u64 affinityMask, int ordinal) {
     s32 lastAllowedCore = -1;
 
-    for (s32 core = 0; core < 4; core++) {
+    for (s32 core = 0; core < 64; core++)
+    {
         if ((affinityMask & (1ULL << core)) == 0) {
             continue;
         }
@@ -91,6 +96,20 @@ void preferSwitchCore(int ordinal) {
 #endif
 
 int main(int argc, char* argv[]) {
+#ifdef __SWITCH2__
+    // Keep diagnostics available after a failed launch or streaming session.
+    mkdir("sdmc:/switch/Moonlight-Switch", 0777);
+    if (FILE* log = fopen("sdmc:/switch/Moonlight-Switch/startup.log", "w"))
+    {
+        setvbuf(log, nullptr, _IONBF, 0);
+        brls::Logger::setLogOutput(log);
+        dup2(fileno(log), fileno(stderr));
+        setvbuf(stderr, nullptr, _IONBF, 0);
+    }
+    brls::Logger::info("SWITCH2_BUILD: id={} renderer=native-vulkan", MOONLIGHT_SWITCH2_BUILD_ID);
+    brls::Logger::info(
+        "Switch 2 startup: libounce, native Vulkan UI/video over OunceVK; H.264/AV1 hardware available; HEVC software");
+#endif
     // Enable recording for Twitter memes
 #ifdef __SWITCH__
     appletInitializeGamePlayRecording();
@@ -178,6 +197,14 @@ int main(int argc, char* argv[]) {
     bool vitaHealthReported = false;
 #endif
     while (brls::Application::mainLoop()) {
+#ifdef __SWITCH2__
+        static bool switch2Ready = false;
+        if (!switch2Ready)
+        {
+            brls::Logger::info("SWITCH2_HEALTH: first UI frame completed");
+            switch2Ready = true;
+        }
+#endif
 #ifdef __PSV__
         if (!vitaHealthReported) {
             brls::Logger::info("VITA_HEALTH: READY");

@@ -4,7 +4,12 @@
 #include "InputManager.hpp"
 #include "Settings.hpp"
 #include "borealis.hpp"
+#include <atomic>
 #include <string.h>
+#ifdef __SWITCH2__
+#include "video/Vulkan/Switch2VulkanContext.hpp"
+#include <switch.h>
+#endif
 
 #if defined(PLATFORM_IOS) || defined(PLATFORM_VISIONOS)
 extern void getWindowSize(int* w, int* h);
@@ -14,11 +19,22 @@ using namespace brls;
 
 int m_video_format;
 static MoonlightSession* m_active_session = nullptr;
+static std::atomic<uint64_t> m_session_generation{0};
 static MoonlightSessionDecoderAndRenderProvider* m_provider = nullptr;
 
 
 MoonlightSession* MoonlightSession::activeSession() {
     return m_active_session;
+}
+
+void MoonlightSession::requestRestart() {
+    // Read only the token on the decoder thread. The session itself belongs
+    // to the main thread and may be gone by the time this task is processed.
+    const uint64_t generation = m_session_generation.load();
+    brls::sync([generation] {
+        if (m_active_session && m_active_session->m_generation == generation)
+            m_active_session->restart();
+    });
 }
 
 void MoonlightSession::set_provider(
@@ -30,6 +46,7 @@ MoonlightSession::MoonlightSession(const std::string& address, int app_id) {
     m_address = address;
     m_app_id = app_id;
     m_active_session = this;
+    m_generation = ++m_session_generation;
 
     m_video_decoder = m_provider->video_decoder();
     m_video_renderer = m_provider->video_renderer();
@@ -84,6 +101,7 @@ void MoonlightSession::connection_started() {
     if (!m_active_session)
         return;
 
+    MoonlightInputManager::instance().resetControllerState();
     m_active_session->m_stop_requested = false;
     m_active_session->m_is_active = true;
 }
@@ -91,49 +109,53 @@ void MoonlightSession::connection_started() {
 void MoonlightSession::connection_terminated(int error_code) {
     brls::Logger::info("MoonlightSession: Connection terminated with code: {}", error_code);
 
-    if (!m_active_session)
-        return;
+    // This runs on moonlight-common-c's termination thread. libnx cannot
+    // detach threads, so on Switch the library joins this thread instead
+    // (#328), and calling LiStopConnection() from here would deadlock waiting
+    // for the thread that is waiting for us. Hand the work to the main thread.
+    const uint64_t generation = m_session_generation.load();
+    brls::sync([generation, error_code] {
+        if (m_active_session && m_active_session->m_generation == generation)
+            m_active_session->handle_connection_terminated(error_code);
+    });
+}
 
-    if (m_active_session->m_stop_requested) {
+void MoonlightSession::handle_connection_terminated(int error_code) {
+    if (m_stop_requested) {
         brls::Logger::info("MoonlightSession: Termination acknowledged after stop request");
-        m_active_session->m_is_active = false;
-        m_active_session->m_is_terminated = true;
+        m_is_active = false;
+        m_is_terminated = true;
         return;
     }
 
     if (error_code != 0) {
         brls::Logger::info("MoonlightSession: Reconnection attempt");
-
-        // Connection is already terminated here; avoid toggling the user stop flag.
-        LiStopConnection();
-
-        m_active_session->start([](const GSResult<bool>& result) {
-            if (result.isSuccess()) {
-                brls::Logger::info("MoonlightSession: Reconnected");
-            } else {
-                brls::Logger::info("MoonlightSession: Reconnection failed");
-                if (m_active_session) {
-                    m_active_session->m_is_active = false;
-                    m_active_session->m_is_terminated = true;
-                }
-            }
-        }, m_active_session->m_is_sunshine);
+        restart();
         return;
     }
 
-    m_active_session->m_is_active = false;
-    m_active_session->m_is_terminated = true;
+    m_is_active = false;
+    m_is_terminated = true;
 }
 
 void MoonlightSession::connection_log_message(const char* format, ...) {
     va_list arglist;
     va_start(arglist, format);
-    int size = vsnprintf(NULL, 0, format, arglist);
-    char buffer[size];
-    vsnprintf(buffer, size, format, arglist);
+    va_list copy;
+    va_copy(copy, arglist);
+    const int size = vsnprintf(NULL, 0, format, copy);
+    va_end(copy);
+
+    std::string message(size > 0 ? size : 0, ' ');
+    if (size > 0)
+        vsnprintf(message.data(), message.size() + 1, format, arglist);
     va_end(arglist);
 
-    brls::Logger::info(fmt::runtime(std::string(buffer)));
+    while (!message.empty() && (message.back() == '\n' || message.back() == '\r'))
+        message.pop_back();
+
+    // Pass the text as an argument: library messages may contain { or }.
+    brls::Logger::info("{}", message);
 }
 
 void MoonlightSession::connection_rumble(unsigned short controller,
@@ -255,7 +277,12 @@ void MoonlightSession::start(ServerCallback<bool> callback, bool is_sunshine) {
     int h = resolution;
     int w = h * 16 / 9;
     if (resolution == -1) {
-#if defined(PLATFORM_IOS) || defined(PLATFORM_VISIONOS)
+#ifdef __SWITCH2__
+        u32 nativeWidth = Application::windowWidth, nativeHeight = Application::windowHeight;
+        nwindowGetDimensions(nwindowGetDefault(), &nativeWidth, &nativeHeight);
+        w = nativeWidth;
+        h = nativeHeight;
+#elif defined(PLATFORM_IOS) || defined(PLATFORM_VISIONOS)
         getWindowSize(&w, &h);
 #else
         h = Application::windowHeight;
@@ -281,6 +308,10 @@ void MoonlightSession::start(ServerCallback<bool> callback, bool is_sunshine) {
     m_config.width = w;
     m_config.height = h;
     m_config.fps = Settings::instance().fps();
+#ifdef __SWITCH2__
+    m_config.colorSpace = COLORSPACE_REC_709;
+    m_config.colorRange = COLOR_RANGE_LIMITED;
+#endif
     m_config.audioConfiguration = AUDIO_CONFIGURATION_STEREO;
     m_config.packetSize = 1392;
     m_config.streamingRemotely = STREAM_CFG_AUTO;
@@ -370,40 +401,97 @@ void MoonlightSession::start(ServerCallback<bool> callback, bool is_sunshine) {
 }
 
 void MoonlightSession::stop(int terminate_app) {
-    if (m_stop_requested)
+    if (m_stop_requested.exchange(true))
         return;
 
-    m_stop_requested = true;
+    m_is_active = false;
 
     if (terminate_app) {
         GameStreamClient::instance().quit(m_address, [](auto _) {});
     }
 
+    if (!m_suspended && m_video_renderer)
+        m_video_renderer->invalidateHardwareResources();
     LiStopConnection();
 }
 
 void MoonlightSession::restart() {
-    LiStopConnection();
+    // Queued from the decoder thread with brls::sync; the user may have
+    // stopped the stream before it ran. Don't bring it back.
+    if (m_stop_requested || m_is_terminated)
+        return;
 
-    start([](const GSResult<bool>& result) {
-        if (result.isSuccess()) {
-            brls::Logger::info("MoonlightSession: Reconnected");
-        } else {
-            brls::Logger::info("MoonlightSession: Reconnection failed");
-            if (m_active_session) {
+    // Borealis can keep processing queued tasks while the console sleeps.
+    // Leave decoder/GPU teardown until the render thread is back in focus.
+    if (m_suspended) {
+        m_restart_pending = true;
+        return;
+    }
+
+    m_restart_pending = false;
+    m_is_active = false;
+    if (m_video_renderer)
+        m_video_renderer->invalidateHardwareResources();
+    m_invalidate_renderer_pending = false;
+    LiStopConnection();
+    m_generation = ++m_session_generation;
+
+    start([generation = m_generation](const GSResult<bool>& result) {
+        brls::sync([generation, result] {
+            if (!m_active_session || m_active_session->m_generation != generation)
+                return;
+            if (result.isSuccess()) {
+                brls::Logger::info("MoonlightSession: Reconnected");
+            } else {
+                brls::Logger::info("MoonlightSession: Reconnection failed");
                 m_active_session->m_is_active = false;
                 m_active_session->m_is_terminated = true;
             }
-        }
-    }, m_active_session->m_is_sunshine);
+        });
+    }, m_is_sunshine);
+}
+
+void MoonlightSession::set_suspended(bool suspended) {
+    if (m_suspended == suspended)
+        return;
+
+    m_suspended = suspended;
+    brls::Logger::info("MoonlightSession: rendering {}",
+                       suspended ? "suspended" : "resumed");
+
+    // The renderer belongs to the decoder callbacks, so let draw() reset it
+    // on the render thread instead of reaching for it from here.
+    if (!suspended)
+        m_invalidate_renderer_pending = true;
 }
 
 void MoonlightSession::draw(NVGcontext* vg, int width, int height) {
+    // Off screen nothing we draw is shown, and during a sleep the graphics
+    // service may be going away underneath us.
+    if (m_suspended)
+        return;
+
+    if (m_restart_pending)
+        restart();
+
+    if (!m_is_active)
+        return;
+
     if (m_video_decoder && m_video_renderer) {
+        if (m_invalidate_renderer_pending) {
+            m_invalidate_renderer_pending = false;
+            m_video_renderer->invalidateHardwareResources();
+        }
+
+        bool consumed = false;
         AVFrameHolder::instance().get(
             [this, vg, width, height](AVFrame* frame) {
                 m_video_renderer->draw(vg, width, height, frame, m_video_format);
-            });
+            }, &consumed);
+#ifdef __SWITCH2__
+        if (auto* context = Switch2VulkanContext::current())
+            context->videoFrameChanged(consumed);
+#endif
 
         const uint64_t now = LiGetMillis();
         if (m_last_stats_update_ms == 0 || now - m_last_stats_update_ms >= 250) {

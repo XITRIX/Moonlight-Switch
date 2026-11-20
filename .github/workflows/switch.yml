@@ -1,0 +1,157 @@
+name: Switch
+
+on:
+  workflow_call:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: ${{ matrix.name }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Switch 1
+            platform: switch1
+            image: devkitpro/devkita64:latest
+          - name: Switch 2
+            platform: switch2
+            # Matches the public ounce-devkit Dockerfile's devkitPro toolchain.
+            image: devkitpro/devkita64:20260219
+
+    container:
+      image: ${{ matrix.image }}
+
+    defaults:
+      run:
+        shell: bash
+
+    env:
+      DEVKITPRO: /opt/devkitpro
+      OUNCE_DEVKIT_VERSION: '20261115b'
+      OUNCE_DEVKIT_SHA256: e6866198bfb44144c8227288c6315772a6a505cacca54b08cd0e6232a84f4729
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+        with:
+          submodules: recursive
+          persist-credentials: false
+
+      - name: Remove useless fonts
+        if: matrix.platform == 'switch1'
+        run: rm -rf ./resources/font
+
+      - name: Remove enet
+        if: matrix.platform == 'switch1'
+        run: dkp-pacman --noconfirm -R switch-enet
+
+      - name: Run cmake
+        if: matrix.platform == 'switch1'
+        continue-on-error: true
+        run: cmake -B build/switch -DCMAKE_BUILD_TYPE=Release -DPLATFORM_SWITCH=ON -DUSE_DEKO3D=ON
+
+      - name: Dirty second cmake run
+        if: matrix.platform == 'switch1'
+        run: cmake -B build/switch -DCMAKE_BUILD_TYPE=Release -DPLATFORM_SWITCH=ON -DUSE_DEKO3D=ON
+
+      - name: Run build
+        if: matrix.platform == 'switch1'
+        run: make -C build/switch Moonlight.nro -j8
+
+      - name: Rename artifact
+        if: matrix.platform == 'switch1'
+        run: |
+          mv build/switch/Moonlight.nro build/switch/Moonlight-Switch.nro
+          cp build/switch/Moonlight.elf build/switch/Debug.elf
+
+      - name: Upload Moonlight-Switch.nro
+        if: matrix.platform == 'switch1'
+        uses: actions/upload-artifact@v7
+        with:
+          name: Moonlight-Switch.nro
+          path: build/switch/Moonlight-Switch.nro
+          if-no-files-found: error
+
+      - name: Upload Debug.elf
+        if: matrix.platform == 'switch1'
+        uses: actions/upload-artifact@v7
+        with:
+          name: Debug.elf
+          path: build/switch/Debug.elf
+          if-no-files-found: error
+
+      - name: Install host build tools
+        if: matrix.platform == 'switch2'
+        run: |
+          set -euo pipefail
+          apt-get update
+          apt-get install -y --no-install-recommends \
+            build-essential ca-certificates cmake curl git glslang-tools \
+            ninja-build pkg-config python3 spirv-tools xz-utils
+
+      - name: Install the public Switch 2 SDK
+        if: matrix.platform == 'switch2'
+        run: |
+          set -euo pipefail
+          archive="$RUNNER_TEMP/ounce-devkit.tar.xz"
+          curl --fail --location --retry 3 \
+            "https://github.com/ouncebrew/ounce-devkit/releases/download/devkit-${OUNCE_DEVKIT_VERSION}/ounce-devkit-${OUNCE_DEVKIT_VERSION}.tar.xz" \
+            --output "$archive"
+          printf '%s  %s\n' "$OUNCE_DEVKIT_SHA256" "$archive" | sha256sum --check
+          tar -xJf "$archive" -C "$DEVKITPRO"
+          test -f "$DEVKITPRO/libounce/cmake/Switch2.cmake"
+          cat "$DEVKITPRO/ounce-devkit-version.txt"
+
+      - name: Cache Switch 2 dependencies
+        if: matrix.platform == 'switch2'
+        uses: actions/cache@v6
+        with:
+          path: build/deps
+          key: switch2-linux-devkita64-20260219-${{ env.OUNCE_DEVKIT_SHA256 }}-${{ hashFiles('scripts/switch2/dependencies.sh', 'scripts/switch2/sources.sha256', 'scripts/switch2/mbedtls_entropy.c', 'scripts/switch2/prepare_expat.py') }}
+
+      - name: Build and validate native Vulkan NRO
+        if: matrix.platform == 'switch2'
+        run: bash scripts/switch2/build.sh --run-tests
+
+      - name: Package the SD card installation
+        if: matrix.platform == 'switch2'
+        run: python3 scripts/switch2/package_ci.py
+
+      - name: Upload Switch 2 installation
+        if: matrix.platform == 'switch2'
+        uses: actions/upload-artifact@v7
+        with:
+          name: Moonlight-Switch2
+          path: build/dist-switch2/Moonlight-Switch2.zip
+          if-no-files-found: error
+
+      - name: Upload Switch 2 debug symbols and validation
+        if: matrix.platform == 'switch2'
+        uses: actions/upload-artifact@v7
+        with:
+          name: Moonlight-Switch2-debug
+          path: |
+            build/switch2/Moonlight.elf
+            build/switch2/Moonlight.map
+            build/switch2/validation.json
+            build/switch2-generated/source-fingerprint.json
+            build/switch2-generated/shader-validation.json
+          if-no-files-found: error
+
+      - name: Upload build diagnostics
+        if: failure() && matrix.platform == 'switch2'
+        uses: actions/upload-artifact@v7
+        with:
+          name: Moonlight-Switch2-build-logs
+          path: |
+            build/deps/switch2-work/*.log
+            build/switch2/CMakeFiles/CMakeConfigureLog.yaml
+            build/switch2/CMakeFiles/CMakeError.log
+            build/switch2/CMakeFiles/CMakeOutput.log
+          if-no-files-found: ignore

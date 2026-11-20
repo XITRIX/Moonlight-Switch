@@ -15,6 +15,7 @@ class SettingsTab : public brls::Box {
   public:
     SettingsTab();
     ~SettingsTab();
+    void willAppear(bool resetState = false) override;
 
     BRLS_BIND(brls::SelectorCell, resolution, "resolution");
     BRLS_BIND(brls::SelectorCell, resolutionScale, "resolution_scale");
@@ -35,6 +36,7 @@ class SettingsTab : public brls::Box {
     BRLS_BIND(brls::BooleanCell, pcAudio, "pcAudio");
     BRLS_BIND(brls::BooleanCell, swapUi, "swap_ui");
     BRLS_BIND(brls::DetailCell, swapGame, "swap_game");
+    BRLS_BIND(brls::DetailCell, halfconMapping, "halfcon_mapping");
     BRLS_BIND(brls::DetailCell, deadzoneStickLeft, "dead_zone_stick_left");
     BRLS_BIND(brls::DetailCell, deadzoneStickRight, "dead_zone_stick_right");
     BRLS_BIND(brls::Header, rumbleForceHeader, "rumble_slider_header");
@@ -55,6 +57,8 @@ class SettingsTab : public brls::Box {
     BRLS_BIND(brls::BooleanCell, swapMouseScroll, "swap_mouse_scroll");
     BRLS_BIND(brls::Header, mouseSpeedHeader, "mouse_speed_header");
     BRLS_BIND(brls::Slider, mouseSpeedSlider, "mouse_speed_slider");
+    BRLS_BIND(brls::Header, mouseScrollHeader, "mouse_scroll_header");
+    BRLS_BIND(brls::Slider, mouseScrollSlider, "mouse_scroll_slider");
     BRLS_BIND(brls::BooleanCell, writeLog, "writeLog");
 
     static brls::View* create();

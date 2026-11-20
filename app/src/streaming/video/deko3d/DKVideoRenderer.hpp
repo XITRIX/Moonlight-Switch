@@ -22,6 +22,8 @@ class DKVideoRenderer : public IVideoRenderer {
 
     VideoRenderStats* video_render_stats() override;
 
+    void invalidateHardwareResources() override;
+
   private:
     void checkAndInitialize(int width, int height, AVFrame* frame);
     void updateRenderState(int width, int height, AVFrame* frame);
@@ -80,7 +82,6 @@ class DKVideoRenderer : public IVideoRenderer {
     CMemPool::Handle easuUniformBuffer;
     CMemPool::Handle ditheringUniformBuffer;
     CMemPool::Handle rcasUniformBuffer;
-    DkFence upscalingFence = {};
   #endif
 
     dk::ImageLayout lumaMappingLayout;

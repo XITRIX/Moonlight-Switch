@@ -1,4 +1,14 @@
 {
+    "halfcon": {
+        "title": "Half-con mapping layout",
+        "left": "Left Joy-Con",
+        "right": "Right Joy-Con",
+        "unmapped": "Not mapped",
+        "reset": "Reset defaults",
+        "select": "Select",
+        "start": "Start",
+        "guide": "Guide"
+    },
     "about": {
         "about": "Moonlight-Switch is a third-party game streaming client based on Moonlight-Common-C for the Nintendo Switch",
         "link_gbatemp": "GbaTemp Page",
@@ -106,6 +116,7 @@
         "audio_backend": "Audio driver",
         "av1": "AV1 (Experimental)",
         "buttons": {
+            "chat": "Chat (C)",
             "home": "Home",
             "screenshot": "Screenshot"
         },
@@ -141,6 +152,7 @@
         "mouse_input": "Mouse input mode",
         "mouse_input_setup_message": "Press keys you'd like to use to open Mouse input mode:\n\n",
         "mouse_speed": "Mouse acceleration",
+        "mouse_scroll_sensitivity": "Scroll sensitivity",
         "overlay": "Ingame overlay",
         "overlay_buttons": "Buttons combination",
         "overlay_setup_message": "Press keys you'd like to use to open Overlay:\n\n",

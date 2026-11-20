@@ -159,7 +159,15 @@ AVFrame* AVFrameQueue::pop(bool* consumed) {
         frameCredit = 0.0;
         playoutResyncStat++;
         dueFrames = 1;
-    } else if (arrivalRateSamples == 0 ||
+    }
+#ifdef __SWITCH2__
+    else if (transferOwnership) {
+        // Native Vulkan/VRR presents on arrivals. A second local-clock gate
+        // would delay an already-ready frame until another decoder wakeup.
+        dueFrames = 1;
+    }
+#endif
+    else if (arrivalRateSamples == 0 ||
                adaptiveFrameInterval <= std::chrono::nanoseconds::zero() ||
                averageDrawInterval <= std::chrono::nanoseconds::zero()) {
         // During the short measurement warm-up, consume only above the jitter
@@ -246,13 +254,17 @@ void AVFrameQueue::recycleWriteFrame(AVFrame*& frame) {
     recycleFrame(freeQueue, frame);
 }
 
-void AVFrameQueue::configure(size_t queueLimit, int configuredStreamFps,
-                             bool transferOwnershipEnabled) {
+void AVFrameQueue::configure(
+    size_t queueLimit, int configuredStreamFps, bool transferOwnershipEnabled, size_t capacityLimit)
+{
     std::lock_guard<std::mutex> lock(m_mutex);
     const size_t configuredDepth = std::max<size_t>(queueLimit, 1);
     limit = capacityFor(configuredDepth);
+    if (capacityLimit)
+        limit = std::min(limit, capacityLimit);
     targetBufferedFrames =
         configuredDepth > 1 ? std::min<size_t>(configuredDepth - 1, 2) : 0;
+    targetBufferedFrames  = std::min(targetBufferedFrames, limit - 1);
     transferOwnership = transferOwnershipEnabled;
     streamFps = configuredStreamFps;
     adaptiveFrameInterval = std::chrono::nanoseconds::zero();

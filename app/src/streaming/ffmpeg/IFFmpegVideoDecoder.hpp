@@ -13,12 +13,12 @@ struct VideoDecodeStats {
     uint32_t total_frames;
     uint32_t network_dropped_frames;
     uint32_t current_reassembly_time;
-    uint32_t current_decode_time;
+    uint64_t current_decode_time; // microseconds
   uint32_t current_decoder_delay_time;
     uint32_t total_received_frames;
     uint32_t total_decoded_frames;
     uint32_t total_reassembly_time;
-    uint32_t total_decode_time;
+    uint64_t total_decode_time; // microseconds; uint32 wraps after ~70 min of decode time
   uint32_t total_decoder_delay_time;
 
     float current_host_fps;

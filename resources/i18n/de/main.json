@@ -1,4 +1,14 @@
 {
+    "halfcon": {
+        "title": "Einzel-Joy-Con-Belegung",
+        "left": "Linker Joy-Con",
+        "right": "Rechter Joy-Con",
+        "unmapped": "Nicht belegt",
+        "reset": "Zurücksetzen",
+        "select": "Select",
+        "start": "Start",
+        "guide": "Guide"
+    },
     "about": {
         "about": "Moonlight-Switch ist ein Drittanbieter game streaming Client basierend auf Moonlight-Common-C für die Nintendo Switch",
         "link_gbatemp": "GbaTemp",
@@ -106,6 +116,7 @@
         "audio_backend": "Audio driver",
         "av1": "AV1 (Experimentell)",
         "buttons": {
+            "chat": "Chat (C)",
             "home": "Home",
             "screenshot": "Screenshot"
         },
@@ -141,6 +152,7 @@
         "mouse_input": "Mauseingabemodus",
         "mouse_input_setup_message": "Drücke die Tasten, die du nutzen möchtest, um den Mauseingabemodus zu aktivieren:\n\n",
         "mouse_speed": "Mausbeschleunigung",
+        "mouse_scroll_sensitivity": "Scroll-Empfindlichkeit",
         "overlay": "Ingame Overlay",
         "overlay_buttons": "Tastenkombination",
         "overlay_setup_message": "Drücken Sie die Tasten, die Sie benutzen wollen, um das Overlay zu öffnen:\n\n\n",

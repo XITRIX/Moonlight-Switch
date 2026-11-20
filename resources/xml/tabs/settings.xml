@@ -99,6 +99,9 @@
             <brls:DetailCell
                 id="swap_game"/>
 
+            <brls:DetailCell
+                id="halfcon_mapping"/>
+
             <brls:Header
                     title="@i18n/settings/deadzone/title"
                     paddingTop="60"/>
@@ -193,6 +196,18 @@
                 
             <brls:Slider
                 id="mouse_speed_slider"
+                width="auto"
+                height="84"
+                grow="1"/>
+
+            <brls:Header
+                id="mouse_scroll_header"
+                title="@i18n/settings/mouse_scroll_sensitivity"
+                subtitle="x1.00"
+                paddingTop="60"/>
+
+            <brls:Slider
+                id="mouse_scroll_slider"
                 width="auto"
                 height="84"
                 grow="1"/>

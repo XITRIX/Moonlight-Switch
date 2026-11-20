@@ -327,9 +327,15 @@ void DKVideoRenderer::updateDitheringConstants() {
     DitheringConstants ditheringConstants = {};
     ditheringConstants.control[0] = m_dithering_enabled ? 1.0f : 0.0f;
     ditheringConstants.control[1] = requestedStrength;
+    m_dithering_strength = requestedStrength;
+    // Called every frame; don't rewrite a buffer the GPU may be reading
+    // when nothing changed.
+    if (memcmp(ditheringUniformBuffer.getCpuAddr(), &ditheringConstants,
+               sizeof(ditheringConstants)) == 0) {
+        return;
+    }
     memcpy(ditheringUniformBuffer.getCpuAddr(), &ditheringConstants,
            sizeof(ditheringConstants));
-    m_dithering_strength = requestedStrength;
 }
 
 bool DKVideoRenderer::shouldUseRcas() const {
@@ -888,7 +894,9 @@ void DKVideoRenderer::recordStaticCommands(AVFrame* frame) {
         bindRenderTarget(sourceTargetImage, m_source_target_width,
                          m_source_target_height);
         drawDecodePass(sourceTransformState);
-        cmdbuf.barrier(DkBarrier_Tiles, DkInvalidateFlags_Image);
+        // EASU samples a neighbourhood of the source that crosses tiles, so a
+        // same-tile barrier is not enough here.
+        cmdbuf.barrier(DkBarrier_Fragments, DkInvalidateFlags_Image);
 
         bindRenderTarget(upscalingTargetImage, m_upscaling_target_width,
                          m_upscaling_target_height);
@@ -909,7 +917,12 @@ void DKVideoRenderer::recordStaticCommands(AVFrame* frame) {
     }
 
     if (useUpscaling || useDithering || useRcas) {
-        cmdbuf.barrier(DkBarrier_Tiles, DkInvalidateFlags_Image);
+        // The post-process pass is submitted right after this list with no
+        // fence in between. DkBarrier_Tiles only orders same-tile reads (like a
+        // Vulkan subpass); RCAS and the filtered present pass sample across
+        // tiles, so wait for all fragments. Still much cheaper than the old
+        // fence signal+wait, which drained the whole GPU.
+        cmdbuf.barrier(DkBarrier_Fragments, DkInvalidateFlags_Image);
     }
 #else
     drawDecodePass(displayTransformState);
@@ -1057,6 +1070,21 @@ void DKVideoRenderer::updateFrameMapping(AVFrame* frame) {
     queue.submitCommands(updateCmdMemRing.end(updateCmdbuf));
 }
 
+void DKVideoRenderer::invalidateHardwareResources() {
+    if (!m_is_initialized) {
+        return;
+    }
+
+    // frameMappings wrap decoder pool buffers keyed by their nvmap handle and
+    // CPU address. After a sleep an entry can still match by handle while no
+    // longer describing the memory the GPU samples, which faults the GPU
+    // (orange screen, #306). Drop them all; updateFrameMapping() rebuilds the
+    // one the next frame needs, as it does when the frame size changes.
+    queue.waitIdle();
+    frameMappings.clear();
+    currentMappingIndex = -1;
+}
+
 void DKVideoRenderer::releaseImageSlots() {
     if (!vctx) {
         return;
@@ -1114,9 +1142,11 @@ void DKVideoRenderer::draw(NVGcontext* vg, int width, int height, AVFrame* frame
         if (m_dithering_enabled || m_upscaling_enabled || m_rcas_enabled) {
             const auto postProcessStart = PostProcessClock::now();
             const auto upscalingStageStart = PostProcessClock::now();
+            // Same queue, so the post-process pass runs after this list; the
+            // barrier at the end of the list (see recordStaticCommands) makes
+            // its output visible to the texture reads. A fence signal+wait here
+            // only drained the GPU.
             queue.submitCommands(cmdlist);
-            vctx->queueSignalFence(&upscalingFence);
-            vctx->queueWaitFence(&upscalingFence);
 
             if (m_upscaling_enabled) {
                 m_video_render_stats_progress.total_upscaling_time +=
@@ -1134,9 +1164,13 @@ void DKVideoRenderer::draw(NVGcontext* vg, int width, int height, AVFrame* frame
             }
         } else {
             queue.submitCommands(cmdlist);
+            // Start the GPU on the video now instead of when the UI frame
+            // is submitted at the end of the draw.
+            vctx->queueFlush();
         }
 #else
         queue.submitCommands(cmdlist);
+        vctx->queueFlush();
 #endif
     }
 

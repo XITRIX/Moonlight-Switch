@@ -37,6 +37,7 @@ if (NOT ANDROID_NDK_HOME OR NOT EXISTS "${ANDROID_NDK_HOME}/build/cmake/android.
 endif ()
 
 set(PROJECT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../../../../..)
+set(VCPKG_OVERLAY_TRIPLETS "${PROJECT_PATH}/extern/cmake/vcpkg-triplets" CACHE STRING "vcpkg overlay triplets")
 set(CMAKE_TOOLCHAIN_FILE ${PROJECT_PATH}/extern/vcpkg/scripts/buildsystems/vcpkg.cmake CACHE PATH "vcpkg toolchain file" FORCE)
 set(VCPKG_CHAINLOAD_TOOLCHAIN_FILE ${ANDROID_NDK_HOME}/build/cmake/android.toolchain.cmake CACHE PATH "android toolchain file")
 if (NOT DEFINED VCPKG_TARGET_TRIPLET AND DEFINED ANDROID_ABI)

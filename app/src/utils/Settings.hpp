@@ -7,6 +7,9 @@
 #include <string>
 #include <utility>
 #include <vector>
+#ifdef __SWITCH__
+#include <borealis/platforms/switch/half_joycon_mapping.hpp>
+#endif
 
 enum VideoCodec : int { H264, H265, AV1 };
 std::string getVideoCodecName(VideoCodec codec);
@@ -22,7 +25,7 @@ enum AudioBackend : int {
 
 enum KeyboardType : int { COMPACT, FULLSIZED };
 
-enum class ButtonOverrideType : int { NONE, SCREENSHOT, HOME };
+enum class ButtonOverrideType : int { NONE, SCREENSHOT, HOME, CHAT };
 
 struct KeyMappingLayout {
     std::string title;
@@ -282,7 +285,7 @@ class Settings : public Singleton<Settings> {
 
     void set_use_hw_decoding(bool hw_decoding) { m_use_hw_decoding = hw_decoding; }
     [[nodiscard]] bool use_hw_decoding() const {
-#if defined(__linux__) && defined(PLATFORM_DESKTOP)
+#if defined(__SWITCH2__) || (defined(__linux__) && defined(PLATFORM_DESKTOP))
         return m_use_hw_decoding;
 #else
         return true;
@@ -307,8 +310,11 @@ class Settings : public Singleton<Settings> {
     void set_rumble_force(float rumble_force) { m_rumble_force = int(rumble_force * 100); }
     [[nodiscard]] float get_rumble_force() const { return float(m_rumble_force) / 100.f; }
 
-    void set_mouse_speed_multiplier(int mouse_speed_multiplier) { m_mouse_speed_multiplier = mouse_speed_multiplier; }
+    void set_mouse_speed_multiplier(int mouse_speed_multiplier);
     [[nodiscard]] int get_mouse_speed_multiplier() const { return m_mouse_speed_multiplier; }
+
+    void set_mouse_scroll_multiplier(int percent);
+    [[nodiscard]] float get_mouse_scroll_multiplier() const { return m_mouse_scroll_multiplier / 100.0f; }
 
     void set_deadzone_stick_left(float deadzone) { m_deadzone_stick_left = deadzone; }
     [[nodiscard]] float get_deadzone_stick_left() const { return m_deadzone_stick_left; }
@@ -318,6 +324,10 @@ class Settings : public Singleton<Settings> {
 
     int get_current_mapping_layout();
     void set_current_mapping_layout(int layout) { m_current_mapping_layout = layout; }
+#ifdef __SWITCH__
+    const brls::HalfJoyConMapping& get_halfcon_mapping(brls::HalfJoyConSide side) const;
+    void set_halfcon_mapping(brls::HalfJoyConSide side, const brls::HalfJoyConMapping& mapping);
+#endif
 
     std::vector<KeyMappingLayout>* get_mapping_laouts() { return &m_mapping_laouts; }
 
@@ -336,7 +346,7 @@ class Settings : public Singleton<Settings> {
     int m_resolution = 720;
     int m_native_resolution_scale = 100;
     int m_fps = 60;
-#ifdef __PSV__
+#if defined(__PSV__) || defined(__SWITCH2__)
     VideoCodec m_video_codec = H264;
 #else
     VideoCodec m_video_codec = H265;
@@ -373,17 +383,22 @@ class Settings : public Singleton<Settings> {
     int m_keyboard_fingers = 3;
     int m_keyboard_locale = 0;
     bool m_volume_amplification = false;
-    int m_mouse_speed_multiplier = 34;
-    int m_current_mapping_layout = 0;
+    int m_mouse_speed_multiplier               = 34;
+    int m_mouse_scroll_multiplier              = 100;
+    int m_current_mapping_layout               = 0;
+#ifdef __SWITCH__
+    std::array<brls::HalfJoyConMapping, 2> m_halfcon_mappings
+        = { brls::defaultHalfJoyConMapping(brls::HalfJoyConSide::LEFT),
+              brls::defaultHalfJoyConMapping(brls::HalfJoyConSide::RIGHT) };
+#endif
     std::vector<KeyMappingLayout> m_mapping_laouts;
-    KeyComboOptions m_guide_key_options{
+    KeyComboOptions m_guide_key_options {
         .holdTime = 0,
-        .buttons = {},
+        .buttons  = { },
     };
-    KeyComboOptions m_overlay_options{
+    KeyComboOptions m_overlay_options {
         .holdTime = 0,
-        .buttons = {brls::ControllerButton::BUTTON_BACK,
-                    brls::ControllerButton::BUTTON_START},
+        .buttons  = { brls::ControllerButton::BUTTON_BACK, brls::ControllerButton::BUTTON_START },
     };
     KeyComboOptions m_mouse_input_options{
         .holdTime = 0,

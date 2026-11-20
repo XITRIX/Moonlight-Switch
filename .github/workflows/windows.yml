@@ -62,7 +62,7 @@ jobs:
 
     steps:
     - name: Check out repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
       with:
         submodules: recursive
 
@@ -81,6 +81,9 @@ jobs:
       with:
         location: 'C:\'
         msystem: ${{ matrix.msystem }}
+        release: false
+        # paccache can fail after a successful ARM64 package installation.
+        cache: false
         update: true
         install: ${{ matrix.packages }}
 
@@ -111,7 +114,7 @@ jobs:
         done
 
     - name: Upload artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: ${{ matrix.artifact }}
         path: |

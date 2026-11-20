@@ -19,7 +19,7 @@ jobs:
 
     steps:
     - name: Check out repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
       with:
         fetch-depth: 0
         submodules: recursive
@@ -126,7 +126,7 @@ jobs:
         echo "filename=${filename}" >> "$GITHUB_OUTPUT"
 
     - name: Upload VPK artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: Moonlight-PSVita-VPK
         path: dist/${{ steps.vpk.outputs.filename }}

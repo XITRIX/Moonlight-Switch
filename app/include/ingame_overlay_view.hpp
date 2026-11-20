@@ -65,6 +65,8 @@ class OptionsTab : public brls::Box {
     BRLS_BIND(brls::BooleanCell, swapStickToDpad, "swap_stick_to_dpad");
     BRLS_BIND(brls::Header, mouseHeader, "mouse_speed_header");
     BRLS_BIND(brls::Slider, mouseSlider, "mouse_speed_slider");
+    BRLS_BIND(brls::Header, mouseScrollHeader, "mouse_scroll_header");
+    BRLS_BIND(brls::Slider, mouseScrollSlider, "mouse_scroll_slider");
     BRLS_BIND(brls::Header, imageAdjustmentsHeader, "image_adjustments_header");
     BRLS_BIND(BooleanSliderCell, ditheringButton, "dithering");
     BRLS_BIND(BooleanSliderCell, rcasButton, "rcas");

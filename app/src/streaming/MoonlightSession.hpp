@@ -2,6 +2,7 @@
 
 #include "GameStreamClient.hpp"
 #include "MoonlightSessionDecoderAndRenderProvider.hpp"
+#include <atomic>
 #include <nanovg.h>
 
 struct SessionStats {
@@ -18,6 +19,7 @@ class MoonlightSession {
     ~MoonlightSession();
 
     static MoonlightSession* activeSession();
+    static void requestRestart();
 
     void start(ServerCallback<bool> callback, bool is_sunshine);
     void stop(int terminate_app);
@@ -26,6 +28,11 @@ class MoonlightSession {
     void restart();
 
     void draw(NVGcontext* vg, int width, int height);
+
+    // Stop touching the GPU while the app is off screen, and drop renderer
+    // state that may not survive a console sleep once it is back.
+    void set_suspended(bool suspended);
+    bool is_suspended() const { return m_suspended; }
 
     bool is_active() const { return m_is_active; }
     bool is_terminated() const { return m_is_terminated; }
@@ -48,6 +55,7 @@ class MoonlightSession {
     static void connection_stage_failed(int, int);
     static void connection_started();
     static void connection_terminated(int);
+    void handle_connection_terminated(int error_code);
     static void connection_log_message(const char* format, ...);
     static void connection_rumble(unsigned short, unsigned short,
                                   unsigned short);
@@ -81,10 +89,14 @@ class MoonlightSession {
     IVideoRenderer* m_video_renderer = nullptr;
     IAudioRenderer* m_audio_renderer = nullptr;
 
-    bool m_is_active = false;
-    bool m_is_terminated = false;
-    bool m_stop_requested = false;
+    std::atomic<bool> m_is_active{false};
+    std::atomic<bool> m_is_terminated{false};
+    std::atomic<bool> m_stop_requested{false};
+    uint64_t m_generation = 0;
     bool m_connection_status_is_poor = false;
+    bool m_suspended = false;
+    bool m_invalidate_renderer_pending = false;
+    bool m_restart_pending = false;
     bool m_use_hdr = false;
 
     SessionStats m_session_stats = {};
