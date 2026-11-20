@@ -502,47 +502,47 @@ int gs_start_app(PSERVER_DATA server, STREAM_CONFIGURATION* config, int appId,
 
     Data data;
 
-    if (server->currentGame == 0) {
-        int channelCounnt =
-            config->audioConfiguration == AUDIO_CONFIGURATION_STEREO
-                ? CHANNEL_COUNT_STEREO
-                : CHANNEL_COUNT_51_SURROUND;
-        int mask = config->audioConfiguration == AUDIO_CONFIGURATION_STEREO
-                       ? CHANNEL_MASK_STEREO
-                       : CHANNEL_MASK_51_SURROUND;
-        int fps = sops && config->fps > 60 ? 60 : config->fps;
-        snprintf(url, sizeof(url),
-                 "https://%s:%u/"
-                 "launch?uniqueid=%s&appid=%d&mode=%dx%dx%d&additionalStates=1&"
-                 "sops=%d&rikey=%s&rikeyid=%d&localAudioPlayMode=%d&"
-                 "surroundAudioInfo=%d&remoteControllersBitmap=%d&gcmap=%d%s",
-                 server->serverInfo.address, server->httpsPort, unique_id.c_str(), appId,
-                 config->width, config->height, fps, sops, rand.hex().bytes(),
-                 rikeyid, localaudio, (mask << 16) + channelCounnt,
-                 gamepad_mask, gamepad_mask, LiGetLaunchUrlQueryParameters());
-    } else {
-        snprintf(url, sizeof(url),
-                 "https://%s:%u/resume?uniqueid=%s&rikey=%s&rikeyid=%d%s",
-                 server->serverInfo.address, server->httpsPort, unique_id.c_str(),
-                 rand.hex().bytes(), rikeyid, LiGetLaunchUrlQueryParameters());
-    }
+    const bool resume = server->currentGame != 0;
+    const char* verb = resume ? "resume" : "launch";
+    // Sunshine may recreate the display when resuming a disconnected session.
+    // Send the same display, audio, and controller configuration as on launch.
+    int channelCount =
+        config->audioConfiguration == AUDIO_CONFIGURATION_STEREO
+            ? CHANNEL_COUNT_STEREO
+            : CHANNEL_COUNT_51_SURROUND;
+    int mask = config->audioConfiguration == AUDIO_CONFIGURATION_STEREO
+                   ? CHANNEL_MASK_STEREO
+                   : CHANNEL_MASK_51_SURROUND;
+    int fps = sops && config->fps > 60 ? 60 : config->fps;
+    snprintf(url, sizeof(url),
+             "https://%s:%u/"
+             "%s?uniqueid=%s&appid=%d&mode=%dx%dx%d&additionalStates=1&"
+             "sops=%d&rikey=%s&rikeyid=%d&localAudioPlayMode=%d&"
+             "surroundAudioInfo=%d&remoteControllersBitmap=%d&gcmap=%d%s",
+             server->serverInfo.address, server->httpsPort, verb, unique_id.c_str(), appId,
+             config->width, config->height, fps, sops, rand.hex().bytes(),
+             rikeyid, localaudio, (mask << 16) + channelCount,
+             gamepad_mask, gamepad_mask, LiGetLaunchUrlQueryParameters());
+    brls::Logger::info("GameStream: {} app={} mode={}x{}x{}", verb, appId,
+                       config->width, config->height, fps);
 
-    if ((ret = http_request(url, &data, HTTPRequestTimeoutLong)) == GS_OK) {
-        server->currentGame = appId;
-    } else {
+    if ((ret = http_request(url, &data, HTTPRequestTimeoutLong)) != GS_OK) {
         goto exit;
     }
 
-    if ((ret = xml_status(data) != GS_OK)) {
+    if ((ret = xml_status(data)) != GS_OK) {
         goto exit;
-    } else if ((ret = xml_search(data, "gamesession", &result)) != GS_OK) {
+    } else if ((ret = xml_search(data, resume ? "resume" : "gamesession", &result)) != GS_OK) {
         goto exit;
     }
 
-    if (result == "0") {
+    if (result.empty() || result == "0") {
+        gs_set_error(std::string("Host did not confirm ") + verb);
         ret = GS_FAILED;
         goto exit;
     }
+
+    server->currentGame = appId;
 
     if (xml_search(data, "sessionUrl0", &result) == GS_OK) {
         const std::string::size_type size = result.size();
