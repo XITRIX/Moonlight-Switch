@@ -12,3 +12,6 @@ __pycache__/
 !scripts/switch2/build.sh
 !scripts/switch2/build.ps1
 !scripts/switch2/build_vulkan_shaders.py
+!scripts/build-switch-local.sh
+!scripts/build-switch-windows.ps1
+!scripts/build-from-generated-makefiles.py

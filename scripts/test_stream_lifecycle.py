@@ -274,6 +274,7 @@ struct MoonlightSession {static void requestRestart(){++restarts;}};
 namespace brls {struct Logger {
     template<class... T> static void info(T...){}
     template<class... T> static void error(T...){}
+    template<class... T> static void debug(T...){}
 };}
 """
 
@@ -311,6 +312,18 @@ int main(){
     assert(restarts==1); // persistent errors queue only one reconnect per setup
     decodedResult=1;++unit.frameNumber;assert(d.submit_decode_unit(&unit)==DR_OK);
     assert(d.m_consecutive_decode_errors==0);
+    d.reset_stream_stats();
+    assert(d.m_last_frame==0&&d.m_frames_in==0&&d.m_frames_out==0);
+    d.record_frame_number(10);d.record_frame_number(13);
+    assert(d.m_video_decode_stats_progress.network_dropped_frames==2);
+    d.record_frame_number(13);d.record_frame_number(1);
+    assert(d.m_video_decode_stats_progress.network_dropped_frames==2);
+    d.reset_stream_stats();d.record_frame_number(UINT32_MAX-1);d.record_frame_number(2);
+    assert(d.m_video_decode_stats_progress.network_dropped_frames==3);
+    d.m_stats_window_start=100;d.m_video_decode_stats_cache.current_host_fps=999;
+    d.reset_stream_stats();d.record_frame_number(1);
+    assert(d.m_stats_window_start==0&&d.m_video_decode_stats_cache.current_host_fps==0);
+    assert(d.m_video_decode_stats_progress.network_dropped_frames==0);
 }
 """
 
@@ -341,7 +354,7 @@ def main():
         "void MoonlightSession::draw(",
     )
     harness = FIXTURE + "\n#define private public\n" + header
-    harness += "\n#undef private\n" + globals_
+    harness += "\n#undef private\n" + (ROOT / "app/src/streaming/VideoRecovery.hpp").read_text().replace('#pragma once', '') + globals_
     harness += "\n".join(method(source, signature) for signature in signatures)
     harness += SCENARIOS
     input_source = (ROOT / "app/src/streaming/InputManager.cpp").read_text()
@@ -356,10 +369,12 @@ def main():
     termination += method(library, "static void ClInternalConnectionTerminated(")
     termination += TERMINATION_SCENARIOS
     ffmpeg_source = (ROOT / "app/src/streaming/ffmpeg/FFmpegVideoDecoder.cpp").read_text()
-    ffmpeg = FFMPEG + stripped_header(ROOT / "app/src/streaming/ffmpeg/IFFmpegVideoDecoder.hpp")
+    ffmpeg = FFMPEG + (ROOT / "app/src/streaming/VideoTrace.hpp").read_text().replace('#pragma once', '') + stripped_header(ROOT / "app/src/streaming/ffmpeg/IFFmpegVideoDecoder.hpp")
     ffmpeg += "\n#define private public\n"
     ffmpeg += stripped_header(ROOT / "app/src/streaming/ffmpeg/FFmpegVideoDecoder.hpp")
     ffmpeg += "\n#undef private\n"
+    ffmpeg += method(ffmpeg_source, "void FFmpegVideoDecoder::reset_stream_stats(")
+    ffmpeg += method(ffmpeg_source, "void FFmpegVideoDecoder::record_frame_number(")
     ffmpeg += method(ffmpeg_source, "int FFmpegVideoDecoder::submit_decode_unit(")
     ffmpeg += FFMPEG_SCENARIOS
     with tempfile.TemporaryDirectory(prefix="moonlight-lifecycle-") as directory:

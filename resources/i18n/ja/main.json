@@ -113,6 +113,9 @@
         "title": "マウス入力モード"
     },
     "settings": {
+        "video_pacing": "Frame pacing (next session)",
+        "prefer_low_latency": "Prefer low latency",
+        "prefer_smooth_video": "Prefer smooth video",
         "audio_backend": "Audio driver",
         "av1": "AV1 (実験的)",
         "buttons": {

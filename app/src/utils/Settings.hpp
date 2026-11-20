@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Singleton.hpp"
+#include "StreamProfile.hpp"
 #include <borealis.hpp>
 #include <map>
 #include <cstdio>
@@ -108,7 +109,7 @@ class Settings : public Singleton<Settings> {
     bool is_favorite(const Host& host, int app_id);
     bool has_any_favorite();
 
-    [[nodiscard]] int resolution() const { return m_resolution; }
+    [[nodiscard]] int resolution() const { return m_profile_session.active ? m_profile_session.value.resolution : m_resolution; }
     void set_resolution(int resolution) { m_resolution = resolution; }
 
     [[nodiscard]] int native_resolution_scale() const {
@@ -128,7 +129,7 @@ class Settings : public Singleton<Settings> {
         }
     }
 
-    [[nodiscard]] int fps() const { return m_fps; }
+    [[nodiscard]] int fps() const { return m_profile_session.active ? m_profile_session.value.fps : m_fps; }
     void set_fps(int fps) { m_fps = fps; }
 
     [[nodiscard]] VideoCodec video_codec() const { return m_video_codec; }
@@ -137,7 +138,7 @@ class Settings : public Singleton<Settings> {
     [[nodiscard]] AudioBackend audio_backend() const { return m_audio_backend; }
     void set_audio_backend(AudioBackend audio_backend) { m_audio_backend = audio_backend; }
 
-    [[nodiscard]] int bitrate() const { return m_bitrate; }
+    [[nodiscard]] int bitrate() const { return m_profile_session.active ? m_profile_session.value.bitrate : m_bitrate; }
     void set_bitrate(int bitrate) { m_bitrate = bitrate; }
 
     [[nodiscard]] bool request_hdr() const { 
@@ -243,6 +244,26 @@ class Settings : public Singleton<Settings> {
 
     void set_frames_queue_size(int frames_queue_size) { m_frames_queue_size = frames_queue_size; }
     [[nodiscard]] int frames_queue_size() const { return m_frames_queue_size; }
+    [[nodiscard]] bool low_latency_video() const { return m_low_latency_video; }
+    void set_low_latency_video(bool enabled) { m_low_latency_video = enabled; }
+    bool nvdec_max_performance() const { return m_profile_session.active ? m_profile_session.value.maximum : m_nvdec_max_performance; }
+    void ensure_stream_profiles() {
+        if (!m_profiles_initialized) {
+            m_profiles[0] = m_profiles[1] = {m_resolution, m_fps, m_bitrate, m_nvdec_max_performance};
+            if (m_resolution == -1) { m_profiles[0].resolution = 720; m_profiles[1].resolution = 1080; }
+            m_profiles_initialized = true;
+        }
+    }
+    StreamProfile& stream_profile(bool docked) { ensure_stream_profiles(); return m_profiles[docked ? 1 : 0]; }
+    void begin_stream_profile(bool docked) { m_profile_session.begin(stream_profile(docked)); }
+    void end_stream_profile() { m_profile_session.end(); }
+    int audio_reserve_ms() const { return m_audio_reserve_ms; }
+    void set_audio_reserve_ms(int value) { m_audio_reserve_ms = value >= 0 && value <= 100 && value % 10 == 0 ? value : 10; }
+    bool video_vsync() const { return m_video_vsync; }
+    bool save_diagnostic_log() const { return m_save_diagnostic_log; }
+    void set_save_diagnostic_log(bool enabled) { m_save_diagnostic_log = enabled; }
+    void set_video_vsync(bool enabled) { m_video_vsync = enabled; }
+    void set_nvdec_max_performance(bool enabled) { m_nvdec_max_performance = enabled; }
 
     void set_sops(bool sops) { m_sops = sops; }
     [[nodiscard]] bool sops() const { return m_sops; }
@@ -366,6 +387,18 @@ class Settings : public Singleton<Settings> {
     bool m_click_by_tap = false;
     int m_decoder_threads = 4;
     int m_frames_queue_size = 3;
+#if defined(PLATFORM_SWITCH) && !defined(__SWITCH2__)
+    bool m_low_latency_video = true;
+#else
+    bool m_low_latency_video = false;
+#endif
+    bool m_nvdec_max_performance = false;
+    bool m_video_vsync = true;
+    int m_audio_reserve_ms = 10;
+    bool m_save_diagnostic_log = false;
+    bool m_profiles_initialized = false;
+    StreamProfile m_profiles[2];
+    StreamProfileLatch m_profile_session;
     bool m_sops = false;
     bool m_play_audio = false;
     bool m_write_log = false;

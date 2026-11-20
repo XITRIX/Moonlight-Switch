@@ -3,9 +3,14 @@
 #include "GameStreamClient.hpp"
 #include "InputManager.hpp"
 #include "Settings.hpp"
+#include "VideoRecovery.hpp"
+#include "VideoTrace.hpp"
 #include "borealis.hpp"
 #include <atomic>
 #include <string.h>
+#if defined(PLATFORM_SWITCH) && !defined(__SWITCH2__)
+#include <switch.h>
+#endif
 #ifdef __SWITCH2__
 #include "video/Vulkan/Switch2VulkanContext.hpp"
 #include <switch.h>
@@ -20,6 +25,9 @@ using namespace brls;
 int m_video_format;
 static MoonlightSession* m_active_session = nullptr;
 static std::atomic<uint64_t> m_session_generation{0};
+static std::atomic<int> failed_connection_stage{0};
+static std::atomic<int> failed_connection_code{0};
+static VideoRecovery video_recovery;
 static MoonlightSessionDecoderAndRenderProvider* m_provider = nullptr;
 
 
@@ -43,6 +51,10 @@ void MoonlightSession::set_provider(
 }
 
 MoonlightSession::MoonlightSession(const std::string& address, int app_id) {
+#if defined(PLATFORM_SWITCH) && !defined(__SWITCH2__)
+    Settings::instance().begin_stream_profile(appletGetOperationMode() == AppletOperationMode_Console);
+#endif
+    video_recovery = VideoRecovery{};
     m_address = address;
     m_app_id = app_id;
     m_active_session = this;
@@ -67,36 +79,29 @@ MoonlightSession::~MoonlightSession() {
     }
 
     m_active_session = nullptr;
+#if defined(PLATFORM_SWITCH) && !defined(__SWITCH2__)
+    Settings::instance().end_stream_profile();
+#endif
 }
 
 // MARK: Connection callbacks
 
-static const char* stages[] = {"STAGE_NONE",
-                               "STAGE_PLATFORM_INIT",
-                               "STAGE_NAME_RESOLUTION",
-                               "STAGE_RTSP_HANDSHAKE",
-                               "STAGE_CONTROL_STREAM_INIT",
-                               "STAGE_VIDEO_STREAM_INIT",
-                               "STAGE_AUDIO_STREAM_INIT",
-                               "STAGE_INPUT_STREAM_INIT",
-                               "STAGE_CONTROL_STREAM_START",
-                               "STAGE_VIDEO_STREAM_START",
-                               "STAGE_AUDIO_STREAM_START",
-                               "STAGE_INPUT_STREAM_START"};
-
 void MoonlightSession::connection_stage_starting(int stage) {
-    brls::Logger::info("MoonlightSession: Starting: {}", stages[stage]);
+    brls::Logger::info("MoonlightSession: Starting: {}", LiGetStageName(stage));
 }
 
 void MoonlightSession::connection_stage_complete(int stage) {
-    brls::Logger::info("MoonlightSession: Complete: {}", stages[stage]);
+    brls::Logger::info("MoonlightSession: Complete: {}", LiGetStageName(stage));
 }
 
 void MoonlightSession::connection_stage_failed(int stage, int error_code) {
-    brls::Logger::error("MoonlightSession: Failed: {} with error code: {}", stages[stage], error_code);
+    failed_connection_stage = stage;
+    failed_connection_code = error_code;
+    brls::Logger::error("MoonlightSession: Failed: {} with error code: {}", LiGetStageName(stage), error_code);
 }
 
 void MoonlightSession::connection_started() {
+    video_recovery.begin(LiGetMillis());
     brls::Logger::info("MoonlightSession: Connection started");
     if (!m_active_session)
         return;
@@ -308,6 +313,11 @@ void MoonlightSession::start(ServerCallback<bool> callback, bool is_sunshine) {
     m_config.width = w;
     m_config.height = h;
     m_config.fps = Settings::instance().fps();
+#if defined(PLATFORM_SWITCH) && !defined(__SWITCH2__)
+    // Switch 1/OLED presentation is 60 Hz; this is display cadence, not stream FPS.
+    m_config.clientRefreshRateX100 = 6000;
+    brls::Logger::info("LL6: client display refresh=6000 (60 Hz), requested stream FPS={}", m_config.fps);
+#endif
 #ifdef __SWITCH2__
     m_config.colorSpace = COLORSPACE_REC_709;
     m_config.colorRange = COLOR_RANGE_LIMITED;
@@ -379,14 +389,19 @@ void MoonlightSession::start(ServerCallback<bool> callback, bool is_sunshine) {
                     auto m_data =
                         GameStreamClient::instance().server_data(m_address);
 
+                    failed_connection_stage = 0;
+                    failed_connection_code = 0;
                     int result = LiStartConnection(
                         &m_data.serverInfo, &m_config, &m_connection_callbacks,
                         &m_video_callbacks, &m_audio_callbacks, NULL, 0, NULL, 0);
 
                     if (result != 0) {
+                        const std::string detail = fmt::format("{}\n{} (code {}, return {})",
+                            "error/stream_start"_i18n,
+                            LiGetStageName(failed_connection_stage.load()),
+                            failed_connection_code.load(), result);
                         LiStopConnection();
-                        callback(
-                            GSResult<bool>::failure("error/stream_start"_i18n));
+                        callback(GSResult<bool>::failure(detail));
                     } else {
                         callback(GSResult<bool>::success(true));
                     }
@@ -463,6 +478,8 @@ void MoonlightSession::set_suspended(bool suspended) {
     // on the render thread instead of reaching for it from here.
     if (!suspended)
         m_invalidate_renderer_pending = true;
+    if (!suspended)
+        video_recovery.begin(LiGetMillis());
 }
 
 void MoonlightSession::draw(NVGcontext* vg, int width, int height) {
@@ -494,6 +511,20 @@ void MoonlightSession::draw(NVGcontext* vg, int width, int height) {
 #endif
 
         const uint64_t now = LiGetMillis();
+
+#if defined(PLATFORM_SWITCH) && !defined(__SWITCH2__)
+        if (Settings::instance().low_latency_video()) {
+            const auto action = video_recovery.update(now, consumed, m_connection_status_is_poor);
+            if (action == VideoRecovery::Keyframe) {
+                brls::Logger::warning("LL4: sustained low video progress; requesting keyframe");
+                LiRequestIdrFrame();
+            } else if (action == VideoRecovery::Reconnect) {
+                brls::Logger::warning("LL4: keyframe did not restore progress; bounded reconnect");
+                restart();
+                return;
+            }
+        }
+#endif
         if (m_last_stats_update_ms == 0 || now - m_last_stats_update_ms >= 250) {
             m_session_stats.video_decode_stats =
                 *m_video_decoder->video_decode_stats();

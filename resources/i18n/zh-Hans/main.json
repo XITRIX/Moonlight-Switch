@@ -113,6 +113,9 @@
         "title": "鼠标输入模式"
     },
     "settings": {
+        "video_pacing": "Frame pacing (next session)",
+        "prefer_low_latency": "Prefer low latency",
+        "prefer_smooth_video": "Prefer smooth video",
         "audio_backend": "音频驱动",
         "av1": "AV1 (实验性)",
         "buttons": {

@@ -113,6 +113,9 @@
         "title": "Mode souris"
     },
     "settings": {
+        "video_pacing": "Frame pacing (next session)",
+        "prefer_low_latency": "Prefer low latency",
+        "prefer_smooth_video": "Prefer smooth video",
         "audio_backend": "Driver audio",
         "av1": "AV1 (Expérimental)",
         "buttons": {

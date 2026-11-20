@@ -85,7 +85,7 @@ std::vector<std::string> audio_backends;
 #endif
 
 
-SettingsTab::SettingsTab() {
+SettingsTab::SettingsTab(int page) {
     // Inflate the tab from the XML file
     this->inflateFromXMLRes("xml/tabs/settings.xml");
 
@@ -300,6 +300,59 @@ SettingsTab::SettingsTab() {
             DEFAULT;
         }
     });
+
+#if defined(PLATFORM_SWITCH) && !defined(__SWITCH2__)
+    // Each row edits the saved profile, never the active session snapshot.
+    auto initProfileNumber = [](brls::SelectorCell* cell, const std::string& title, std::vector<int> values, int current, std::function<void(int)> setter) {
+        if(std::find(values.begin(),values.end(),current)==values.end()) values.push_back(current);
+        std::vector<std::string> labels;int selected=0;
+        for(size_t i=0;i<values.size();++i){ labels.push_back(std::to_string(values[i]));if(values[i]==current)selected=(int)i; }
+        cell->init(title,labels,selected,[values,setter](int n){setter(values.at(n));});
+    };
+    initProfileNumber(profile0res, "settings/profile_0_res"_i18n, {360,480,540,720,900,1080}, Settings::instance().stream_profile(0).resolution, [](int v){Settings::instance().stream_profile(0).resolution=v;});
+    initProfileNumber(profile0fps, "settings/profile_0_fps"_i18n, {24,30,40,50,60}, Settings::instance().stream_profile(0).fps, [](int v){Settings::instance().stream_profile(0).fps=v;});
+    initProfileNumber(profile0rate, "settings/profile_0_rate"_i18n, {500,1000,2000,5000,10000,15000,20000,25000,30000,40000,50000,75000,100000}, Settings::instance().stream_profile(0).bitrate, [](int v){Settings::instance().stream_profile(0).bitrate=v;});
+    profile0power->init("settings/profile_0_power"_i18n, {"settings/nvdec_battery"_i18n,"settings/nvdec_max"_i18n}, Settings::instance().stream_profile(0).maximum ? 1 : 0, [](int v){Settings::instance().stream_profile(0).maximum=v==1;});
+    initProfileNumber(profile1res, "settings/profile_1_res"_i18n, {360,480,540,720,900,1080}, Settings::instance().stream_profile(1).resolution, [](int v){Settings::instance().stream_profile(1).resolution=v;});
+    initProfileNumber(profile1fps, "settings/profile_1_fps"_i18n, {24,30,40,50,60}, Settings::instance().stream_profile(1).fps, [](int v){Settings::instance().stream_profile(1).fps=v;});
+    initProfileNumber(profile1rate, "settings/profile_1_rate"_i18n, {500,1000,2000,5000,10000,15000,20000,25000,30000,40000,50000,75000,100000}, Settings::instance().stream_profile(1).bitrate, [](int v){Settings::instance().stream_profile(1).bitrate=v;});
+    profile1power->init("settings/profile_1_power"_i18n, {"settings/nvdec_battery"_i18n,"settings/nvdec_max"_i18n}, Settings::instance().stream_profile(1).maximum ? 1 : 0, [](int v){Settings::instance().stream_profile(1).maximum=v==1;});
+#else
+    profile0res->removeFromSuperView(true);
+    profile0fps->removeFromSuperView(true);
+    profile0rate->removeFromSuperView(true);
+    profile0power->removeFromSuperView(true);
+    profile1res->removeFromSuperView(true);
+    profile1fps->removeFromSuperView(true);
+    profile1rate->removeFromSuperView(true);
+    profile1power->removeFromSuperView(true);
+#endif
+    saveDiagnosticLog->init("settings/save_diagnostic_log"_i18n, Settings::instance().save_diagnostic_log(),
+        [](bool enabled) { Settings::instance().set_save_diagnostic_log(enabled); });
+#if !defined(PLATFORM_SWITCH) || defined(__SWITCH2__)
+    saveDiagnosticLog->removeFromSuperView(true);
+#endif
+    videoVsync->init("settings/video_vsync"_i18n, Settings::instance().video_vsync(),
+        [](bool enabled) { Settings::instance().set_video_vsync(enabled); });
+#if !defined(PLATFORM_SWITCH) || defined(__SWITCH2__)
+    videoVsync->removeFromSuperView(true);
+#endif
+    nvdecPower->init("settings/nvdec_power"_i18n,
+        {"settings/nvdec_battery"_i18n, "settings/nvdec_max"_i18n},
+        Settings::instance().nvdec_max_performance() ? 1 : 0,
+        [](int selected) { Settings::instance().set_nvdec_max_performance(selected == 1); });
+#if !defined(PLATFORM_SWITCH) || defined(__SWITCH2__)
+    nvdecPower->removeFromSuperView(true);
+#endif
+    videoPacing->init("settings/video_pacing"_i18n,
+        {"settings/prefer_low_latency"_i18n, "settings/prefer_smooth_video"_i18n},
+        Settings::instance().low_latency_video() ? 0 : 1,
+        [](int selected) {
+            Settings::instance().set_low_latency_video(selected == 0);
+        });
+#if !defined(PLATFORM_SWITCH) || defined(__SWITCH2__)
+    videoPacing->removeFromSuperView(true);
+#endif
 
     std::vector<std::string> decoders = {"settings/zero_threads"_i18n, "2", "3",
                                          "4"};
@@ -786,6 +839,26 @@ SettingsTab::SettingsTab() {
     mouseSpeedSlider->setProgress(mouseProgress);
     setupMouseScrollSettings(mouseScrollHeader, mouseScrollSlider);
 
+#if defined(PLATFORM_SWITCH) && !defined(__SWITCH2__)
+    // These values are now supplied by the two explicit profiles.
+    for (brls::View* row : std::initializer_list<brls::View*>{fps,resolution,resolutionScale,nvdecPower,header,slider})
+        row->setVisibility(brls::Visibility::GONE);
+#endif
+    audioReserve->init("settings/audio_reserve"_i18n, {"0 ms", "10 ms", "20 ms", "30 ms", "40 ms", "50 ms", "60 ms", "70 ms", "80 ms", "90 ms", "100 ms"},
+        Settings::instance().audio_reserve_ms() / 10,
+        [](int selected) { Settings::instance().set_audio_reserve_ms(selected * 10); });
+#if defined(PLATFORM_SWITCH) && !defined(__SWITCH2__)
+    brls::View* selectedGroup = page == 1 ? static_cast<brls::Box*>(handheldGroup) :
+        page == 2 ? static_cast<brls::Box*>(dockedGroup) : page == 3 ? static_cast<brls::Box*>(debugGroup) : nullptr;
+    if (selectedGroup) {
+        for (auto* row : settingsContent->getChildren())
+            row->setVisibility(row == selectedGroup ? brls::Visibility::VISIBLE : brls::Visibility::GONE);
+    } else {
+        handheldGroup->setVisibility(brls::Visibility::GONE);
+        dockedGroup->setVisibility(brls::Visibility::GONE);
+        debugGroup->setVisibility(brls::Visibility::GONE);
+    }
+#endif
     writeLog->init("settings/debugging_view"_i18n,
                    Settings::instance().write_log(), [](bool value) {
                        Settings::instance().set_write_log(value);
@@ -848,4 +921,64 @@ SettingsTab::getColorFromButtons(std::vector<brls::ControllerButton> buttons) {
 
 SettingsTab::~SettingsTab() { Settings::instance().save(); }
 
-brls::View* SettingsTab::create() { return new SettingsTab(); }
+#if defined(PLATFORM_SWITCH) && !defined(__SWITCH2__)
+namespace {
+class HorizontalSettingsTabs final : public brls::Box {
+public:
+    HorizontalSettingsTabs() {
+        this->inflateFromXMLString(R"xml(
+            <brls:Box axis="column" width="auto" height="auto">
+                <brls:Box axis="row" width="auto" height="64" paddingLeft="16" paddingRight="16">
+                    <brls:Button id="settings_tab_0" width="0" height="52" grow="1" marginRight="6"/>
+                    <brls:Button id="settings_tab_1" width="0" height="52" grow="1" marginRight="6"/>
+                    <brls:Button id="settings_tab_2" width="0" height="52" grow="1" marginRight="6"/>
+                    <brls:Button id="settings_tab_3" width="0" height="52" grow="1"/>
+                </brls:Box>
+                <brls:Box id="settings_pages_content" axis="column" width="auto" height="0" grow="1"/>
+            </brls:Box>
+        )xml");
+        content = dynamic_cast<brls::Box*>(this->getView("settings_pages_content"));
+        const std::string labels[] = {"settings/tab_general"_i18n, "settings/tab_handheld"_i18n,
+                                     "settings/tab_docked"_i18n, "settings/debug"_i18n};
+        for (int i = 0; i < 4; ++i) {
+            buttons[i] = dynamic_cast<brls::Button*>(this->getView("settings_tab_" + std::to_string(i)));
+            buttons[i]->setText(labels[i]);
+            buttons[i]->registerClickAction([this, i](brls::View*) { select(i, true); return true; });
+        }
+        this->registerAction("settings/previous_tab"_i18n, brls::BUTTON_LB,
+            [this](brls::View*) { select((selected + 3) % 4, true); return true; });
+        this->registerAction("settings/next_tab"_i18n, brls::BUTTON_RB,
+            [this](brls::View*) { select((selected + 1) % 4, true); return true; });
+        select(0, false);
+    }
+    brls::View* getDefaultFocus() override { return page ? page->getDefaultFocus() : buttons[0]; }
+private:
+    void select(int index, bool focus) {
+        if (page && selected == index) return;
+        // Move focus off controls before deleting the previous page.
+        if (focus) brls::Application::giveFocus(buttons[index]);
+        if (page) { content->removeView(page); page = nullptr; }
+        selected = index;
+        for (int i = 0; i < 4; ++i)
+            buttons[i]->setStyle(i == selected ? &brls::BUTTONSTYLE_PRIMARY : &brls::BUTTONSTYLE_BORDERLESS);
+        page = new SettingsTab(selected);
+        page->setGrow(1.0f);
+        content->addView(page);
+        if (focus && brls::Application::getInputType() != brls::InputType::TOUCH)
+            brls::Application::giveFocus(page->getDefaultFocus());
+    }
+    brls::Box* content = nullptr;
+    brls::Button* buttons[4]{};
+    SettingsTab* page = nullptr;
+    int selected = 0;
+};
+} // namespace
+#endif
+
+brls::View* SettingsTab::create() {
+#if defined(PLATFORM_SWITCH) && !defined(__SWITCH2__)
+    return new HorizontalSettingsTabs();
+#else
+    return new SettingsTab();
+#endif
+}

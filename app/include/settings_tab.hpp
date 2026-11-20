@@ -13,10 +13,15 @@
 
 class SettingsTab : public brls::Box {
   public:
-    SettingsTab();
+    SettingsTab(int page = 0);
     ~SettingsTab();
     void willAppear(bool resetState = false) override;
 
+    BRLS_BIND(brls::Box, settingsContent, "settings_content");
+    BRLS_BIND(brls::Box, handheldGroup, "handheld_group");
+    BRLS_BIND(brls::Box, dockedGroup, "docked_group");
+    BRLS_BIND(brls::Box, debugGroup, "debug_group");
+    BRLS_BIND(brls::SelectorCell, audioReserve, "audio_reserve");
     BRLS_BIND(brls::SelectorCell, resolution, "resolution");
     BRLS_BIND(brls::SelectorCell, resolutionScale, "resolution_scale");
     BRLS_BIND(brls::Header, imageAdjustmentsHeader, "image_adjustments_header");
@@ -28,6 +33,18 @@ class SettingsTab : public brls::Box {
     BRLS_BIND(brls::SelectorCell, codec, "codec");
     BRLS_BIND(brls::BooleanCell, requestHdr, "request_hdr");
     BRLS_BIND(brls::SelectorCell, decoder, "decoder");
+    BRLS_BIND(brls::SelectorCell, videoPacing, "video_pacing");
+    BRLS_BIND(brls::SelectorCell, nvdecPower, "nvdec_power");
+    BRLS_BIND(brls::BooleanCell, videoVsync, "video_vsync");
+    BRLS_BIND(brls::BooleanCell, saveDiagnosticLog, "save_diagnostic_log");
+    BRLS_BIND(brls::SelectorCell, profile0res, "profile_0_res");
+    BRLS_BIND(brls::SelectorCell, profile0fps, "profile_0_fps");
+    BRLS_BIND(brls::SelectorCell, profile0rate, "profile_0_rate");
+    BRLS_BIND(brls::SelectorCell, profile0power, "profile_0_power");
+    BRLS_BIND(brls::SelectorCell, profile1res, "profile_1_res");
+    BRLS_BIND(brls::SelectorCell, profile1fps, "profile_1_fps");
+    BRLS_BIND(brls::SelectorCell, profile1rate, "profile_1_rate");
+    BRLS_BIND(brls::SelectorCell, profile1power, "profile_1_power");
     BRLS_BIND(brls::BooleanCell, hwDecoding, "use_hw_decoding");
     BRLS_BIND(brls::Header, header, "header");
     BRLS_BIND(brls::Slider, slider, "slider");

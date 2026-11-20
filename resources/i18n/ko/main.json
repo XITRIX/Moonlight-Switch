@@ -113,6 +113,9 @@
         "title": "마우스 입력 모드"
     },
     "settings": {
+        "video_pacing": "Frame pacing (next session)",
+        "prefer_low_latency": "Prefer low latency",
+        "prefer_smooth_video": "Prefer smooth video",
         "audio_backend": "오디오 드라이버",
         "av1": "AV1 (실험용)",
         "buttons": {

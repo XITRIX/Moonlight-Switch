@@ -113,7 +113,10 @@
         "title": "Modo mouse"
     },
     "settings": {
-        "audio_backend": "Audio driver",
+        "video_pacing": "Apresentação dos quadros (próxima sessão)",
+        "prefer_low_latency": "Preferir baixa latência",
+        "prefer_smooth_video": "Preferir vídeo suave",
+        "audio_backend": "Driver de áudio",
         "av1": "AV1 (Experimental)",
         "buttons": {
             "chat": "Bate-papo (C)",
@@ -183,7 +186,27 @@
         "video_bitrate": "Bitrate do vídeo",
         "video_codec": "Codec de vídeo",
         "volume_amplification": "Permitir amplificação de volume",
-        "zero_threads": "0 (Não usar threads)"
+        "zero_threads": "0 (Não usar threads)",
+        "nvdec_power": "Perfil NVDEC (próxima transmissão)",
+        "nvdec_battery": "Economia de bateria",
+        "nvdec_max": "Desempenho máximo",
+        "video_vsync": "VSync (reinicie o aplicativo)",
+        "save_diagnostic_log": "Salvar log básico (reinicie o app)",
+        "profile_0_res": "Resolução (altura em pixels)",
+        "profile_0_fps": "FPS",
+        "profile_0_rate": "Bitrate (kbps)",
+        "profile_0_power": "NVDEC",
+        "profile_1_res": "Resolução (altura em pixels)",
+        "profile_1_fps": "FPS",
+        "profile_1_rate": "Bitrate (kbps)",
+        "profile_1_power": "NVDEC",
+        "tab_general": "Geral",
+        "tab_handheld": "Portátil",
+        "tab_docked": "Dock",
+        "audio_settings": "Áudio",
+        "audio_reserve": "Buffer de áudio (próxima transmissão)",
+        "previous_tab": "Aba anterior",
+        "next_tab": "Próxima aba"
     },
     "streaming": {
         "connection": "Conexão",
