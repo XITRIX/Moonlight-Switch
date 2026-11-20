@@ -32,6 +32,10 @@
 
 using namespace brls;
 
+#if defined(PLATFORM_SWITCH) && !defined(__SWITCH2__)
+extern "C" int moonlightSocketReceiveBufferBytes(void);
+#endif
+
 #ifdef PLATFORM_TVOS
 extern void updatePreferredDisplayMode(bool streamActive);
 #endif
@@ -428,6 +432,14 @@ std::string StreamingView::buildStatsText() {
                 stats->video_decode_stats.current_decoded_fps, 2,
                 stats->video_render_stats.rendered_fps, 2);
 
+#if defined(PLATFORM_SWITCH) && !defined(__SWITCH2__)
+    const AppletType launchType = appletGetAppletType();
+    const bool fullApplication = launchType == AppletType_Application ||
+                                 launchType == AppletType_SystemApplication;
+    statistics += fmt::format("Build: LL27 Stable | launch: {}\n",
+                               fullApplication ? "Application" : "Applet (limited)");
+#endif
+
     statistics += fmt::format("Frames dropped by your network connection: {}\n"
                               "Average receive time: {:.{}f} | {:.{}f} ms\n"
                               "Average decode time: {:.{}f} | {:.{}f} ms\n"
@@ -459,28 +471,10 @@ std::string StreamingView::buildStatsText() {
             /*stats->video_render_stats.rendered_frames*/);
     }
 
-    statistics += fmt::format("Frames queue underflows | skipped: {} | {}\n"
-                              "Queue empty | startup holds: {} | {}\n"
-                              "Queue overflow | paced skips: {} | {}\n"
-                              "Scheduled frame holds: {}\n"
-                              "Frames presented by local clock: {}\n"
-                              "Playout resyncs | estimated source: {} | {:.2f} FPS\n"
-                              "Max pushes between draws: {}\n"
-                              "Frames queue depth | target | capacity: {} | {} | {}",
-                              AVFrameHolder::instance().getFakeFrameStat(),
-                              AVFrameHolder::instance().getFrameDropStat(),
-                              AVFrameHolder::instance().getFrameQueueEmptyStat(),
-                              AVFrameHolder::instance().getFrameQueueRebufferHoldStat(),
-                              AVFrameHolder::instance().getFrameQueueOverflowDropStat(),
-                              AVFrameHolder::instance().getFrameQueuePacingSkipStat(),
-                              AVFrameHolder::instance().getFrameQueueScheduledHoldStat(),
-                              AVFrameHolder::instance().getFrameQueueLocalClockPacedFrameStat(),
-                              AVFrameHolder::instance().getFrameQueuePlayoutResyncStat(),
-                              AVFrameHolder::instance().getFrameQueueEstimatedSourceFps(),
-                              AVFrameHolder::instance().getFrameQueueMaxPushBurstStat(),
-                              AVFrameHolder::instance().getFrameQueueSize(),
-                              AVFrameHolder::instance().getFrameQueueTargetDepth(),
-                              AVFrameHolder::instance().getFrameQueueCapacity());
+    statistics += fmt::format("Frames skipped: {}\nFrames queue depth | target: {} | {}",
+        AVFrameHolder::instance().getFrameDropStat(),
+        AVFrameHolder::instance().getFrameQueueSize(),
+        AVFrameHolder::instance().getFrameQueueTargetDepth());
     return statistics;
 }
 

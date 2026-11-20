@@ -1,0 +1,113 @@
+{
+  "hardware_tested": false,
+  "results": [
+    {
+      "test": "test_audio_diagnostics.py",
+      "passed": true,
+      "seconds": 2.469,
+      "output": "recorder concurrent records=9728 dropped_diagnostics=5272; append, errors and cleanup passed\nPASS: production diagnostic recorder, concurrent producers, exact record accounting, append, disabled hook and failure cleanup\n"
+    },
+    {
+      "test": "test_audio_queue_policy.py",
+      "passed": true,
+      "seconds": 0.437,
+      "output": "PASS: starvation protection, intentional reserve, bounded output queue, separate drop reasons, bounded catch-up rate\n"
+    },
+    {
+      "test": "test_audio_reserve.py",
+      "passed": true,
+      "seconds": 0.438,
+      "output": "PASS: 0..100 ms startup reserve, no repeated underrun, recovery threshold, disabled mode\n"
+    },
+    {
+      "test": "test_audio_sample_queue.py",
+      "passed": true,
+      "seconds": 0.391,
+      "output": "PASS: partial playback, accepted samples, repeated snapshots, 32-bit wrap, driver reset and long-run accounting\n"
+    },
+    {
+      "test": "test_audio_seam.py",
+      "passed": true,
+      "seconds": 0.703,
+      "output": "PASS: seam ramp, channel isolation, bit-exact contiguous PCM, reset, clipping boundaries and memory guards\n"
+    },
+    {
+      "test": "test_audio_trace_analysis.py",
+      "passed": true,
+      "seconds": 0.093,
+      "output": "PASS: trace analyzer pairing, asynchronous timestamps, underrun context, sessions and missing diagnostic records\n"
+    },
+    {
+      "test": "test_audio_trace_bridge.py",
+      "passed": true,
+      "seconds": 1.11,
+      "output": "PASS: production C bridge atomic hook, callback timing, thread-local sequence and disabled tracing without clock reads\n"
+    },
+    {
+      "test": "test_audren_integration.py",
+      "passed": true,
+      "seconds": 2.843,
+      "output": "50 ms callback gap with queued PCM: coupled silence_samples=480; independent=0\nPASS: production renderer steady playback, four-slot jitter, drift, stalls, Opus errors/PLC, driver errors, buffer rejection, init failures and cleanup\n"
+    },
+    {
+      "test": "test_audren_threads.py",
+      "passed": true,
+      "seconds": 2.828,
+      "output": "real-thread fixture: idle sleep, periodic playback updates, 60 restarts, concurrent producer/shutdown, retry and ownership passed\nPASS: production pump synchronization and teardown with real host threads\n"
+    },
+    {
+      "test": "test_frame_queue.py",
+      "passed": true,
+      "seconds": 2.125,
+      "output": "PASS: latest frame, ownership, burst, pause, smooth mode, concurrency, cleanup\n"
+    },
+    {
+      "test": "test_nvdec_power.py",
+      "passed": true,
+      "seconds": 0.422,
+      "output": "PASS: dynamic/maximum modes, session latch, other engines, failed initialization\n"
+    },
+    {
+      "test": "test_stable_audio_settings.py",
+      "passed": true,
+      "seconds": 0.406,
+      "output": "PASS: production 0..100 ms validator, all 11 selector choices, unique rows, audio header/driver/buffer placement and UTF-8 labels\n"
+    },
+    {
+      "test": "test_stream_lifecycle.py",
+      "passed": true,
+      "seconds": 6.438,
+      "output": "Session sleep/lifetime, controller announcements, termination threads, and FFmpeg recovery passed\n"
+    },
+    {
+      "test": "test_stream_profiles.py",
+      "passed": true,
+      "seconds": 0.391,
+      "output": "PASS: independent profiles, immutable session snapshot, reconnect/dock retention, next-session selection\n"
+    },
+    {
+      "test": "test_swapchain_buffers.py",
+      "passed": true,
+      "seconds": 1.719,
+      "output": "PASS: two active presentation buffers, original maker/storage untouched, passthrough\n"
+    },
+    {
+      "test": "test_switch_network.py",
+      "passed": true,
+      "seconds": 0.375,
+      "output": "PASS: BSD return values and actual receive-buffer reporting\n"
+    },
+    {
+      "test": "test_switch_tls_abi.py",
+      "passed": true,
+      "seconds": 1.375,
+      "output": "PASS: native C/C++ TLS probes, stable diagnostic removal / linked audio accessor and executable instruction scan use libnx-compatible TLS\n"
+    },
+    {
+      "test": "test_video_recovery.py",
+      "passed": true,
+      "seconds": 0.437,
+      "output": "PASS: stalled progress, keyframe grace, bounded reconnects, recovery and static desktop\n"
+    }
+  ]
+}

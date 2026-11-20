@@ -74,6 +74,11 @@ bool AVFrameQueue::push(AVFrame* item) {
     pushesSincePop++;
     maxPushBurstStat = std::max(maxPushBurstStat, pushesSincePop);
 
+    if (latestFrameOnly) {
+        trimToLatestFrameLocked();
+        return true;
+    }
+
     if (queue.size() > limit) {
         const size_t keepFrames = targetBufferedFrames + 1;
         while (queue.size() > keepFrames) {
@@ -102,6 +107,25 @@ AVFrame* AVFrameQueue::pop(bool* consumed) {
 
     if (consumed) {
         *consumed = false;
+    }
+
+    if (latestFrameOnly) {
+        // Present the newest decoded frame at the renderer's next opportunity.
+        // Never wait for a jitter reserve or a second, estimated source clock.
+        if (queue.empty()) {
+            if (bufferFrame) {
+                fakeFrameUsedStat++;
+                emptyQueueStat++;
+            }
+            return bufferFrame;
+        }
+        recycleFrame(freeQueue, bufferFrame);
+        bufferFrame = queue.front();
+        queue.pop();
+        if (consumed) {
+            *consumed = true;
+        }
+        return bufferFrame;
     }
 
     const auto now = std::chrono::steady_clock::now();
@@ -255,7 +279,7 @@ void AVFrameQueue::recycleWriteFrame(AVFrame*& frame) {
 }
 
 void AVFrameQueue::configure(
-    size_t queueLimit, int configuredStreamFps, bool transferOwnershipEnabled, size_t capacityLimit)
+    size_t queueLimit, int configuredStreamFps, bool transferOwnershipEnabled, size_t capacityLimit, bool useLatestFrameOnly)
 {
     std::lock_guard<std::mutex> lock(m_mutex);
     const size_t configuredDepth = std::max<size_t>(queueLimit, 1);
@@ -265,6 +289,11 @@ void AVFrameQueue::configure(
     targetBufferedFrames =
         configuredDepth > 1 ? std::min<size_t>(configuredDepth - 1, 2) : 0;
     targetBufferedFrames  = std::min(targetBufferedFrames, limit - 1);
+    latestFrameOnly = useLatestFrameOnly;
+    if (latestFrameOnly) {
+        targetBufferedFrames = 0;
+        trimToLatestFrameLocked();
+    }
     transferOwnership = transferOwnershipEnabled;
     streamFps = configuredStreamFps;
     adaptiveFrameInterval = std::chrono::nanoseconds::zero();
@@ -372,6 +401,11 @@ bool AVFrameQueue::pushTransferredLocked(AVFrame* item) {
     pushesSincePop++;
     maxPushBurstStat = std::max(maxPushBurstStat, pushesSincePop);
 
+    if (latestFrameOnly) {
+        trimToLatestFrameLocked();
+        return true;
+    }
+
     if (queue.size() > limit) {
         const size_t keepFrames = targetBufferedFrames + 1;
         while (queue.size() > keepFrames) {
@@ -448,6 +482,18 @@ void AVFrameQueue::resetArrivalRateEstimatorLocked() {
     arrivalRateSamples = 0;
     estimatedSourceFps = 0.0;
     adaptiveFrameInterval = std::chrono::nanoseconds::zero();
+}
+
+void AVFrameQueue::trimToLatestFrameLocked() {
+    // Only decoded output is discarded. Compressed reference frames still
+    // pass through the decoder, and the currently displayed frame stays alive.
+    while (queue.size() > 1) {
+        AVFrame* frame = queue.front();
+        queue.pop();
+        recycleFrame(freeQueue, frame);
+        framesDroppedStat++;
+        pacingSkipStat++;
+    }
 }
 
 void AVFrameQueue::trimToPlayoutWindowLocked() {

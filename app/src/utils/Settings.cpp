@@ -364,6 +364,28 @@ void Settings::load() {
                 }
             }
 
+            if (json_t* low_latency_video = json_object_get(settings, "low_latency_video")) {
+                if (json_is_boolean(low_latency_video)) {
+                    m_low_latency_video = json_is_true(low_latency_video);
+                }
+            }
+            if (json_t* value = json_object_get(settings, "nvdec_max_performance")) {
+                m_nvdec_max_performance = json_is_true(value);
+            }
+            if (json_t* value = json_object_get(settings, "video_vsync")) {
+                if (json_is_boolean(value)) m_video_vsync = json_is_true(value);
+            }
+            if (json_t* value = json_object_get(settings, "audio_reserve_ms")) {
+                if (json_is_integer(value)) set_audio_reserve_ms((int)json_integer_value(value));
+            }
+            if (json_t* value = json_object_get(settings, "save_diagnostic_log")) {
+                m_save_diagnostic_log = json_is_true(value);
+            }
+#ifdef MOONLIGHT_STABLE_BUILD
+            if (!json_is_true(json_object_get(settings, "stable_daily_defaults")))
+                m_save_diagnostic_log = false;
+#endif
+
             if (json_t* frames_queue_size = json_object_get(settings, "frames_queue_size")) {
                 if (json_typeof(frames_queue_size) == JSON_INTEGER) {
                     m_frames_queue_size = (int)json_integer_value(frames_queue_size);
@@ -564,6 +586,20 @@ void Settings::load() {
             }
         }
         
+        ensure_stream_profiles();
+        if (json_t* profiles = json_object_get(root, "switch_stream_profiles")) {
+            for (int i=0;i<2;++i) {
+                json_t* obj=json_object_get(profiles, i ? "docked" : "handheld");
+                if (!json_is_object(obj)) continue;
+                auto integer=[obj](const char* key,int fallback) { auto* v=json_object_get(obj,key);return json_is_integer(v)?(int)json_integer_value(v):fallback; };
+                auto& p=m_profiles[i];
+                const int height=integer("resolution",p.resolution);
+                if (height==360||height==480||height==540||height==720||height==900||height==1080) p.resolution=height;
+                const int fps=integer("fps",p.fps);if(fps>=24&&fps<=60)p.fps=fps;
+                p.bitrate=std::clamp(integer("bitrate",p.bitrate),500,100000);
+                if(auto* v=json_object_get(obj,"maximum")) {if(json_is_boolean(v))p.maximum=json_is_true(v);}
+            }
+        }
         json_decref(root);
     }
     set_mouse_speed_multiplier(m_mouse_speed_multiplier);
@@ -595,6 +631,16 @@ void Settings::set_halfcon_mapping(brls::HalfJoyConSide side, const brls::HalfJo
 void Settings::save()
 {
     json_t* root = json_object();
+    ensure_stream_profiles();
+    if (root) {
+        json_t* profiles=json_object();
+        for(int i=0;i<2;++i){
+            json_t* p=json_pack("{s:i,s:i,s:i,s:b}","resolution",m_profiles[i].resolution,"fps",m_profiles[i].fps,"bitrate",m_profiles[i].bitrate,"maximum",m_profiles[i].maximum);
+            json_object_set_new(profiles,i?"docked":"handheld",p);
+        }
+        json_object_set_new(root,"switch_stream_profiles",profiles);
+    }
+
 
     if (root)
     {
@@ -649,6 +695,14 @@ void Settings::save()
             json_object_set_new(settings, "bitrate", json_integer(m_bitrate));
             json_object_set_new(settings, "decoder_threads", json_integer(m_decoder_threads));
             json_object_set_new(settings, "frames_queue_size", json_integer(m_frames_queue_size));
+            json_object_set_new(settings, "low_latency_video", json_boolean(m_low_latency_video));
+            json_object_set_new(settings, "nvdec_max_performance", json_boolean(m_nvdec_max_performance));
+            json_object_set_new(settings, "video_vsync", json_boolean(m_video_vsync));
+            json_object_set_new(settings, "audio_reserve_ms", json_integer(m_audio_reserve_ms));
+            json_object_set_new(settings, "save_diagnostic_log", json_boolean(m_save_diagnostic_log));
+#ifdef MOONLIGHT_STABLE_BUILD
+            json_object_set_new(settings, "stable_daily_defaults", json_true());
+#endif
             json_object_set_new(settings, "enable_hdr", m_enable_hdr ? json_true() : json_false());
             json_object_set_new(settings, "enable_upscaling", upscaling() ? json_true() : json_false());
             json_object_set_new(settings, "upscaling_mode", json_integer(upscaling_mode()));

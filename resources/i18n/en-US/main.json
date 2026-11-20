@@ -113,6 +113,9 @@
         "title": "Mouse input mode"
     },
     "settings": {
+        "video_pacing": "Frame pacing (next session)",
+        "prefer_low_latency": "Prefer low latency",
+        "prefer_smooth_video": "Prefer smooth video",
         "audio_backend": "Audio driver",
         "av1": "AV1 (Experimental)",
         "buttons": {
@@ -183,7 +186,27 @@
         "video_bitrate": "Video bitrate",
         "video_codec": "Video codec",
         "volume_amplification": "Allow volume amplification",
-        "zero_threads": "0 (No use threads)"
+        "zero_threads": "0 (No use threads)",
+        "nvdec_power": "NVDEC power (next stream)",
+        "nvdec_battery": "Battery saving",
+        "nvdec_max": "Maximum performance",
+        "video_vsync": "VSync (restart app)",
+        "save_diagnostic_log": "Save basic log (restart app)",
+        "profile_0_res": "Resolution (height)",
+        "profile_0_fps": "FPS",
+        "profile_0_rate": "Bitrate (kbps)",
+        "profile_0_power": "NVDEC",
+        "profile_1_res": "Resolution (height)",
+        "profile_1_fps": "FPS",
+        "profile_1_rate": "Bitrate (kbps)",
+        "profile_1_power": "NVDEC",
+        "tab_general": "General",
+        "tab_handheld": "Handheld",
+        "tab_docked": "Dock",
+        "audio_settings": "Audio",
+        "audio_reserve": "Audio buffer (next stream)",
+        "previous_tab": "Previous tab",
+        "next_tab": "Next tab"
     },
     "streaming": {
         "connection": "Connection",

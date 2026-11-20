@@ -58,6 +58,11 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${EXTERN_PATH}/cmake")
 
 # project info
 project(Moonlight)
+if (PLATFORM_SWITCH AND NOT PLATFORM_SWITCH2)
+    # libnx supplies __aarch64_read_tp; direct TPIDR_EL0 is not the TLS ABI.
+    add_compile_options(-mtp=soft -mtls-dialect=trad -ftls-model=local-exec)
+    add_compile_definitions(MOONLIGHT_STABLE_BUILD=1)
+endif ()
 include(GNUInstallDirs)
 if (APPLE AND USE_SDL3)
     enable_language(OBJC)
@@ -274,6 +279,10 @@ endif ()
 # building target
 program_target(${PROJECT_NAME} "${MAIN_SRC}")
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 20)
+if (PLATFORM_SWITCH AND NOT PLATFORM_SWITCH2)
+    target_link_options(${PROJECT_NAME} PRIVATE
+        "-Wl,--wrap=setsockopt" "-Wl,--wrap=av_nvtegra_dfs_init" "-Wl,--wrap=av_nvtegra_dfs_update" "-Wl,--wrap=dkQueueAcquireImage" "-Wl,--wrap=dkQueuePresentImage" "-Wl,--wrap=dkSwapchainCreate")
+endif ()
 if (PLATFORM_SWITCH2)
     target_compile_definitions(${PROJECT_NAME} PRIVATE USE_VULKAN_RENDERER VK_USE_PLATFORM_VI_NN)
     target_include_directories(${PROJECT_NAME} PRIVATE app/src/streaming/video/Vulkan ${CMAKE_CURRENT_SOURCE_DIR}/build/switch2-generated)
@@ -557,7 +566,11 @@ if (MOONLIGHT_APPLE_MOBILE_USE_MULTI_SDK)
     list(APPEND MOONLIGHT_APP_FFMPEG_LIBS avcodec avformat avutil swresample)
     list(APPEND MOONLIGHT_APP_MISC_LIBS jansson expat zstd opus png16 z)
 else ()
+    # Switch 1 links the bundled MbedTLS-enabled CURL archive below and
+    # already includes its matching headers from lib/switch/include.
+    if (NOT PLATFORM_SWITCH OR PLATFORM_SWITCH2)
         find_package(CURL REQUIRED)
+    endif ()
     if (PLATFORM_SWITCH2)
         find_package(Jansson MODULE REQUIRED)
         find_package(EXPAT MODULE REQUIRED)

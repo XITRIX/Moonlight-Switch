@@ -1,0 +1,11 @@
+--- a/src/cpu.c
++++ b/src/cpu.c
+@@ -100,7 +100,7 @@
+     size_t length = sizeof(num_processors);
+     if (!sysctlbyname("hw.logicalcpu", &num_processors, &length, NULL, 0))
+         return num_processors;
+-#elif defined(_SC_NPROCESSORS_ONLN)
++#elif defined(_SC_NPROCESSORS_ONLN) && !defined(__SWITCH__)
+     return (int)sysconf(_SC_NPROCESSORS_ONLN);
+ #endif
+     if (c)

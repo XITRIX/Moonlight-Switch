@@ -10,6 +10,7 @@
         grow="1.0" >
         
         <brls:Box
+            id="settings_content"
             width="10000"
             height="auto"
             axis="column"
@@ -24,6 +25,24 @@
                 
             <brls:SelectorCell
                 id="fps"/>
+
+            <brls:SelectorCell
+                id="video_pacing"/>
+            <brls:SelectorCell id="nvdec_power"/>
+            <brls:BooleanCell id="video_vsync"/>
+
+            <brls:Box id="handheld_group" axis="column" width="auto" height="auto">
+            <brls:SelectorCell id="profile_0_res"/>
+            <brls:SelectorCell id="profile_0_fps"/>
+            <brls:SelectorCell id="profile_0_rate"/>
+            <brls:SelectorCell id="profile_0_power"/>
+            </brls:Box>
+            <brls:Box id="docked_group" axis="column" width="auto" height="auto">
+            <brls:SelectorCell id="profile_1_res"/>
+            <brls:SelectorCell id="profile_1_fps"/>
+            <brls:SelectorCell id="profile_1_rate"/>
+            <brls:SelectorCell id="profile_1_power"/>
+            </brls:Box>
                     
             <brls:SelectorCell
                 id="resolution"/>
@@ -77,11 +96,12 @@
                 title="@i18n/settings/stream_settings"
                 paddingTop="60"/>
 
-            <brls:SelectorCell
-                id="audio_backend"/>
-
             <brls:BooleanCell
                 id="optimal"/>
+
+            <brls:Header title="@i18n/settings/audio_settings" paddingTop="60"/>
+            <brls:SelectorCell id="audio_backend"/>
+            <brls:SelectorCell id="audio_reserve"/>
             
             <brls:BooleanCell
                 id="pcAudio"/>
@@ -212,6 +232,8 @@
                 height="84"
                 grow="1"/>
                 
+            <brls:Box id="debug_group" axis="column" width="auto" height="auto">
+            <brls:BooleanCell id="save_diagnostic_log"/>
             <brls:Header
                 title="@i18n/settings/debug"
                 paddingTop="60"
@@ -219,6 +241,7 @@
                 
             <brls:BooleanCell
                 id="writeLog"/>
+            </brls:Box>
             
         </brls:Box>
 

@@ -1,3 +1,6 @@
+#include <ctime>
+#include <cstdio>
+#include <mutex>
 #ifdef __SWITCH2__
 #include "switch2_build_id.hpp"
 #endif
@@ -96,6 +99,8 @@ void preferSwitchCore(int ordinal) {
 #endif
 
 int main(int argc, char* argv[]) {
+
+
 #ifdef __SWITCH2__
     // Keep diagnostics available after a failed launch or streaming session.
     mkdir("sdmc:/switch/Moonlight-Switch", 0777);
@@ -134,7 +139,7 @@ int main(int argc, char* argv[]) {
 
     // Set log level
     // We recommend to use INFO for real apps
-    brls::Logger::setLogLevel(brls::LogLevel::LOG_DEBUG);
+    brls::Logger::setLogLevel(brls::LogLevel::LOG_WARNING);
 
     // Init the app and i18n
     if (!brls::Application::init()) {
@@ -156,7 +161,44 @@ int main(int argc, char* argv[]) {
     auto home = Application::getPlatform()->getHomeDirectory("Moonlight-Switch");
     Settings::instance().set_working_dir(home);
     Settings::instance().set_launch_path(argc > 0 ? argv[0] : "");
+#if defined(PLATFORM_SWITCH) && !defined(__SWITCH2__)
+    if (Settings::instance().save_diagnostic_log()) {
+    // Use the NRO's directory, even when its folder differs from settings home.
+    std::string traceDir = argc > 0 ? argv[0] : "";
+    const auto slash = traceDir.find_last_of("/\\");
+    traceDir = slash == std::string::npos ? "sdmc:/switch/Moonlight-Switch/" : traceDir.substr(0, slash + 1);
+    const std::string tracePath = traceDir + "moonlight-LL27-log.txt";
+    const std::string previousTracePath = traceDir + "moonlight-LL27-log-previous.txt";
+    std::remove(previousTracePath.c_str());
+    std::rename(tracePath.c_str(), previousTracePath.c_str());
+    if (FILE* traceFile = std::fopen(tracePath.c_str(), "w")) {
+        std::setvbuf(traceFile, nullptr, _IOFBF, 64 * 1024);
+        std::fprintf(traceFile, "Moonlight LL27 basic log; timestamps=monotonic microseconds\n");
+        std::fprintf(traceFile, "Executable: %s\nLog path: %s\nBuild: %s %s\nStarted epoch: %lld\n", argc > 0 ? argv[0] : "(unavailable)", tracePath.c_str(), __DATE__, __TIME__, static_cast<long long>(std::time(nullptr)));
+        std::fflush(traceFile);
+        brls::Logger::getLogEvent()->subscribe([traceFile](auto, brls::LogLevel level, const std::string& line) {
+            static std::mutex traceMutex;
+            std::lock_guard<std::mutex> lock(traceMutex);
+            static uint64_t lastFlush = 0;
+            const uint64_t now = LiGetMicroseconds();
+            std::fprintf(traceFile, "%llu [%d] %s\n", (unsigned long long)now, (int)level, line.c_str());
+            if (now < 3000000 || now - lastFlush >= 250000) {
+                std::fflush(traceFile);
+                lastFlush = now;
+            }
+        });
+    } else {
+        brls::Logger::error("LL27: could not create diagnostic file: {}", tracePath);
+    }
+    }
+    brls::Logger::setLogLevel(Settings::instance().save_diagnostic_log() ? brls::LogLevel::LOG_INFO : brls::LogLevel::LOG_WARNING);
+#endif
+
     brls::Logger::info("Working dir, {}", home);
+#if defined(PLATFORM_SWITCH) && !defined(__SWITCH2__)
+    brls::Application::setSwapInterval(Settings::instance().video_vsync() ? 1 : 0);
+    brls::Logger::info("LL27: presentation buffers=2 swap_interval={}", Settings::instance().video_vsync() ? 1 : 0);
+#endif
 
     // Have the application register an action on every activity that will quit
     // when you press BUTTON_START

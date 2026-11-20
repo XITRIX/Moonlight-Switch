@@ -22,6 +22,8 @@ class FFmpegVideoDecoder : public IFFmpegVideoDecoder {
     VideoDecodeStats* video_decode_stats() override;
 
   private:
+    void reset_stream_stats();
+    void record_frame_number(uint32_t number);
     int decode(char* indata, int inlen);
     int drain_frames();
     int get_frame(bool native_frame, AVFrame** frame);

@@ -30,9 +30,20 @@ extern "C" {
 //#else
 //#define DECODER_BUFFER_SIZE 92 * 1024 * 2
 //#endif
+#include "../VideoTrace.hpp"
 #define DECODER_BUFFER_SIZE (1024 * 1024)
 
 FFmpegVideoDecoder::FFmpegVideoDecoder() {
+#if defined(PLATFORM_SWITCH) && !defined(__SWITCH2__)
+    av_log_set_level(Settings::instance().save_diagnostic_log() ? AV_LOG_WARNING : AV_LOG_QUIET);
+    av_log_set_callback([](void* context, int level, const char* format, va_list args) {
+        if (level > av_log_get_level()) return;
+        char text[4096];
+        thread_local int prefix = 1;
+        av_log_format_line(context, level, format, args, text, sizeof(text), &prefix);
+        brls::Logger::warning("FFmpeg level={}: {}", level, text);
+    });
+#endif
 //    AVBufferRef* deviceRef = av_hwdevice_ctx_alloc(AV_HWDEVICE_TYPE_MEDIACODEC);
 //    AVHWDeviceContext* ctx = (AVHWDeviceContext*)deviceRef->data;
 //    AVMediaCodecDeviceContext* hwctx = (AVMediaCodecDeviceContext*)ctx->hwctx;
@@ -41,6 +52,30 @@ FFmpegVideoDecoder::FFmpegVideoDecoder() {
 }
 
 FFmpegVideoDecoder::~FFmpegVideoDecoder() = default;
+
+void FFmpegVideoDecoder::reset_stream_stats() {
+    m_last_frame = 0;
+    m_frames_in = 0;
+    m_frames_out = 0;
+    m_current_frame = 0;
+    m_next_frame = 0;
+    m_stats_window_start = 0;
+    m_video_decode_stats_progress = {};
+    m_video_decode_stats_cache = {};
+}
+
+void FFmpegVideoDecoder::record_frame_number(uint32_t number) {
+    if (m_last_frame != 0) {
+        const uint32_t distance = number - m_last_frame;
+        // A restarted or repeated sequence must not underflow the loss counter.
+        // Small positive modular deltas also handle the normal uint32 rollover.
+        if (distance > 0 && distance < 0x80000000u) {
+            m_video_decode_stats_progress.network_dropped_frames += distance - 1;
+            m_video_decode_stats_progress.total_frames += distance - 1;
+        }
+    }
+    m_last_frame = number;
+}
 
 void ffmpegLog(void* ptr, int level, const char* fmt, va_list vargs) {
     std::string message;
@@ -433,6 +468,7 @@ int FFmpegVideoDecoder::setup(int video_format, int width, int height,
     avcodec_register_all();
 #endif
 
+    reset_stream_stats();
     m_video_format = video_format;
     m_video_width = width;
     m_video_height = height;
@@ -637,6 +673,7 @@ int FFmpegVideoDecoder::setup(int video_format, int width, int height,
 
 void FFmpegVideoDecoder::cleanup() {
     brls::Logger::info("FFmpeg: Cleanup...");
+    reset_stream_stats();
 
     m_decoder_ready = false;
     m_decoder_finalized = false;
@@ -694,6 +731,8 @@ void FFmpegVideoDecoder::cleanup() {
 }
 
 int FFmpegVideoDecoder::submit_decode_unit(PDECODE_UNIT decode_unit) {
+
+    ++videoTrace::submitted;
     if (!decode_unit || decode_unit->fullLength <= 0)
         return DR_NEED_IDR;
     // Grow the reassembly buffer for oversized frames (large keyframes at high
@@ -720,17 +759,7 @@ int FFmpegVideoDecoder::submit_decode_unit(PDECODE_UNIT decode_unit) {
             m_video_decode_stats_progress.measurement_start_timestamp = LiGetMillis();
         }
 
-        if (!m_last_frame) {
-            m_last_frame = decode_unit->frameNumber;
-        } else {
-            // Any frame number greater than m_LastFrameNumber + 1 represents a
-            // dropped frame
-            m_video_decode_stats_progress.network_dropped_frames +=
-                decode_unit->frameNumber - (m_last_frame + 1);
-            m_video_decode_stats_progress.total_frames +=
-                decode_unit->frameNumber - (m_last_frame + 1);
-            m_last_frame = decode_unit->frameNumber;
-        }
+        record_frame_number(decode_unit->frameNumber);
 
         m_video_decode_stats_progress.current_received_frames++;
         m_video_decode_stats_progress.total_frames++;
@@ -787,6 +816,7 @@ int FFmpegVideoDecoder::submit_decode_unit(PDECODE_UNIT decode_unit) {
         const uint64_t before_decode = LiGetMicroseconds();
 
         const int decoded_frames = decode(m_ffmpeg_buffer, length);
+
         if (decoded_frames >= 0) {
             m_consecutive_decode_errors = 0;
 
@@ -892,7 +922,12 @@ int FFmpegVideoDecoder::submit_decode_unit(PDECODE_UNIT decode_unit) {
 }
 
 int FFmpegVideoDecoder::capabilities() const {
-#if defined(__SWITCH__)
+#if defined(PLATFORM_SWITCH) && !defined(__SWITCH2__) && defined(BOREALIS_USE_DEKO3D)
+    // Deko3D requires NVTEGRA hardware decoding. Software slice workers are
+    // not used here; avoid asking the host for four independent slices.
+    brls::Logger::info("LL6: NVTEGRA hardware path requests 1 slice per frame");
+    return CAPABILITY_SLICES_PER_FRAME(1);
+#elif defined(__SWITCH__)
     return CAPABILITY_SLICES_PER_FRAME(4);
 #else
     return CAPABILITY_SLICES_PER_FRAME(4) | CAPABILITY_DIRECT_SUBMIT;
@@ -902,6 +937,9 @@ int FFmpegVideoDecoder::capabilities() const {
 int FFmpegVideoDecoder::decode(char* indata, int inlen) {
     m_packet->data = (uint8_t*)indata;
     m_packet->size = inlen;
+    // Diagnostic sequence propagated by FFmpeg, not a wall-clock timestamp.
+    m_packet->pts = static_cast<int64_t>(videoTrace::submitted.load());
+    m_packet->dts = m_packet->pts;
 
 #if defined(_WIN32)
     (void) SDL_SetThreadPriority(SDL_THREAD_PRIORITY_HIGH);

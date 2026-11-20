@@ -4,6 +4,7 @@
 
 #include "DKVideoRenderer.hpp"
 #include "Settings.hpp"
+#include "../../VideoTrace.hpp"
 #include <borealis/platforms/switch/switch_platform.hpp>
 
 #include <libavcodec/avcodec.h>
