@@ -4,6 +4,9 @@
 #include <borealis.hpp>
 #include <cstring>
 #include <stdexcept>
+#ifdef __aarch64__
+#include <arm_neon.h>
+#endif
 
 #include "Switch2FrameReferences.hpp"
 #include "Switch2ImageInterop.hpp"
@@ -26,6 +29,62 @@ VkShaderModule shader(Switch2VulkanContext& ctx, const uint32_t* code, size_t si
     VkShaderModule result;
     ctx.check(vkCreateShaderModule(ctx.device, &info, nullptr, &result), "video shader");
     return result;
+}
+
+void copyLuma10(const uint8_t* src, uint8_t* dst, int width)
+{
+    const auto* s16 = reinterpret_cast<const uint16_t*>(src);
+    int x           = 0;
+#ifdef __aarch64__
+    for (; x + 16 <= width; x += 16)
+    {
+        uint8x8_t lo = vshrn_n_u16(vld1q_u16(s16 + x), 2);
+        uint8x8_t hi = vshrn_n_u16(vld1q_u16(s16 + x + 8), 2);
+        vst1q_u8(dst + x, vcombine_u8(lo, hi));
+    }
+#endif
+    for (; x < width; ++x)
+        dst[x] = static_cast<uint8_t>(s16[x] >> 2);
+}
+
+void interleaveChroma8(const uint8_t* u, const uint8_t* v, uint8_t* dst, int samples)
+{
+    int x = 0;
+#ifdef __aarch64__
+    for (; x + 16 <= samples; x += 16)
+    {
+        uint8x16x2_t uv;
+        uv.val[0] = vld1q_u8(u + x);
+        uv.val[1] = vld1q_u8(v + x);
+        vst2q_u8(dst + x * 2, uv);
+    }
+#endif
+    for (; x < samples; ++x)
+    {
+        dst[x * 2]     = u[x];
+        dst[x * 2 + 1] = v[x];
+    }
+}
+
+void interleaveChroma10(const uint8_t* u, const uint8_t* v, uint8_t* dst, int samples)
+{
+    const auto* u16 = reinterpret_cast<const uint16_t*>(u);
+    const auto* v16 = reinterpret_cast<const uint16_t*>(v);
+    int x           = 0;
+#ifdef __aarch64__
+    for (; x + 8 <= samples; x += 8)
+    {
+        uint8x8x2_t uv;
+        uv.val[0] = vshrn_n_u16(vld1q_u16(u16 + x), 2);
+        uv.val[1] = vshrn_n_u16(vld1q_u16(v16 + x), 2);
+        vst2_u8(dst + x * 2, uv);
+    }
+#endif
+    for (; x < samples; ++x)
+    {
+        dst[x * 2]     = static_cast<uint8_t>(u16[x] >> 2);
+        dst[x * 2 + 1] = static_cast<uint8_t>(v16[x] >> 2);
+    }
 }
 }
 
@@ -196,7 +255,9 @@ void VulkanVideoRenderer::draw(NVGcontext*, int, int, AVFrame* frame, int)
             pitch[i]  = frame->linesize[i];
         }
     }
-    if (format != AV_PIX_FMT_NV12 && format != AV_PIX_FMT_YUV420P)
+    const bool isPlanar8  = format == AV_PIX_FMT_YUV420P || format == AV_PIX_FMT_YUVJ420P;
+    const bool isPlanar10 = format == AV_PIX_FMT_YUV420P10LE;
+    if (format != AV_PIX_FMT_NV12 && !isPlanar8 && !isPlanar10)
         throw std::runtime_error("Unsupported Vulkan video pixel format");
     VkBuffer buffer       = imported.buffer;
     VkDeviceSize bytes    = imported.size;
@@ -215,32 +276,52 @@ void VulkanVideoRenderer::draw(NVGcontext*, int, int, AVFrame* frame, int)
                 usage |= VK_BUFFER_USAGE_UNIFORM_TEXEL_BUFFER_BIT;
             upload = ctx.createBuffer(bytes, usage);
         }
-        const int count = format == AV_PIX_FMT_NV12 ? 2 : 3;
-        uint32_t offset = 0;
-        for (int i = 0; i < count; ++i)
+        auto* outY  = static_cast<uint8_t*>(upload.mapped);
+        auto* outUV = outY + yBytes;
+        if (format == AV_PIX_FMT_NV12)
         {
-            const int width  = i && format == AV_PIX_FMT_YUV420P ? frame->width / 2 : frame->width;
-            const int height = i ? frame->height / 2 : frame->height;
-            if (!planes[i] || pitch[i] < width)
-                throw std::runtime_error("Invalid software video plane");
-            for (int row = 0; row < height; ++row)
-                std::memcpy(static_cast<uint8_t*>(upload.mapped) + offset + size_t(row) * width,
-                    planes[i] + ptrdiff_t(row) * pitch[i], width);
-            if (i < 2)
-            {
-                params.plane[i * 2]     = offset;
-                params.plane[i * 2 + 1] = width;
-            }
-            else
-            {
-                params.extra[0] = offset;
-                params.extra[1] = width;
-            }
-            offset += width * height;
+            if (!planes[0] || !planes[1] || pitch[0] < frame->width || pitch[1] < frame->width)
+                throw std::runtime_error("Invalid software NV12 video plane");
+            for (int row = 0; row < frame->height; ++row)
+                std::memcpy(outY + size_t(row) * frame->width, planes[0] + ptrdiff_t(row) * pitch[0], frame->width);
+            for (int row = 0; row < frame->height / 2; ++row)
+                std::memcpy(outUV + size_t(row) * frame->width, planes[1] + ptrdiff_t(row) * pitch[1], frame->width);
         }
-        buffer     = upload.buffer;
-        lumaView   = upload.luma;
-        chromaView = upload.chroma;
+        else
+        {
+            const int minY  = isPlanar10 ? frame->width * 2 : frame->width;
+            const int minUV = isPlanar10 ? frame->width : frame->width / 2;
+            if (!planes[0] || !planes[1] || !planes[2] || pitch[0] < minY || pitch[1] < minUV || pitch[2] < minUV)
+                throw std::runtime_error("Invalid software planar video plane");
+            for (int row = 0; row < frame->height; ++row)
+            {
+                const uint8_t* src = planes[0] + ptrdiff_t(row) * pitch[0];
+                uint8_t* dst       = outY + size_t(row) * frame->width;
+                if (isPlanar10)
+                    copyLuma10(src, dst, frame->width);
+                else
+                    std::memcpy(dst, src, frame->width);
+            }
+            const int cw = frame->width / 2;
+            const int ch = frame->height / 2;
+            for (int row = 0; row < ch; ++row)
+            {
+                const uint8_t* u = planes[1] + ptrdiff_t(row) * pitch[1];
+                const uint8_t* v = planes[2] + ptrdiff_t(row) * pitch[2];
+                uint8_t* dst     = outUV + size_t(row) * frame->width;
+                if (isPlanar10)
+                    interleaveChroma10(u, v, dst, cw);
+                else
+                    interleaveChroma8(u, v, dst, cw);
+            }
+        }
+        params.plane[0] = 0;
+        params.plane[1] = frame->width;
+        params.plane[2] = yBytes;
+        params.plane[3] = frame->width;
+        buffer          = upload.buffer;
+        lumaView        = upload.luma;
+        chromaView      = upload.chroma;
         ++copiedDraws;
     }
     else
@@ -260,14 +341,14 @@ void VulkanVideoRenderer::draw(NVGcontext*, int, int, AVFrame* frame, int)
         params.region[1] = 0.5f - 0.5f * aspect;
         params.region[3] = 1 / aspect;
     }
-    const bool full   = frame->color_range == AVCOL_RANGE_JPEG;
+    const bool full   = frame->color_range == AVCOL_RANGE_JPEG || format == AV_PIX_FMT_YUVJ420P;
     const bool rec709 = frame->colorspace == AVCOL_SPC_BT709;
     params.red[0] = params.green[0] = params.blue[0] = full ? 1 : 1.1644f;
     params.red[2]                                    = rec709 ? (full ? 1.5748f : 1.7927f) : (full ? 1.402f : 1.596f);
     params.green[1] = rec709 ? (full ? -0.1873f : -0.2132f) : (full ? -0.3441f : -0.3917f);
     params.green[2] = rec709 ? (full ? -0.4681f : -0.5329f) : (full ? -0.7141f : -0.8129f);
     params.blue[1]  = rec709 ? (full ? 1.8556f : 2.1124f) : (full ? 1.772f : 2.0172f);
-    params.red[3]   = format == AV_PIX_FMT_YUV420P ? 1 : 0;
+    params.red[3]   = 0;
     params.green[3] = full ? 0 : 16.0f / 255;
     VkDescriptorBufferInfo descriptor { buffer, 0, bytes };
     VkWriteDescriptorSet write { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET };
@@ -275,8 +356,7 @@ void VulkanVideoRenderer::draw(NVGcontext*, int, int, AVFrame* frame, int)
     write.descriptorCount = 1;
     write.descriptorType  = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
     write.pBufferInfo     = &descriptor;
-    const bool texel      = texelPipeline && lumaView && chromaView
-        && (format != AV_PIX_FMT_NV12 || !((params.plane[2] | params.plane[3]) & 1));
+    const bool texel      = texelPipeline && lumaView && chromaView && !((params.plane[2] | params.plane[3]) & 1);
     VkWriteDescriptorSet writes[] { write, { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET },
         { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET } };
     if (texel)
