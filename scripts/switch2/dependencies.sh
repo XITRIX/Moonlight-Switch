@@ -119,6 +119,7 @@ if [ ! -f "$work/ffmpeg.done" ]; then
             --disable-debug --disable-autodetect --disable-programs --disable-doc \
             --disable-everything --disable-network --disable-avdevice --disable-avfilter \
             --disable-swscale --enable-swresample --enable-pthreads \
+            --enable-neon --disable-runtime-cpudetect \
             --enable-decoder=h264,hevc --enable-parser=h264,hevc >"$work/ffmpeg.log" 2>&1
         make -j "$jobs" install >>"$work/ffmpeg.log" 2>&1
     )

@@ -5,7 +5,13 @@
 #include "borealis.hpp"
 #include "MoonlightSession.hpp"
 
+#include <algorithm>
 #include <cstring>
+
+#if defined(__SWITCH2__)
+#include "Switch2ImageInterop.hpp"
+#include <switch.h>
+#endif
 
 #if defined(_WIN32)
 #if defined(__SDL3__)
@@ -53,6 +59,19 @@ void ffmpegLog(void* ptr, int level, const char* fmt, va_list vargs) {
     brls::Logger::debug("FFmpeg [LOG]: {}", message.c_str());
 }
 
+#if defined(__SWITCH2__)
+static int switch2CpuCores() {
+    u64 mask = 0;
+    if (R_SUCCEEDED(svcGetInfo(&mask, InfoType_CoreMask, CUR_PROCESS_HANDLE, 0))) {
+        int cores = __builtin_popcountll(mask);
+        if (cores > 0) {
+            return cores;
+        }
+    }
+    return 1;
+}
+#endif
+
 int FFmpegVideoDecoder::configure_decoder_context(bool enable_hw_decode,
                                                   bool enable_low_delay,
                                                   bool enable_decoder_threads) {
@@ -95,6 +114,22 @@ int FFmpegVideoDecoder::configure_decoder_context(bool enable_hw_decode,
         m_decoder_context->flags |= AV_CODEC_FLAG_LOW_DELAY;
     }
 
+#if defined(__SWITCH2__)
+    const bool switch2_sw_hevc =
+        !enable_hw_decode && m_codec_id == AV_CODEC_ID_HEVC;
+    if (switch2_sw_hevc) {
+        // Sunshine encodes HEVC with a single slice per frame by default, so
+        // slice-only threading leaves the Switch 2 CPU single-threaded. Enable
+        // frame+slice threading with low-delay output, bounded to available
+        // cores (defaulting to up to 3 threads when Auto is selected).
+        const int cores = switch2CpuCores();
+        const int wanted =
+            m_decoder_threads_setting > 1 ? m_decoder_threads_setting : 3;
+        m_decoder_context->flags |= AV_CODEC_FLAG_LOW_DELAY;
+        m_decoder_context->thread_type = FF_THREAD_FRAME | FF_THREAD_SLICE;
+        m_decoder_context->thread_count = std::clamp(wanted, 1, cores);
+    } else
+#endif
     if (enable_decoder_threads) {
         m_decoder_context->thread_type = FF_THREAD_SLICE;
         m_decoder_context->thread_count = m_decoder_threads_setting;
@@ -114,7 +149,7 @@ int FFmpegVideoDecoder::configure_decoder_context(bool enable_hw_decode,
         m_decoder_context->pix_fmt = AV_PIX_FMT_NV12;
     }
 #endif
-#if defined(PLATFORM_SWITCH)
+#if defined(PLATFORM_SWITCH) && !defined(__SWITCH2__)
 #ifdef BOREALIS_USE_DEKO3D
     if (ffmpeg::decoder::configureDeko3DDecoderContext(m_decoder_context, enable_hw_decode) < 0) {
         return AVERROR(EINVAL);
@@ -145,12 +180,22 @@ int FFmpegVideoDecoder::configure_decoder_context(bool enable_hw_decode,
 
 int FFmpegVideoDecoder::open_decoder() {
     auto log_decoder_attempt = [&]() {
+        const char* thread_mode = "single";
+        if (m_decoder_context->thread_count > 1) {
+            if (m_decoder_context->thread_type == (FF_THREAD_FRAME | FF_THREAD_SLICE)) {
+                thread_mode = "frame+slice";
+            } else if (m_decoder_context->thread_type == FF_THREAD_SLICE) {
+                thread_mode = "slice";
+            } else if (m_decoder_context->thread_type == FF_THREAD_FRAME) {
+                thread_mode = "frame";
+            }
+        }
         brls::Logger::info(
             "FFmpeg: Decoder threading mode: hw={} threads={} low_delay={} thread_type={} slice_support={} decoder={}",
             m_hw_decode_active ? "on" : "off",
             m_decoder_context->thread_count,
-            m_use_low_delay ? "on" : "off",
-            m_use_decoder_threads ? "slice" : "single",
+            (m_decoder_context->flags & AV_CODEC_FLAG_LOW_DELAY) != 0 ? "on" : "off",
+            thread_mode,
             m_supports_slice_threading ? "on" : "off",
             m_decoder != nullptr && m_decoder->name != nullptr ? m_decoder->name : "unknown");
     };
@@ -967,6 +1012,9 @@ int FFmpegVideoDecoder::drain_frames() {
         } else {
             AVFrameHolder::instance().push(frame);
         }
+#if defined(__SWITCH2__)
+        switch2WakeVideoFrame();
+#endif
 
         decoded_frames++;
     }
