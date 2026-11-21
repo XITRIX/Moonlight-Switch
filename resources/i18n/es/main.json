@@ -189,6 +189,7 @@
         "connection": "Conexión",
         "debug_info": "Información de debug",
         "disconnect": "Desconectar",
+        "display": "Pantalla",
         "esc": "Botón de Escape",
         "input": "Entrada",
         "keys": "Botones",
@@ -197,6 +198,7 @@
         "mouse_speed": "Aceleración del ratón",
         "options": "Ajustes",
         "show_logs": "Mostrar logs",
+        "switch_display": "Cambiar de pantalla",
         "terminate": "Cerrar aplicación",
         "volume": "Volumen"
     },
