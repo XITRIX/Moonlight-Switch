@@ -34,8 +34,9 @@ void MoonlightSession::requestRestart() {
     // to the main thread and may be gone by the time this task is processed.
     const uint64_t generation = m_session_generation.load();
     brls::sync([generation] {
-        if (m_active_session && m_active_session->m_generation == generation)
-            m_active_session->restart();
+        MoonlightSession* session = activeSession();
+        if (session && session->m_generation == generation)
+            session->restart();
     });
 }
 
@@ -105,12 +106,13 @@ void MoonlightSession::connection_stage_failed(int stage, int error_code) {
 
 void MoonlightSession::connection_started() {
     brls::Logger::info("MoonlightSession: Connection started");
-    if (!m_active_session)
+    MoonlightSession* session = activeSession();
+    if (!session)
         return;
 
     MoonlightInputManager::instance().resetControllerState();
-    m_active_session->m_stop_requested = false;
-    m_active_session->m_is_active = true;
+    session->m_stop_requested = false;
+    session->m_is_active = true;
 }
 
 void MoonlightSession::connection_terminated(int error_code) {
@@ -122,8 +124,9 @@ void MoonlightSession::connection_terminated(int error_code) {
     // for the thread that is waiting for us. Hand the work to the main thread.
     const uint64_t generation = m_session_generation.load();
     brls::sync([generation, error_code] {
-        if (m_active_session && m_active_session->m_generation == generation)
-            m_active_session->handle_connection_terminated(error_code);
+        MoonlightSession* session = activeSession();
+        if (session && session->m_generation == generation)
+            session->handle_connection_terminated(error_code);
     });
 }
 
@@ -181,15 +184,15 @@ void MoonlightSession::connection_rumble_triggers(uint16_t controllerNumber,
 }
 
 void MoonlightSession::connection_status_update(int connection_status) {
-    if (m_active_session) {
-        m_active_session->m_connection_status_is_poor =
+    if (MoonlightSession* session = activeSession()) {
+        session->m_connection_status_is_poor =
             connection_status == CONN_STATUS_POOR;
     }
 }
 
 void MoonlightSession::connection_set_hdr_mode(bool use_hdr) {
-    if (m_active_session) {
-        m_active_session->m_use_hdr = use_hdr;
+    if (MoonlightSession* session = activeSession()) {
+        session->m_use_hdr = use_hdr;
     }
 }
 
@@ -199,35 +202,40 @@ int MoonlightSession::video_decoder_setup(int video_format, int width,
                                           int height, int redraw_rate,
                                           void* context, int dr_flags) {
     m_video_format = video_format;
-    if (m_active_session && m_active_session->m_video_decoder) {
-        return m_active_session->m_video_decoder->setup(
+    MoonlightSession* session = activeSession();
+    if (session && session->m_video_decoder) {
+        return session->m_video_decoder->setup(
             video_format, width, height, redraw_rate, context, dr_flags);
     }
     return DR_OK;
 }
 
 void MoonlightSession::video_decoder_start() {
-    if (m_active_session && m_active_session->m_video_decoder) {
-        m_active_session->m_video_decoder->start();
+    MoonlightSession* session = activeSession();
+    if (session && session->m_video_decoder) {
+        session->m_video_decoder->start();
     }
 }
 
 void MoonlightSession::video_decoder_stop() {
-    if (m_active_session && m_active_session->m_video_decoder) {
-        m_active_session->m_video_decoder->stop();
+    MoonlightSession* session = activeSession();
+    if (session && session->m_video_decoder) {
+        session->m_video_decoder->stop();
     }
 }
 
 void MoonlightSession::video_decoder_cleanup() {
-    if (m_active_session && m_active_session->m_video_decoder) {
-        m_active_session->m_video_decoder->cleanup();
+    MoonlightSession* session = activeSession();
+    if (session && session->m_video_decoder) {
+        session->m_video_decoder->cleanup();
     }
 }
 
 int MoonlightSession::video_decoder_submit_decode_unit(
     PDECODE_UNIT decode_unit) {
-    if (m_active_session && m_active_session->m_video_decoder) {
-        return m_active_session->m_video_decoder->submit_decode_unit(
+    MoonlightSession* session = activeSession();
+    if (session && session->m_video_decoder) {
+        return session->m_video_decoder->submit_decode_unit(
             decode_unit);
     }
     return DR_OK;
@@ -238,35 +246,40 @@ int MoonlightSession::video_decoder_submit_decode_unit(
 int MoonlightSession::audio_renderer_init(
     int audio_configuration, const POPUS_MULTISTREAM_CONFIGURATION opus_config,
     void* context, int ar_flags) {
-    if (m_active_session && m_active_session->m_audio_renderer) {
-        return m_active_session->m_audio_renderer->init(
+    MoonlightSession* session = activeSession();
+    if (session && session->m_audio_renderer) {
+        return session->m_audio_renderer->init(
             audio_configuration, opus_config, context, ar_flags);
     }
     return DR_OK;
 }
 
 void MoonlightSession::audio_renderer_start() {
-    if (m_active_session && m_active_session->m_audio_renderer) {
-        m_active_session->m_audio_renderer->start();
+    MoonlightSession* session = activeSession();
+    if (session && session->m_audio_renderer) {
+        session->m_audio_renderer->start();
     }
 }
 
 void MoonlightSession::audio_renderer_stop() {
-    if (m_active_session && m_active_session->m_audio_renderer) {
-        m_active_session->m_audio_renderer->stop();
+    MoonlightSession* session = activeSession();
+    if (session && session->m_audio_renderer) {
+        session->m_audio_renderer->stop();
     }
 }
 
 void MoonlightSession::audio_renderer_cleanup() {
-    if (m_active_session && m_active_session->m_audio_renderer) {
-        m_active_session->m_audio_renderer->cleanup();
+    MoonlightSession* session = activeSession();
+    if (session && session->m_audio_renderer) {
+        session->m_audio_renderer->cleanup();
     }
 }
 
 void MoonlightSession::audio_renderer_decode_and_play_sample(
     char* sample_data, int sample_length) {
-    if (m_active_session && m_active_session->m_audio_renderer) {
-        m_active_session->m_audio_renderer->decode_and_play_sample(
+    MoonlightSession* session = activeSession();
+    if (session && session->m_audio_renderer) {
+        session->m_audio_renderer->decode_and_play_sample(
             sample_data, sample_length);
     }
 }
@@ -458,14 +471,15 @@ void MoonlightSession::restart() {
 
     start([generation = m_generation](const GSResult<bool>& result) {
         brls::sync([generation, result] {
-            if (!m_active_session || m_active_session->m_generation != generation)
+            MoonlightSession* session = activeSession();
+            if (!session || session->m_generation != generation)
                 return;
             if (result.isSuccess()) {
                 brls::Logger::info("MoonlightSession: Reconnected");
             } else {
                 brls::Logger::info("MoonlightSession: Reconnection failed");
-                m_active_session->m_is_active = false;
-                m_active_session->m_is_terminated = true;
+                session->m_is_active = false;
+                session->m_is_terminated = true;
             }
         });
     }, m_is_sunshine);
