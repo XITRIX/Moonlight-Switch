@@ -18,13 +18,15 @@ extern void getWindowSize(int* w, int* h);
 using namespace brls;
 
 int m_video_format;
-static MoonlightSession* m_active_session = nullptr;
+// Worker threads read this while the UI thread may be tearing the session down.
+// Atomic so a reader never observes a torn or half-written pointer.
+static std::atomic<MoonlightSession*> m_active_session{nullptr};
 static std::atomic<uint64_t> m_session_generation{0};
 static MoonlightSessionDecoderAndRenderProvider* m_provider = nullptr;
 
 
 MoonlightSession* MoonlightSession::activeSession() {
-    return m_active_session;
+    return m_active_session.load(std::memory_order_acquire);
 }
 
 void MoonlightSession::requestRestart() {
@@ -45,7 +47,7 @@ void MoonlightSession::set_provider(
 MoonlightSession::MoonlightSession(const std::string& address, int app_id) {
     m_address = address;
     m_app_id = app_id;
-    m_active_session = this;
+    m_active_session.store(this, std::memory_order_release);
     m_generation = ++m_session_generation;
 
     m_video_decoder = m_provider->video_decoder();
@@ -54,6 +56,13 @@ MoonlightSession::MoonlightSession(const std::string& address, int app_id) {
 }
 
 MoonlightSession::~MoonlightSession() {
+    // Only clear our own registration: a newer session may already have taken
+    // the pointer if the activities overlapped during teardown.
+    MoonlightSession* expected = this;
+    m_active_session.compare_exchange_strong(
+        expected, nullptr, std::memory_order_acq_rel,
+        std::memory_order_acquire);
+
     if (m_video_decoder) {
         delete m_video_decoder;
     }
@@ -65,8 +74,6 @@ MoonlightSession::~MoonlightSession() {
     if (m_audio_renderer) {
         delete m_audio_renderer;
     }
-
-    m_active_session = nullptr;
 }
 
 // MARK: Connection callbacks
@@ -384,7 +391,12 @@ void MoonlightSession::start(ServerCallback<bool> callback, bool is_sunshine) {
                         &m_video_callbacks, &m_audio_callbacks, NULL, 0, NULL, 0);
 
                     if (result != 0) {
-                        LiStopConnection();
+                        // Do not LiStopConnection() from this worker thread:
+                        // it can still race an in-flight deko3d present. Mark
+                        // the session dead and let StreamingView tear it down
+                        // on the UI thread.
+                        m_is_active = false;
+                        m_is_terminated = true;
                         callback(
                             GSResult<bool>::failure("error/stream_start"_i18n));
                     } else {
@@ -405,6 +417,14 @@ void MoonlightSession::stop(int terminate_app) {
         return;
 
     m_is_active = false;
+
+    // Stop dispatching to callbacks as early as possible: worker threads check
+    // the active pointer, so clearing it here (not only in the destructor)
+    // narrows the window in which they could keep dereferencing this session.
+    MoonlightSession* expected = this;
+    m_active_session.compare_exchange_strong(
+        expected, nullptr, std::memory_order_acq_rel,
+        std::memory_order_acquire);
 
     if (terminate_app) {
         GameStreamClient::instance().quit(m_address, [](auto _) {});
@@ -474,7 +494,7 @@ void MoonlightSession::draw(NVGcontext* vg, int width, int height) {
     if (m_restart_pending)
         restart();
 
-    if (!m_is_active)
+    if (!m_is_active || m_is_terminated)
         return;
 
     if (m_video_decoder && m_video_renderer) {

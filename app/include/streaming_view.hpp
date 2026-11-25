@@ -46,6 +46,8 @@ class StreamingView : public brls::Box {
     KeyboardView* keyboard = nullptr;
     bool blocked = false;
     bool terminated = false;
+    bool teardownStarted = false;
+    bool pendingTeardownTerminateApp = false;
     bool tempInputLock = false;
     brls::Event<brls::KeyState>::Subscription keysSubscription;
     int touchScrollCounter = 0;
@@ -67,4 +69,6 @@ class StreamingView : public brls::Box {
     void handleMouseInputCombo();
     void addKeyboard();
     void removeKeyboard();
+    void releaseInputBlock();
+    void finishTeardown();
 };
