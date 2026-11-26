@@ -53,6 +53,7 @@ class MoonlightInputManager : public Singleton<MoonlightInputManager> {
   public:
     MoonlightInputManager();
     void dropInput();
+    void stopAllRumble();
     void resetControllerState() { resetControllers = true; }
     void handleInput(bool ignoreTouch = false);
     void sendMouseScroll(brls::Point scroll);

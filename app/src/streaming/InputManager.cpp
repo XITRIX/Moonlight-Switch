@@ -284,9 +284,27 @@ void MoonlightInputManager::handleRumbleTriggers(uint16_t controllerNumber,
         rumbleCache[controllerNumber].rightTriggerMotor);
 }
 
+void MoonlightInputManager::stopAllRumble() {
+    auto* inputManager = brls::Application::getPlatform()->getInputManager();
+    int controllersCount = inputManager->getControllersConnectedCount();
+    if (controllersCount > GAMEPADS_MAX)
+        controllersCount = GAMEPADS_MAX;
+
+    for (int i = 0; i < controllersCount; i++)
+        inputManager->sendRumble(i, 0, 0);
+
+    for (auto& cached : rumbleCache)
+        cached = {};
+}
+
 void MoonlightInputManager::dropInput() {
     if (inputDropped)
         return;
+
+    // A rumble packet can land in the same frame as a suspend or a disconnect.
+    // Stopping the motors here covers the teardown paths that never reach
+    // StreamingView::terminate().
+    stopAllRumble();
 
     desktopMouseRemainder = {0, 0};
     desktopScrollRemainder = {0, 0};

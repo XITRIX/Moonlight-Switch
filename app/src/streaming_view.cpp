@@ -275,6 +275,9 @@ void StreamingView::onFocusGained() {
 #endif
     Box::onFocusGained();
 
+    if (terminated)
+        return;
+
     MoonlightInputManager::instance().setInputEnabled(true);
 
     if (!blocked) {
@@ -307,10 +310,7 @@ void StreamingView::onFocusLost() {
     MoonlightInputManager::instance().setInputEnabled(false);
     MoonlightInputManager::instance().dropInput();
 
-    if (blocked) {
-        blocked = false;
-        Application::unblockInputs();
-    }
+    releaseInputBlock();
 
     removeKeyboard();
     Application::getPlatform()->getInputManager()->setPointerLock(false);
@@ -340,6 +340,11 @@ void StreamingView::onWindowFocusChanged(bool focused) {
 
 void StreamingView::draw(NVGcontext* vg, float x, float y, float width,
                          float height, Style style, FrameContext* ctx) {
+    // Once terminate() starts, skip all GPU/input/overlay work so Host menu
+    // navigation cannot race deko3d teardown (Switch orange-screen crash).
+    if (terminated)
+        return;
+
     // Off screen, run nothing: no stream, input or overlays. This comes before
     // the termination check so a session dropped because the console turned
     // wifi off for sleep is not torn down while the compositor is stopped; the
@@ -505,19 +510,65 @@ void StreamingView::terminate(bool terminateApp) {
     if (terminated)
         return;
     terminated = true;
+    pendingTeardownTerminateApp = terminateApp;
 
-    session->stop(terminateApp);
+    // Drop input and rumble immediately. The session lives one more frame, and
+    // the Host menu must not inherit a stuck input block from the stream.
+    MoonlightInputManager::instance().setInputEnabled(false);
+    MoonlightInputManager::instance().dropInput();
+    releaseInputBlock();
+    MoonlightInputManager::instance().stopAllRumble();
+    if (loader)
+        loader->setHidden(true);
 
-    int controllersCount = Application::getPlatform()->getInputManager()->getControllersConnectedCount();
-    for (int i = 0; i < controllersCount; i++)
-        Application::getPlatform()->getInputManager()->sendRumble(i, 0, 0);
+    // Do not call LiStopConnection()/dismiss inside draw(): destroying deko3d
+    // resources mid-frame is the Switch orange-screen crash. Defer teardown to
+    // the next event loop iteration.
+    ASYNC_RETAIN
+    delay(1, [ASYNC_TOKEN] {
+        ASYNC_RELEASE
+        finishTeardown();
+    });
+}
 
-    bool hasOverlays =
-        Application::getActivitiesStack().back() != this->getParentActivity();
-    this->dismiss([this, hasOverlays] {
-        if (hasOverlays)
+void StreamingView::finishTeardown() {
+    if (teardownStarted)
+        return;
+    teardownStarted = true;
+
+    if (session)
+        session->stop(pendingTeardownTerminateApp);
+    releaseInputBlock();
+
+    Activity* streamActivity = this->getParentActivity();
+    auto stack = Application::getActivitiesStack();
+    const bool streamIsTop =
+        !stack.empty() && stack.back() == streamActivity;
+
+    // View::dismiss → AppletFrame::popContentView → popActivity always pops the
+    // top activity. When overlays sit above the stream, the first dismiss
+    // clears one overlay; keep clearing until the stream is top, then exit.
+    if (streamIsTop) {
+        this->dismiss();
+        return;
+    }
+
+    this->dismiss([this, streamActivity] {
+        auto stack = Application::getActivitiesStack();
+        while (stack.size() > 1 && stack.back() != streamActivity) {
+            Application::popActivity(TransitionAnimation::NONE);
+            stack = Application::getActivitiesStack();
+        }
+        if (!stack.empty() && stack.back() == streamActivity)
             this->dismiss();
     });
+}
+
+void StreamingView::releaseInputBlock() {
+    if (!blocked)
+        return;
+    blocked = false;
+    Application::unblockInputs();
 }
 
 void StreamingView::handleInput() {
@@ -684,6 +735,15 @@ StreamingView::~StreamingView() {
         ->getInputManager()
         ->getKeyboardKeyStateChanged()
         ->unsubscribe(keysSubscription);
-    session->stop(false);
-    delete session;
+    releaseInputBlock();
+    // Covers the destroy paths that never run terminate(), so motors do not
+    // keep buzzing after the stream is gone.
+    MoonlightInputManager::instance().stopAllRumble();
+    if (session) {
+        // Keep the terminate(false)/(true) choice when the view is destroyed
+        // before the deferred teardown had a chance to run.
+        session->stop(terminated ? pendingTeardownTerminateApp : false);
+        delete session;
+        session = nullptr;
+    }
 }
